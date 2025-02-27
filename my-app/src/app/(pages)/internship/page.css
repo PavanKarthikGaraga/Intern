@@ -1,0 +1,840 @@
+.register-component {
+    height: 100vh;
+    width: 100vw;
+    background-color: #006400;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .register-component-in {
+    flex: 1;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  
+  .section {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  
+  /* Progress bar styles */
+  .progress-bar {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    position: relative;
+    padding: 0 1rem;
+  }
+  
+  .progress-bar::before {
+    content: '';
+    position: absolute;
+    top: 1.5rem;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.2);
+    z-index: 1;
+  }
+  
+  .progress-step {
+    text-align: center;
+    position: relative;
+    z-index: 2;
+  }
+  
+  .progress-step span {
+    color: white;
+    font-size: 0.9rem;
+  }
+  
+  .step-number {
+    width: 3rem;
+    height: 3rem;
+    background: transparent;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 0.5rem;
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: white;
+  }
+  
+  .step-number.active {
+    background: #00b300;
+    border-color: #00b300;
+    color: white;
+  }
+  
+  /* Button group styles */
+  .button-group {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
+    gap: 1rem;
+  }
+  
+  .next-button, .back-button {
+    padding: 0.8rem 2rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    font-weight: 600;
+  }
+  
+  .next-button {
+    background-color: #006400;
+    color: white;
+  }
+  
+  .next-button:hover {
+    background-color: #008000;
+    transform: translateY(-2px);
+  }
+  
+  .next-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    transform: none;
+  }
+  
+  .back-button {
+    background-color: #333333;
+    color: white;
+  }
+  
+  .back-button:hover {
+    background-color: #404040;
+    transform: translateY(-2px);
+  }
+  
+  /* Form styles */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    padding: 1rem;
+    overflow: hidden;
+  }
+  
+  .form-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-height: 100%;
+  }
+  
+  .form-section h3 {
+    color: #006400;
+    font-size: 1.3rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  input, select {
+    padding: 0.8rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+  }
+  
+  input:focus, select:focus {
+    border-color: #006400;
+    outline: none;
+  }
+  
+  .submit-button {
+    background-color: #006400;
+    color: white;
+    padding: 0.8rem 2rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+  
+  .submit-button:hover {
+    background-color: #008000;
+    transform: translateY(-2px);
+  }
+  
+  /* Content styles */
+  .content {
+    padding: 1rem;
+    flex: 1;
+    overflow: hidden;
+  }
+  
+  .content ul {
+    margin-left: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .content li {
+    margin-bottom: 0.5rem;
+  }
+  
+  /* Domain grid styles */
+  .domains-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.8rem;
+    padding-right: 1rem;
+    flex: 0 0 60%;
+  }
+  
+  .domain-button {
+    padding: 0.8rem;
+    border: 2px solid #006400;
+    border-radius: 8px;
+    background: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .domain-button:hover {
+    background-color: #006400;
+    color: white;
+  }
+  
+  .domain-button.selected {
+    background-color: #006400;
+    color: white;
+  }
+  
+  .domain-info-panel {
+    flex: 1;
+    background-color: #f0f7f0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    border: 1px solid #006400;
+  }
+  
+  .select-prompt {
+    color: #666;
+    font-style: italic;
+  }
+  
+  /* ID input group styles */
+  .id-input-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  
+  .id-input-group input {
+    padding-right: 2.5rem;
+    width: 100%;
+  }
+  
+  .delete-button {
+    position: absolute;
+    right: 0.5rem;
+    background: none;
+    border: none;
+    color: #666;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.2rem 0.5rem;
+    transition: color 0.3s ease;
+  }
+  
+  .delete-button:hover {
+    color: #dc3545;
+  }
+  
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: #006400;
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: #008000;
+  }
+  
+  @media (max-width: 768px) {
+    .register-component-in {
+      padding: 1rem;
+    }
+  
+    .section {
+      padding: 1rem;
+    }
+  
+    .form-grid {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    
+    .progress-bar {
+      display: none;
+    }
+  
+    .domains-grid {
+      grid-template-columns: 1fr;
+      padding-right: 0;
+    }
+  
+    .button-group {
+      margin-top: 1rem;
+    }
+  
+    input, select, .submit-button {
+      padding: 0.7rem;
+    }
+  
+    .domain-selection-container {
+      flex-direction: column;
+    }
+  
+    .domain-info-panel {
+      margin-top: 1rem;
+    }
+  }
+  
+  /* Add this to your existing CSS */
+  .readonly-input {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+  }
+  
+  .readonly-input:focus {
+    border-color: #e0e0e0;
+  }
+  
+  /* Domain selection styles */
+  .domain-container {
+    display: flex;
+    gap: 2rem;
+    height: calc(100vh - 250px);
+    margin: 1rem 0;
+  }
+  
+  .domain-list {
+    flex: 0 0 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    border-right: 2px solid #e0e0e0;
+    padding-right: 1rem;
+  }
+  
+  .domain-list-item {
+    padding: 1rem;
+    text-align: left;
+    background: none;
+    border: 2px solid #006400;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+    color: #006400;
+  }
+  
+  .domain-list-item:hover {
+    background-color: #006400;
+    color: white;
+  }
+  
+  .domain-list-item.selected {
+    background-color: #006400;
+    color: white;
+    font-weight: 600;
+  }
+  
+  .domain-details {
+    flex: 1;
+    padding: 1rem;
+    background-color: #f8f8f8;
+    border-radius: 8px;
+  }
+  
+  .domain-description {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    color: #333;
+  }
+  
+  .domain-activities {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  .domain-activities li {
+    padding: 0.8rem;
+    margin-bottom: 0.5rem;
+    background-color: white;
+    border-radius: 6px;
+    border-left: 4px solid #006400;
+  }
+  
+  /* Common content container style */
+  .content-container {
+    height: calc(100vh - 250px);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+  }
+  
+  /* Rules styles */
+  .rules-content {
+    height: 100%;
+    overflow-y: auto;
+    padding-right: 1rem;
+  }
+  
+  .rules-list {
+    list-style-type: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  
+  .rules-list li {
+    padding: 1rem;
+    background-color: #f8f8f8;
+    border-radius: 8px;
+    border-left: 4px solid #006400;
+    font-size: 0.95rem;
+    line-height: 1.4;
+  }
+  
+  /* Update undertaking styles to match */
+  .undertaking-content {
+    height: calc(100vh - 250px);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+  }
+  
+  .undertaking-intro {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #006400;
+    margin-bottom: 1rem;
+  }
+  
+  .undertaking-list {
+    list-style-type: none;
+    padding: 0;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  
+  .undertaking-list li {
+    padding: 1rem;
+    background-color: #f8f8f8;
+    border-radius: 8px;
+    border-left: 4px solid #006400;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    height: fit-content;
+  }
+  
+  .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background-color: #f8f8f8;
+    border-radius: 8px;
+    margin-top: auto;
+    border: 2px solid #006400;
+  }
+  
+  .checkbox-label input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    accent-color: #006400;
+  }
+  
+  /* Add media query for smaller screens */
+  @media (max-width: 768px) {
+    .undertaking-list {
+      grid-template-columns: 1fr;
+    }
+    
+    .undertaking-content {
+      height: calc(100vh - 200px);
+    }
+  }
+  
+  /* Phone input styles */
+  .phone-input-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  
+  .country-code {
+    position: absolute;
+    left: 0.8rem;
+    color: #666;
+    font-size: 1rem;
+    pointer-events: none;
+  }
+  
+  .phone-input-group input {
+    padding-left: 3.5rem;
+    width: 100%;
+  }
+  
+  /* Residence section styles */
+  .residence-content {
+    height: calc(100vh - 250px);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+  }
+  
+  .residence-form {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    overflow-y: auto;
+    padding-right: 1rem;
+  }
+  
+  /* Common styles for form inputs in residence section */
+  .residence-form select,
+  .residence-form input,
+  .residence-section select,
+  .residence-section input {
+    padding: 1rem;
+    border: 2px solid #006400;
+    border-radius: 8px;
+    font-size: 1rem;
+    background-color: white;
+    width: 100%;
+    height: 3.5rem;
+  }
+  
+  /* Hover and focus states */
+  .residence-form select:hover,
+  .residence-form input:hover,
+  .residence-section select:hover,
+  .residence-section input:hover {
+    border-color: #008000;
+  }
+  
+  .residence-form select:focus,
+  .residence-form input:focus,
+  .residence-section select:focus,
+  .residence-section input:focus {
+    border-color: #008000;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 100, 0, 0.1);
+  }
+  
+  /* Style for select dropdowns */
+  .residence-form select,
+  .residence-section select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23006400' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    padding-right: 2.5rem;
+  }
+  
+  /* Indian address section */
+  .residence-section {
+    background-color: #f8f8f8;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border-left: 4px solid #006400;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-top: 1rem;
+    grid-column: 1 / -1;
+  }
+  
+  /* Bus routes styling */
+  .residence-form select optgroup {
+    font-weight: 600;
+    color: #006400;
+  }
+  
+  .residence-form select option {
+    padding: 0.5rem;
+    color: #333;
+  }
+  
+  .residence-form select option[value="own"] {
+    font-weight: 500;
+    border-bottom: 1px solid #eee;
+  }
+  
+  @media (max-width: 768px) {
+    .residence-form {
+      grid-template-columns: 1fr;
+    }
+  
+    .residence-section {
+      margin-top: 0.5rem;
+      padding: 1rem;
+    }
+  }
+  
+  /* Program Details styles */
+  .program-content {
+    padding: 1rem;
+    overflow-y: auto;
+    height: calc(100vh - 300px);
+  }
+  
+  .program-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 2px solid #e0e0e0;
+  }
+  
+  .program-header h3 {
+    color: #006400;
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .program-highlights {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    margin-top: 1.5rem;
+  }
+  
+  .highlight-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .highlight-label {
+    font-size: 0.9rem;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  
+  .highlight-value {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #006400;
+  }
+  
+  .program-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+  
+  .program-section {
+    background-color: #f8f8f8;
+    padding: 1.5rem;
+    border-radius: 12px;
+    border-left: 4px solid #006400;
+  }
+  
+  .program-section h4 {
+    color: #006400;
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+  }
+  
+  .outcomes-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    margin-top: 1rem;
+  }
+  
+  .outcome-card {
+    background-color: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease;
+  }
+  
+  .outcome-card:hover {
+    transform: translateY(-2px);
+  }
+  
+  .outcome-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .outcome-card h5 {
+    color: #006400;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .outcome-card p {
+    color: #666;
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+  
+  .benefits-list {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  
+  .benefits-list li {
+    padding: 1rem;
+    background-color: white;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .benefits-list li::before {
+    content: '✓';
+    color: #006400;
+    font-weight: bold;
+  }
+  
+  @media (max-width: 768px) {
+    .program-highlights {
+      flex-direction: column;
+      gap: 1rem;
+    }
+  
+    .outcomes-grid,
+    .benefits-list {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  /* Confirmation page styles */
+  .confirmation-content {
+    padding: 1rem;
+    overflow-y: auto;
+    height: calc(100vh - 250px);
+  }
+  
+  .confirm-section {
+    background-color: #f8f8f8;
+    padding: 1.5rem;
+    border-radius: 12px;
+    border-left: 4px solid #006400;
+    margin-bottom: 1.5rem;
+  }
+  
+  .confirm-section h3 {
+    color: #006400;
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+  }
+  
+  .confirm-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  
+  .confirm-item {
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .confirm-item span:first-child {
+    color: #666;
+    font-weight: 500;
+  }
+  
+  .confirm-item span:last-child {
+    color: #333;
+    font-weight: 600;
+  }
+  
+  @media (max-width: 768px) {
+    .confirm-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  /* Add these styles to your existing CSS */
+  :root {
+    --toastify-color-success: #48bb78;
+    --toastify-color-error: #f56565;
+    --toastify-color-info: #4299e1;
+  }
+  
+  /* Custom toast styles */
+  .Toaster {
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+  
+  .toast-message {
+    font-size: 14px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .email-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  
+  .email-note {
+    color: #666;
+    font-size: 0.85rem;
+    margin-left: 0.25rem;
+  } 

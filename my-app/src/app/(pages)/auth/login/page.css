@@ -1,0 +1,136 @@
+.login-component {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: white;
+}
+
+.login-component-in {
+    width: 100%;
+    max-width: 27.5rem;
+    padding: 0 1.5rem;
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding: 1rem;
+}
+
+.login-header h1 {
+    font-size: 2.375rem;
+    color: #111;
+    font-weight: 700;
+    letter-spacing: -0.03125rem;
+}
+
+.login-header h1 span {
+    color: #2e7d32;
+}
+
+.login-header h2 {
+    display: none;
+}
+
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-group label {
+    display: none;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 1rem;
+    border: 0.09375rem solid #eaeaea;
+    border-radius: 0.5rem;
+    font-size: 0.9375rem;
+    color: #111;
+    transition: border-color 0.15s ease;
+}
+
+.form-group input::placeholder {
+    color: #888;
+    font-size: 0.9375rem;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #2e7d32;
+}
+
+.form-group-recaptive {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    background: #f8f9f8;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    border: 0.09375rem solid #eaeaea;
+}
+
+.form-group-recaptive label {
+    min-width: 6.25rem;
+    text-align: center;
+    font-size: 1.125rem;
+    font-family: monospace;
+    color: #2e7d32;
+    letter-spacing: 0.1875rem;
+    font-weight: 500;
+    background: white;
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+    border: 0.09375rem solid #eaeaea;
+}
+
+.form-group-recaptive input {
+    flex: 1;
+    padding: 1rem;
+    border: 0.09375rem solid #eaeaea;
+    border-radius: 0.5rem;
+    font-size: 0.9375rem;
+    background: white;
+}
+
+.form-group-recaptive input:focus {
+    outline: none;
+    border-color: #2e7d32;
+}
+
+.form-group-button button {
+    width: 100%;
+    padding: 1rem;
+    background: #2e7d32;
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    cursor: pointer;
+    margin-bottom: 1.5rem;
+    transition: background-color 0.15s ease;
+}
+
+.form-group-button button:hover {
+    background: #246b27;
+}
+
+.form-group-button p {
+    color: #555;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: color 0.15s ease;
+    text-align: center;
+    margin-bottom: 0.75rem;
+}
+
+.form-group-button p:last-child {
+    margin-bottom: 0;
+}
+
+.form-group-button p:hover {
+    color: #2e7d32;
+}

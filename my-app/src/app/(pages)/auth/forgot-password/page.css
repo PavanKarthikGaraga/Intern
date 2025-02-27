@@ -1,0 +1,103 @@
+.forgot-password-component {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: white;
+}
+
+.forgot-password-component-in {
+    width: 100%;
+    max-width: 27.5rem;
+    padding: 0 1.5rem;
+}
+
+.forgot-password-header {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding: 1rem;
+}
+
+.forgot-password-header h1 {
+    font-size: 2.375rem;
+    color: #111;
+    font-weight: 700;
+    letter-spacing: -0.03125rem;
+    margin-bottom: 1rem;
+}
+
+.forgot-password-header h1 span {
+    color: #2e7d32;
+}
+
+.forgot-password-header p {
+    color: #666;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+}
+
+.forgot-password-header .success-message {
+    color: #2e7d32;
+    background: #e8f5e9;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-top: 1rem;
+}
+
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-group label {
+    display: none;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 1rem;
+    border: 0.09375rem solid #eaeaea;
+    border-radius: 0.5rem;
+    font-size: 0.9375rem;
+    color: #111;
+    transition: border-color 0.15s ease;
+}
+
+.form-group input::placeholder {
+    color: #888;
+    font-size: 0.9375rem;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #2e7d32;
+}
+
+.form-group-button button {
+    width: 100%;
+    padding: 1rem;
+    background: #2e7d32;
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    cursor: pointer;
+    margin-bottom: 1.5rem;
+    transition: background-color 0.15s ease;
+}
+
+.form-group-button button:hover {
+    background: #246b27;
+}
+
+.form-group-button p {
+    color: #555;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: color 0.15s ease;
+    text-align: center;
+}
+
+.form-group-button p:hover {
+    color: #2e7d32;
+} 
