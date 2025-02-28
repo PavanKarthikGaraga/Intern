@@ -10,9 +10,6 @@ import { BUS_ROUTES, BOYS_HOSTELS, GIRLS_HOSTELS, COUNTRIES, INDIAN_STATES } fro
 
 /**
  * @typedef {Object} PhoneInputProps
- * @property {string} value
- * @property {(value: string) => void} onChange
- * @property {string} countryCode
  */
 
 const PhoneInput = ({ value, onChange, countryCode }) => {
@@ -47,33 +44,14 @@ const PhoneInput = ({ value, onChange, countryCode }) => {
 
 /**
  * @typedef {Object} StudentInfo
- * @property {string} name
- * @property {string} idNumber
- * @property {string} email
- * @property {string} branch
- * @property {string} gender
- * @property {string} year
- * @property {string} phoneNumber
  */
 
 /**
  * @typedef {Object} Residence
- * @property {string} type
- * @property {string} hostelType
- * @property {string} busRoute
- * @property {string} country
- * @property {string} state
- * @property {string} district
- * @property {string} pincode
  */
 
 /**
  * @typedef {Object} FormData
- * @property {string} selectedDomain
- * @property {boolean} agreedToRules
- * @property {StudentInfo} studentInfo
- * @property {Residence} residence
- * @property {null} idProof
  */
 
 export default function Register() {
