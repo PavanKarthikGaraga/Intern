@@ -134,3 +134,7 @@
 .form-group-button p:hover {
     color: #2e7d32;
 }
+
+.captcha{
+    user-select: none;
+}

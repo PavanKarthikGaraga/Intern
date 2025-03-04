@@ -2,27 +2,17 @@
 import { useState } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+import axios from "axios";
 import './page.css';
 
 import { DOMAINS } from '../../Data/domains';
 import { RULES, UNDERTAKING_POINTS } from '../../Data/rules';
 import { BUS_ROUTES, BOYS_HOSTELS, GIRLS_HOSTELS, COUNTRIES, INDIAN_STATES } from '../../Data/locations';
 
-/**
- * @typedef {Object} PhoneInputProps
- */
 
 const PhoneInput = ({ value, onChange, countryCode }) => {
-  /**
-   * @param {string} code
-   */
-  const getCountryCode = (code) => {
-    switch (code) {
-      case 'IN': return '+91';
-      case 'US': return '+1';
-      case 'UK': return '+44';
-      default: return '+91';
-    }
+    const getCountryCode = (code) => {
+    return '+91';
   };
 
   return (
@@ -42,17 +32,7 @@ const PhoneInput = ({ value, onChange, countryCode }) => {
   );
 };
 
-/**
- * @typedef {Object} StudentInfo
- */
 
-/**
- * @typedef {Object} Residence
- */
-
-/**
- * @typedef {Object} FormData
- */
 
 export default function Register() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -77,14 +57,11 @@ export default function Register() {
       district: '',
       pincode: '',
     },
-    idProof: null,
   });
 
   const [selectedDomainInfo, setSelectedDomainInfo] = useState('');
 
-  /**
-   * @param {typeof DOMAINS[0]} domain
-   */
+
   const handleDomainClick = (domain) => {
     setSelectedDomainInfo(domain.description);
     setFormData(prev => ({
@@ -99,11 +76,7 @@ export default function Register() {
     router.push('/'); // Navigate to the home page
   };
 
-  /**
-   * @param {'studentInfo' | 'residence'} section
-   * @param {string} field
-   * @param {string} value
-   */
+
   const handleInputChange = (section, field, value) => {
     if (section === 'studentInfo') {
       if (field === 'idNumber') {
@@ -303,15 +276,11 @@ export default function Register() {
       // Show loading toast
       const loadingToast = toast.loading('Submitting registration...');
 
-      const response = await fetch('/api/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
+      const response = await axios.post("/api/register",formData,{
+        headers:{"Content-Type":"application/json"}
       });
 
-      const data = await response.json();
+      const data = response.data;
 
       // Dismiss loading toast
       toast.dismiss(loadingToast);
@@ -326,8 +295,15 @@ export default function Register() {
         toast.error(data.message || 'Registration failed. Please try again.');
       }
     } catch (error) {
-      console.error('Registration error:', error);
-      toast.error('Registration failed. Please try again.');
+      // toast.dismiss(loadingToast);
+
+      if (error.response) {
+        console.log("Registration error:", error.response.data);
+        toast.error(error.response.data.message || "Registration failed. Please try again.");
+      } else {
+        console.log("Registration error:", error);
+        toast.error("A network error occurred. Please try again.");
+      }
     }
   };
 
@@ -626,7 +602,7 @@ export default function Register() {
                           <option key={hostel} value={hostel}>{hostel}</option>
                         ))
                     }
-                  </select>
+                  </select> 
                 )}
 
                 {formData.residence.type === 'dayscholar' && (
