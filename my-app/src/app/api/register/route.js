@@ -49,7 +49,7 @@ export async function POST(request) {
         formData.studentInfo.name,
         formData.studentInfo.idNumber,
         hashedPassword,
-        "user"
+        "student"
         ];
         const result1 = await db.execute(query1, values1);
         const result2 = await db.execute(query2, values2);

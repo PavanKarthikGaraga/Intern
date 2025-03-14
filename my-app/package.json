@@ -2,6 +2,7 @@
   "name": "my-app",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
@@ -19,7 +20,6 @@
     "react-dom": "^19.0.0",
     "react-hot-toast": "^2.5.1"
   },
-  "type": "module",
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@types/node": "22.13.1",

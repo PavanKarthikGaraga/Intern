@@ -25,14 +25,24 @@ CREATE TABLE registrations (
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
-
-
 CREATE TABLE users (
     idNumber BIGINT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     password VARCHAR(100) NOT NULL,
-    role ENUM('user', 'superuser') NOT NULL DEFAULT 'user',
-    
+    role ENUM('student', 'studentMentor','faculty','admin') NOT NULL DEFAULT 'student',
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE uploads (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    studentId BIGINT NOT NULL,
+    dayNumber INT NOT NULL,
+    fileName VARCHAR(255) NOT NULL,
+    fileContent LONGBLOB NOT NULL,
+    uploadStatus ENUM('success', 'failed') NOT NULL DEFAULT 'success',
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (studentId) REFERENCES registrations(idNumber),
+    UNIQUE KEY unique_student_day (studentId, dayNumber)
 );

@@ -5,17 +5,16 @@ import "./page.css";
 import axios from "axios";
 import toast, { Toaster } from 'react-hot-toast';
 import { useRouter } from "next/navigation";
-
+import { useAuth } from "@/context/AuthContext";
 
 const Login = () => {
     const [captcha, setCaptcha] = useState('');
     const [idNumber, setIdNumber] = useState('');
     const [password, setPassword] = useState('');
     const [captchaInput, setCaptchaInput] = useState('');
+    const router = useRouter();
+    const { setIsAuthenticated, checkAuth } = useAuth();
 
-    const router= useRouter() ;
-    
-    // Generate random 4-digit number for captcha
     useEffect(() => {
         generateCaptcha();
     }, []);
@@ -32,43 +31,67 @@ const Login = () => {
             toast.error('Incorrect captcha');
             return;
         }
-        
 
         try {
-            const response = await axios.post('/api/auth/login', {
-                idNumber,
-                password
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    idNumber,
+                    password
+                })
             });
-            if(response.data.message === 'User Successfully Logged In'){
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                await checkAuth(); // This will set the user and isAuthenticated state
                 toast.success('Login successful');
-                router.replace('/');
-            }else{
-                toast.error('Login failed');
+                router.replace(`/dashboard/${data.user.role}`);
+            } else {
+                toast.error(data.error || 'Login failed');
             }
         } catch (error) {
-            console.error(error);
+            console.log('Login error:', error);
+            toast.error('Login failed');
         }
-    }
-        
+    };
 
-
-    return ( 
+    return (
         <div className="login-component">
             <Toaster position="top-center" />
-
             <div className="login-component-in">
                 <div className="login-header">
                     <h1>Smart Village <span>Revolution</span></h1>
                     <h2>Please sign in to continue</h2>
                 </div>
-                <form action="">
+                <form onSubmit={handleSubmit}>
                     <div className="form-group">
                         <label htmlFor="idNumber">ID Number</label>
-                        <input type="text" id="idNumber" value={idNumber} onChange={(e)=>setIdNumber(e.target.value)} placeholder="Enter your ID number"/>
+                        <input 
+                            type="text" 
+                            id="idNumber" 
+                            value={idNumber} 
+                            autoComplete="Id-Number"
+                            onChange={(e)=>setIdNumber(e.target.value)} 
+                            placeholder="Enter your ID number"
+                            required
+                        />
                     </div>
                     <div className="form-group">
                         <label htmlFor="password">Password</label>
-                        <input type="password" value={password} onChange={(e)=>setPassword(e.target.value)} id="password" placeholder="Enter your password"/>
+                        <input 
+                            type="text" 
+                            value={password} 
+                            autoComplete="current-password"
+                            onChange={(e)=>setPassword(e.target.value)} 
+                            id="password" 
+                            placeholder="Enter your password"
+                            required
+                        />
                     </div>
                     <div className="form-group-recaptive">
                         <label className="captcha">{captcha}</label>
@@ -77,21 +100,22 @@ const Login = () => {
                             onChange={(e)=>setCaptchaInput(e.target.value)}
                             type="text" 
                             placeholder="Enter the code above"
+                            required
                         />
                     </div>
                     <div className="form-group-button">
-                        <button onClick={handleSubmit} type="button">Sign In</button>
+                        <button type="submit">Sign In</button>
                         <Link href="/auth/forgot-password">
                             <p>Forgot Password?</p>
                         </Link>
-                        <Link href="/internhsip">
+                        <Link href="/internship">
                             <p>Don't have an account? Register here</p>
                         </Link>
                     </div>
                 </form>
             </div>
         </div>
-     );
-}
- 
+    );
+};
+
 export default Login;
