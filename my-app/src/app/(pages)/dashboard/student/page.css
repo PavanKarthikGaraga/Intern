@@ -11,6 +11,10 @@
     position: relative;
     max-width: 600px;
     margin: 0 auto;
+    background: #fff;
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .file-input {
@@ -58,17 +62,24 @@
 }
 
 .submit-button {
-    background-color: #059669;
+    background: #007bff;
     color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
     border: none;
+    padding: 0.75rem;
+    border-radius: 4px;
     cursor: pointer;
-    margin-top: 0.5rem;
+    font-weight: 500;
+    transition: background 0.3s ease;
+    width: 100%;
 }
 
-.submit-button:hover {
-    background-color: #047857;
+.submit-button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.submit-button:hover:not(:disabled) {
+    background: #0056b3;
 }
 
 .drag-overlay {
@@ -80,4 +91,165 @@
     right: 0;
     bottom: 0;
     left: 0;
+}
+
+/* Add student dashboard styles */
+.student-dashboard {
+    padding: 2rem;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.student-dashboard h1 {
+    text-align: center;
+    margin-bottom: 2rem;
+    color: #333;
+}
+
+.upload-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.input-group {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.day-input-container {
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.day-input-container label {
+    font-weight: 500;
+    color: #333;
+}
+
+.day-input {
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 100px;
+}
+
+.day-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+}
+
+.student-id-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.student-id-container label {
+    font-weight: 500;
+    color: #333;
+}
+
+.student-id-input {
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 150px;
+}
+
+.student-id-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+}
+
+.link-input-container {
+    margin-bottom: 1rem;
+}
+
+.link-input-container label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #333;
+}
+
+.link-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.link-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+}
+
+.upload-status {
+    margin-top: 1rem;
+    padding: 0.5rem;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.upload-status.success {
+    background-color: #e6ffe6;
+    color: #008000;
+}
+
+.upload-status.error {
+    background-color: #ffe6e6;
+    color: #ff0000;
+}
+
+.upload-status.uploading {
+    background-color: #e6e6ff;
+    color: #0000ff;
+}
+
+.link-validation-group {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.validate-button {
+    padding: 0.5rem 1rem;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 0.3s ease;
+}
+
+.validate-button:hover:not(:disabled) {
+    background: #218838;
+}
+
+.validate-button:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+}
+
+.validation-success {
+    color: #28a745;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+/* Modify existing link-input to work with the new layout */
+.link-input {
+    flex: 1;
 }

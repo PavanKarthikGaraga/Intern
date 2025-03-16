@@ -3,48 +3,47 @@ import getDBConnection from '../../../lib/db';
 export async function POST(request) {
     let db;
     try {
-        const formData = await request.formData();
-        const file = formData.get('file');
-        const studentId = formData.get('studentId');
-        const dayNumber = formData.get('dayNumber');
+        const { link, studentId, dayNumber } = await request.json();
 
-        if (!file) {
-            return Response.json({ error: 'No file provided' }, { status: 400 });
+        if (!link || !studentId || !dayNumber) {
+            return Response.json({ 
+                error: 'Missing required fields' 
+            }, { status: 400 });
         }
-
-        // Convert file to buffer
-        const buffer = await file.arrayBuffer();
-        const fileContent = Buffer.from(buffer);
 
         db = await getDBConnection();
 
-        // Save file to uploads table with content
+        // Verify if student exists
+        const [student] = await db.query(
+            'SELECT idNumber FROM registrations WHERE idNumber = ?',
+            [studentId]
+        );
+
+        if (!student || student.length === 0) {
+            return Response.json({ 
+                error: 'Student not found' 
+            }, { status: 404 });
+        }
+
+        // Insert or update upload record
         await db.query(
-            `INSERT INTO uploads (
-                studentId, 
-                dayNumber,
-                fileName,
-                fileContent,
-                uploadStatus
-            ) VALUES (?, ?, ?, ?, 'success')`,
-            [
-                studentId,
-                dayNumber,
-                file.name,
-                fileContent
-            ]
+            `INSERT INTO uploads (studentId, dayNumber, link)
+             VALUES (?, ?, ?)
+             ON DUPLICATE KEY UPDATE 
+             link = VALUES(link),
+             updatedAt = CURRENT_TIMESTAMP`,
+            [studentId, dayNumber, link]
         );
 
         return Response.json({ 
             success: true,
-            message: 'File uploaded successfully'
+            message: 'Link uploaded successfully'
         }, { status: 200 });
 
     } catch (error) {
         console.error('Upload error:', error);
         return Response.json({ 
-            success: false,
-            error: 'Error uploading file' 
+            error: 'Error processing upload' 
         }, { status: 500 });
     } finally {
         if (db) await db.end();

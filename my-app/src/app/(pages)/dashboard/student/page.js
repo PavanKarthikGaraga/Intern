@@ -1,97 +1,110 @@
 "use client";
-import { useState } from "react";
-import "./page.css";
-import "./styles.css";
+import { useState } from 'react';
+import toast, { Toaster } from 'react-hot-toast';
+import './page.css';
 
 export default function Student() {
-    const [file, setFile] = useState(null);
-    const [dragActive, setDragActive] = useState(false);
-    const [uploadStatus, setUploadStatus] = useState({ status: '', message: '' });
+    const [link, setLink] = useState('');
     const [dayNumber, setDayNumber] = useState('');
     const [studentId, setStudentId] = useState('');
+    const [uploadStatus, setUploadStatus] = useState({ status: '', message: '' });
+    const [isValidated, setIsValidated] = useState(false);
+    const [isValidating, setIsValidating] = useState(false);
 
-    const handleDrag = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (e.type === "dragenter" || e.type === "dragover") {
-            setDragActive(true);
-        } else if (e.type === "dragleave") {
-            setDragActive(false);
-        }
-    };
-
-    const handleDrop = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setDragActive(false);
-
-        const files = e.dataTransfer.files;
-        validateAndSetFile(files[0]);
-    };
-
-    const handleChange = (e) => {
-        validateAndSetFile(e.target.files[0]);
-    };
-
-    const validateAndSetFile = (file) => {
-        if (!file) return;
-        
-        // Check file type
-        if (file.type !== "application/pdf") {
-            alert("Please upload a PDF file");
-            return;
-        }
-
-        // Check file size (max 10MB)
-        if (file.size >  1024 * 1024) {
-            alert("File size should be less than 1MB");
-            return;
-        }
-
-        setFile(file);
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        if (!file || !dayNumber || !studentId) {
-            alert("Please fill in all fields and select a file");
+    const validateLink = async () => {
+        if (!link) {
+            toast.error("Please enter a link");
             return;
         }
 
         try {
-            setUploadStatus({ status: 'uploading', message: 'Uploading...' });
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('dayNumber', dayNumber);
-            formData.append('studentId', studentId);
-
-            const response = await fetch('/api/upload', {
+            // First check if it's a valid URL format
+            new URL(link);
+            
+            setIsValidating(true);
+            toast.loading('Validating link...', { id: 'validating' });
+            
+            const response = await fetch('/api/validate-link', {
                 method: 'POST',
-                body: formData,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ link }),
             });
 
-            if (!response.ok) throw new Error('Upload failed');
+            if (!response.ok) {
+                throw new Error('Link validation failed');
+            }
+
+            const data = await response.json();
+            if (data.valid) {
+                setIsValidated(true);
+                if (data.type === 'onedrive') {
+                    toast.success('OneDrive link format validated!', { id: 'validating' });
+                } else {
+                    toast.success('Link validated successfully!', { id: 'validating' });
+                }
+                window.open(link, '_blank');
+            } else {
+                toast.error('Invalid link format. Please check the URL.', { id: 'validating' });
+                setIsValidated(false);
+            }
+        } catch (error) {
+            toast.error('Please enter a valid URL', { id: 'validating' });
+            setIsValidated(false);
+        } finally {
+            setIsValidating(false);
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        
+        if (!isValidated) {
+            toast.error("Please validate the link first");
+            return;
+        }
+
+        if (!link || !dayNumber || !studentId) {
+            toast.error("Please fill in all fields");
+            return;
+        }
+
+        try {
+            setUploadStatus({ status: 'uploading', message: 'Submitting...' });
+            const response = await fetch('/api/upload', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    link,
+                    dayNumber,
+                    studentId
+                }),
+            });
+
+            if (!response.ok) throw new Error('Submission failed');
 
             const data = await response.json();
             setUploadStatus({ 
                 status: 'success', 
-                message: `File "${file.name}" uploaded successfully for Day ${dayNumber}!` 
+                message: `Link submitted successfully for Day ${dayNumber}!` 
             });
+            setLink('');
+            setDayNumber('');
         } catch (error) {
             setUploadStatus({ 
                 status: 'error', 
-                message: 'Failed to upload file. Please try again.' 
+                message: 'Failed to submit link. Please try again.' 
             });
         }
     };
 
     return (
         <div className="container">
-            <form
-                className="upload-container"
-                onDragEnter={handleDrag}
-                onSubmit={handleSubmit}
-            >
+            <Toaster position="top-center" />
+            <form className="upload-container" onSubmit={handleSubmit}>
                 <div className="input-group">
                     <div className="day-input-container">
                         <label htmlFor="day-number">Day Number:</label>
@@ -117,52 +130,48 @@ export default function Student() {
                         />
                     </div>
                 </div>
-                <input 
-                    type="file"
-                    id="file-upload"
-                    className="file-input"
-                    accept=".pdf"
-                    onChange={handleChange}
-                />
-                <label 
-                    htmlFor="file-upload"
-                    className={`upload-label ${dragActive ? 'drag-active' : ''}`}
-                >
-                    
-                    {file ? (
-                        <div className="file-info">
-                        <p>Selected file: {file.name}</p>
-                        <p>Size: {(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                <div className="link-input-container">
+                    <label htmlFor="link">Document Link:</label>
+                    <div className="link-validation-group">
+                        <input
+                            type="url"
+                            id="link"
+                            value={link}
+                            onChange={(e) => {
+                                setLink(e.target.value);
+                                setIsValidated(false);
+                            }}
+                            placeholder="Enter your document link here"
+                            required
+                            className="link-input"
+                        />
                         <button 
-                            type="submit" 
-                            className="submit-button"
-                            disabled={uploadStatus.status === 'uploading'}
+                            type="button"
+                            onClick={validateLink}
+                            disabled={isValidating || !link}
+                            className="validate-button"
                         >
-                            {uploadStatus.status === 'uploading' ? 'Uploading...' : 'Upload PDF'}
+                            {isValidating ? 'Validating...' : 'Validate & Preview'}
                         </button>
-                    </div>) : (
-                    <div>
-                        <p>Drag and drop your PDF here or</p>
-                        
-                        <button type="button" className="upload-button">
-                            Choose file
-                        </button>
-                    </div>)}
-                </label>
+                    </div>
+                    {isValidated && (
+                        <div className="validation-success">
+                            ✓ Link validated successfully
+                        </div>
+                    )}
+                </div>
+                <button 
+                    type="submit" 
+                    className="submit-button"
+                    disabled={!isValidated || uploadStatus.status === 'uploading'}
+                >
+                    {uploadStatus.status === 'uploading' ? 'Submitting...' : 'Submit Link'}
+                </button>
                 {uploadStatus.message && (
                     <div className={`upload-status ${uploadStatus.status}`}>
                         {uploadStatus.message}
                     </div>
                 )}
-                {dragActive && 
-                    <div 
-                        className="drag-overlay"
-                        onDragEnter={handleDrag}
-                        onDragLeave={handleDrag}
-                        onDragOver={handleDrag}
-                        onDrop={handleDrop}
-                    />
-                }
             </form>
         </div>
     );
