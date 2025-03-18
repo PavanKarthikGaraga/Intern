@@ -3,14 +3,38 @@ import getDBConnection from "../../../../../lib/db";
 export async function POST(request) {
     let db;
     try {
-        db = await getDBConnection();
-        const { idNumber } = await request.json(); // Extract idNumber from the request body
-
-        if (!idNumber) {
+        if (!request.body) {
             return new Response(
-                JSON.stringify({ success: false, error: "Missing student ID" }),
+                JSON.stringify({ success: false, error: "Missing request body" }),
                 { status: 400, headers: { "Content-Type": "application/json" } }
             );
+        }
+
+        const body = await request.json();
+        const { idNumber } = body;
+
+        // Enhanced validation
+        if (!idNumber) {
+            return new Response(
+                JSON.stringify({ success: false, error: "Missing idNumber" }),
+                { status: 400, headers: { "Content-Type": "application/json" } }
+            );
+        }
+
+        // Convert to string if number is provided
+        const studentId = idNumber.toString();
+
+        // Validate format (assuming student IDs are alphanumeric)
+        if (!/^[A-Za-z0-9]+$/.test(studentId)) {
+            return new Response(
+                JSON.stringify({ success: false, error: "Invalid student ID format" }),
+                { status: 400, headers: { "Content-Type": "application/json" } }
+            );
+        }
+
+        db = await getDBConnection();
+        if (!db) {
+            throw new Error("Database connection failed");
         }
 
         const query = `
@@ -23,7 +47,7 @@ export async function POST(request) {
             WHERE r.idNumber = ?;
         `;
 
-        const [rows] = await db.execute(query, [idNumber]);
+        const [rows] = await db.execute(query, [studentId]);
 
         if (rows.length === 0) {
             return new Response(
@@ -38,12 +62,21 @@ export async function POST(request) {
         );
 
     } catch (err) {
-        console.error("Error fetching student data", err);
+        console.error("Error fetching student data:", err);
+        const errorMessage = err.code === 'ECONNREFUSED' 
+            ? "Database connection failed" 
+            : "Failed to fetch student data";
         return new Response(
-            JSON.stringify({ success: false, error: err.message }),
+            JSON.stringify({ success: false, error: errorMessage }),
             { status: 500, headers: { "Content-Type": "application/json" } }
         );
     } finally {
-        if (db) await db.end();
+        if (db) {
+            try {
+                await db.end();
+            } catch (err) {
+                console.error("Error closing database connection:", err);
+            }
+        }
     }
 }

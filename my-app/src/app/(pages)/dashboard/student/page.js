@@ -6,20 +6,20 @@ import './page.css';
 export default function StudentDashboard() {
   const { user } = useAuth();
   const [submissions, setSubmissions] = useState(Array(8).fill(false));
-  const [domain, setDomain] = useState('');
+  const [student, setStudent] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeAccordion, setActiveAccordion] = useState(null);
 
   useEffect(() => {
-    if (!user?.idNumber) {  // Changed from user?.id to user?.idNumber
-      setLoading(false);    // Changed to false since we know user isn't loaded
+    if (!user?.idNumber) {
+      setLoading(false);
       return;
     }
 
     const fetchData = async () => {
       try {
-        setError(null); // Reset error state before fetching
+        setError(null);
         console.log('Fetching data for student:', user.idNumber);
         const response = await fetch('/api/dashboard/student/data', {
           method: 'POST',
@@ -33,12 +33,12 @@ export default function StudentDashboard() {
         }
 
         const data = await response.json();
-        console.log('Data:', data);
-        if (data.success) {
-          setDomain(data.domain || 'Not assigned');
-          setSubmissions(Array.isArray(data.submissions) ? data.submissions : Array(8).fill(false));
+        console.log('Received data:', data);
+        
+        if (data.success && data.student) {
+          setStudent(data.student);
         } else {
-          throw new Error(data.error || 'Failed to fetch data');
+          throw new Error(data.error || 'Failed to fetch student data');
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -49,7 +49,7 @@ export default function StudentDashboard() {
     };
 
     fetchData();
-  }, [user]); // Changed dependency array to include user
+  }, [user]);
 
   console.log('user:', user);
 
@@ -67,7 +67,18 @@ export default function StudentDashboard() {
 
   const completedDays = submissions.filter(Boolean).length;
 
+  // Add new helper function to check if a day can be submitted
+  const canSubmitDay = (dayIndex) => {
+    if (dayIndex === 0) return true;
+    return submissions[dayIndex - 1];
+  };
+
+  // Modify the toggleAccordion function
   const toggleAccordion = (index) => {
+    if (!canSubmitDay(index)) {
+      // Don't allow opening days that can't be submitted yet
+      return;
+    }
     setActiveAccordion(activeAccordion === index ? null : index);
   };
 
@@ -77,7 +88,7 @@ export default function StudentDashboard() {
     if (!link) return;
 
     try {
-      const response = await fetch('/api/dashboard/student/submit', {
+      const response = await fetch('/api/dashboard/student/reports', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -100,8 +111,41 @@ export default function StudentDashboard() {
   return (
     <div className="dashboard-container">
       <div className="welcome-section">
-        <h1>Welcome, {user?.name || 'Student'}</h1>
-        <div className="domain-info">Domain: {domain || 'Not assigned'}</div>
+        <h1>Welcome, {student.name}</h1>
+        <div className="student-info">
+          <div className="info-grid">
+            <div className="info-item">
+              <span className="info-label">ID Number:</span>
+              <span className="info-value">{student.idNumber}</span>
+            </div>
+            <div className="info-item">
+              <span className="info-label">Branch:</span>
+              <span className="info-value">{student.branch}</span>
+            </div>
+            <div className="info-item">
+              <span className="info-label">Year:</span>
+              <span className="info-value">{student.year}</span>
+            </div>
+            <div className="info-item">
+              <span className="info-label">Domain:</span>
+              <span className="info-value">{student.selectedDomain}</span>
+            </div>
+            <div className="info-item">
+              <span className="info-label">Phone:</span>
+              <span className="info-value">{student.phoneNumber}</span>
+            </div>
+            <div className="info-item">
+              <span className="info-label">Residence:</span>
+              <span className="info-value">{student.residenceType}</span>
+            </div>
+            {student.residenceType === 'Hostel' && (
+              <div className="info-item">
+                <span className="info-label">Hostel:</span>
+                <span className="info-value">{student.hostelType}</span>
+              </div>
+            )}
+          </div>
+        </div>
         <div className="progress-bar">
           <div 
             className="progress-fill"
@@ -113,49 +157,67 @@ export default function StudentDashboard() {
 
       <div className="submissions-section">
         <h2>Daily Reports</h2>
-        <div className="accordion">
-          {Array(8).fill(null).map((_, index) => (
-            <div 
-              key={index} 
-              className={`accordion-item ${activeAccordion === index ? 'active' : ''}`}
-            >
+        <div className="submissions-layout">
+          <div className="days-list">
+            {Array(8).fill(null).map((_, index) => (
               <div 
-                className="accordion-header"
+                key={index} 
+                className={`day-item ${activeAccordion === index ? 'active' : ''} ${
+                  canSubmitDay(index) ? 'submittable' : 'locked'
+                }`}
                 onClick={() => toggleAccordion(index)}
               >
                 <span>Day {index + 1}</span>
-                {submissions[index] && <span className="submission-status">✓</span>}
+                {submissions[index] ? (
+                  <span className="submission-status">✓</span>
+                ) : !canSubmitDay(index) ? (
+                  <span className="lock-icon">🔒</span>
+                ) : null}
               </div>
-              <div className="accordion-content">
-                <div className="submission-form">
-                  {submissions[index] ? (
-                    <div className="submitted-message">
-                      Report submitted successfully
+            ))}
+          </div>
+          
+          <div className="submission-form-container">
+            {activeAccordion !== null ? (
+              <div className="submission-content">
+                <h3>Day {activeAccordion + 1} Submission</h3>
+                {submissions[activeAccordion] ? (
+                  <div className="submitted-message">
+                    Report submitted successfully
+                  </div>
+                ) : !canSubmitDay(activeAccordion) ? (
+                  <div className="locked-message">
+                    Please submit the previous day's report first
+                  </div>
+                ) : (
+                  <form onSubmit={(e) => handleSubmit(activeAccordion, e)}>
+                    <div className="upload-container">
+                      <label htmlFor={`link-${activeAccordion}`}>
+                        Submit your report for Day {activeAccordion + 1}
+                      </label>
+                      <input 
+                        id={`link-${activeAccordion}`}
+                        name="link"
+                        type="url" 
+                        placeholder="Enter your document link"
+                        className="link-input"
+                        required
+                      />
+                      <button type="submit" className="submit-btn">
+                        Submit Report
+                      </button>
                     </div>
-                  ) : (
-                    <form onSubmit={(e) => handleSubmit(index, e)}>
-                      <div className="upload-container">
-                        <label htmlFor={`link-${index}`}>
-                          Submit your report for Day {index + 1}
-                        </label>
-                        <input 
-                          id={`link-${index}`}
-                          name="link"
-                          type="url" 
-                          placeholder="Enter your document link"
-                          className="link-input"
-                          required
-                        />
-                        <button type="submit" className="submit-btn">
-                          Submit Report
-                        </button>
-                      </div>
-                    </form>
-                  )}
-                </div>
+                  </form>
+                )}
               </div>
-            </div>
-          ))}
+            ) : (
+              <div className="placeholder-content">
+                <div className="placeholder-icon">📝</div>
+                <h3>Select a Day</h3>
+                <p>Submit your reports in order, starting from Day 1</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
