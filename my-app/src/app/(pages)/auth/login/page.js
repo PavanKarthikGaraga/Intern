@@ -50,7 +50,7 @@ const Login = () => {
             if (response.ok) {
                 await checkAuth(); // This will set the user and isAuthenticated state
                 toast.success('Login successful');
-                router.replace(`/dashboard/${data.user.role}`);
+                router.push(`/dashboard/${data.user.role}`);
             } else {
                 toast.error(data.error || 'Login failed');
             }
