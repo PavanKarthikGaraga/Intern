@@ -1,4 +1,3 @@
-import { stat } from "fs";
 import getDBConnection from "../../../lib/db.js";
 import bcrypt from 'bcryptjs';
 

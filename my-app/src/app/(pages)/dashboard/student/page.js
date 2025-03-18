@@ -7,34 +7,62 @@ export default function StudentDashboard() {
   const { user } = useAuth();
   const [submissions, setSubmissions] = useState(Array(8).fill(false));
   const [domain, setDomain] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [activeAccordion, setActiveAccordion] = useState(null);
 
-//   useEffect(() => {
-//     const fetchData = async () => {
-//       try {
-//         const response = await fetch('/api/student/data');
-//         if (!response.ok) {
-//           throw new Error('Network response was not ok');
-//         }
-//         const data = await response.json();
-//         if (data.success) {
-//           setDomain(data.domain);
-//           setSubmissions(data.submissions);
-//         } else {
-//           throw new Error(data.error || 'Failed to fetch data');
-//         }
-//       } catch (error) {
-//         console.error('Error fetching data:', error);
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-//     fetchData();
-//   }, []);
+  useEffect(() => {
+    if (!user?.idNumber) {  // Changed from user?.id to user?.idNumber
+      setLoading(false);    // Changed to false since we know user isn't loaded
+      return;
+    }
+
+    const fetchData = async () => {
+      try {
+        setError(null); // Reset error state before fetching
+        console.log('Fetching data for student:', user.idNumber);
+        const response = await fetch('/api/dashboard/student/data', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idNumber: user.idNumber })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Data:', data);
+        if (data.success) {
+          setDomain(data.domain || 'Not assigned');
+          setSubmissions(Array.isArray(data.submissions) ? data.submissions : Array(8).fill(false));
+        } else {
+          throw new Error(data.error || 'Failed to fetch data');
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        setError(error.message || 'Failed to load dashboard data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [user]); // Changed dependency array to include user
+
+  console.log('user:', user);
+
+  if (!user) {
+    return <div className="error">Please log in to view your dashboard</div>;
+  }
 
   if (loading) {
-    return <div className="loading">Loading...</div>;
+    return <div className="loading">Loading your dashboard...</div>;
+  }
+
+  if (error) {
+    return <div className="error">{error}</div>;
   }
 
   const completedDays = submissions.filter(Boolean).length;
@@ -49,10 +77,14 @@ export default function StudentDashboard() {
     if (!link) return;
 
     try {
-      const response = await fetch('/api/submit-report', {
+      const response = await fetch('/api/dashboard/student/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ day: index + 1, link })
+        body: JSON.stringify({ 
+          studentId: user.idNumber,  // Changed from user.id to user.idNumber
+          day: index + 1, 
+          link 
+        })
       });
 
       if (response.ok) {
