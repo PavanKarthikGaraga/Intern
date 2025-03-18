@@ -56,7 +56,7 @@ export function AuthProvider({children}) {
 
         if (isAuthenticated) {
             // Refresh every 10 seconds (before the 15-second token expiry)
-            intervalId = setInterval(refreshToken, 14000);
+            intervalId = setInterval(refreshToken, 270000);
         }
 
         return () => {
@@ -64,19 +64,6 @@ export function AuthProvider({children}) {
         };
     }, [isAuthenticated, router]);
 
-    const logout = async () => {
-        try {
-            await fetch('/api/auth/logout', {
-                method: 'POST',
-                credentials: 'include'
-            });
-            setUser(null);
-            setIsAuthenticated(false);
-            router.replace('/auth/login');
-        } catch (error) {
-            console.error('Logout error:', error);
-        }
-    };
 
     return (
         <AuthContext.Provider value={{ 
@@ -85,7 +72,6 @@ export function AuthProvider({children}) {
             isAuthenticated,
             setUser,
             setIsAuthenticated,
-            logout,
             checkAuth 
         }}>
             {children}
