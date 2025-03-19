@@ -35,13 +35,12 @@ CREATE TABLE users (
 );
 
 CREATE TABLE uploads (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    studentId BIGINT NOT NULL,
+    idNumber BIGINT NOT NULL PRIMARY KEY,
     dayNumber INT NOT NULL,
     link VARCHAR(2048) NOT NULL,
     uploadStatus ENUM('success', 'failed') NOT NULL DEFAULT 'success',
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (studentId) REFERENCES registrations(idNumber),
-    UNIQUE KEY unique_student_day (studentId, dayNumber)
+    UNIQUE KEY unique_student_day (idNumber, dayNumber)
 );
+    -- FOREIGN KEY (idNumber) REFERENCES registrations(idNumber),

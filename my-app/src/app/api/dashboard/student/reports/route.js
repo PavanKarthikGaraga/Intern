@@ -4,9 +4,9 @@ export async function POST(request) {
     let db;
     try {
         db = await getDBConnection();
-        const { studentId, day, link } = await request.json();
+        const { idNumber, day, link } = await request.json();
 
-        if (!studentId || !day || !link) {
+        if (!idNumber || !day || !link) {
             return new Response(
                 JSON.stringify({ success: false, error: "Missing required fields" }),
                 { status: 400, headers: { "Content-Type": "application/json" } }
@@ -14,8 +14,8 @@ export async function POST(request) {
         }
 
         // Check if the student already submitted for the given day
-        const checkQuery = `SELECT id FROM uploads WHERE studentId = ? AND dayNumber = ?`;
-        const [existing] = await db.execute(checkQuery, [studentId, day]);
+        const checkQuery = `SELECT idNumber FROM uploads WHERE idNumber = ? AND dayNumber = ?`;
+        const [existing] = await db.execute(checkQuery, [idNumber, day]);
 
         if (existing.length > 0) {
             return new Response(
@@ -26,10 +26,10 @@ export async function POST(request) {
 
         // Insert submission record
         const insertQuery = `
-            INSERT INTO uploads (studentId, dayNumber, link, uploadStatus)
+            INSERT INTO uploads (idNumber, dayNumber, link, uploadStatus)
             VALUES (?, ?, ?, 'success')
         `;
-        await db.execute(insertQuery, [studentId, day, link]);
+        await db.execute(insertQuery, [idNumber, day, link]);
 
         return new Response(
             JSON.stringify({ success: true, message: "Report submitted successfully" }),
@@ -52,30 +52,37 @@ export async function GET(request) {
     let db;
     try {
         db = await getDBConnection();
-        const { studentId } = await request.json(); // Get studentId from request body
 
-        if (!studentId) {
+        // Extract query parameters from the request URL
+        const { searchParams } = new URL(request.url);
+        const idNumber = searchParams.get('idNumber');
+
+        if (!idNumber) {
             return new Response(
-                JSON.stringify({ success: false, error: "Missing student ID" }),
+                JSON.stringify({ success: false, error: "Student ID is required" }),
                 { status: 400, headers: { "Content-Type": "application/json" } }
             );
         }
 
         const query = `
-            SELECT dayNumber, link
-            FROM uploads
-            WHERE studentId = ?
+            SELECT dayNumber, link, uploadStatus, createdAt 
+            FROM uploads 
+            WHERE idNumber = ? 
             ORDER BY dayNumber ASC
         `;
-        const [rows] = await db.execute(query, [studentId]);
+        const [reports] = await db.execute(query, [idNumber]);
 
         return new Response(
-            JSON.stringify({ success: true, reports: rows }),
+            JSON.stringify({ 
+                success: true, 
+                data: reports,
+                message: "Reports fetched successfully"
+            }),
             { status: 200, headers: { "Content-Type": "application/json" } }
         );
 
     } catch (err) {
-        console.error("Error fetching student reports", err);
+        console.error("Error fetching reports:", err);
         return new Response(
             JSON.stringify({ success: false, error: err.message }),
             { status: 500, headers: { "Content-Type": "application/json" } }

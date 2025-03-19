@@ -21,6 +21,8 @@ export default function StudentDashboard() {
       try {
         setError(null);
         console.log('Fetching data for student:', user.idNumber);
+
+        // Fetch student details
         const response = await fetch('/api/dashboard/student/data', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -33,12 +35,36 @@ export default function StudentDashboard() {
         }
 
         const data = await response.json();
-        console.log('Received data:', data);
-        
+        console.log('Received student data:', data);
+
         if (data.success && data.student) {
           setStudent(data.student);
         } else {
           throw new Error(data.error || 'Failed to fetch student data');
+        }
+
+        // Fetch submitted reports
+        const reportsResponse = await fetch(`/api/dashboard/student/reports?idNumber=${user.idNumber}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (!reportsResponse.ok) {
+          throw new Error('Failed to fetch reports');
+        }
+
+        const reportsData = await reportsResponse.json();
+        console.log('Fetched reports:', reportsData);
+
+        if (reportsData.success) {
+          const submittedDays = reportsData.data.map((report) => report.dayNumber - 1);
+          const updatedSubmissions = Array(8).fill(false);
+
+          submittedDays.forEach((day) => {
+            updatedSubmissions[day] = true;
+          });
+
+          setSubmissions(updatedSubmissions);
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -67,18 +93,13 @@ export default function StudentDashboard() {
 
   const completedDays = submissions.filter(Boolean).length;
 
-  // Add new helper function to check if a day can be submitted
   const canSubmitDay = (dayIndex) => {
     if (dayIndex === 0) return true;
     return submissions[dayIndex - 1];
   };
 
-  // Modify the toggleAccordion function
   const toggleAccordion = (index) => {
-    if (!canSubmitDay(index)) {
-      // Don't allow opening days that can't be submitted yet
-      return;
-    }
+    if (!canSubmitDay(index)) return;
     setActiveAccordion(activeAccordion === index ? null : index);
   };
 
@@ -91,10 +112,10 @@ export default function StudentDashboard() {
       const response = await fetch('/api/dashboard/student/reports', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          studentId: user.idNumber,  // Changed from user.id to user.idNumber
-          day: index + 1, 
-          link 
+        body: JSON.stringify({
+          idNumber: user.idNumber,
+          day: index + 1,
+          link
         })
       });
 
@@ -147,7 +168,7 @@ export default function StudentDashboard() {
           </div>
         </div>
         <div className="progress-bar">
-          <div 
+          <div
             className="progress-fill"
             style={{ width: `${(completedDays / 8) * 100}%` }}
           ></div>
@@ -160,8 +181,8 @@ export default function StudentDashboard() {
         <div className="submissions-layout">
           <div className="days-list">
             {Array(8).fill(null).map((_, index) => (
-              <div 
-                key={index} 
+              <div
+                key={index}
                 className={`day-item ${activeAccordion === index ? 'active' : ''} ${
                   canSubmitDay(index) ? 'submittable' : 'locked'
                 }`}
@@ -176,7 +197,7 @@ export default function StudentDashboard() {
               </div>
             ))}
           </div>
-          
+
           <div className="submission-form-container">
             {activeAccordion !== null ? (
               <div className="submission-content">
@@ -195,10 +216,10 @@ export default function StudentDashboard() {
                       <label htmlFor={`link-${activeAccordion}`}>
                         Submit your report for Day {activeAccordion + 1}
                       </label>
-                      <input 
+                      <input
                         id={`link-${activeAccordion}`}
                         name="link"
-                        type="url" 
+                        type="url"
                         placeholder="Enter your document link"
                         className="link-input"
                         required
