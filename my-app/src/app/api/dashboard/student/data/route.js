@@ -25,12 +25,12 @@ export async function POST(request) {
         const studentId = idNumber.toString();
 
         // Validate format (assuming student IDs are alphanumeric)
-        if (!/^[A-Za-z0-9]+$/.test(studentId)) {
-            return new Response(
-                JSON.stringify({ success: false, error: "Invalid student ID format" }),
-                { status: 400, headers: { "Content-Type": "application/json" } }
-            );
-        }
+        // if (!/^[A-Za-z0-9]+$/.test(studentId)) {
+        //     return new Response(
+        //         JSON.stringify({ success: false, error: "Invalid student ID format" }),
+        //         { status: 400, headers: { "Content-Type": "application/json" } }
+        //     );
+        // }
 
         db = await getDBConnection();
         if (!db) {

@@ -36,6 +36,28 @@ export function AuthProvider({children}) {
         }
     };
 
+    const logout = async () => {
+        try {
+            const response = await fetch("/api/auth/logout", {
+                method: "POST",
+                credentials: 'include',
+                headers: { "Content-Type": "application/json" },
+            });
+
+            if (!response.ok) {
+                throw new Error('Logout failed');
+            }
+
+            router.replace('/auth/login');
+            setUser(null);
+            setIsAuthenticated(false);
+            toast.success('Logged out successfully');
+        } catch (error) {
+            toast.error('Failed to logout');
+            console.error('Logout error:', error);
+        }
+    };
+
     // Initial auth check
     useEffect(() => {
         checkAuth().finally(() => setIsLoading(false));
@@ -72,7 +94,8 @@ export function AuthProvider({children}) {
             isAuthenticated,
             setUser,
             setIsAuthenticated,
-            checkAuth 
+            checkAuth,
+            logout  // Add logout to context
         }}>
             {children}
         </AuthContext.Provider> 

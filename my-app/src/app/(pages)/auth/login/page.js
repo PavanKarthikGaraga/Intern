@@ -62,7 +62,7 @@ const Login = () => {
 
     return (
         <div className="login-component">
-            <Toaster position="top-center" />
+            {/* <Toaster position="top-center" /> */}
             <div className="login-component-in">
                 <div className="login-header">
                     <h1>Smart Village <span>Revolution</span></h1>

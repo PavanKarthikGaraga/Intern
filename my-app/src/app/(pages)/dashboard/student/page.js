@@ -1,15 +1,17 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import toast from 'react-hot-toast';
 import './page.css';
 
 export default function StudentDashboard() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [submissions, setSubmissions] = useState(Array(8).fill(false));
   const [student, setStudent] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeAccordion, setActiveAccordion] = useState(null);
+  const [submittedLinks, setSubmittedLinks] = useState({});
 
   useEffect(() => {
     if (!user?.idNumber) {
@@ -59,16 +61,20 @@ export default function StudentDashboard() {
         if (reportsData.success) {
           const submittedDays = reportsData.data.map((report) => report.dayNumber - 1);
           const updatedSubmissions = Array(8).fill(false);
+          const links = {};
 
-          submittedDays.forEach((day) => {
-            updatedSubmissions[day] = true;
+          reportsData.data.forEach((report) => {
+            updatedSubmissions[report.dayNumber - 1] = true;
+            links[report.dayNumber - 1] = report.link;
           });
 
           setSubmissions(updatedSubmissions);
+          setSubmittedLinks(links);
         }
       } catch (error) {
         console.error('Error fetching data:', error);
         setError(error.message || 'Failed to load dashboard data');
+        toast.error(error.message || 'Failed to load dashboard data');
       } finally {
         setLoading(false);
       }
@@ -99,14 +105,22 @@ export default function StudentDashboard() {
   };
 
   const toggleAccordion = (index) => {
-    if (!canSubmitDay(index)) return;
+    if (!canSubmitDay(index)) {
+      toast.error('Please submit the previous day\'s report first');
+      return;
+    }
     setActiveAccordion(activeAccordion === index ? null : index);
   };
 
   const handleSubmit = async (index, e) => {
     e.preventDefault();
     const link = e.target.elements.link.value;
-    if (!link) return;
+    if (!link) {
+      toast.error('Please enter a valid document link');
+      return;
+    }
+
+    const loadingToast = toast.loading('Submitting your report...');
 
     try {
       const response = await fetch('/api/dashboard/student/reports', {
@@ -119,20 +133,44 @@ export default function StudentDashboard() {
         })
       });
 
-      if (response.ok) {
+      const data = await response.json();
+
+      if (response.ok && data.success) {
         const newSubmissions = [...submissions];
         newSubmissions[index] = true;
+        
+        // Update the submitted links
+        const newSubmittedLinks = { ...submittedLinks };
+        newSubmittedLinks[index] = link;
+        
         setSubmissions(newSubmissions);
+        setSubmittedLinks(newSubmittedLinks);
+        
+        toast.success(`Day ${index + 1} report submitted successfully`, {
+          id: loadingToast,
+        });
+      } else {
+        toast.error(data.message || 'Failed to submit report', {
+          id: loadingToast,
+        });
       }
     } catch (error) {
       console.error('Error submitting report:', error);
+      toast.error('Error submitting report. Please try again.', {
+        id: loadingToast,
+      });
     }
   };
 
   return (
     <div className="dashboard-container">
       <div className="welcome-section">
-        <h1>Welcome, {student.name}</h1>
+        <div className="welcome-header">
+          <h1>Welcome, {student.name}</h1>
+          <button onClick={logout} className="logout-btn">
+            Logout
+          </button>
+        </div>
         <div className="student-info">
           <div className="info-grid">
             <div className="info-item">
@@ -172,7 +210,7 @@ export default function StudentDashboard() {
             className="progress-fill"
             style={{ width: `${(completedDays / 8) * 100}%` }}
           ></div>
-          <span className="progress-text">{completedDays}/8 days completed</span>
+          <span className="progress-text">{completedDays}/8 days Completed</span>
         </div>
       </div>
 
@@ -204,7 +242,11 @@ export default function StudentDashboard() {
                 <h3>Day {activeAccordion + 1} Submission</h3>
                 {submissions[activeAccordion] ? (
                   <div className="submitted-message">
-                    Report submitted successfully
+                    <p>Report submitted successfully</p>
+                    <div className="submitted-link">
+                      <p>Submitted Link: <a href={submittedLinks[activeAccordion]} target="_blank" rel="noopener noreferrer">{submittedLinks[activeAccordion]}</a></p>
+                      <p className="edit-notice">Note: To edit your submission, please contact your student mentor.</p>
+                    </div>
                   </div>
                 ) : !canSubmitDay(activeAccordion) ? (
                   <div className="locked-message">

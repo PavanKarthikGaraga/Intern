@@ -130,3 +130,66 @@ tr:hover {
 .close-modal-btn:hover {
     background: #555;
 }
+
+.faculty-intro {
+    padding: 20px;
+    margin-bottom: 30px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.faculty-info {
+    margin-bottom: 20px;
+}
+
+.faculty-info h1 {
+    margin: 0;
+    color: #333;
+    font-size: 24px;
+}
+
+.faculty-info p {
+    margin: 5px 0;
+    color: #666;
+}
+
+.stats-cards {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 6px;
+    min-width: 150px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.stat-card h3 {
+    margin: 0;
+    font-size: 14px;
+    color: #666;
+}
+
+.stat-card p {
+    margin: 10px 0 0;
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+}
+
+.filters {
+    margin-bottom: 20px;
+}
+
+.domain-filter {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    min-width: 200px;
+}

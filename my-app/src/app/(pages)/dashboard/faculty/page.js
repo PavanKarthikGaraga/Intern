@@ -4,6 +4,8 @@ import "./page.css";
 
 export default function Faculty() {
     const [registrations, setRegistrations] = useState([]);
+    const [filteredRegistrations, setFilteredRegistrations] = useState([]);
+    const [selectedDomain, setSelectedDomain] = useState('all');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [selectedStudent, setSelectedStudent] = useState(null);
@@ -13,12 +15,27 @@ export default function Faculty() {
         fetchRegistrations();
     }, []);
 
+    useEffect(() => {
+        if (registrations.length > 0) {
+            setFilteredRegistrations(
+                selectedDomain === 'all' 
+                    ? registrations 
+                    : registrations.filter(reg => reg.selectedDomain === selectedDomain)
+            );
+        }
+    }, [selectedDomain, registrations]);
+
     const fetchRegistrations = async () => {
         try {
-            const response = await fetch('/api/registrations');
+            const response = await fetch('/api/dashboard/faculty', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
             if (!response.ok) throw new Error('Failed to fetch');
             const data = await response.json();
-            setRegistrations(data);
+            setRegistrations(Array.isArray(data) ? data : []);
         } catch (err) {
             setError('Failed to load registrations');
             console.error(err);
@@ -29,7 +46,7 @@ export default function Faculty() {
 
     const fetchUploads = async (studentId) => {
         try {
-            const response = await fetch('/api/registrations/uploads', {
+            const response = await fetch('/api/dashboard/faculty', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -43,7 +60,18 @@ export default function Faculty() {
             setSelectedStudent(studentId);
         } catch (err) {
             console.error(err);
+            toast.error('Failed to fetch uploads');
         }
+    };
+
+    const getStats = () => {
+        const totalStudents = registrations.length;
+        const domains = [...new Set(registrations.map(reg => reg.selectedDomain))];
+        const studentsPerDomain = domains.reduce((acc, domain) => {
+            acc[domain] = registrations.filter(reg => reg.selectedDomain === domain).length;
+            return acc;
+        }, {});
+        return { totalStudents, domains, studentsPerDomain };
     };
 
     if (loading) return <div className="loading">Loading...</div>;
@@ -51,7 +79,39 @@ export default function Faculty() {
 
     return (
         <div className="faculty-dashboard">
-            <h1>Student Registrations</h1>
+            <div className="faculty-intro">
+                <div className="faculty-info">
+                    <h1>Welcome, Faculty Mentor</h1>
+                    <p>ID: FM001</p>
+                </div>
+                
+                <div className="stats-cards">
+                    <div className="stat-card">
+                        <h3>Total Students</h3>
+                        <p>{getStats().totalStudents}</p>
+                    </div>
+                    {Object.entries(getStats().studentsPerDomain).map(([domain, count]) => (
+                        <div key={domain} className="stat-card">
+                            <h3>{domain}</h3>
+                            <p>{count} students</p>
+                        </div>
+                    ))}
+                </div>
+
+                <div className="filters">
+                    <select 
+                        value={selectedDomain} 
+                        onChange={(e) => setSelectedDomain(e.target.value)}
+                        className="domain-filter"
+                    >
+                        <option value="all">All Domains</option>
+                        {getStats().domains.map(domain => (
+                            <option key={domain} value={domain}>{domain}</option>
+                        ))}
+                    </select>
+                </div>
+            </div>
+
             <div className="registrations-table">
                 <table>
                     <thead>
@@ -68,7 +128,7 @@ export default function Faculty() {
                         </tr>
                     </thead>
                     <tbody>
-                        {registrations.map((reg) => (
+                        {(filteredRegistrations || []).map((reg) => (
                             <tr key={reg.idNumber}>
                                 <td>{reg.idNumber}</td>
                                 <td>{reg.name}</td>
@@ -86,8 +146,8 @@ export default function Faculty() {
                                     </button>
                                 </td>
                                 <td>
-                                    <span className={`status ${reg.status?.toLowerCase()}`}>
-                                        {reg.status || 'Pending'}
+                                    <span className={`status ${reg.uploadStatus?.toLowerCase()}`}>
+                                        {reg.uploadStatus || 'No uploads'}
                                     </span>
                                 </td>
                             </tr>
@@ -106,11 +166,12 @@ export default function Faculty() {
                                     <th>Day</th>
                                     <th>Link</th>
                                     <th>Uploaded At</th>
+                                    <th>Status</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {uploads.map((upload) => (
-                                    <tr key={upload.id}>
+                                    <tr key={`${upload.idNumber}-${upload.dayNumber}`}>
                                         <td>Day {upload.dayNumber}</td>
                                         <td>
                                             <a 
@@ -124,6 +185,7 @@ export default function Faculty() {
                                         <td>
                                             {new Date(upload.createdAt).toLocaleDateString()}
                                         </td>
+                                        <td>{upload.uploadStatus}</td>
                                     </tr>
                                 ))}
                             </tbody>
