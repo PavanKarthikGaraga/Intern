@@ -35,7 +35,7 @@ CREATE TABLE users (
 );
 
 CREATE TABLE uploads (
-    idNumber BIGINT NOT NULL PRIMARY KEY,
+    idNumber BIGINT NOT NULL,
     dayNumber INT NOT NULL,
     link VARCHAR(2048) NOT NULL,
     uploadStatus ENUM('success', 'failed') NOT NULL DEFAULT 'success',
@@ -43,4 +43,18 @@ CREATE TABLE uploads (
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY unique_student_day (idNumber, dayNumber)
 );
-    -- FOREIGN KEY (idNumber) REFERENCES registrations(idNumber),
+
+CREATE TABLE attendance (
+    idNumber BIGINT PRIMARY KEY,
+    day1 ENUM('P', 'A') DEFAULT NULL,
+    day2 ENUM('P', 'A') DEFAULT NULL,
+    day3 ENUM('P', 'A') DEFAULT NULL,
+    day4 ENUM('P', 'A') DEFAULT NULL,
+    day5 ENUM('P', 'A') DEFAULT NULL,
+    day6 ENUM('P', 'A') DEFAULT NULL,
+    day7 ENUM('P', 'A') DEFAULT NULL,
+    day8 ENUM('P', 'A') DEFAULT NULL,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (idNumber) REFERENCES registrations(idNumber)
+);

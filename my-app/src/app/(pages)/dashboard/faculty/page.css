@@ -88,6 +88,7 @@ tr:hover {
     border-radius: 4px;
     cursor: pointer;
     font-size: 0.875rem;
+    min-width: 150px;
 }
 
 .view-uploads-btn:hover {
@@ -192,4 +193,67 @@ tr:hover {
     border-radius: 4px;
     font-size: 14px;
     min-width: 200px;
+}
+
+.attendance-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.attendance-btn {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.attendance-btn.present {
+    background: #e6ffe6;
+    color: #006400;
+}
+
+.attendance-btn.absent {
+    background: #ffe6e6;
+    color: #dc3545;
+}
+
+.attendance-btn.active {
+    color: white;
+}
+
+.attendance-btn.present.active {
+    background: #006400;
+}
+
+.attendance-btn.absent.active {
+    background: #dc3545;
+}
+
+.attendance-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.attendance-btn:disabled:hover {
+    transform: none;
+    background: inherit;
+}
+
+.attendance-table {
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+.attendance-table th,
+.attendance-table td {
+    padding: 12px;
+    text-align: left;
+}
+
+.attendance-table td:nth-child(3) {
+    color: #666;
+    font-size: 0.9em;
 }

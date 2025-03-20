@@ -34,6 +34,7 @@ export async function POST(request) {
         
         const { accessToken, refreshToken } = generateAuthTokens({ 
             idNumber: user.idNumber,
+            name:user.name,
             role: user.role 
         });
         

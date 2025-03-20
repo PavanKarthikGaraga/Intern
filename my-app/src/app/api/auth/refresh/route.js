@@ -38,6 +38,7 @@ export async function GET(request) {
             success: true,
             user: {
                 idNumber: decoded.idNumber,
+                name:decoded.name,
                 role: decoded.role
             }
         }, { status: 200 });

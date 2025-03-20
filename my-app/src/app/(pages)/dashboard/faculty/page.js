@@ -1,6 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
+import toast from 'react-hot-toast';
 import "./page.css";
+import { useAuth } from '@/context/AuthContext';
 
 export default function Faculty() {
     const [registrations, setRegistrations] = useState([]);
@@ -10,6 +12,10 @@ export default function Faculty() {
     const [error, setError] = useState(null);
     const [selectedStudent, setSelectedStudent] = useState(null);
     const [uploads, setUploads] = useState([]);
+    const [attendance, setAttendance] = useState({});
+    const [studentAttendance, setStudentAttendance] = useState({});
+    const { user, logout } = useAuth();
+    
 
     useEffect(() => {
         fetchRegistrations();
@@ -44,23 +50,66 @@ export default function Faculty() {
         }
     };
 
+    const fetchAttendance = async (studentId) => {
+        try {
+            const response = await fetch(`/api/dashboard/faculty/attendance?studentId=${studentId}`);
+            if (!response.ok) throw new Error('Failed to fetch attendance');
+            const data = await response.json();
+            if (data.success) {
+                setStudentAttendance(data.data || {});
+            }
+        } catch (err) {
+            console.error(err);
+            toast.error('Failed to fetch attendance');
+        }
+    };
+
     const fetchUploads = async (studentId) => {
         try {
-            const response = await fetch('/api/dashboard/faculty', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ studentId })
-            });
+            const [uploadsResponse] = await Promise.all([
+                fetch('/api/dashboard/faculty', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ studentId })
+                }),
+                fetchAttendance(studentId)
+            ]);
             
-            if (!response.ok) throw new Error('Failed to fetch uploads');
-            const data = await response.json();
+            if (!uploadsResponse.ok) throw new Error('Failed to fetch uploads');
+            const data = await uploadsResponse.json();
             setUploads(data);
             setSelectedStudent(studentId);
         } catch (err) {
             console.error(err);
             toast.error('Failed to fetch uploads');
+        }
+    };
+
+    const markAttendance = async (studentId, dayNumber, status) => {
+        try {
+            const response = await fetch('/api/dashboard/faculty/attendance', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    studentId, 
+                    dayNumber, 
+                    status 
+                })
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to mark attendance');
+            }
+            
+            // Fetch updated attendance data immediately after marking
+            await fetchAttendance(studentId);
+            toast.success('Attendance marked successfully');
+        } catch (err) {
+            console.error(err);
+            toast.error(err.message || 'Failed to mark attendance');
         }
     };
 
@@ -74,6 +123,80 @@ export default function Faculty() {
         return { totalStudents, domains, studentsPerDomain };
     };
 
+    const canMarkAttendance = (dayNumber) => {
+        if (dayNumber === 1) return true;
+        const prevDay = `day${dayNumber - 1}`;
+        return !!studentAttendance[prevDay];
+    };
+
+    const formatDate = (dateString) => {
+        return new Date(dateString).toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+    };
+
+    const renderAttendanceModal = () => (
+        <div className="modal-content">
+            <h2>Student Attendance - {selectedStudent}</h2>
+            <table className="attendance-table">
+                <thead>
+                    <tr>
+                        <th>Day</th>
+                        <th>Document</th>
+                        <th>Uploaded On</th>
+                        <th>Actions</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {uploads.map((upload) => {
+                        const dayKey = `day${upload.dayNumber}`;
+                        const currentStatus = studentAttendance[dayKey];
+                        const canMark = canMarkAttendance(upload.dayNumber);
+                        
+                        return (
+                            <tr key={`${upload.idNumber}-${upload.dayNumber}`}>
+                                <td>Day {upload.dayNumber}</td>
+                                <td>
+                                    <a href={upload.link} target="_blank" rel="noopener noreferrer">
+                                        View Document
+                                    </a>
+                                </td>
+                                <td>{formatDate(upload.createdAt)}</td>
+                                <td className="attendance-actions">
+                                    <button 
+                                        className={`attendance-btn present ${currentStatus === 'P' ? 'active' : ''}`}
+                                        onClick={() => markAttendance(selectedStudent, upload.dayNumber, 'P')}
+                                        disabled={!canMark}
+                                        title={!canMark ? "Mark previous days first" : ""}
+                                    >
+                                        Present
+                                    </button>
+                                    <button 
+                                        className={`attendance-btn absent ${currentStatus === 'A' ? 'active' : ''}`}
+                                        onClick={() => markAttendance(selectedStudent, upload.dayNumber, 'A')}
+                                        disabled={!canMark}
+                                        title={!canMark ? "Mark previous days first" : ""}
+                                    >
+                                        Absent
+                                    </button>
+                                </td>
+                                <td>
+                                    {currentStatus || (canMark ? 'Not Marked' : 'Mark previous days first')}
+                                </td>
+                            </tr>
+                        );
+                    })}
+                </tbody>
+            </table>
+            <button className="close-modal-btn" onClick={() => setSelectedStudent(null)}>
+                Close
+            </button>
+        </div>
+    );
+
     if (loading) return <div className="loading">Loading...</div>;
     if (error) return <div className="error">{error}</div>;
 
@@ -81,8 +204,8 @@ export default function Faculty() {
         <div className="faculty-dashboard">
             <div className="faculty-intro">
                 <div className="faculty-info">
-                    <h1>Welcome, Faculty Mentor</h1>
-                    <p>ID: FM001</p>
+                    <h1>Welcome, {user.name}</h1>
+                    <p>ID: {user.idNumber}</p>
                 </div>
                 
                 <div className="stats-cards">
@@ -123,8 +246,8 @@ export default function Faculty() {
                             <th>Year</th>
                             <th>Email</th>
                             <th>Phone</th>
-                            <th>Uploads</th>
-                            <th>Status</th>
+                            <th>Days Completed</th>
+                            <th>Attendance</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -137,18 +260,14 @@ export default function Faculty() {
                                 <td>{reg.year}</td>
                                 <td>{reg.email}</td>
                                 <td>{reg.phoneNumber}</td>
+                                <td>{reg.uploadsCount || 0}/8</td>
                                 <td>
                                     <button 
                                         onClick={() => fetchUploads(reg.idNumber)}
                                         className="view-uploads-btn"
                                     >
-                                        View Uploads ({reg.uploadsCount || 0})
+                                        Mark Attendance
                                     </button>
-                                </td>
-                                <td>
-                                    <span className={`status ${reg.uploadStatus?.toLowerCase()}`}>
-                                        {reg.uploadStatus || 'No uploads'}
-                                    </span>
                                 </td>
                             </tr>
                         ))}
@@ -158,45 +277,7 @@ export default function Faculty() {
 
             {selectedStudent && (
                 <div className="uploads-modal">
-                    <div className="modal-content">
-                        <h2>Student Uploads</h2>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Day</th>
-                                    <th>Link</th>
-                                    <th>Uploaded At</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {uploads.map((upload) => (
-                                    <tr key={`${upload.idNumber}-${upload.dayNumber}`}>
-                                        <td>Day {upload.dayNumber}</td>
-                                        <td>
-                                            <a 
-                                                href={upload.link} 
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                            >
-                                                View Document
-                                            </a>
-                                        </td>
-                                        <td>
-                                            {new Date(upload.createdAt).toLocaleDateString()}
-                                        </td>
-                                        <td>{upload.uploadStatus}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                        <button 
-                            className="close-modal-btn"
-                            onClick={() => setSelectedStudent(null)}
-                        >
-                            Close
-                        </button>
-                    </div>
+                    {renderAttendanceModal()}
                 </div>
             )}
         </div>
