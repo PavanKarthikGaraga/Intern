@@ -12,6 +12,7 @@ export default function StudentDashboard() {
   const [error, setError] = useState(null);
   const [activeAccordion, setActiveAccordion] = useState(null);
   const [submittedLinks, setSubmittedLinks] = useState({});
+  const [attendance, setAttendance] = useState({});
 
   useEffect(() => {
     if (!user?.idNumber) {
@@ -71,6 +72,20 @@ export default function StudentDashboard() {
           setSubmissions(updatedSubmissions);
           setSubmittedLinks(links);
         }
+
+        // Add fetch attendance data
+        const attendanceResponse = await fetch(`/api/dashboard/faculty/attendance?studentId=${user.idNumber}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (attendanceResponse.ok) {
+          const attendanceData = await attendanceResponse.json();
+          if (attendanceData.success) {
+            setAttendance(attendanceData.data || {});
+          }
+        }
+
       } catch (error) {
         console.error('Error fetching data:', error);
         setError(error.message || 'Failed to load dashboard data');
@@ -97,7 +112,8 @@ export default function StudentDashboard() {
     return <div className="error">{error}</div>;
   }
 
-  const completedDays = submissions.filter(Boolean).length;
+  // Update completedDays calculation to use attendance
+  const completedDays = Object.values(attendance).filter(status => status === 'P').length;
 
   const canSubmitDay = (dayIndex) => {
     if (dayIndex === 0) return true;
@@ -160,6 +176,39 @@ export default function StudentDashboard() {
         id: loadingToast,
       });
     }
+  };
+
+  // Helper function to get attendance status text and className
+  const getAttendanceStatus = (dayNumber) => {
+    const day = `day${dayNumber}`;
+    const status = attendance[day];
+
+    if (!submissions[dayNumber - 1]) {
+      return { text: '', className: '' };
+    }
+
+    if (!status) {
+      return { text: 'Attendance is yet to be posted', className: 'pending' };
+    }
+
+    if (status === 'P') {
+      return { text: 'Present', className: 'present' };
+    }
+
+    return { 
+      text: 'You have been marked absent due to incorrect submission', 
+      className: 'absent' 
+    };
+  };
+
+  // Add handleResubmit function
+  const handleResubmit = (index) => {
+    setActiveAccordion(index);
+    const newSubmissions = [...submissions];
+    newSubmissions[index] = false;
+    setSubmissions(newSubmissions);
+    delete submittedLinks[index];
+    setSubmittedLinks({...submittedLinks});
   };
 
   return (
@@ -228,7 +277,13 @@ export default function StudentDashboard() {
               >
                 <span>Day {index + 1}</span>
                 {submissions[index] ? (
-                  <span className="submission-status">✓</span>
+                  attendance[`day${index + 1}`] === 'P' ? (
+                    <span className="submission-status">✓</span>
+                  ) : attendance[`day${index + 1}`] === 'A' ? (
+                    <span className="submission-status">❌</span>
+                  ) : (
+                    <span className="submission-status">⏳</span>
+                  )
                 ) : !canSubmitDay(index) ? (
                   <span className="lock-icon">🔒</span>
                 ) : null}
@@ -245,6 +300,17 @@ export default function StudentDashboard() {
                     <p>Report submitted successfully</p>
                     <div className="submitted-link">
                       <p>Submitted Link: <a href={submittedLinks[activeAccordion]} target="_blank" rel="noopener noreferrer">{submittedLinks[activeAccordion]}</a></p>
+                      <div className={`attendance-status ${getAttendanceStatus(activeAccordion + 1).className}`}>
+                        <p>{getAttendanceStatus(activeAccordion + 1).text}</p>
+                        {attendance[`day${activeAccordion + 1}`] === 'A' && (
+                          <button 
+                            onClick={() => handleResubmit(activeAccordion)}
+                            className="resubmit-btn"
+                          >
+                            Resubmit Report
+                          </button>
+                        )}
+                      </div>
                       <p className="edit-notice">Note: To edit your submission, please contact your student mentor.</p>
                     </div>
                   </div>

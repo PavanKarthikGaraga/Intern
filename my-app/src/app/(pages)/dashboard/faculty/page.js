@@ -15,11 +15,14 @@ export default function Faculty() {
     const [attendance, setAttendance] = useState({});
     const [studentAttendance, setStudentAttendance] = useState({});
     const { user, logout } = useAuth();
-    
+    const [searchQuery, setSearchQuery] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [itemsPerPage] = useState(20);
 
     useEffect(() => {
         fetchRegistrations();
-    }, []);
+    }, [currentPage, searchQuery]);
 
     useEffect(() => {
         if (registrations.length > 0) {
@@ -33,15 +36,19 @@ export default function Faculty() {
 
     const fetchRegistrations = async () => {
         try {
-            const response = await fetch('/api/dashboard/faculty', {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
+            const response = await fetch(
+                `/api/dashboard/faculty?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
                 }
-            });
+            );
             if (!response.ok) throw new Error('Failed to fetch');
             const data = await response.json();
-            setRegistrations(Array.isArray(data) ? data : []);
+            setRegistrations(data.reports);
+            setTotalPages(data.pagination.totalPages);
         } catch (err) {
             setError('Failed to load registrations');
             console.error(err);
@@ -197,6 +204,11 @@ export default function Faculty() {
         </div>
     );
 
+    const handleSearch = (e) => {
+        setSearchQuery(e.target.value);
+        setCurrentPage(1); // Reset to first page when searching
+    };
+
     if (loading) return <div className="loading">Loading...</div>;
     if (error) return <div className="error">{error}</div>;
 
@@ -204,8 +216,15 @@ export default function Faculty() {
         <div className="faculty-dashboard">
             <div className="faculty-intro">
                 <div className="faculty-info">
-                    <h1>Welcome, {user.name}</h1>
-                    <p>ID: {user.idNumber}</p>
+                    <div className="faculty-header">
+                        <div>
+                            <h1>Welcome, {user.name}</h1>
+                            <p>ID: {user.idNumber}</p>
+                        </div>
+                        <button onClick={logout} className="logout-btn">
+                            Logout
+                        </button>
+                    </div>
                 </div>
                 
                 <div className="stats-cards">
@@ -232,6 +251,32 @@ export default function Faculty() {
                             <option key={domain} value={domain}>{domain}</option>
                         ))}
                     </select>
+                </div>
+            </div>
+
+            <div className="search-pagination-controls">
+                <input
+                    type="text"
+                    placeholder="Search by name, ID, or domain..."
+                    value={searchQuery}
+                    onChange={handleSearch}
+                    className="search-input"
+                />
+                
+                <div className="pagination-controls">
+                    <button 
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                    >
+                        Previous
+                    </button>
+                    <span>Page {currentPage} of {totalPages}</span>
+                    <button 
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        disabled={currentPage === totalPages}
+                    >
+                        Next
+                    </button>
                 </div>
             </div>
 
