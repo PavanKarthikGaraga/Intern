@@ -2,6 +2,7 @@ CREATE TABLE registrations (
     idNumber BIGINT PRIMARY KEY,
     selectedDomain VARCHAR(255) NOT NULL,
     agreedToRules BOOLEAN NOT NULL DEFAULT FALSE,
+    studentMentorId BIGINT,
     
     -- Student Info
     name VARCHAR(100) NOT NULL,
@@ -34,14 +35,48 @@ CREATE TABLE users (
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
-CREATE TABLE uploads (
-    idNumber BIGINT NOT NULL,
-    dayNumber INT NOT NULL,
-    link VARCHAR(2048) NOT NULL,
-    uploadStatus ENUM('success', 'failed') NOT NULL DEFAULT 'success',
+CREATE TABLE studentMentors (
+    mentorId BIGINT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    domain VARCHAR(255) NOT NULL,
+    student1Id BIGINT,
+    student2Id BIGINT,
+    student3Id BIGINT,
+    student4Id BIGINT,
+    student5Id BIGINT,
+    student6Id BIGINT,
+    student7Id BIGINT,
+    student8Id BIGINT,
+    student9Id BIGINT,
+    student10Id BIGINT,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    UNIQUE KEY unique_student_day (idNumber, dayNumber)
+    FOREIGN KEY (mentorId) REFERENCES users(idNumber),
+    FOREIGN KEY (student1Id) REFERENCES registrations(idNumber),
+    FOREIGN KEY (student2Id) REFERENCES registrations(idNumber),
+    FOREIGN KEY (student3Id) REFERENCES registrations(idNumber),
+    FOREIGN KEY (student4Id) REFERENCES registrations(idNumber),
+    FOREIGN KEY (student5Id) REFERENCES registrations(idNumber),
+    FOREIGN KEY (student6Id) REFERENCES registrations(idNumber),
+    FOREIGN KEY (student7Id) REFERENCES registrations(idNumber),
+    FOREIGN KEY (student8Id) REFERENCES registrations(idNumber),
+    FOREIGN KEY (student9Id) REFERENCES registrations(idNumber),
+    FOREIGN KEY (student10Id) REFERENCES registrations(idNumber)
+);
+
+CREATE TABLE uploads (
+    idNumber BIGINT PRIMARY KEY,
+    day1Link VARCHAR(200) DEFAULT NULL,
+    day2Link VARCHAR(200) DEFAULT NULL,
+    day3Link VARCHAR(200) DEFAULT NULL,
+    day4Link VARCHAR(200) DEFAULT NULL,
+    day5Link VARCHAR(200) DEFAULT NULL,
+    day6Link VARCHAR(200) DEFAULT NULL,
+    day7Link VARCHAR(200) DEFAULT NULL,
+    day8Link VARCHAR(200) DEFAULT NULL,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (idNumber) REFERENCES registrations(idNumber)
 );
 
 CREATE TABLE attendance (

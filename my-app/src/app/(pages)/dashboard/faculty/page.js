@@ -19,9 +19,21 @@ export default function Faculty() {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [itemsPerPage] = useState(20);
+    const [studentMentors, setStudentMentors] = useState([]);
+    const [showMentorModal, setShowMentorModal] = useState(false);
+    const [selectedStudentForMentor, setSelectedStudentForMentor] = useState(null);
+    const [mentorSearchQuery, setMentorSearchQuery] = useState('');
+    const [searchedStudents, setSearchedStudents] = useState([]);
+    const [showNewMentorForm, setShowNewMentorForm] = useState(false);
+    const [newMentorData, setNewMentorData] = useState({
+        idNumber: '',
+        name: '',
+        domain: ''
+    });
 
     useEffect(() => {
         fetchRegistrations();
+        fetchStudentMentors();
     }, [currentPage, searchQuery]);
 
     useEffect(() => {
@@ -54,6 +66,20 @@ export default function Faculty() {
             console.error(err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchStudentMentors = async () => {
+        try {
+            const response = await fetch('/api/dashboard/faculty/student-mentors');
+            if (!response.ok) throw new Error('Failed to fetch student mentors');
+            const data = await response.json();
+            if (data.success) {
+                setStudentMentors(data.mentors);
+            }
+        } catch (err) {
+            console.error('Error fetching student mentors:', err);
+            toast.error('Failed to load student mentors');
         }
     };
 
@@ -209,6 +235,67 @@ export default function Faculty() {
         setCurrentPage(1); // Reset to first page when searching
     };
 
+    const handleAssignMentor = async (studentId, mentorId) => {
+        try {
+            if (!studentId || !mentorId) {
+                toast.error('Student ID and Mentor ID are required');
+                return;
+            }
+
+            const response = await fetch('/api/dashboard/faculty/assign-mentor', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ studentId, mentorId })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                toast.success('Student mentor assigned successfully');
+                setShowMentorModal(false);
+                fetchRegistrations(); // Refresh the list
+            } else {
+                throw new Error(data.error || 'Failed to assign mentor');
+            }
+        } catch (err) {
+            console.error('Error assigning mentor:', err);
+            toast.error(err.message || 'Failed to assign mentor');
+        }
+    };
+
+    const searchPotentialMentors = async (query) => {
+        try {
+            const response = await fetch(`/api/dashboard/faculty/search-students?query=${query}`);
+            if (!response.ok) throw new Error('Failed to search students');
+            const data = await response.json();
+            setSearchedStudents(data.students);
+        } catch (err) {
+            console.error('Error searching students:', err);
+            toast.error('Failed to search students');
+        }
+    };
+
+    const createNewMentor = async (studentData) => {
+        try {
+            const response = await fetch('/api/dashboard/faculty/create-mentor', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(studentData)
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                toast.success('Student mentor created successfully');
+                fetchStudentMentors(); // Refresh mentors list
+                setShowNewMentorForm(false);
+            } else {
+                throw new Error(data.error);
+            }
+        } catch (err) {
+            console.error('Error creating mentor:', err);
+            toast.error(err.message || 'Failed to create mentor');
+        }
+    };
+
     if (loading) return <div className="loading">Loading...</div>;
     if (error) return <div className="error">{error}</div>;
 
@@ -292,7 +379,8 @@ export default function Faculty() {
                             <th>Email</th>
                             <th>Phone</th>
                             <th>Days Completed</th>
-                            <th>Attendance</th>
+                            <th>Student Mentor</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -306,7 +394,17 @@ export default function Faculty() {
                                 <td>{reg.email}</td>
                                 <td>{reg.phoneNumber}</td>
                                 <td>{reg.uploadsCount || 0}/8</td>
+                                <td>{reg.mentorName || 'Not Assigned'}</td>
                                 <td>
+                                    <button 
+                                        onClick={() => {
+                                            setSelectedStudentForMentor(reg);
+                                            setShowMentorModal(true);
+                                        }}
+                                        className="assign-mentor-btn"
+                                    >
+                                        Assign Mentor
+                                    </button>
                                     <button 
                                         onClick={() => fetchUploads(reg.idNumber)}
                                         className="view-uploads-btn"
@@ -319,6 +417,84 @@ export default function Faculty() {
                     </tbody>
                 </table>
             </div>
+
+            {showMentorModal && (
+                <div className="mentor-modal">
+                    <div className="modal-content">
+                        <h3>Assign Student Mentor</h3>
+                        <p>Select a mentor for {selectedStudentForMentor?.name}</p>
+
+                        <div className="mentor-search-section">
+                            <h4>Existing Mentors</h4>
+                            <div className="mentor-list">
+                                {studentMentors.map((mentor) => (
+                                    <div key={mentor.mentorId} className="mentor-item">
+                                        <div className="mentor-info">
+                                            <span className="mentor-name">{mentor.name}</span>
+                                            <span className="mentor-domain">{mentor.domain}</span>
+                                        </div>
+                                        <button
+                                            onClick={() => handleAssignMentor(selectedStudentForMentor?.idNumber, mentor.mentorId)}
+                                            className="assign-btn"
+                                        >
+                                            Assign
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="create-mentor-section">
+                                <h4>Create New Mentor</h4>
+                                <div className="search-container">
+                                    <input
+                                        type="text"
+                                        placeholder="Search students by name or ID..."
+                                        value={mentorSearchQuery}
+                                        onChange={(e) => {
+                                            setMentorSearchQuery(e.target.value);
+                                            searchPotentialMentors(e.target.value);
+                                        }}
+                                        className="search-input"
+                                    />
+                                </div>
+
+                                {searchedStudents.length > 0 && (
+                                    <div className="search-results">
+                                        {searchedStudents.map((student) => (
+                                            <div key={student.idNumber} className="student-result">
+                                                <div className="student-info">
+                                                    <span>{student.name}</span>
+                                                    <span>{student.idNumber}</span>
+                                                </div>
+                                                <button
+                                                    onClick={() => {
+                                                        setNewMentorData({
+                                                            idNumber: student.idNumber,
+                                                            name: student.name,
+                                                            domain: ''
+                                                        });
+                                                        setShowNewMentorForm(true);
+                                                    }}
+                                                    className="select-btn"
+                                                >
+                                                    Select
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={() => setShowMentorModal(false)}
+                            className="close-modal-btn"
+                        >
+                            Close
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {selectedStudent && (
                 <div className="uploads-modal">

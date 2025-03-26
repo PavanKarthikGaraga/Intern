@@ -7,8 +7,8 @@ async function insertUsers() {
     db = await getDBConnection(); // Get a new DB connection
 
     const users = [
-      { idNumber: 1, name: "Student Mentor", password: "pass", role: "studentMentor" },
-      { idNumber: 2, name: "Faculty", password: "pass", role: "faculty" },
+      { idNumber: 1, name: "Mento", password: "pass", role: "studentMentor" },
+      { idNumber: 2, name: "Bob", password: "pass", role: "faculty" },
       { idNumber: 3, name: "Admin", password: "pass", role: "admin" },
     ];
 

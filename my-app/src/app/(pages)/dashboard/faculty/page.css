@@ -313,3 +313,200 @@ tr:hover {
 .logout-btn:hover {
     background-color: #c82333;
 }
+
+.assign-mentor-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    margin-right: 0.5rem;
+}
+
+.assign-mentor-btn:hover {
+    background: #218838;
+}
+
+.mentor-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.mentor-modal .modal-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    max-width: 500px;
+    width: 90%;
+}
+
+.mentor-modal h3 {
+    margin: 0 0 1rem;
+    color: #333;
+}
+
+.mentor-list {
+    max-height: 300px;
+    overflow-y: auto;
+    margin: 1rem 0;
+}
+
+.mentor-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    border-bottom: 1px solid #eee;
+}
+
+.mentor-item:last-child {
+    border-bottom: none;
+}
+
+.mentor-item span {
+    font-size: 1rem;
+    color: #333;
+}
+
+.assign-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.875rem;
+}
+
+.assign-btn:hover {
+    background: #218838;
+}
+
+.mentor-search-section {
+    margin-top: 1rem;
+}
+
+.mentor-search-section h4 {
+    margin-bottom: 0.5rem;
+    color: #333;
+}
+
+.search-container {
+    margin-bottom: 1rem;
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.search-results {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #eee;
+    border-radius: 4px;
+}
+
+.student-result {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    border-bottom: 1px solid #eee;
+}
+
+.student-result:last-child {
+    border-bottom: none;
+}
+
+.student-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.student-info span:first-child {
+    font-weight: 500;
+}
+
+.student-info span:last-child {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.select-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.new-mentor-form {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.form-group select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.create-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.create-btn:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+}
+
+.mentor-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.mentor-name {
+    font-weight: 500;
+}
+
+.mentor-domain {
+    font-size: 0.8rem;
+    color: #666;
+}

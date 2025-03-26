@@ -777,7 +777,7 @@ export default function Register() {
 
   return (
     <div className="register-component">
-      <Toaster position="top-center" />
+      {/* <Toaster position="top-center" /> */}
       
       <div className="register-component-in">
         {/* Progress indicator */}

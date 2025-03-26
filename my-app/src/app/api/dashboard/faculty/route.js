@@ -25,13 +25,41 @@ export async function GET(request) {
         const query = `
             SELECT 
                 r.*,
-                COUNT(u.idNumber) as uploadsCount
+                COALESCE(
+                    (SELECT COUNT(*)
+                    FROM uploads u
+                    WHERE u.idNumber = r.idNumber
+                    AND (
+                        (u.day1Link IS NOT NULL) +
+                        (u.day2Link IS NOT NULL) +
+                        (u.day3Link IS NOT NULL) +
+                        (u.day4Link IS NOT NULL) +
+                        (u.day5Link IS NOT NULL) +
+                        (u.day6Link IS NOT NULL) +
+                        (u.day7Link IS NOT NULL) +
+                        (u.day8Link IS NOT NULL)
+                    )), 0
+                ) as uploadsCount,
+                MAX(sm.name) as mentorName,
+                MAX(sm.mentorId) as mentorId
             FROM registrations r
             LEFT JOIN uploads u ON r.idNumber = u.idNumber
+            LEFT JOIN studentMentors sm ON 
+                r.idNumber IN (
+                    sm.student1Id, sm.student2Id, sm.student3Id,
+                    sm.student4Id, sm.student5Id, sm.student6Id,
+                    sm.student7Id, sm.student8Id, sm.student9Id,
+                    sm.student10Id
+                )
             WHERE r.name LIKE ? 
             OR r.idNumber LIKE ? 
             OR r.selectedDomain LIKE ?
-            GROUP BY r.idNumber
+            GROUP BY 
+                r.idNumber, r.name, r.email, r.selectedDomain, 
+                r.branch, r.gender, r.year, r.phoneNumber,
+                r.residenceType, r.hostelType, r.busRoute,
+                r.country, r.state, r.district, r.pincode,
+                r.createdAt, r.updatedAt
             ORDER BY r.idNumber
             LIMIT ${parseInt(limit)} OFFSET ${parseInt(offset)}
         `;
@@ -52,7 +80,7 @@ export async function GET(request) {
         );
 
     } catch (err) {
-        console.error("Error fetching reports:", err);
+        console.error("Error fetching registrations:", err);
         return new Response(
             JSON.stringify({ success: false, error: err.message }),
             { status: 500, headers: { "Content-Type": "application/json" } }
@@ -69,15 +97,23 @@ export async function POST(request) {
         const { studentId } = await request.json();
 
         const query = `
-            SELECT *
+            SELECT 
+                idNumber,
+                day1Link,
+                day2Link,
+                day3Link,
+                day4Link,
+                day5Link,
+                day6Link,
+                day7Link,
+                day8Link
             FROM uploads
             WHERE idNumber = ?
-            ORDER BY dayNumber ASC
         `;
         const [uploads] = await db.execute(query, [studentId]);
 
         return new Response(
-            JSON.stringify(uploads),
+            JSON.stringify(uploads[0] || {}),
             { status: 200, headers: { "Content-Type": "application/json" } }
         );
 

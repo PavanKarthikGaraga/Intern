@@ -13,23 +13,21 @@ export async function POST(request) {
             );
         }
 
-        // Check if the student already submitted for the given day
-        const checkQuery = `SELECT idNumber FROM uploads WHERE idNumber = ? AND dayNumber = ?`;
-        const [existing] = await db.execute(checkQuery, [idNumber, day]);
+        // Check if the student already has an entry
+        const checkQuery = `SELECT idNumber FROM uploads WHERE idNumber = ?`;
+        const [existing] = await db.execute(checkQuery, [idNumber]);
 
-        if (existing.length > 0) {
-            return new Response(
-                JSON.stringify({ success: false, error: "Report already submitted for this day" }),
-                { status: 409, headers: { "Content-Type": "application/json" } }
-            );
+        const dayColumn = `day${day}Link`;
+
+        if (existing.length === 0) {
+            // Create new record
+            const insertQuery = `INSERT INTO uploads (idNumber, ${dayColumn}) VALUES (?, ?)`;
+            await db.execute(insertQuery, [idNumber, link]);
+        } else {
+            // Update existing record
+            const updateQuery = `UPDATE uploads SET ${dayColumn} = ? WHERE idNumber = ?`;
+            await db.execute(updateQuery, [link, idNumber]);
         }
-
-        // Insert submission record
-        const insertQuery = `
-            INSERT INTO uploads (idNumber, dayNumber, link, uploadStatus)
-            VALUES (?, ?, ?, 'success')
-        `;
-        await db.execute(insertQuery, [idNumber, day, link]);
 
         return new Response(
             JSON.stringify({ success: true, message: "Report submitted successfully" }),
@@ -65,12 +63,72 @@ export async function GET(request) {
         }
 
         const query = `
-            SELECT dayNumber, link, uploadStatus, createdAt 
+            SELECT 
+                idNumber,
+                CASE WHEN day1Link IS NOT NULL THEN 1 ELSE NULL END as dayNumber,
+                day1Link as link,
+                createdAt
             FROM uploads 
-            WHERE idNumber = ? 
+            WHERE idNumber = ? AND day1Link IS NOT NULL
+            UNION ALL
+            SELECT 
+                idNumber,
+                CASE WHEN day2Link IS NOT NULL THEN 2 ELSE NULL END,
+                day2Link,
+                createdAt
+            FROM uploads 
+            WHERE idNumber = ? AND day2Link IS NOT NULL
+            UNION ALL
+            SELECT 
+                idNumber,
+                CASE WHEN day3Link IS NOT NULL THEN 3 ELSE NULL END,
+                day3Link,
+                createdAt
+            FROM uploads 
+            WHERE idNumber = ? AND day3Link IS NOT NULL
+            UNION ALL
+            SELECT 
+                idNumber,
+                CASE WHEN day4Link IS NOT NULL THEN 4 ELSE NULL END,
+                day4Link,
+                createdAt
+            FROM uploads 
+            WHERE idNumber = ? AND day4Link IS NOT NULL
+            UNION ALL
+            SELECT 
+                idNumber,
+                CASE WHEN day5Link IS NOT NULL THEN 5 ELSE NULL END,
+                day5Link,
+                createdAt
+            FROM uploads 
+            WHERE idNumber = ? AND day5Link IS NOT NULL
+            UNION ALL
+            SELECT 
+                idNumber,
+                CASE WHEN day6Link IS NOT NULL THEN 6 ELSE NULL END,
+                day6Link,
+                createdAt
+            FROM uploads 
+            WHERE idNumber = ? AND day6Link IS NOT NULL
+            UNION ALL
+            SELECT 
+                idNumber,
+                CASE WHEN day7Link IS NOT NULL THEN 7 ELSE NULL END,
+                day7Link,
+                createdAt
+            FROM uploads 
+            WHERE idNumber = ? AND day7Link IS NOT NULL
+            UNION ALL
+            SELECT 
+                idNumber,
+                CASE WHEN day8Link IS NOT NULL THEN 8 ELSE NULL END,
+                day8Link,
+                createdAt
+            FROM uploads 
+            WHERE idNumber = ? AND day8Link IS NOT NULL
             ORDER BY dayNumber ASC
         `;
-        const [reports] = await db.execute(query, [idNumber]);
+        const [reports] = await db.execute(query, Array(8).fill(idNumber));
 
         return new Response(
             JSON.stringify({ 
