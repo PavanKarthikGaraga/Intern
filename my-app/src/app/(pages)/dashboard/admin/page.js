@@ -1,7 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import toast from 'react-hot-toast';
 import {
   BarChart,
   Bar,
@@ -14,14 +13,13 @@ import {
   Pie,
   Cell
 } from 'recharts';
+import toast from 'react-hot-toast';
 import './page.css';
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
+const COLORS = ['#2e7d32', '#66bb6a', '#81c784', '#a5d6a7', '#c8e6c9'];
 
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [stats, setStats] = useState({
     totalStudents: 0,
     completedStudents: 0,
@@ -29,12 +27,15 @@ export default function AdminDashboard() {
     facultyStats: {}
   });
   const [facultyList, setFacultyList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [activeSection, setActiveSection] = useState('analytics');
+  const [showAddFaculty, setShowAddFaculty] = useState(false);
   const [newFaculty, setNewFaculty] = useState({
     name: '',
     idNumber: '',
     password: ''
   });
-  const [showAddFaculty, setShowAddFaculty] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
@@ -117,15 +118,8 @@ export default function AdminDashboard() {
     value
   }));
 
-  return (
-    <div className="admin-dashboard">
-      <div className="dashboard-header">
-        <h1>Admin Dashboard</h1>
-        <button onClick={logout} className="logout-btn">
-          Logout
-        </button>
-      </div>
-
+  const renderAnalytics = () => (
+    <div className="analytics-section">
       <div className="stats-overview">
         <div className="stat-card">
           <h3>Total Students</h3>
@@ -151,7 +145,7 @@ export default function AdminDashboard() {
               cy={150}
               labelLine={false}
               outerRadius={80}
-              fill="#8884d8"
+              fill="#2e7d32"
               dataKey="value"
             >
               {domainData.map((entry, index) => (
@@ -166,109 +160,151 @@ export default function AdminDashboard() {
         <div className="chart-container">
           <h2>Students by Faculty</h2>
           <BarChart width={400} height={300} data={facultyData}>
-            <CartesianGrid strokeDasharray="3 3" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#c8e6c9" />
             <XAxis dataKey="name" />
             <YAxis />
             <Tooltip />
             <Legend />
-            <Bar dataKey="value" fill="#8884d8" />
+            <Bar dataKey="value" fill="#2e7d32" />
           </BarChart>
         </div>
       </div>
+    </div>
+  );
 
-      <div className="faculty-management">
-        <div className="section-header">
-          <h2>Faculty Management</h2>
-          <button 
-            className="add-faculty-btn"
-            onClick={() => setShowAddFaculty(true)}
-          >
-            Add New Faculty
+  const renderFacultyManagement = () => (
+    <div className="faculty-management">
+      <div className="section-header">
+        <h2>Faculty Management</h2>
+        <button 
+          className="add-faculty-btn"
+          onClick={() => setShowAddFaculty(true)}
+        >
+          Add New Faculty
+        </button>
+      </div>
+
+      {showAddFaculty && (
+        <div className="add-faculty-modal">
+          <form onSubmit={handleAddFaculty}>
+            <h3>Add New Faculty</h3>
+            <div className="form-group">
+              <label>Name:</label>
+              <input
+                type="text"
+                value={newFaculty.name}
+                onChange={(e) => setNewFaculty({...newFaculty, name: e.target.value})}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>ID Number:</label>
+              <input
+                type="text"
+                value={newFaculty.idNumber}
+                onChange={(e) => setNewFaculty({...newFaculty, idNumber: e.target.value})}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Password:</label>
+              <input
+                type="password"
+                value={newFaculty.password}
+                onChange={(e) => setNewFaculty({...newFaculty, password: e.target.value})}
+                required
+              />
+            </div>
+            <div className="form-actions">
+              <button type="submit" className="submit-btn">Add Faculty</button>
+              <button 
+                type="button" 
+                className="cancel-btn"
+                onClick={() => setShowAddFaculty(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      <div className="faculty-list">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>ID Number</th>
+              <th>Students Assigned</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {facultyList.map((faculty) => (
+              <tr key={faculty.idNumber}>
+                <td>{faculty.name}</td>
+                <td>{faculty.idNumber}</td>
+                <td>{stats.facultyStats[faculty.name] || 0}</td>
+                <td>
+                  <button className="action-btn edit">Edit</button>
+                  <button className="action-btn delete">Delete</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="admin-dashboard">
+      {/* Header */}
+      <header className="dashboard-header">
+        <div className="header-left">
+          <h1>Admin Dashboard</h1>
+        </div>
+        <div className="header-right">
+          <div className="user-info">
+            <span>{user?.name}</span>
+            <span className="user-id">ID: {user?.idNumber}</span>
+          </div>
+          <button onClick={logout} className="logout-btn">
+            Logout
           </button>
         </div>
+      </header>
 
-        {showAddFaculty && (
-          <div className="add-faculty-modal">
-            <form onSubmit={handleAddFaculty}>
-              <h3>Add New Faculty</h3>
-              <div className="form-group">
-                <label>Name:</label>
-                <input
-                  type="text"
-                  value={newFaculty.name}
-                  onChange={(e) => setNewFaculty({...newFaculty, name: e.target.value})}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>ID Number:</label>
-                <input
-                  type="text"
-                  value={newFaculty.idNumber}
-                  onChange={(e) => setNewFaculty({...newFaculty, idNumber: e.target.value})}
-                  required
-                />
-              </div>
-              {/* <div className="form-group">
-                <label>Email:</label>
-                <input
-                  type="email"
-                  value={newFaculty.email}
-                  onChange={(e) => setNewFaculty({...newFaculty, email: e.target.value})}
-                  required
-                />
-              </div> */}
-              <div className="form-group">
-                <label>Password:</label>
-                <input
-                  type="password"
-                  value={newFaculty.password}
-                  onChange={(e) => setNewFaculty({...newFaculty, password: e.target.value})}
-                  required
-                />
-              </div>
-              <div className="form-actions">
-                <button type="submit" className="submit-btn">Add Faculty</button>
-                <button 
-                  type="button" 
-                  className="cancel-btn"
-                  onClick={() => setShowAddFaculty(false)}
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
+      <div className="dashboard-content">
+        {/* Sidebar */}
+        <aside className="dashboard-sidebar">
+          <button
+            className={`sidebar-item ${activeSection === 'analytics' ? 'active' : ''}`}
+            onClick={() => setActiveSection('analytics')}
+          >
+            <span className="item-icon">📊</span>
+            <span>Analytics</span>
+          </button>
+          <button
+            className={`sidebar-item ${activeSection === 'faculty' ? 'active' : ''}`}
+            onClick={() => setActiveSection('faculty')}
+          >
+            <span className="item-icon">👥</span>
+            <span>Faculty Management</span>
+          </button>
+        </aside>
 
-        <div className="faculty-list">
-          <table>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>ID Number</th>
-                {/* <th>Email</th> */}
-                <th>Students Assigned</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {facultyList.map((faculty) => (
-                <tr key={faculty.idNumber}>
-                  <td>{faculty.name}</td>
-                  <td>{faculty.idNumber}</td>
-                  {/* <td>{faculty.email}</td> */}
-                  <td>{stats.facultyStats[faculty.name] || 0}</td>
-                  <td>
-                    <button className="action-btn edit">Edit</button>
-                    <button className="action-btn delete">Delete</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        {/* Main Content */}
+        <main className="dashboard-main">
+          {activeSection === 'analytics' ? renderAnalytics() : renderFacultyManagement()}
+        </main>
       </div>
+
+      {/* Footer */}
+      <footer className="dashboard-footer">
+        <p>© 2024 Smart Village Revolution. All Rights Reserved.</p>
+        <p>Designed and Developed by ZeroOne CodeClub</p>
+      </footer>
     </div>
   );
 }

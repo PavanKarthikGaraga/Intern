@@ -13,9 +13,10 @@ export default function StudentMentor() {
     const [uploads, setUploads] = useState([]);
     const [attendance, setAttendance] = useState({});
     const [studentAttendance, setStudentAttendance] = useState({});
+    const [activeSection, setActiveSection] = useState('overview');
     
 
-
+ 
     useEffect(() => {
         if (!user?.idNumber) {
             setLoading(false);
@@ -113,58 +114,6 @@ export default function StudentMentor() {
         }
     };
 
-    const renderAttendanceModal = () => {
-        if (!selectedStudent) return null;
-
-        return (
-            <div className="modal">
-                <div className="modal-content">
-                    <h2>Mark Attendance</h2>
-                    <div className="uploads-table">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Day</th>
-                                    <th>Upload</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {uploads.map((upload) => (
-                                    <tr key={upload.dayNumber}>
-                                        <td>Day {upload.dayNumber}</td>
-                                        <td>
-                                            <a href={upload.link} target="_blank" rel="noopener noreferrer">
-                                                View Upload
-                                            </a>
-                                        </td>
-                                        <td>
-                                            <button
-                                                onClick={() => markAttendance(selectedStudent, upload.dayNumber, 'P')}
-                                                className="mark-present-btn"
-                                            >
-                                                Mark Present
-                                            </button>
-                                            <button
-                                                onClick={() => markAttendance(selectedStudent, upload.dayNumber, 'A')}
-                                                className="mark-absent-btn"
-                                            >
-                                                Mark Absent
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                    <button className="close-modal-btn" onClick={() => setSelectedStudent(null)}>
-                        Close
-                    </button>
-                </div>
-            </div>
-        );
-    };
-
     if (!user) {
         return <div className="error">Please log in to view your dashboard</div>;
     }
@@ -179,77 +128,218 @@ export default function StudentMentor() {
 
     return (
         <div className="student-mentor-dashboard">
-            <div className="mentor-intro">
-                <div className="mentor-info">
-                    <div className="mentor-header">
-                        <div>
-                            <h1>Welcome, {user.name}</h1>
-                            <p>ID: {user.idNumber}</p>
+            <header className="dashboard-header">
+                <div className="header-left">
+                    <h1>Student Mentor Dashboard</h1>
+                </div>
+                <div className="header-right">
+                    <div className="user-info">
+                        <span>{user.name}</span>
+                        <span className="user-id">ID: {user.idNumber}</span>
+                    </div>
+                    <button onClick={logout} className="logout-btn">
+                        Logout
+                    </button>
+                </div>
+            </header>
+
+            <div className="dashboard-content">
+                <nav className="dashboard-sidebar">
+                    <button
+                        className={`sidebar-item ${activeSection === 'overview' ? 'active' : ''}`}
+                        onClick={() => setActiveSection('overview')}
+                    >
+                        <span className="item-label">Overview</span>
+                    </button>
+                    <button
+                        className={`sidebar-item ${activeSection === 'active-students' ? 'active' : ''}`}
+                        onClick={() => setActiveSection('active-students')}
+                    >
+                        <span className="item-label">Active Students</span>
+                    </button>
+                    <button
+                        className={`sidebar-item ${activeSection === 'completed-students' ? 'active' : ''}`}
+                        onClick={() => setActiveSection('completed-students')}
+                    >
+                        <span className="item-label">Completed Students</span>
+                    </button>
+                </nav>
+
+                <main className="dashboard-main">
+                    {activeSection === 'overview' && (
+                        <section className="overview-section">
+                            <h2>Overview</h2>
+                            <div className="stats-cards">
+                                <div className="stat-card">
+                                    <h3>Assigned Students</h3>
+                                    <p>{assignedStudents.length}</p>
+                                </div>
+                                <div className="stat-card">
+                                    <h3>Completed Students</h3>
+                                    <p>
+                                        {assignedStudents.filter(student => 
+                                            Object.values(studentAttendance[student.idNumber] || {})
+                                                .filter(status => status === 'P').length === 8
+                                        ).length}
+                                    </p>
+                                </div>
+                                <div className="stat-card">
+                                    <h3>Completion Rate</h3>
+                                    <p>
+                                        {Math.round((assignedStudents.filter(student => 
+                                            Object.values(studentAttendance[student.idNumber] || {})
+                                                .filter(status => status === 'P').length === 8
+                                        ).length / assignedStudents.length) * 100)}%
+                                    </p>
+                                </div>
+                            </div>
+                        </section>
+                    )}
+
+                    {activeSection === 'active-students' && (
+                        <section className="students-section">
+                            <h2>Active Students</h2>
+                            <div className="students-table">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>ID Number</th>
+                                            <th>Name</th>
+                                            <th>Domain</th>
+                                            <th>Branch</th>
+                                            <th>Year</th>
+                                            <th>Days Completed</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {assignedStudents
+                                            .filter(student => 
+                                                Object.values(studentAttendance[student.idNumber] || {})
+                                                    .filter(status => status === 'P').length < 8
+                                            )
+                                            .map((student) => (
+                                                <tr key={student.idNumber}>
+                                                    <td>{student.idNumber}</td>
+                                                    <td>{student.name}</td>
+                                                    <td>{student.selectedDomain}</td>
+                                                    <td>{student.branch}</td>
+                                                    <td>{student.year}</td>
+                                                    <td>
+                                                        {Object.values(studentAttendance[student.idNumber] || {})
+                                                            .filter(status => status === 'P').length}/8
+                                                    </td>
+                                                    <td>
+                                                        <button 
+                                                            onClick={() => fetchUploads(student.idNumber)}
+                                                            className="view-uploads-btn"
+                                                        >
+                                                            Mark Attendance
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+                    )}
+
+                    {activeSection === 'completed-students' && (
+                        <section className="completed-students-section">
+                            <h2>Completed Students</h2>
+                            <div className="students-table">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>ID Number</th>
+                                            <th>Name</th>
+                                            <th>Domain</th>
+                                            <th>Branch</th>
+                                            <th>Year</th>
+                                            <th>Completion Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {assignedStudents
+                                            .filter(student => 
+                                                Object.values(studentAttendance[student.idNumber] || {})
+                                                    .filter(status => status === 'P').length === 8
+                                            )
+                                            .map((student) => (
+                                                <tr key={student.idNumber}>
+                                                    <td>{student.idNumber}</td>
+                                                    <td>{student.name}</td>
+                                                    <td>{student.selectedDomain}</td>
+                                                    <td>{student.branch}</td>
+                                                    <td>{student.year}</td>
+                                                    <td>
+                                                        {new Date(student.completionDate || Date.now()).toLocaleDateString()}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+                    )}
+                </main>
+            </div>
+
+            <footer className="dashboard-footer">
+                <p>© 2024 Internship Management System</p>
+                <p>Developed by Karthik</p>
+            </footer>
+
+            {selectedStudent && (
+                <div className="modal">
+                    <div className="modal-content">
+                        <h2>Mark Attendance</h2>
+                        <div className="students-table">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Day</th>
+                                        <th>Upload</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {uploads.map((upload) => (
+                                        <tr key={upload.dayNumber}>
+                                            <td>Day {upload.dayNumber}</td>
+                                            <td>
+                                                <a href={upload.link} target="_blank" rel="noopener noreferrer">
+                                                    View Upload
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <div className="attendance-actions">
+                                                    <button
+                                                        onClick={() => markAttendance(selectedStudent, upload.dayNumber, 'P')}
+                                                        className="mark-present-btn"
+                                                    >
+                                                        Mark Present
+                                                    </button>
+                                                    <button
+                                                        onClick={() => markAttendance(selectedStudent, upload.dayNumber, 'A')}
+                                                        className="mark-absent-btn"
+                                                    >
+                                                        Mark Absent
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
-                        <button onClick={logout} className="logout-btn">
-                            Logout
+                        <button className="close-modal-btn" onClick={() => setSelectedStudent(null)}>
+                            Close
                         </button>
                     </div>
                 </div>
-                
-                <div className="stats-cards">
-                    <div className="stat-card">
-                        <h3>Assigned Students</h3>
-                        <p>{assignedStudents.length}</p>
-                    </div>
-                    <div className="stat-card">
-                        <h3>Completed Students</h3>
-                        <p>{assignedStudents.filter(student => 
-                            Object.values(studentAttendance[student.idNumber] || {})
-                                .filter(status => status === 'P').length === 8
-                        ).length}</p>
-                    </div>
-                </div>
-            </div>
-
-            <div className="students-section">
-                <h2>Your Assigned Students</h2>
-                <div className="students-table">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>ID Number</th>
-                                <th>Name</th>
-                                <th>Domain</th>
-                                <th>Branch</th>
-                                <th>Year</th>
-                                <th>Days Completed</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {assignedStudents.map((student) => (
-                                <tr key={student.idNumber}>
-                                    <td>{student.idNumber}</td>
-                                    <td>{student.name}</td>
-                                    <td>{student.selectedDomain}</td>
-                                    <td>{student.branch}</td>
-                                    <td>{student.year}</td>
-                                    <td>
-                                        {Object.values(studentAttendance[student.idNumber] || {})
-                                            .filter(status => status === 'P').length}/8
-                                    </td>
-                                    <td>
-                                        <button 
-                                            onClick={() => fetchUploads(student.idNumber)}
-                                            className="view-uploads-btn"
-                                        >
-                                            Mark Attendance
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            {renderAttendanceModal()}
+            )}
         </div>
     );
 }

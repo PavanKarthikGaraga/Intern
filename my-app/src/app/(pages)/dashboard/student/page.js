@@ -13,6 +13,7 @@ export default function StudentDashboard() {
   const [activeAccordion, setActiveAccordion] = useState(null);
   const [submittedLinks, setSubmittedLinks] = useState({});
   const [attendance, setAttendance] = useState({});
+  const [activeSection, setActiveSection] = useState('overview');
 
   useEffect(() => {
     if (!user?.idNumber) {
@@ -112,7 +113,6 @@ export default function StudentDashboard() {
     return <div className="error">{error}</div>;
   }
 
-  // Update completedDays calculation to use attendance
   const completedDays = Object.values(attendance).filter(status => status === 'P').length;
 
   const canSubmitDay = (dayIndex) => {
@@ -155,7 +155,6 @@ export default function StudentDashboard() {
         const newSubmissions = [...submissions];
         newSubmissions[index] = true;
         
-        // Update the submitted links
         const newSubmittedLinks = { ...submittedLinks };
         newSubmittedLinks[index] = link;
         
@@ -178,7 +177,6 @@ export default function StudentDashboard() {
     }
   };
 
-  // Helper function to get attendance status text and className
   const getAttendanceStatus = (dayNumber) => {
     const day = `day${dayNumber}`;
     const status = attendance[day];
@@ -201,7 +199,6 @@ export default function StudentDashboard() {
     };
   };
 
-  // Add handleResubmit function
   const handleResubmit = (index) => {
     setActiveAccordion(index);
     const newSubmissions = [...submissions];
@@ -212,143 +209,271 @@ export default function StudentDashboard() {
   };
 
   return (
-    <div className="dashboard-container">
-      <div className="welcome-section">
-        <div className="welcome-header">
-          <h1>Welcome, {student.name}</h1>
+    <div className="student-dashboard">
+      <header className="dashboard-header">
+        <div className="header-left">
+          <h1>Student Dashboard</h1>
+        </div>
+        <div className="header-right">
+          <div className="user-info">
+            <span>{student.name}</span>
+            <span className="user-id">{student.idNumber}</span>
+          </div>
           <button onClick={logout} className="logout-btn">
             Logout
           </button>
         </div>
-        <div className="student-info">
-          <div className="info-grid">
-            <div className="info-item">
-              <span className="info-label">ID Number:</span>
-              <span className="info-value">{student.idNumber}</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">Branch:</span>
-              <span className="info-value">{student.branch}</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">Year:</span>
-              <span className="info-value">{student.year}</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">Domain:</span>
-              <span className="info-value">{student.selectedDomain}</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">Phone:</span>
-              <span className="info-value">{student.phoneNumber}</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">Residence:</span>
-              <span className="info-value">{student.residenceType}</span>
-            </div>
-            {student.residenceType === 'Hostel' && (
-              <div className="info-item">
-                <span className="info-label">Hostel:</span>
-                <span className="info-value">{student.hostelType}</span>
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="progress-bar">
-          <div
-            className="progress-fill"
-            style={{ width: `${(completedDays / 8) * 100}%` }}
-          ></div>
-          <span className="progress-text">{completedDays}/8 days Completed</span>
-        </div>
-      </div>
+      </header>
 
-      <div className="submissions-section">
-        <h2>Daily Reports</h2>
-        <div className="submissions-layout">
-          <div className="days-list">
-            {Array(8).fill(null).map((_, index) => (
-              <div
-                key={index}
-                className={`day-item ${activeAccordion === index ? 'active' : ''} ${
-                  canSubmitDay(index) ? 'submittable' : 'locked'
-                }`}
-                onClick={() => toggleAccordion(index)}
-              >
-                <span>Day {index + 1}</span>
-                {submissions[index] ? (
-                  attendance[`day${index + 1}`] === 'P' ? (
-                    <span className="submission-status">✓</span>
-                  ) : attendance[`day${index + 1}`] === 'A' ? (
-                    <span className="submission-status">❌</span>
+      <div className="dashboard-content">
+        <nav className="dashboard-sidebar">
+          <button
+            className={`sidebar-item ${activeSection === 'overview' ? 'active' : ''}`}
+            onClick={() => setActiveSection('overview')}
+          >
+            <span className="item-label">Overview</span>
+          </button>
+          <button
+            className={`sidebar-item ${activeSection === 'submissions' ? 'active' : ''}`}
+            onClick={() => setActiveSection('submissions')}
+          >
+            <span className="item-label">Daily Reports</span>
+          </button>
+          <button
+            className={`sidebar-item ${activeSection === 'progress' ? 'active' : ''}`}
+            onClick={() => setActiveSection('progress')}
+          >
+            <span className="item-label">Progress Tracking</span>
+          </button>
+        </nav>
+
+        <main className="dashboard-main">
+          {activeSection === 'overview' && (
+            <section className="welcome-section">
+              <div className="welcome-header">
+                <h1>Welcome, {student.name}!</h1>
+              </div>
+              <div className="student-info">
+                <div className="info-grid">
+                  <div className="info-item">
+                    <span className="info-label">ID Number</span>
+                    <span className="info-value">{student.idNumber}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Branch</span>
+                    <span className="info-value">{student.branch}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Year</span>
+                    <span className="info-value">{student.year}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Domain</span>
+                    <span className="info-value">{student.selectedDomain}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Phone</span>
+                    <span className="info-value">{student.phoneNumber}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Residence</span>
+                    <span className="info-value">{student.residenceType}</span>
+                  </div>
+                  {student.residenceType === 'Hostel' && (
+                    <div className="info-item">
+                      <span className="info-label">Hostel</span>
+                      <span className="info-value">{student.hostelType}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="progress-bar">
+                <div
+                  className="progress-fill"
+                  style={{ width: `${(completedDays / 8) * 100}%` }}
+                ></div>
+                <span className="progress-text">{completedDays}/8 days Completed</span>
+              </div>
+            </section>
+          )}
+
+          {activeSection === 'submissions' && (
+            <section className="submissions-section">
+              <h2>Daily Reports</h2>
+              <div className="submissions-layout">
+                <div className="days-list">
+                  {Array(8).fill(null).map((_, index) => (
+                    <div
+                      key={index}
+                      className={`day-item ${activeAccordion === index ? 'active' : ''} ${
+                        canSubmitDay(index) ? 'submittable' : 'locked'
+                      }`}
+                      onClick={() => toggleAccordion(index)}
+                    >
+                      <span>Day {index + 1}</span>
+                      {submissions[index] ? (
+                        attendance[`day${index + 1}`] === 'P' ? (
+                          <span className="submission-status">✓</span>
+                        ) : attendance[`day${index + 1}`] === 'A' ? (
+                          <span className="submission-status">❌</span>
+                        ) : (
+                          <span className="submission-status">⏳</span>
+                        )
+                      ) : !canSubmitDay(index) ? (
+                        <span className="lock-icon">🔒</span>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="submission-form-container">
+                  {activeAccordion !== null ? (
+                    <div className="submission-content">
+                      <h3>Day {activeAccordion + 1} Submission</h3>
+                      {submissions[activeAccordion] ? (
+                        <div className="submitted-message">
+                          <p>Report submitted successfully</p>
+                          <div className="submitted-link">
+                            <p>Submitted Link: <a href={submittedLinks[activeAccordion]} target="_blank" rel="noopener noreferrer">{submittedLinks[activeAccordion]}</a></p>
+                            <div className={`attendance-status ${getAttendanceStatus(activeAccordion + 1).className}`}>
+                              <p>{getAttendanceStatus(activeAccordion + 1).text}</p>
+                              {attendance[`day${activeAccordion + 1}`] === 'A' && (
+                                <button 
+                                  onClick={() => handleResubmit(activeAccordion)}
+                                  className="resubmit-btn"
+                                >
+                                  Resubmit Report
+                                </button>
+                              )}
+                            </div>
+                            <p className="edit-notice">Note: To edit your submission, please contact your student mentor.</p>
+                          </div>
+                        </div>
+                      ) : !canSubmitDay(activeAccordion) ? (
+                        <div className="locked-message">
+                          Please submit the previous day's report first
+                        </div>
+                      ) : (
+                        <form onSubmit={(e) => handleSubmit(activeAccordion, e)}>
+                          <div className="upload-container">
+                            <label htmlFor={`link-${activeAccordion}`}>
+                              Submit your report for Day {activeAccordion + 1}
+                            </label>
+                            <input
+                              id={`link-${activeAccordion}`}
+                              name="link"
+                              type="url"
+                              placeholder="Enter your document link"
+                              className="link-input"
+                              required
+                            />
+                            <button type="submit" className="submit-btn">
+                              Submit Report
+                            </button>
+                          </div>
+                        </form>
+                      )}
+                    </div>
                   ) : (
-                    <span className="submission-status">⏳</span>
-                  )
-                ) : !canSubmitDay(index) ? (
-                  <span className="lock-icon">🔒</span>
-                ) : null}
+                    <div className="placeholder-content">
+                      <div className="placeholder-icon">📝</div>
+                      <h3>Select a Day</h3>
+                      <p>Submit your reports in order, starting from Day 1</p>
+                    </div>
+                  )}
+                </div>
               </div>
-            ))}
-          </div>
+            </section>
+          )}
 
-          <div className="submission-form-container">
-            {activeAccordion !== null ? (
-              <div className="submission-content">
-                <h3>Day {activeAccordion + 1} Submission</h3>
-                {submissions[activeAccordion] ? (
-                  <div className="submitted-message">
-                    <p>Report submitted successfully</p>
-                    <div className="submitted-link">
-                      <p>Submitted Link: <a href={submittedLinks[activeAccordion]} target="_blank" rel="noopener noreferrer">{submittedLinks[activeAccordion]}</a></p>
-                      <div className={`attendance-status ${getAttendanceStatus(activeAccordion + 1).className}`}>
-                        <p>{getAttendanceStatus(activeAccordion + 1).text}</p>
-                        {attendance[`day${activeAccordion + 1}`] === 'A' && (
-                          <button 
-                            onClick={() => handleResubmit(activeAccordion)}
-                            className="resubmit-btn"
-                          >
-                            Resubmit Report
-                          </button>
-                        )}
-                      </div>
-                      <p className="edit-notice">Note: To edit your submission, please contact your student mentor.</p>
-                    </div>
+          {activeSection === 'progress' && (
+            <section className="progress-section">
+              <h2>Progress Tracking</h2>
+              <div className="progress-stats">
+                <div className="stat-card">
+                  <h3>Overall Progress</h3>
+                  <p>{Math.round((completedDays / 8) * 100)}%</p>
+                  <div className="progress-bar">
+                    <div 
+                      className="progress-fill"
+                      style={{ width: `${(completedDays / 8) * 100}%` }}
+                    ></div>
                   </div>
-                ) : !canSubmitDay(activeAccordion) ? (
-                  <div className="locked-message">
-                    Please submit the previous day's report first
+                </div>
+                <div className="stat-card">
+                  <h3>Completed Days</h3>
+                  <p>{completedDays}/8</p>
+                  <div className="progress-bar">
+                    <div 
+                      className="progress-fill"
+                      style={{ width: `${(completedDays / 8) * 100}%` }}
+                    ></div>
                   </div>
-                ) : (
-                  <form onSubmit={(e) => handleSubmit(activeAccordion, e)}>
-                    <div className="upload-container">
-                      <label htmlFor={`link-${activeAccordion}`}>
-                        Submit your report for Day {activeAccordion + 1}
-                      </label>
-                      <input
-                        id={`link-${activeAccordion}`}
-                        name="link"
-                        type="url"
-                        placeholder="Enter your document link"
-                        className="link-input"
-                        required
-                      />
-                      <button type="submit" className="submit-btn">
-                        Submit Report
-                      </button>
-                    </div>
-                  </form>
-                )}
+                </div>
+                <div className="stat-card">
+                  <h3>Attendance Rate</h3>
+                  <p>{Math.round((Object.values(attendance).filter(status => status === 'P').length / 8) * 100)}%</p>
+                  <div className="progress-bar">
+                    <div 
+                      className="progress-fill"
+                      style={{ width: `${(Object.values(attendance).filter(status => status === 'P').length / 8) * 100}%` }}
+                    ></div>
+                  </div>
+                </div>
               </div>
-            ) : (
-              <div className="placeholder-content">
-                <div className="placeholder-icon">📝</div>
-                <h3>Select a Day</h3>
-                <p>Submit your reports in order, starting from Day 1</p>
+              <div className="submissions-history">
+                <h3>Recent Submissions</h3>
+                <div className="submissions-table">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Day</th>
+                        <th>Status</th>
+                        <th>Attendance</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Array(8).fill(null).map((_, index) => (
+                        <tr key={index}>
+                          <td>Day {index + 1}</td>
+                          <td>
+                            <span className={`status ${submissions[index] ? 'submitted' : 'pending'}`}>
+                              {submissions[index] ? 'Submitted' : 'Pending'}
+                            </span>
+                          </td>
+                          <td>
+                            <span className={`status ${attendance[`day${index + 1}`]?.toLowerCase() || 'pending'}`}>
+                              {attendance[`day${index + 1}`] || 'Pending'}
+                            </span>
+                          </td>
+                          <td>
+                            {submissions[index] && (
+                              <a 
+                                href={submittedLinks[index]}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="view-submission-btn"
+                              >
+                                View
+                              </a>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            )}
-          </div>
-        </div>
+            </section>
+          )}
+        </main>
       </div>
+
+      <footer className="dashboard-footer">
+        <p>© 2024 Internship Management System</p>
+        <p>Developed by Karthik</p>
+      </footer>
     </div>
   );
 }

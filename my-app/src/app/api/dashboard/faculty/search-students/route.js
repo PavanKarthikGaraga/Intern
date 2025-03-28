@@ -5,6 +5,8 @@ export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
         const query = searchParams.get('query') || '';
+        const studentId = searchParams.get('studentId') || '';
+        const domain = searchParams.get('domain') || '';
         
         db = await getDBConnection();
         
@@ -20,11 +22,13 @@ export async function GET(request) {
             WHERE (r.name LIKE ? OR r.idNumber LIKE ?)
             AND (u.role = 'student' OR u.role IS NULL)
             AND r.idNumber NOT IN (SELECT mentorId FROM studentMentors)
+            AND r.idNumber != ?
+            AND r.selectedDomain = ?
             LIMIT 10
         `;
         
         const searchPattern = `%${query}%`;
-        const [students] = await db.execute(searchQuery, [searchPattern, searchPattern]);
+        const [students] = await db.execute(searchQuery, [searchPattern, searchPattern, studentId, domain]);
 
         return new Response(
             JSON.stringify({
