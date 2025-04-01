@@ -30,7 +30,7 @@ export default function StudentMentor() {
                 setError(null);
                 
                 // Fetch assigned students
-                const response = await fetch(`/api/dashboard/student-mentor/assigned-students?mentorId=${user.idNumber}`);
+                const response = await fetch(`/api/dashboard/studentMentor/assigned-students?mentorId=${user.idNumber}`);
                 if (!response.ok) throw new Error('Failed to fetch assigned students');
                 const data = await response.json();
                 if (data.success) {
@@ -38,7 +38,7 @@ export default function StudentMentor() {
                     
                     // Fetch attendance for each student
                     const attendancePromises = data.students.map(async (student) => {
-                        const attendanceResponse = await fetch(`/api/dashboard/student-mentor/attendance?studentId=${student.idNumber}`);
+                        const attendanceResponse = await fetch(`/api/dashboard/studentMentor/attendance?studentId=${student.idNumber}`);
                         if (attendanceResponse.ok) {
                             const attendanceData = await attendanceResponse.json();
                             if (attendanceData.success) {
@@ -69,7 +69,7 @@ export default function StudentMentor() {
 
     const fetchUploads = async (studentId) => {
         try {
-            const response = await fetch('/api/dashboard/student-mentor/uploads', {
+            const response = await fetch('/api/dashboard/studentMentor/uploads', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ studentId })
@@ -89,7 +89,7 @@ export default function StudentMentor() {
 
     const markAttendance = async (studentId, dayNumber, status) => {
         try {
-            const response = await fetch('/api/dashboard/student-mentor/attendance', {
+            const response = await fetch('/api/dashboard/studentMentor/attendance', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ studentId, dayNumber, status })

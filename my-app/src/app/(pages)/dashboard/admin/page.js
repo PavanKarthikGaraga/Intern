@@ -24,13 +24,19 @@ export default function AdminDashboard() {
     totalStudents: 0,
     completedStudents: 0,
     domainStats: {},
-    facultyStats: {}
+    branchStats: {}
   });
   const [facultyList, setFacultyList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeSection, setActiveSection] = useState('analytics');
   const [showAddFaculty, setShowAddFaculty] = useState(false);
+  const [studentsList, setStudentsList] = useState([]);
+  const [mentorsList, setMentorsList] = useState([]);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [selectedMentor, setSelectedMentor] = useState(null);
+  const [showStudentModal, setShowStudentModal] = useState(false);
+  const [showMentorModal, setShowMentorModal] = useState(false);
   const [newFaculty, setNewFaculty] = useState({
     name: '',
     idNumber: '',
@@ -44,23 +50,33 @@ export default function AdminDashboard() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const [statsResponse, facultyResponse] = await Promise.all([
+      const [statsResponse, facultyResponse, studentsResponse, mentorsResponse] = await Promise.all([
         fetch('/api/dashboard/admin/stats'),
-        fetch('/api/dashboard/admin/faculty')
+        fetch('/api/dashboard/admin/faculty'),
+        fetch('/api/dashboard/admin/students'),
+        fetch('/api/dashboard/admin/mentors')
       ]);
 
-      if (!statsResponse.ok || !facultyResponse.ok) {
+      if (!statsResponse.ok || !facultyResponse.ok || !studentsResponse.ok || !mentorsResponse.ok) {
         throw new Error('Failed to fetch dashboard data');
       }
 
       const statsData = await statsResponse.json();
       const facultyData = await facultyResponse.json();
+      const studentsData = await studentsResponse.json();
+      const mentorsData = await mentorsResponse.json();
 
       if (statsData.success) {
         setStats(statsData.data);
       }
       if (facultyData.success) {
         setFacultyList(facultyData.faculty);
+      }
+      if (studentsData.success) {
+        setStudentsList(studentsData.students);
+      }
+      if (mentorsData.success) {
+        setMentorsList(mentorsData.mentors);
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -96,6 +112,24 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleViewStudent = (student) => {
+    setSelectedStudent(student);
+    setShowStudentModal(true);
+  };
+
+  const handleEditStudent = (studentId) => {
+    window.location.href = `/dashboard/admin/students/${studentId}/edit`;
+  };
+
+  const handleViewMentor = (mentor) => {
+    setSelectedMentor(mentor);
+    setShowMentorModal(true);
+  };
+
+  const handleEditMentor = (mentorId) => {
+    window.location.href = `/dashboard/admin/mentors/${mentorId}/edit`;
+  };
+
   if (!user || user.role !== 'admin') {
     return <div className="error">Access denied. Admin privileges required.</div>;
   }
@@ -108,12 +142,12 @@ export default function AdminDashboard() {
     return <div className="error">{error}</div>;
   }
 
-  const domainData = Object.entries(stats.domainStats).map(([name, value]) => ({
+  const domainData = Object.entries(stats.domainStats || {}).map(([name, value]) => ({
     name,
     value
   }));
 
-  const facultyData = Object.entries(stats.facultyStats).map(([name, value]) => ({
+  const branchData = Object.entries(stats.branchStats || {}).map(([name, value]) => ({
     name,
     value
   }));
@@ -158,8 +192,8 @@ export default function AdminDashboard() {
         </div>
 
         <div className="chart-container">
-          <h2>Students by Faculty</h2>
-          <BarChart width={400} height={300} data={facultyData}>
+          <h2>Students by Branch</h2>
+          <BarChart width={400} height={300} data={branchData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#c8e6c9" />
             <XAxis dataKey="name" />
             <YAxis />
@@ -244,10 +278,244 @@ export default function AdminDashboard() {
               <tr key={faculty.idNumber}>
                 <td>{faculty.name}</td>
                 <td>{faculty.idNumber}</td>
-                <td>{stats.facultyStats[faculty.name] || 0}</td>
+                <td>{stats.branchStats[faculty.name] || 0}</td>
                 <td>
                   <button className="action-btn edit">Edit</button>
                   <button className="action-btn delete">Delete</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  const renderStudentModal = () => {
+    if (!selectedStudent) return null;
+
+    return (
+      <div className="modal-overlay" onClick={() => setShowStudentModal(false)}>
+        <div className="modal-content" onClick={e => e.stopPropagation()}>
+          <div className="modal-header">
+            <h2>Student Details</h2>
+            <button className="close-btn" onClick={() => setShowStudentModal(false)}>×</button>
+          </div>
+          <div className="modal-body">
+            <div className="info-section">
+              <h3>Basic Information</h3>
+              <div className="info-grid">
+                <div className="info-item">
+                  <label>Name</label>
+                  <span>{selectedStudent.name}</span>
+                </div>
+                <div className="info-item">
+                  <label>Roll Number</label>
+                  <span>{selectedStudent.idNumber}</span>
+                </div>
+                <div className="info-item">
+                  <label>Branch</label>
+                  <span>{selectedStudent.branch}</span>
+                </div>
+                <div className="info-item">
+                  <label>Year</label>
+                  <span>{selectedStudent.year}</span>
+                </div>
+                <div className="info-item">
+                  <label>Email</label>
+                  <span>{selectedStudent.email}</span>
+                </div>
+                <div className="info-item">
+                  <label>Phone</label>
+                  <span>{selectedStudent.phone}</span>
+                </div>
+                <div className="info-item">
+                  <label>Domain</label>
+                  <span>{selectedStudent.domain}</span>
+                </div>
+                <div className="info-item">
+                  <label>Status</label>
+                  <span className={`status-badge ${selectedStudent.status.toLowerCase()}`}>
+                    {selectedStudent.status}
+                  </span>
+                </div>
+                <div className="info-item">
+                  <label>Mentor</label>
+                  <span>{selectedStudent.mentorName || 'Not Assigned'}</span>
+                </div>
+              </div>
+            </div>
+            <div className="info-section">
+              <h3>Daily Reports</h3>
+              <div className="reports-grid">
+                {Array.from({ length: 8 }, (_, index) => (
+                  <div key={index} className="report-item">
+                    <label>Day {index + 1}</label>
+                    {selectedStudent.reports?.[index] ? (
+                      <a 
+                        href={selectedStudent.reports[index]} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="report-link"
+                      >
+                        View Report
+                      </a>
+                    ) : (
+                      <span className="report-not-submitted">Not Submitted</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderMentorModal = () => {
+    if (!selectedMentor) return null;
+
+    return (
+      <div className="modal-overlay" onClick={() => setShowMentorModal(false)}>
+        <div className="modal-content" onClick={e => e.stopPropagation()}>
+          <div className="modal-header">
+            <h2>Mentor Details</h2>
+            <button className="close-btn" onClick={() => setShowMentorModal(false)}>×</button>
+          </div>
+          <div className="modal-body">
+            <div className="info-section">
+              <h3>Basic Information</h3>
+              <div className="info-grid">
+                <div className="info-item">
+                  <label>Name</label>
+                  <span>{selectedMentor.name}</span>
+                </div>
+                <div className="info-item">
+                  <label>ID</label>
+                  <span>{selectedMentor.mentorId}</span>
+                </div>
+                <div className="info-item">
+                  <label>Domain</label>
+                  <span>{selectedMentor.domain}</span>
+                </div>
+                <div className="info-item">
+                  <label>Students Assigned</label>
+                  <span>{selectedMentor.studentsAssigned}</span>
+                </div>
+              </div>
+            </div>
+            <div className="info-section">
+              <h3>Assigned Students</h3>
+              <div className="students-list">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Roll Number</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedMentor.assignedStudents?.map((student) => (
+                      <tr key={student.idNumber}>
+                        <td>{student.name}</td>
+                        <td>{student.idNumber}</td>
+                        <td>
+                          <span className={`status-badge ${student.status.toLowerCase()}`}>
+                            {student.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                    {!selectedMentor.assignedStudents?.length && (
+                      <tr>
+                        <td colSpan="3" className="no-students">No students assigned</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderStudentsList = () => (
+    <div className="students-section">
+      <div className="section-header">
+        <h2>Students List</h2>
+      </div>
+      <div className="students-list">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Roll Number</th>
+              <th>Department</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {studentsList.map((student) => (
+              <tr key={student.idNumber}>
+                <td>{student.name}</td>
+                <td>{student.idNumber}</td>
+                <td>{student.branch}</td>
+                <td>
+                  <span className={`status-badge ${student.status.toLowerCase()}`}>
+                    {student.status}
+                  </span>
+                </td>
+                <td>
+                  <button 
+                    className="action-btn view"
+                    onClick={() => handleViewStudent(student)}
+                  >
+                    View
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  const renderMentorsList = () => (
+    <div className="mentors-section">
+      <div className="section-header">
+        <h2>Mentors List</h2>
+      </div>
+      <div className="mentors-list">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Company</th>
+              <th>Domain</th>
+              <th>Students Assigned</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {mentorsList.map((mentor) => (
+              <tr key={mentor.mentorId}>
+                <td>{mentor.name}</td>
+                <td>{mentor.domain}</td>
+                <td>{mentor.domain}</td>
+                <td>{mentor.studentsAssigned}</td>
+                <td>
+                  <button 
+                    className="action-btn view"
+                    onClick={() => handleViewMentor(mentor)}
+                  >
+                    View
+                  </button>
                 </td>
               </tr>
             ))}
@@ -282,21 +550,35 @@ export default function AdminDashboard() {
             className={`sidebar-item ${activeSection === 'analytics' ? 'active' : ''}`}
             onClick={() => setActiveSection('analytics')}
           >
-            <span className="item-icon">📊</span>
+            {/* <span className="item-icon">📊</span> */}
             <span>Analytics</span>
           </button>
           <button
             className={`sidebar-item ${activeSection === 'faculty' ? 'active' : ''}`}
             onClick={() => setActiveSection('faculty')}
           >
-            <span className="item-icon">👥</span>
+            {/* <span className="item-icon"></span> */}
             <span>Faculty Management</span>
+          </button>
+          <button
+            className={`sidebar-item ${activeSection === 'students' ? 'active' : ''}`}
+            onClick={() => setActiveSection('students')}
+          >
+            {/* <span className="item-icon">👨</span> */}
+            <span>Students</span>
+          </button>
+          <button
+            className={`sidebar-item ${activeSection === 'mentors' ? 'active' : ''}`}
+            onClick={() => setActiveSection('mentors')}
+          >
+            {/* <span className="item-icon"></span> */}
+            <span>Mentors</span>
           </button>
         </aside>
 
         {/* Main Content */}
         <main className="dashboard-main">
-          {activeSection === 'analytics' ? renderAnalytics() : renderFacultyManagement()}
+          {activeSection === 'analytics' ? renderAnalytics() : activeSection === 'faculty' ? renderFacultyManagement() : activeSection === 'students' ? renderStudentsList() : renderMentorsList()}
         </main>
       </div>
 
@@ -305,6 +587,10 @@ export default function AdminDashboard() {
         <p>© 2024 Smart Village Revolution. All Rights Reserved.</p>
         <p>Designed and Developed by ZeroOne CodeClub</p>
       </footer>
+
+      {/* Modals */}
+      {showStudentModal && renderStudentModal()}
+      {showMentorModal && renderMentorModal()}
     </div>
   );
 }

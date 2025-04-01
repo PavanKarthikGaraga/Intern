@@ -184,7 +184,7 @@ export default function Faculty() {
     };
 
     const renderAttendanceModal = () => (
-        <div className="modal-content">
+        <>
             <h2>Student Attendance - {selectedStudent}</h2>
             <table className="attendance-table">
                 <thead>
@@ -237,10 +237,12 @@ export default function Faculty() {
                     })}
                 </tbody>
             </table>
-            <button className="close-modal-btn" onClick={() => setSelectedStudent(null)}>
-                Close
-            </button>
-        </div>
+            <div className="modal-footer">
+                <button className="close-modal-btn" onClick={() => setSelectedStudent(null)}>
+                    Close
+                </button>
+            </div>
+        </>
     );
 
     const handleSearch = (e) => {
@@ -387,13 +389,17 @@ export default function Faculty() {
                                         onClick={() => {
                                             setSelectedStudentForMentor(reg);
                                             setShowMentorModal(true);
+                                            setSelectedStudent(null);
                                         }}
                                         className="assign-mentor-btn"
                                     >
                                         Assign Mentor
                                     </button>
                                     <button 
-                                        onClick={() => fetchUploads(reg.idNumber)}
+                                        onClick={() => {
+                                            fetchUploads(reg.idNumber);
+                                            setShowMentorModal(false);
+                                        }}
                                         className="view-uploads-btn"
                                     >
                                         Mark Attendance
@@ -423,6 +429,7 @@ export default function Faculty() {
                         </div>
                     ))}
                 </div>
+
                 <div className="domain-filter">
                     <select 
                         value={selectedDomain} 
@@ -434,12 +441,63 @@ export default function Faculty() {
                         ))}
                     </select>
                 </div>
+
+                <div className="registrations-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID Number</th>
+                                <th>Name</th>
+                                <th>Domain</th>
+                                <th>Branch</th>
+                                <th>Year</th>
+                                <th>Days Completed</th>
+                                <th>Student Mentor</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {(activeSection === 'domains' ? filteredRegistrations : registrations).map((reg) => (
+                                <tr key={reg.idNumber}>
+                                    <td>{reg.idNumber}</td>
+                                    <td>{reg.name}</td>
+                                    <td>{reg.selectedDomain}</td>
+                                    <td>{reg.branch}</td>
+                                    <td>{reg.year}</td>
+                                    <td>{reg.uploadsCount || 0}/8</td>
+                                    <td>{reg.mentorName || 'Not Assigned'}</td>
+                                    <td>
+                                        <button 
+                                            onClick={() => {
+                                                setSelectedStudentForMentor(reg);
+                                                setShowMentorModal(true);
+                                                setSelectedStudent(null);
+                                            }}
+                                            className="assign-mentor-btn"
+                                        >
+                                            Assign Mentor
+                                        </button>
+                                        <button 
+                                            onClick={() => {
+                                                fetchUploads(reg.idNumber);
+                                                setShowMentorModal(false);
+                                            }}
+                                            className="view-uploads-btn"
+                                        >
+                                            Mark Attendance
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         );
     };
 
     const renderMentorModal = () => (
-        <div className="modal-content">
+        <>
             <h3>Assign Student Mentor</h3>
             <p>Select a mentor for {selectedStudentForMentor?.name} (Domain: {selectedStudentForMentor?.selectedDomain})</p>
 
@@ -505,13 +563,15 @@ export default function Faculty() {
                 </div>
             </div>
 
-            <button
-                onClick={() => setShowMentorModal(false)}
-                className="close-modal-btn"
-            >
-                Close
-            </button>
-        </div>
+            <div className="modal-footer">
+                <button
+                    onClick={() => setShowMentorModal(false)}
+                    className="close-modal-btn"
+                >
+                    Close
+                </button>
+            </div>
+        </>
     );
 
     const fetchMentorOverview = async () => {
@@ -646,15 +706,18 @@ export default function Faculty() {
             </footer>
 
             {/* Modals */}
-            {selectedStudent && (
-                <div className="uploads-modal">
-                    {renderAttendanceModal()}
-                </div>
-            )}
-
-            {showMentorModal && (
-                <div className="mentor-modal">
-                    {renderMentorModal()}
+            {(selectedStudent || showMentorModal) && (
+                <div className="modal-overlay">
+                    {selectedStudent && (
+                        <div className="modal-content">
+                            {renderAttendanceModal()}
+                        </div>
+                    )}
+                    {showMentorModal && (
+                        <div className="modal-content">
+                            {renderMentorModal()}
+                        </div>
+                    )}
                 </div>
             )}
         </div>

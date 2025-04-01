@@ -39,14 +39,19 @@ export async function GET() {
                 SELECT 
                     r.idNumber,
                     r.name,
-                    (
-                        SELECT COUNT(*)
-                        FROM attendance a
-                        WHERE a.idNumber = r.idNumber
-                        AND (
-                            a.day1 = 'P' OR a.day2 = 'P' OR a.day3 = 'P' OR a.day4 = 'P' OR
-                            a.day5 = 'P' OR a.day6 = 'P' OR a.day7 = 'P' OR a.day8 = 'P'
-                        )
+                    COALESCE(
+                        (SELECT 
+                            (CASE WHEN day1Link IS NOT NULL THEN 1 ELSE 0 END) +
+                            (CASE WHEN day2Link IS NOT NULL THEN 1 ELSE 0 END) +
+                            (CASE WHEN day3Link IS NOT NULL THEN 1 ELSE 0 END) +
+                            (CASE WHEN day4Link IS NOT NULL THEN 1 ELSE 0 END) +
+                            (CASE WHEN day5Link IS NOT NULL THEN 1 ELSE 0 END) +
+                            (CASE WHEN day6Link IS NOT NULL THEN 1 ELSE 0 END) +
+                            (CASE WHEN day7Link IS NOT NULL THEN 1 ELSE 0 END) +
+                            (CASE WHEN day8Link IS NOT NULL THEN 1 ELSE 0 END)
+                        FROM uploads 
+                        WHERE uploads.idNumber = r.idNumber
+                        ), 0
                     ) as daysCompleted
                 FROM registrations r
                 WHERE r.idNumber IN (${studentIds.map(() => '?').join(',')})
