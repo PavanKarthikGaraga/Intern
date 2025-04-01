@@ -294,45 +294,49 @@ export default function StudentMentor() {
             {selectedStudent && (
                 <div className="modal">
                     <div className="modal-content">
-                        <h2>Mark Attendance</h2>
+                        <h2>Student Uploads</h2>
                         <div className="students-table">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Day</th>
-                                        <th>Upload</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {uploads.map((upload) => (
-                                        <tr key={upload.dayNumber}>
-                                            <td>Day {upload.dayNumber}</td>
-                                            <td>
-                                                <a href={upload.link} target="_blank" rel="noopener noreferrer">
-                                                    View Upload
-                                                </a>
-                                            </td>
-                                            <td>
-                                                <div className="attendance-actions">
-                                                    <button
-                                                        onClick={() => markAttendance(selectedStudent, upload.dayNumber, 'P')}
-                                                        className="mark-present-btn"
-                                                    >
-                                                        Mark Present
-                                                    </button>
-                                                    <button
-                                                        onClick={() => markAttendance(selectedStudent, upload.dayNumber, 'A')}
-                                                        className="mark-absent-btn"
-                                                    >
-                                                        Mark Absent
-                                                    </button>
-                                                </div>
-                                            </td>
+                            {uploads.length === 0 ? (
+                                <p className="no-uploads">No uploads found for this student.</p>
+                            ) : (
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Day</th>
+                                            <th>Upload</th>
+                                            <th>Actions</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        {uploads.map((upload) => (
+                                            <tr key={upload.dayNumber}>
+                                                <td>Day {upload.dayNumber}</td>
+                                                <td>
+                                                    <a href={upload.link} target="_blank" rel="noopener noreferrer">
+                                                        View Upload
+                                                    </a>
+                                                </td>
+                                                <td>
+                                                    <div className="attendance-actions">
+                                                        <button
+                                                            onClick={() => markAttendance(selectedStudent, upload.dayNumber, 'P')}
+                                                            className="mark-present-btn"
+                                                        >
+                                                            Mark Present
+                                                        </button>
+                                                        <button
+                                                            onClick={() => markAttendance(selectedStudent, upload.dayNumber, 'A')}
+                                                            className="mark-absent-btn"
+                                                        >
+                                                            Mark Absent
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
                         </div>
                         <button className="close-modal-btn" onClick={() => setSelectedStudent(null)}>
                             Close

@@ -1,36 +1,147 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+I'll help analyze the codebase to create a comprehensive description that would help an AI model understand the project. Let me gather information about the key components.
 
-## Getting Started
+First, let me look at the main structure and key files.
 
-First, run the development server:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+Ran tool
+Let me check the package.json to understand the project dependencies and structure.
+
+
+Read file: package.json
+Let me check the main application structure in the src directory.
+
+
+Ran tool
+Let me check the app directory structure to understand the main application components.
+
+
+
+Ran tool
+Let me check the pages directory to understand the main application routes.
+
+
+Ran tool
+Let me check the API routes to understand the backend functionality.
+
+
+
+Ran tool
+Let me check the dashboard API routes to understand the core functionality.
+
+
+
+Ran tool
+Let me check the admin dashboard API to understand the admin functionality.
+
+
+
+Ran tool
+Let me check the admin dashboard page to understand the frontend implementation.
+
+
+Read file: src/app/(pages)/dashboard/admin/page.js
+Based on my analysis of the codebase, I can provide a comprehensive description that would help an AI model understand the project:
+
+# Project Overview: Internship Management System
+
+This is a full-stack web application built using Next.js for managing student internships, with a focus on faculty-student-mentor interactions. The system implements a role-based access control system with three main user types: Admin, Faculty, and Students.
+
+## Technical Stack
+- **Frontend**: Next.js 15.2.3 with React 19
+- **Backend**: Next.js API Routes
+- **Database**: MySQL (using mysql2)
+- **Authentication**: JWT-based authentication (jsonwebtoken)
+- **UI Components**: Custom components with Recharts for data visualization
+- **State Management**: React Context API
+- **HTTP Client**: Axios
+- **Security**: bcryptjs for password hashing
+
+## Core Features
+
+### 1. Authentication System
+- JWT-based authentication with role-based access control
+- Secure password hashing using bcryptjs
+- Protected routes using middleware
+- Login/logout functionality for all user types
+
+### 2. Admin Dashboard
+- Comprehensive analytics dashboard with:
+  - Total students and completion statistics
+  - Domain-wise student distribution (pie chart)
+  - Branch-wise student distribution (bar chart)
+- Faculty management system
+  - Add new faculty members
+  - View faculty list
+- Student management
+  - View student details in modal
+  - Track student progress
+- Mentor management
+  - View mentor details in modal
+  - Track mentor assignments
+
+### 3. Faculty Dashboard
+- Student progress monitoring
+- Report management
+- Upload management for student documents
+- Faculty-specific analytics
+
+### 4. Student Dashboard
+- Internship progress tracking
+- Report submission
+- Document uploads
+- Mentor interaction
+
+### 5. Data Management
+- Structured database schema for:
+  - Users (admin, faculty, students, mentors)
+  - Internships
+  - Reports
+  - Uploads
+  - Statistics
+
+## Key Components
+
+### API Structure
+```
+/api
+├── auth/         # Authentication endpoints
+├── dashboard/    # Dashboard-specific endpoints
+│   ├── admin/    # Admin operations
+│   ├── faculty/  # Faculty operations
+│   └── student/  # Student operations
+└── register/     # Registration endpoints
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Frontend Structure
+```
+src/
+├── app/          # Next.js app directory
+│   ├── (pages)/  # Application pages
+│   │   ├── dashboard/  # Dashboard pages
+│   │   ├── auth/      # Authentication pages
+│   │   └── internship/ # Internship pages
+│   └── api/      # API routes
+├── context/      # React context providers
+└── lib/          # Utility functions
+```
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## Security Features
+- JWT-based authentication
+- Password hashing
+- Role-based access control
+- Protected API routes
+- Secure file uploads
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Data Visualization
+- Interactive charts using Recharts
+- Real-time statistics updates
+- Responsive design for all screen sizes
 
-## Learn More
+## State Management
+- Centralized authentication state
+- Dashboard-specific state management
+- Modal state management for details view
 
-To learn more about Next.js, take a look at the following resources:
+This system is designed to streamline the internship management process by providing a centralized platform for all stakeholders (admin, faculty, students, and mentors) to interact and manage the internship workflow efficiently.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The codebase follows modern React practices with Next.js, implementing server-side rendering where appropriate and client-side interactivity where needed. The architecture is modular and scalable, with clear separation of concerns between frontend and backend components.
