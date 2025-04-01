@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import {
   BarChart,
   Bar,
@@ -15,6 +16,7 @@ import {
 } from 'recharts';
 import toast from 'react-hot-toast';
 import './page.css';
+import Loader from '@/app/components/loader/loader';
 
 const COLORS = ['#2e7d32', '#66bb6a', '#81c784', '#a5d6a7', '#c8e6c9'];
 
@@ -41,6 +43,19 @@ export default function AdminDashboard() {
     name: '',
     idNumber: '',
     password: ''
+  });
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [passwordError, setPasswordError] = useState('');
+  const [isPasswordLoading, setIsPasswordLoading] = useState(false);
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    new: false,
+    confirm: false
   });
 
   useEffect(() => {
@@ -130,12 +145,66 @@ export default function AdminDashboard() {
     window.location.href = `/dashboard/admin/mentors/${mentorId}/edit`;
   };
 
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    setPasswordError('');
+    setIsPasswordLoading(true);
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordError('New passwords do not match');
+      setIsPasswordLoading(false);
+      return;
+    }
+
+    if (passwordForm.newPassword.length < 6) {
+      setPasswordError('New password must be at least 6 characters long');
+      setIsPasswordLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentPassword: passwordForm.currentPassword,
+          newPassword: passwordForm.newPassword
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success('Password changed successfully');
+        setShowChangePassword(false);
+        setPasswordForm({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        });
+      } else {
+        throw new Error(data.error || 'Failed to change password');
+      }
+    } catch (error) {
+      toast.error(error.message || 'Failed to change password');
+    } finally {
+      setIsPasswordLoading(false);
+    }
+  };
+
+  const togglePasswordVisibility = (field) => {
+    setShowPasswords(prev => ({
+      ...prev,
+      [field]: !prev[field]
+    }));
+  };
+
   if (!user || user.role !== 'admin') {
     return <div className="error">Access denied. Admin privileges required.</div>;
   }
 
   if (loading) {
-    return <div className="loading">Loading dashboard...</div>;
+    return <Loader />;
   }
 
   if (error) {
@@ -525,6 +594,97 @@ export default function AdminDashboard() {
     </div>
   );
 
+  const renderChangePassword = () => (
+    <div className="change-password-section">
+      <div className="section-header">
+        <h2>Change Password</h2>
+      </div>
+      <div className="change-password-form">
+        <form onSubmit={handlePasswordChange}>
+          {passwordError && (
+            <div className="error-message">{passwordError}</div>
+          )}
+          
+          <div className="form-group">
+            <label htmlFor="currentPassword">Current Password</label>
+            <input
+              type={showPasswords.current ? "text" : "password"}
+              id="currentPassword"
+              value={passwordForm.currentPassword}
+              onChange={(e) => setPasswordForm({
+                ...passwordForm,
+                currentPassword: e.target.value
+              })}
+              required
+            />
+            <button
+              type="button"
+              className="password-toggle"
+              onClick={() => togglePasswordVisibility('current')}
+              aria-label={showPasswords.current ? "Hide password" : "Show password"}
+            >
+              {showPasswords.current ? <FaEyeSlash /> : <FaEye />}
+            </button>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="newPassword">New Password</label>
+            <input
+              type={showPasswords.new ? "text" : "password"}
+              id="newPassword"
+              value={passwordForm.newPassword}
+              onChange={(e) => setPasswordForm({
+                ...passwordForm,
+                newPassword: e.target.value
+              })}
+              required
+            />
+            <button
+              type="button"
+              className="password-toggle"
+              onClick={() => togglePasswordVisibility('new')}
+              aria-label={showPasswords.new ? "Hide password" : "Show password"}
+            >
+              {showPasswords.new ? <FaEyeSlash /> : <FaEye />}
+            </button>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="confirmPassword">Confirm New Password</label>
+            <input
+              type={showPasswords.confirm ? "text" : "password"}
+              id="confirmPassword"
+              value={passwordForm.confirmPassword}
+              onChange={(e) => setPasswordForm({
+                ...passwordForm,
+                confirmPassword: e.target.value
+              })}
+              required
+            />
+            <button
+              type="button"
+              className="password-toggle"
+              onClick={() => togglePasswordVisibility('confirm')}
+              aria-label={showPasswords.confirm ? "Hide password" : "Show password"}
+            >
+              {showPasswords.confirm ? <FaEyeSlash /> : <FaEye />}
+            </button>
+          </div>
+
+          <div className="button-group">
+            <button 
+              type="submit" 
+              className="submit-btn"
+              disabled={isPasswordLoading}
+            >
+              {isPasswordLoading ? 'Changing...' : 'Change Password'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+
   return (
     <div className="admin-dashboard">
       {/* Header */}
@@ -550,35 +710,41 @@ export default function AdminDashboard() {
             className={`sidebar-item ${activeSection === 'analytics' ? 'active' : ''}`}
             onClick={() => setActiveSection('analytics')}
           >
-            {/* <span className="item-icon">📊</span> */}
             <span>Analytics</span>
           </button>
           <button
             className={`sidebar-item ${activeSection === 'faculty' ? 'active' : ''}`}
             onClick={() => setActiveSection('faculty')}
           >
-            {/* <span className="item-icon"></span> */}
             <span>Faculty Management</span>
           </button>
           <button
             className={`sidebar-item ${activeSection === 'students' ? 'active' : ''}`}
             onClick={() => setActiveSection('students')}
           >
-            {/* <span className="item-icon">👨</span> */}
             <span>Students</span>
           </button>
           <button
             className={`sidebar-item ${activeSection === 'mentors' ? 'active' : ''}`}
             onClick={() => setActiveSection('mentors')}
           >
-            {/* <span className="item-icon"></span> */}
             <span>Mentors</span>
+          </button>
+          <button
+            className={`sidebar-item ${activeSection === 'change-password' ? 'active' : ''}`}
+            onClick={() => setActiveSection('change-password')}
+          >
+            <span>Change Password</span>
           </button>
         </aside>
 
         {/* Main Content */}
         <main className="dashboard-main">
-          {activeSection === 'analytics' ? renderAnalytics() : activeSection === 'faculty' ? renderFacultyManagement() : activeSection === 'students' ? renderStudentsList() : renderMentorsList()}
+          {activeSection === 'analytics' ? renderAnalytics() : 
+           activeSection === 'faculty' ? renderFacultyManagement() : 
+           activeSection === 'students' ? renderStudentsList() : 
+           activeSection === 'mentors' ? renderMentorsList() :
+           renderChangePassword()}
         </main>
       </div>
 

@@ -1,8 +1,10 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import './page.css';
+import Loader from '@/app/components/loader/loader';
 
 export default function StudentDashboard() {
   const { user, logout } = useAuth();
@@ -14,6 +16,18 @@ export default function StudentDashboard() {
   const [submittedLinks, setSubmittedLinks] = useState({});
   const [attendance, setAttendance] = useState({});
   const [activeSection, setActiveSection] = useState('overview');
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [passwordError, setPasswordError] = useState('');
+  const [isPasswordLoading, setIsPasswordLoading] = useState(false);
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    new: false,
+    confirm: false
+  });
 
   useEffect(() => {
     if (!user?.idNumber) {
@@ -102,11 +116,11 @@ export default function StudentDashboard() {
   console.log('user:', user);
 
   if (!user) {
-    return <div className="error">Please log in to view your dashboard</div>;
+    return <Loader />;
   }
 
   if (loading) {
-    return <div className="loading">Loading your dashboard...</div>;
+    return <Loader />;
   }
 
   if (error) {
@@ -208,6 +222,150 @@ export default function StudentDashboard() {
     setSubmittedLinks({...submittedLinks});
   };
 
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    setPasswordError('');
+    setIsPasswordLoading(true);
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordError('New passwords do not match');
+      setIsPasswordLoading(false);
+      return;
+    }
+
+    if (passwordForm.newPassword.length < 6) {
+      setPasswordError('New password must be at least 6 characters long');
+      setIsPasswordLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentPassword: passwordForm.currentPassword,
+          newPassword: passwordForm.newPassword
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success('Password changed successfully');
+        setPasswordForm({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        });
+      } else {
+        throw new Error(data.error || 'Failed to change password');
+      }
+    } catch (error) {
+      toast.error(error.message || 'Failed to change password');
+    } finally {
+      setIsPasswordLoading(false);
+    }
+  };
+
+  const togglePasswordVisibility = (field) => {
+    setShowPasswords(prev => ({
+      ...prev,
+      [field]: !prev[field]
+    }));
+  };
+
+  const renderChangePassword = () => (
+    <div className="change-password-section">
+      <div className="section-header">
+        <h2>Change Password</h2>
+      </div>
+      <div className="change-password-form">
+        <form onSubmit={handlePasswordChange}>
+          {passwordError && (
+            <div className="error-message">{passwordError}</div>
+          )}
+          
+          <div className="form-group">
+            <label htmlFor="currentPassword">Current Password</label>
+            <input
+              type={showPasswords.current ? "text" : "password"}
+              id="currentPassword"
+              value={passwordForm.currentPassword}
+              onChange={(e) => setPasswordForm({
+                ...passwordForm,
+                currentPassword: e.target.value
+              })}
+              required
+            />
+            <button
+              type="button"
+              className="password-toggle"
+              onClick={() => togglePasswordVisibility('current')}
+              aria-label={showPasswords.current ? "Hide password" : "Show password"}
+            >
+              {showPasswords.current ? <FaEyeSlash /> : <FaEye />}
+            </button>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="newPassword">New Password</label>
+            <input
+              type={showPasswords.new ? "text" : "password"}
+              id="newPassword"
+              value={passwordForm.newPassword}
+              onChange={(e) => setPasswordForm({
+                ...passwordForm,
+                newPassword: e.target.value
+              })}
+              required
+            />
+            <button
+              type="button"
+              className="password-toggle"
+              onClick={() => togglePasswordVisibility('new')}
+              aria-label={showPasswords.new ? "Hide password" : "Show password"}
+            >
+              {showPasswords.new ? <FaEyeSlash /> : <FaEye />}
+            </button>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="confirmPassword">Confirm New Password</label>
+            <input
+              type={showPasswords.confirm ? "text" : "password"}
+              id="confirmPassword"
+              value={passwordForm.confirmPassword}
+              onChange={(e) => setPasswordForm({
+                ...passwordForm,
+                confirmPassword: e.target.value
+              })}
+              required
+            />
+            <button
+              type="button"
+              className="password-toggle"
+              onClick={() => togglePasswordVisibility('confirm')}
+              aria-label={showPasswords.confirm ? "Hide password" : "Show password"}
+            >
+              {showPasswords.confirm ? <FaEyeSlash /> : <FaEye />}
+            </button>
+          </div>
+
+          <div className="button-group">
+            <button 
+              type="submit" 
+              className="submit-btn"
+              disabled={isPasswordLoading}
+            >
+              {isPasswordLoading ? 'Changing...' : 'Change Password'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+
   return (
     <div className="student-dashboard">
       <header className="dashboard-header">
@@ -240,10 +398,10 @@ export default function StudentDashboard() {
             <span className="item-label">Daily Reports</span>
           </button>
           <button
-            className={`sidebar-item ${activeSection === 'progress' ? 'active' : ''}`}
-            onClick={() => setActiveSection('progress')}
+            className={`sidebar-item ${activeSection === 'change-password' ? 'active' : ''}`}
+            onClick={() => setActiveSection('change-password')}
           >
-            <span className="item-label">Progress Tracking</span>
+            <span className="item-label">Change Password</span>
           </button>
         </nav>
 
@@ -386,86 +544,8 @@ export default function StudentDashboard() {
             </section>
           )}
 
-          {activeSection === 'progress' && (
-            <section className="progress-section">
-              <h2>Progress Tracking</h2>
-              <div className="progress-stats">
-                <div className="stat-card">
-                  <h3>Overall Progress</h3>
-                  <p>{Math.round((completedDays / 8) * 100)}%</p>
-                  <div className="progress-bar">
-                    <div 
-                      className="progress-fill"
-                      style={{ width: `${(completedDays / 8) * 100}%` }}
-                    ></div>
-                  </div>
-                </div>
-                <div className="stat-card">
-                  <h3>Completed Days</h3>
-                  <p>{completedDays}/8</p>
-                  <div className="progress-bar">
-                    <div 
-                      className="progress-fill"
-                      style={{ width: `${(completedDays / 8) * 100}%` }}
-                    ></div>
-                  </div>
-                </div>
-                <div className="stat-card">
-                  <h3>Attendance Rate</h3>
-                  <p>{Math.round((Object.values(attendance).filter(status => status === 'P').length / 8) * 100)}%</p>
-                  <div className="progress-bar">
-                    <div 
-                      className="progress-fill"
-                      style={{ width: `${(Object.values(attendance).filter(status => status === 'P').length / 8) * 100}%` }}
-                    ></div>
-                  </div>
-                </div>
-              </div>
-              <div className="submissions-history">
-                <h3>Recent Submissions</h3>
-                <div className="submissions-table">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Day</th>
-                        <th>Status</th>
-                        <th>Attendance</th>
-                        <th>Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {Array(8).fill(null).map((_, index) => (
-                        <tr key={index}>
-                          <td>Day {index + 1}</td>
-                          <td>
-                            <span className={`status ${submissions[index] ? 'submitted' : 'pending'}`}>
-                              {submissions[index] ? 'Submitted' : 'Pending'}
-                            </span>
-                          </td>
-                          <td>
-                            <span className={`status ${attendance[`day${index + 1}`]?.toLowerCase() || 'pending'}`}>
-                              {attendance[`day${index + 1}`] || 'Pending'}
-                            </span>
-                          </td>
-                          <td>
-                            {submissions[index] && (
-                              <a 
-                                href={submittedLinks[index]}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="view-submission-btn"
-                              >
-                                View
-                              </a>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </section>
+          {activeSection === 'change-password' && (
+            renderChangePassword()
           )}
         </main>
       </div>

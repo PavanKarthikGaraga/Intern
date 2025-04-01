@@ -1,4 +1,4 @@
-import { verifyRefreshToken, generateAuthTokens } from "../../../../lib/jwt";
+import { verifyRefreshToken, generateAccessToken } from "../../../../lib/jwt";
 import { cookies } from 'next/headers';
 
 export async function GET(request) {
@@ -21,9 +21,10 @@ export async function GET(request) {
             }, { status: 401 });
         }
 
-        const { accessToken } = generateAuthTokens({ 
+        const accessToken = generateAccessToken({ 
             idNumber: decoded.idNumber,
-            role: decoded.role
+            role: decoded.role,
+            name: decoded.name
         });
             
         cookieStore.set('accessToken', accessToken, {
@@ -31,14 +32,14 @@ export async function GET(request) {
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
             path: '/',
-            maxAge: 15
+            maxAge: 300 // 5 minutes
         });
 
         return Response.json({
             success: true,
             user: {
                 idNumber: decoded.idNumber,
-                name:decoded.name,
+                name: decoded.name,
                 role: decoded.role
             }
         }, { status: 200 });

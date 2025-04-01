@@ -1,8 +1,10 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useAuth } from '@/context/AuthContext';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import "./page.css";
+import Loader from '@/app/components/loader/loader';
 
 export default function StudentMentor() {
     const { user, logout } = useAuth();
@@ -14,6 +16,18 @@ export default function StudentMentor() {
     const [attendance, setAttendance] = useState({});
     const [studentAttendance, setStudentAttendance] = useState({});
     const [activeSection, setActiveSection] = useState('overview');
+    const [passwordForm, setPasswordForm] = useState({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+    });
+    const [passwordError, setPasswordError] = useState('');
+    const [isPasswordLoading, setIsPasswordLoading] = useState(false);
+    const [showPasswords, setShowPasswords] = useState({
+        current: false,
+        new: false,
+        confirm: false
+    });
     
 
  
@@ -114,12 +128,156 @@ export default function StudentMentor() {
         }
     };
 
+    const handlePasswordChange = async (e) => {
+        e.preventDefault();
+        setPasswordError('');
+        setIsPasswordLoading(true);
+
+        if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+            setPasswordError('New passwords do not match');
+            setIsPasswordLoading(false);
+            return;
+        }
+
+        if (passwordForm.newPassword.length < 6) {
+            setPasswordError('New password must be at least 6 characters long');
+            setIsPasswordLoading(false);
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/auth/change-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    currentPassword: passwordForm.currentPassword,
+                    newPassword: passwordForm.newPassword
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                toast.success('Password changed successfully');
+                setPasswordForm({
+                    currentPassword: '',
+                    newPassword: '',
+                    confirmPassword: ''
+                });
+            } else {
+                throw new Error(data.error || 'Failed to change password');
+            }
+        } catch (error) {
+            toast.error(error.message || 'Failed to change password');
+        } finally {
+            setIsPasswordLoading(false);
+        }
+    };
+
+    const togglePasswordVisibility = (field) => {
+        setShowPasswords(prev => ({
+            ...prev,
+            [field]: !prev[field]
+        }));
+    };
+
+    const renderChangePassword = () => (
+        <div className="change-password-section">
+            <div className="section-header">
+                <h2>Change Password</h2>
+            </div>
+            <div className="change-password-form">
+                <form onSubmit={handlePasswordChange}>
+                    {passwordError && (
+                        <div className="error-message">{passwordError}</div>
+                    )}
+                    
+                    <div className="form-group">
+                        <label htmlFor="currentPassword">Current Password</label>
+                        <input
+                            type={showPasswords.current ? "text" : "password"}
+                            id="currentPassword"
+                            value={passwordForm.currentPassword}
+                            onChange={(e) => setPasswordForm({
+                                ...passwordForm,
+                                currentPassword: e.target.value
+                            })}
+                            required
+                        />
+                        <button
+                            type="button"
+                            className="password-toggle"
+                            onClick={() => togglePasswordVisibility('current')}
+                            aria-label={showPasswords.current ? "Hide password" : "Show password"}
+                        >
+                            {showPasswords.current ? <FaEyeSlash /> : <FaEye />}
+                        </button>
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="newPassword">New Password</label>
+                        <input
+                            type={showPasswords.new ? "text" : "password"}
+                            id="newPassword"
+                            value={passwordForm.newPassword}
+                            onChange={(e) => setPasswordForm({
+                                ...passwordForm,
+                                newPassword: e.target.value
+                            })}
+                            required
+                        />
+                        <button
+                            type="button"
+                            className="password-toggle"
+                            onClick={() => togglePasswordVisibility('new')}
+                            aria-label={showPasswords.new ? "Hide password" : "Show password"}
+                        >
+                            {showPasswords.new ? <FaEyeSlash /> : <FaEye />}
+                        </button>
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="confirmPassword">Confirm New Password</label>
+                        <input
+                            type={showPasswords.confirm ? "text" : "password"}
+                            id="confirmPassword"
+                            value={passwordForm.confirmPassword}
+                            onChange={(e) => setPasswordForm({
+                                ...passwordForm,
+                                confirmPassword: e.target.value
+                            })}
+                            required
+                        />
+                        <button
+                            type="button"
+                            className="password-toggle"
+                            onClick={() => togglePasswordVisibility('confirm')}
+                            aria-label={showPasswords.confirm ? "Hide password" : "Show password"}
+                        >
+                            {showPasswords.confirm ? <FaEyeSlash /> : <FaEye />}
+                        </button>
+                    </div>
+
+                    <div className="button-group">
+                        <button 
+                            type="submit" 
+                            className="submit-btn"
+                            disabled={isPasswordLoading}
+                        >
+                            {isPasswordLoading ? 'Changing...' : 'Change Password'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+
     if (!user) {
-        return <div className="error">Please log in to view your dashboard</div>;
+        return <Loader />;
     }
 
     if (loading) {
-        return <div className="loading">Loading your dashboard...</div>;
+        return <Loader />;
     }
 
     if (error) {
@@ -162,6 +320,12 @@ export default function StudentMentor() {
                         onClick={() => setActiveSection('completed-students')}
                     >
                         <span className="item-label">Completed Students</span>
+                    </button>
+                    <button
+                        className={`sidebar-item ${activeSection === 'change-password' ? 'active' : ''}`}
+                        onClick={() => setActiveSection('change-password')}
+                    >
+                        <span className="item-label">Change Password</span>
                     </button>
                 </nav>
 
@@ -283,6 +447,8 @@ export default function StudentMentor() {
                             </div>
                         </section>
                     )}
+
+                    {activeSection === 'change-password' && renderChangePassword()}
                 </main>
             </div>
 

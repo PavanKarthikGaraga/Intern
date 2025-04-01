@@ -13,25 +13,68 @@ export function AuthProvider({children}) {
 
     const checkAuth = async () => {
         try {
-            const response = await fetch("/api/auth/refresh", {
+            // First check if user is valid
+            const checkResponse = await fetch("/api/auth/check", {
                 method: "GET",
                 credentials: 'include',
                 headers: { "Content-Type": "application/json" },
             });
             
-            const data = await response.json();
+            const checkData = await checkResponse.json();
             
-            if (!response.ok || !data.success) {
-                throw new Error(data.error || 'Auth check failed');
+            if (!checkResponse.ok || checkData.error === "Token expired") {
+                // If token expired, try to refresh
+                const refreshResponse = await fetch("/api/auth/refresh", {
+                    method: "GET",
+                    credentials: 'include',
+                    headers: { "Content-Type": "application/json" },
+                });
+                
+                const refreshData = await refreshResponse.json();
+                
+                if (!refreshResponse.ok || !refreshData.success) {
+                    throw new Error(refreshData.error || 'Auth refresh failed');
+                }
+
+                setUser(refreshData.user);
+                setIsAuthenticated(true);
+                return true;
             }
 
-            setUser(data.user);
+            if (!checkData.user) {
+                throw new Error('Auth check failed');
+            }
+
+            setUser(checkData.user);
             setIsAuthenticated(true);
             return true;
         } catch (error) {
             console.log('Auth check failed:', error);
             setUser(null);
             setIsAuthenticated(false);
+            return false;
+        }
+    };
+
+    const changePassword = async (currentPassword, newPassword) => {
+        try {
+            const response = await fetch("/api/auth/change-password", {
+                method: "POST",
+                credentials: 'include',
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ currentPassword, newPassword }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to change password');
+            }
+
+            toast.success('Password changed successfully');
+            return true;
+        } catch (error) {
+            toast.error(error.message || 'Failed to change password');
             return false;
         }
     };
@@ -77,7 +120,7 @@ export function AuthProvider({children}) {
         };
 
         if (isAuthenticated) {
-            // Refresh every 10 seconds (before the 15-second token expiry)
+            // Check auth every 4.5 minutes (access token is 5 minutes)
             intervalId = setInterval(refreshToken, 270000);
         }
 
@@ -85,7 +128,6 @@ export function AuthProvider({children}) {
             if (intervalId) clearInterval(intervalId);
         };
     }, [isAuthenticated, router]);
-
 
     return (
         <AuthContext.Provider value={{ 
@@ -95,13 +137,18 @@ export function AuthProvider({children}) {
             setUser,
             setIsAuthenticated,
             checkAuth,
-            logout  // Add logout to context
+            logout,
+            changePassword
         }}>
             {children}
-        </AuthContext.Provider> 
+        </AuthContext.Provider>
     );
 }
 
 export function useAuth() {
-    return useContext(AuthContext);
+    const context = useContext(AuthContext);
+    if (!context) {
+        throw new Error('useAuth must be used within an AuthProvider');
+    }
+    return context;
 }

@@ -3,8 +3,8 @@ import { cookies } from "next/headers";
 
 export async function GET() {
     try {
-        const cookieStore = cookies();
-        const accessToken = cookieStore.get("accessToken");
+        const cookieStore =await cookies();
+        const accessToken =await cookieStore.get("accessToken");
 
         if (!accessToken?.value) {
             return Response.json({ error: "Unauthorized" }, { status: 401 });
@@ -13,23 +13,24 @@ export async function GET() {
         try {
             const decoded = verifyAccessToken(accessToken.value);
             if (!decoded) {
-                // ✅ Properly delete cookies
+                // Only delete access token if invalid
                 cookieStore.set("accessToken", "", { maxAge: 0 });
-                cookieStore.set("refreshToken", "", { maxAge: 0 });
-
                 return Response.json({ error: "Invalid token" }, { status: 401 });
             }
 
             return Response.json(
                 {
                     user: {
-                        username: decoded.username,
+                        idNumber: decoded.idNumber,
+                        name: decoded.name,
+                        role: decoded.role
                     },
                 },
                 { status: 200 }
             );
         } catch (tokenError) {
             if (tokenError.name === "TokenExpiredError") {
+                // Only delete access token on expiration
                 cookieStore.set("accessToken", "", { maxAge: 0 });
 
                 return Response.json(
@@ -42,8 +43,8 @@ export async function GET() {
             }
 
             if (tokenError.name === "JsonWebTokenError") {
+                // Only delete access token if invalid
                 cookieStore.set("accessToken", "", { maxAge: 0 });
-                cookieStore.set("refreshToken", "", { maxAge: 0 });
 
                 return Response.json(
                     {
