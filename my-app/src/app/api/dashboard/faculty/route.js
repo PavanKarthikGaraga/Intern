@@ -50,9 +50,17 @@ export async function GET(request) {
                     sm.student7Id, sm.student8Id, sm.student9Id,
                     sm.student10Id
                 )
-            WHERE r.name LIKE ? 
+            WHERE (r.name LIKE ? 
             OR r.idNumber LIKE ? 
-            OR r.selectedDomain LIKE ?
+            OR r.selectedDomain LIKE ?)
+            AND (
+                sm.mentorId IS NOT NULL OR 
+                NOT EXISTS (
+                    SELECT 1 FROM users u 
+                    WHERE u.idNumber = r.idNumber 
+                    AND u.role = 'studentMentor'
+                )
+            )
             GROUP BY 
                 r.idNumber, r.name, r.email, r.selectedDomain, 
                 r.branch, r.gender, r.year, r.phoneNumber,

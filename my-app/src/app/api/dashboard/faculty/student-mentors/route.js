@@ -12,12 +12,18 @@ export async function GET(request) {
                 sm.domain,
                 COUNT(DISTINCT r.idNumber) as assignedStudents
             FROM studentMentors sm
+            JOIN users u ON sm.mentorId = u.idNumber AND u.role = 'studentMentor'
             LEFT JOIN registrations r ON 
                 r.idNumber IN (
                     sm.student1Id, sm.student2Id, sm.student3Id,
                     sm.student4Id, sm.student5Id, sm.student6Id,
                     sm.student7Id, sm.student8Id, sm.student9Id,
                     sm.student10Id
+                )
+                AND NOT EXISTS (
+                    SELECT 1 FROM users u2 
+                    WHERE u2.idNumber = r.idNumber 
+                    AND u2.role = 'studentMentor'
                 )
             GROUP BY sm.mentorId, sm.name, sm.domain
             ORDER BY sm.name

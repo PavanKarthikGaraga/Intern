@@ -16,6 +16,7 @@ export async function GET() {
                 sm.student6Id, sm.student7Id, sm.student8Id, sm.student9Id, sm.student10Id
             FROM studentMentors sm
             JOIN users u ON sm.mentorId = u.idNumber
+            WHERE u.role = 'studentMentor'
         `);
         
         // Process each mentor to get their students' details
@@ -61,6 +62,11 @@ export async function GET() {
                     ) as daysCompleted
                 FROM registrations r
                 WHERE r.idNumber IN (${studentIds.map(() => '?').join(',')})
+                AND NOT EXISTS (
+                    SELECT 1 FROM users u 
+                    WHERE u.idNumber = r.idNumber 
+                    AND u.role = 'studentMentor'
+                )
             `, studentIds);
 
             const processedStudents = students.map(student => ({

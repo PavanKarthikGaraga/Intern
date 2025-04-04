@@ -23,7 +23,7 @@ export default function Faculty() {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [itemsPerPage] = useState(20);
-    const [activeSection, setActiveSection] = useState('students');
+    const [activeSection, setActiveSection] = useState('home');
     const [showMentorModal, setShowMentorModal] = useState(false);
     const [selectedStudentForMentor, setSelectedStudentForMentor] = useState(null);
     const [studentMentors, setStudentMentors] = useState([]);
@@ -198,7 +198,9 @@ export default function Faculty() {
             acc[domain] = registrations.filter(reg => reg.selectedDomain === domain).length;
             return acc;
         }, {});
-        return { totalStudents, domains, studentsPerDomain };
+        const activeStudents = registrations.filter(reg => (reg.daysCompleted || 0) < 8).length;
+        const completedStudents = registrations.filter(reg => (reg.daysCompleted || 0) === 8).length;
+        return { totalStudents, domains, studentsPerDomain, activeStudents, completedStudents };
     };
 
     const canMarkAttendance = (dayNumber) => {
@@ -341,13 +343,6 @@ export default function Faculty() {
 
     const createNewMentor = async (studentData) => {
         try {
-            // First check if the student has a mentor
-            const student = registrations.find(reg => reg.idNumber === studentData.idNumber);
-            if (student?.mentorName) {
-                toast.error('This student already has a mentor assigned. Please remove their mentor first before promoting them.');
-                return;
-            }
-
             const response = await fetch('/api/dashboard/faculty/create-mentor', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -368,33 +363,27 @@ export default function Faculty() {
         }
     };
 
-    const renderStudentManagement = () => {
-        // Filter out students who are mentors
-        const nonMentorStudents = registrations.filter(student => 
-            !studentMentors.some(mentor => mentor.mentorId === student.idNumber)
-        );
-
-        return (
-            <div className="student-management">
-                <h2>Student Management</h2>
-                <div className="filters">
+    const renderStudentManagement = () => (
+        <div className="student-management">
+            <h2>Student Management</h2>
+            <div className="filters">
                 <input
                     type="text"
                     placeholder="Search by name, ID, or domain..."
                     value={searchQuery}
-                        onChange={handleSearch}
+                    onChange={handleSearch}
                     className="search-input"
                 />
-                    <select
-                        value={selectedDomain}
-                        onChange={(e) => setSelectedDomain(e.target.value)}
-                        className="domain-filter"
-                    >
-                        <option value="all">All Domains</option>
-                        {[...new Set(nonMentorStudents.map(reg => reg.selectedDomain))].map(domain => (
-                            <option key={domain} value={domain}>{domain}</option>
-                        ))}
-                    </select>
+                <select
+                    value={selectedDomain}
+                    onChange={(e) => setSelectedDomain(e.target.value)}
+                    className="domain-filter"
+                >
+                    <option value="all">All Domains</option>
+                    {[...new Set(registrations.map(reg => reg.selectedDomain))].map(domain => (
+                        <option key={domain} value={domain}>{domain}</option>
+                    ))}
+                </select>
             </div>
 
             <div className="registrations-table">
@@ -412,24 +401,14 @@ export default function Faculty() {
                         </tr>
                     </thead>
                     <tbody>
-                            {nonMentorStudents
-                                .filter(reg => 
-                                    selectedDomain === 'all' || 
-                                    reg.selectedDomain === selectedDomain
-                                )
-                                .filter(reg => 
-                                    reg.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                    reg.idNumber.toString().includes(searchQuery) ||
-                                    reg.selectedDomain.toLowerCase().includes(searchQuery.toLowerCase())
-                                )
-                                .map((reg) => (
+                        {filteredRegistrations.map((reg) => (
                             <tr key={reg.idNumber}>
                                 <td>{reg.idNumber}</td>
                                 <td>{reg.name}</td>
                                 <td>{reg.selectedDomain}</td>
                                 <td>{reg.branch}</td>
                                 <td>{reg.year}</td>
-                                        <td>{reg.daysCompleted || 0}/8</td>
+                                <td>{reg.daysCompleted || 0}/8</td>
                                 <td>{reg.mentorName || 'Not Assigned'}</td>
                                 <td>
                                     <button 
@@ -440,7 +419,7 @@ export default function Faculty() {
                                         }}
                                         className="assign-mentor-btn"
                                     >
-                                                {reg.mentorName ? 'Modify Mentor' : 'Assign Mentor'}
+                                        {reg.mentorName ? 'Modify Mentor' : 'Assign Mentor'}
                                     </button>
                                     <button 
                                         onClick={() => {
@@ -459,71 +438,66 @@ export default function Faculty() {
             </div>
         </div>
     );
-    };
 
     const renderDomainStats = () => {
-        // Filter out students who are mentors
-        const nonMentorStudents = registrations.filter(student => 
-            !studentMentors.some(mentor => mentor.mentorId === student.idNumber)
-        );
-
-        const stats = {
-            totalStudents: nonMentorStudents.length,
-            domains: [...new Set(nonMentorStudents.map(reg => reg.selectedDomain))],
-            studentsPerDomain: nonMentorStudents.reduce((acc, reg) => {
-                if (!acc[reg.selectedDomain]) {
-                    acc[reg.selectedDomain] = {
-                        total: 0,
-                        active: 0,
-                        completed: 0,
-                        mentors: 0
-                    };
-                }
-                acc[reg.selectedDomain].total++;
-                if ((reg.daysCompleted || 0) < 8) {
-                    acc[reg.selectedDomain].active++;
-                } else if ((reg.daysCompleted || 0) === 8) {
-                    acc[reg.selectedDomain].completed++;
-                }
-                return acc;
-            }, {})
-        };
-
-        // Count mentors per domain
-        studentMentors.forEach(mentor => {
-            if (stats.studentsPerDomain[mentor.domain]) {
-                stats.studentsPerDomain[mentor.domain].mentors++;
-            }
-        });
-
+        const stats = getStats();
         return (
             <div className="domain-stats">
-                <h2>Domain Statistics</h2>
+                <div className="welcome-header">
+                    <h2>Welcome, {user?.name || 'Faculty'}</h2>
+                    <p className="welcome-subtitle">Here's an overview of your students' progress</p>
+                </div>
                 <div className="stats-grid">
                     <div className="stat-card">
                         <h3>Total Students</h3>
                         <p>{stats.totalStudents}</p>
                     </div>
                     <div className="stat-card">
+                        <h3>Active Students</h3>
+                        <p>{stats.activeStudents}</p>
+                    </div>
+                    <div className="stat-card">
+                        <h3>Completed Students</h3>
+                        <p>{stats.completedStudents}</p>
+                    </div>
+                    <div className="stat-card">
                         <h3>Total Domains</h3>
                         <p>{stats.domains.length}</p>
-                        </div>
+                    </div>
                     <div className="stat-card">
                         <h3>Total Mentors</h3>
                         <p>{studentMentors.length}</p>
-                </div>
+                    </div>
+                    <div className="stat-card">
+                        <h3>Completion Rate</h3>
+                        <p>{((stats.completedStudents / stats.totalStudents) * 100).toFixed(1)}%</p>
+                    </div>
                 </div>
 
-                <h3>Students per Domain</h3>
+                <h3>Domain-wise Progress</h3>
                 <div className="domain-breakdown">
-                    {Object.entries(stats.studentsPerDomain).map(([domain, data]) => (
+                    {Object.entries(stats.studentsPerDomain).map(([domain, count]) => (
                         <div key={domain} className="domain-stat-card">
                             <h4>{domain}</h4>
                             <div className="domain-details">
-                                <p>Total Students: {data.total}</p>
-                                <p>Active Students: {data.active}</p>
-                                <p>Completed Students: {data.completed}</p>
-                                <p>Assigned Mentors: {data.mentors}</p>
+                                <p>Total Students: {count}</p>
+                                <p>Active Students: {
+                                    registrations.filter(reg => 
+                                        reg.selectedDomain === domain && 
+                                        (reg.daysCompleted || 0) < 8
+                                    ).length
+                                }</p>
+                                <p>Completed Students: {
+                                    registrations.filter(reg => 
+                                        reg.selectedDomain === domain && 
+                                        (reg.daysCompleted || 0) === 8
+                                    ).length
+                                }</p>
+                                <p>Assigned Mentors: {
+                                    studentMentors.filter(mentor => 
+                                        mentor.domain === domain
+                                    ).length
+                                }</p>
                             </div>
                         </div>
                     ))}
@@ -665,11 +639,6 @@ export default function Faculty() {
                                     </div>
                                     <button
                                         onClick={() => {
-                                                    // Check if student has a mentor before creating
-                                                    if (student.mentorName) {
-                                                        toast.error('This student already has a mentor assigned. Please remove their mentor first before promoting them.');
-                                                        return;
-                                                    }
                                                     createNewMentor({
                                                         idNumber: student.idNumber,
                                                         name: student.name,
@@ -690,21 +659,21 @@ export default function Faculty() {
 
                             {searchedStudents.length === 0 && mentorSearchQuery && (
                                 <p className="no-results">No students found matching your search</p>
-                            )}
+                    )}
                 </div>
                     )}
-            </div>
+                </div>
 
-            <div className="modal-footer">
-                <button
-                        onClick={handleModalClose}
-                    className="close-modal-btn"
-                >
-                    Close
-                </button>
-            </div>
-        </>
-    );
+                <div className="modal-footer">
+                    <button
+                            onClick={handleModalClose}
+                        className="close-modal-btn"
+                    >
+                        Close
+                    </button>
+                </div>
+            </>
+        );
     };
 
     const fetchMentorOverview = async () => {
@@ -728,6 +697,37 @@ export default function Faculty() {
         const matchesDomain = selectedDomain === 'all' || mentor.domain === selectedDomain;
         return matchesSearch && matchesDomain;
     }) || [];
+
+    const handleDeleteMentor = async (mentorId) => {
+        if (!window.confirm('Are you sure you want to delete this mentor? This will demote them to a student role.')) {
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/dashboard/faculty/delete-mentor', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ mentorId })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to delete mentor');
+            }
+
+            const data = await response.json();
+            if (data.success) {
+                toast.success('Mentor deleted successfully and demoted to student role');
+                setExpandedMentor(null); // Close the mentor profile
+                fetchMentorOverview(); // Refresh the mentor list
+            }
+        } catch (err) {
+            console.error('Error deleting mentor:', err);
+            toast.error(err.message || 'Failed to delete mentor');
+        }
+    };
 
     const renderMentorOverview = () => {
         const uniqueDomains = [...new Set(mentorOverview?.map(mentor => mentor?.domain).filter(Boolean))];
@@ -810,12 +810,20 @@ export default function Faculty() {
                                             <span className="stat-value">{mentorOverview.find(m => m.mentorId === expandedMentor).stats.completed}</span>
                                         </div>
                                     </div>
-                                    <button 
-                                        className="back-btn"
-                                        onClick={() => setExpandedMentor(null)}
-                                    >
-                                        Back to List
-                                    </button>
+                                    <div className="mentor-actions">
+                                        <button 
+                                            className="back-btn"
+                                            onClick={() => setExpandedMentor(null)}
+                                        >
+                                            Back to List
+                                        </button>
+                                        <button 
+                                            className="delete-mentor-btn"
+                                            onClick={() => handleDeleteMentor(expandedMentor)}
+                                        >
+                                            Delete Mentor
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div className="mentor-students">
@@ -1117,16 +1125,16 @@ export default function Faculty() {
                 {/* Sidebar */}
                 <aside className="dashboard-sidebar">
                     <button
+                        className={`sidebar-item ${activeSection === 'home' ? 'active' : ''}`}
+                        onClick={() => setActiveSection('home')}
+                    >
+                        <span className="item-label">Home</span>
+                    </button>
+                    <button
                         className={`sidebar-item ${activeSection === 'students' ? 'active' : ''}`}
                         onClick={() => setActiveSection('students')}
                     >
                         <span className="item-label">Student Management</span>
-                    </button>
-                    <button
-                        className={`sidebar-item ${activeSection === 'domains' ? 'active' : ''}`}
-                        onClick={() => setActiveSection('domains')}
-                    >
-                        <span className="item-label">Domain Statistics</span>
                     </button>
                     <button
                         className={`sidebar-item ${activeSection === 'mentors' ? 'active' : ''}`}
@@ -1144,8 +1152,8 @@ export default function Faculty() {
 
                 {/* Main Content */}
                 <main className="dashboard-main">
-                    {activeSection === 'students' ? renderStudentManagement() : 
-                     activeSection === 'domains' ? renderDomainStats() : 
+                    {activeSection === 'home' ? renderDomainStats() : 
+                     activeSection === 'students' ? renderStudentManagement() : 
                      activeSection === 'mentors' ? renderMentorOverview() :
                      renderChangePassword()}
                 </main>
