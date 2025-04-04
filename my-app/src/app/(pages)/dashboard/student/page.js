@@ -1,12 +1,13 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaEye, FaEyeSlash, FaEnvelope, FaPhone, FaMapMarkerAlt, FaUser, FaIdCard, FaVenusMars, FaHome } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import './page.css';
 import Loader from '@/app/components/loader/loader';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { UserOutlined, PhoneOutlined, HomeOutlined, BookOutlined, MailOutlined, EnvironmentOutlined, TeamOutlined, CalendarOutlined, IdcardOutlined } from '@ant-design/icons';
 
 export default function StudentDashboard() {
   const { user, logout } = useAuth();
@@ -18,6 +19,7 @@ export default function StudentDashboard() {
   const [submittedLinks, setSubmittedLinks] = useState({});
   const [attendance, setAttendance] = useState({});
   const [activeSection, setActiveSection] = useState('overview');
+  const [activeProfileSection, setActiveProfileSection] = useState('personal');
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
     newPassword: '',
@@ -30,6 +32,8 @@ export default function StudentDashboard() {
     new: false,
     confirm: false
   });
+  const [mentorDetails, setMentorDetails] = useState(null);
+  const [isMentorLoading, setIsMentorLoading] = useState(false);
 
   useEffect(() => {
     if (!user?.idNumber) {
@@ -114,6 +118,12 @@ export default function StudentDashboard() {
 
     fetchData();
   }, [user]);
+
+  useEffect(() => {
+    if (student.studentMentorId) {
+      fetchMentorDetails();
+    }
+  }, [student.studentMentorId]);
 
   console.log('user:', user);
 
@@ -368,126 +378,441 @@ export default function StudentDashboard() {
     </div>
   );
 
-  const renderOverview = () => (
-    <section className="welcome-section">
-      <div className="welcome-header">
-        <h1>Welcome, {student.name}!</h1>
+  const renderOverview = () => {
+    return (
+      <div className="overview-section">
+        <h1>Welcome {user?.name || 'Student'}</h1>
+        <p className="role-text">Student</p>
+        
+        <div className="stats-grid">
+          <div className="stat-card">
+            <div className="stat-content">
+              <div>
+                <h3>Selected Domain</h3>
+                <p>{student.selectedDomain || 'Not Selected'}</p>
+              </div>
+              <TeamOutlined className="stat-icon" />
+            </div>
+          </div>
+
+          <div className="stat-card">
+            <div className="stat-content">
+              <div>
+                <h3>Days Completed</h3>
+                <p>{completedDays || '0'}/8</p>
+              </div>
+              <CalendarOutlined className="stat-icon" />
+            </div>
+          </div>
+
+          <div className="stat-card">
+            <div className="stat-content">
+              <div>
+                <h3>Mentor ID</h3>
+                <p>{student.studentMentorId || 'Not Assigned'}</p>
+              </div>
+              <UserOutlined className="stat-icon" />
+            </div>
+          </div>
+        </div>
+
+        <p className="beta-note">
+          Note: This is a beta version. If you experience any issues or discrepancies, please report them to SAC Department.
+        </p>
       </div>
-      <div className="student-info">
-        <div className="info-grid">
-          <div className="info-item">
-            <span className="info-label">ID Number</span>
-            <span className="info-value">{student.idNumber}</span>
-          </div>
-          <div className="info-item">
-            <span className="info-label">Branch</span>
-            <span className="info-value">{student.branch}</span>
-          </div>
-          <div className="info-item">
-            <span className="info-label">Year</span>
-            <span className="info-value">{student.year}</span>
-          </div>
-          <div className="info-item">
-            <span className="info-label">Domain</span>
-            <span className="info-value">{student.selectedDomain}</span>
-          </div>
-          <div className="info-item">
-            <span className="info-label">Phone</span>
-            <span className="info-value">{student.phoneNumber}</span>
-          </div>
-          <div className="info-item">
-            <span className="info-label">Residence</span>
-            <span className="info-value">{student.residenceType}</span>
-          </div>
-          {student.residenceType === 'Hostel' && (
-            <div className="info-item">
-              <span className="info-label">Hostel</span>
-              <span className="info-value">{student.hostelType}</span>
+    );
+  };
+
+  const renderProfile = () => {
+    return (
+      <div className="student-profile">
+        <div className="profile-tabs">
+          <button 
+            className={`tab-button ${activeProfileSection === 'personal' ? 'active' : ''}`}
+            onClick={() => setActiveProfileSection('personal')}
+          >
+            <UserOutlined className="tab-icon" />
+            Personal Information
+          </button>
+          <button 
+            className={`tab-button ${activeProfileSection === 'contact' ? 'active' : ''}`}
+            onClick={() => setActiveProfileSection('contact')}
+          >
+            <PhoneOutlined className="tab-icon" />
+            Contact Information
+          </button>
+          <button 
+            className={`tab-button ${activeProfileSection === 'accommodation' ? 'active' : ''}`}
+            onClick={() => setActiveProfileSection('accommodation')}
+          >
+            <HomeOutlined className="tab-icon" />
+            Accommodation Details
+          </button>
+        </div>
+
+        <div className="profile-content">
+          {activeProfileSection === 'personal' && (
+            <div className="section-content">
+              <div className="section-header">
+                <h1>Personal Information</h1>
+                <div className="header-underline"></div>
+              </div>
+              <div className="info-container">
+                <div className="info-group">
+                  <label>Name</label>
+                  <div className="info-value">
+                    {student.name}
+                    <div className="value-underline"></div>
+                  </div>
+                </div>
+                <div className="info-group">
+                  <label>ID Number</label>
+                  <div className="info-value">
+                    {student.idNumber}
+                    <div className="value-underline"></div>
+                  </div>
+                </div>
+                <div className="info-group">
+                  <label>Gender</label>
+                  <div className="info-value">
+                    {student.gender}
+                    <div className="value-underline"></div>
+                  </div>
+                </div>
+                <div className="info-group">
+                  <label>Branch</label>
+                  <div className="info-value">
+                    {student.branch}
+                    <div className="value-underline"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeProfileSection === 'contact' && (
+            <div className="section-content">
+              <div className="section-header">
+                <h1>Contact Information</h1>
+                <div className="header-underline"></div>
+              </div>
+              <div className="info-container">
+                <div className="info-group">
+                  <label>Email</label>
+                  <div className="info-value">
+                    <MailOutlined className="info-icon" />
+                    {student.email}
+                    <div className="value-underline"></div>
+                  </div>
+                </div>
+                <div className="info-group">
+                  <label>Phone</label>
+                  <div className="info-value">
+                    <PhoneOutlined className="info-icon" />
+                    {student.phoneNumber}
+                    <div className="value-underline"></div>
+                  </div>
+                </div>
+                <div className="info-group">
+                  <label>Address</label>
+                  <div className="info-value">
+                    <EnvironmentOutlined className="info-icon" />
+                    {student.district}, {student.state}, {student.country} - {student.pincode}
+                    <div className="value-underline"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeProfileSection === 'accommodation' && (
+            <div className="section-content">
+              <div className="section-header">
+                <h1>Accommodation Details</h1>
+                <div className="header-underline"></div>
+              </div>
+              <div className="info-container">
+                <div className="info-group">
+                  <label>Type</label>
+                  <div className="info-value">
+                    <HomeOutlined className="info-icon" />
+                    {student.residenceType}
+                    <div className="value-underline"></div>
+                  </div>
+                </div>
+                {student.residenceType === 'Hostel' && (
+                  <div className="info-group">
+                    <label>Hostel</label>
+                    <div className="info-value">
+                      <HomeOutlined className="info-icon" />
+                      {student.hostelType}
+                      <div className="value-underline"></div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
       </div>
-      <div className="progress-bar">
-        <div
-          className="progress-fill"
-          style={{ width: `${(completedDays / 8) * 100}%` }}
-        ></div>
-        <span className="progress-text">{completedDays}/8 days Completed</span>
+    );
+  };
+
+  const fetchMentorDetails = async () => {
+    if (!student.studentMentorId || mentorDetails) return;
+    
+    setIsMentorLoading(true);
+    try {
+      const response = await fetch('/api/dashboard/student/mentor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mentorId: student.studentMentorId })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setMentorDetails(data.mentor);
+      } else {
+        console.error('Failed to fetch mentor details:', data.error);
+      }
+    } catch (error) {
+      console.error('Error fetching mentor details:', error);
+    } finally {
+      setIsMentorLoading(false);
+    }
+  };
+
+  const renderMentor = () => (
+    <div className="mentor-section">
+      <div className="section-header">
+        <h1>Mentor Information</h1>
+        <div className="header-underline"></div>
       </div>
-    </section>
+      {isMentorLoading ? (
+        <div className="loading-state">
+          <Loader />
+        </div>
+      ) : (
+        <div className="info-container">
+          <div className="info-group">
+            <label>Mentor Name</label>
+            <div className="info-value">
+              <UserOutlined className="info-icon" />
+              {mentorDetails?.name || 'Not Assigned'}
+              <div className="value-underline"></div>
+            </div>
+          </div>
+          <div className="info-group">
+            <label>Mentor ID</label>
+            <div className="info-value">
+              <IdcardOutlined className="info-icon" />
+              {student.studentMentorId || 'Not Assigned'}
+              <div className="value-underline"></div>
+            </div>
+          </div>
+          <div className="info-group">
+            <label>Mentor Email</label>
+            <div className="info-value">
+              <MailOutlined className="info-icon" />
+              {mentorDetails?.email || 'Not Available'}
+              <div className="value-underline"></div>
+            </div>
+          </div>
+          <div className="info-group">
+            <label>Domain</label>
+            <div className="info-value">
+              <TeamOutlined className="info-icon" />
+              {mentorDetails?.domain || 'Not Available'}
+              <div className="value-underline"></div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 
   const renderSubmissions = () => (
     <section className="submissions-section">
-      <h2>Daily Reports</h2>
-      <div className="submissions-layout">
-        <div className="days-list">
-          {Array(8).fill(null).map((_, index) => (
-            <div
-              key={index}
-              className={`day-item ${activeAccordion === index ? 'active' : ''} ${
-                canSubmitDay(index) ? 'submittable' : 'locked'
-              }`}
-              onClick={() => toggleAccordion(index)}
-            >
-              <span>Day {index + 1}</span>
-              {submissions[index] ? (
-                attendance[`day${index + 1}`] === 'P' ? (
-                  <span className="submission-status">✓</span>
-                ) : attendance[`day${index + 1}`] === 'A' ? (
-                  <span className="submission-status">❌</span>
-                ) : (
-                  <span className="submission-status">⏳</span>
-                )
-              ) : !canSubmitDay(index) ? (
-                <span className="lock-icon">🔒</span>
-              ) : null}
+        <h2>Daily Reports</h2>
+      <div className="submissions-header">
+        <div className="progress-tracker">
+          {/* <div className="progress-stats">
+            <div className="stat">
+              <span className="stat-label">Completed</span>
+              <span className="stat-value">{submissions.filter(Boolean).length}/8</span>
             </div>
-          ))}
+            <div className="stat">
+              <span className="stat-label">Approved</span>
+              <span className="stat-value">
+                {Object.values(attendance).filter(status => status === 'P').length}/8
+              </span>
+            </div>
+          </div> */}
+          <div className="progress-bar">
+            <div 
+              className="progress-fill" 
+              style={{ width: `${(submissions.filter(Boolean).length / 8) * 100}%` }}
+            ></div>
+          </div>
+        </div>
+      </div>
+
+      <div className="submissions-layout">
+        <div className="days-grid">
+          {Array(8).fill(null).map((_, index) => {
+            const status = attendance[`day${index + 1}`];
+            const isSubmitted = submissions[index];
+            const isLocked = !canSubmitDay(index);
+            
+            return (
+              <div
+                key={index}
+                className={`day-card ${activeAccordion === index ? 'active' : ''} ${
+                  isLocked ? 'locked' : isSubmitted ? 'submitted' : 'submittable'
+                }`}
+                onClick={() => toggleAccordion(index)}
+              >
+                <div className="day-header">
+                  <span className="day-number">Day {index + 1}</span>
+                  <div className="day-status">
+                    {isSubmitted ? (
+                      status === 'P' ? (
+                        <div className="status approved">
+                          <span className="status-icon">✓</span>
+                          <span className="status-text">Approved</span>
+                        </div>
+                      ) : status === 'A' ? (
+                        <div className="status rejected">
+                          <span className="status-icon">✕</span>
+                          <span className="status-text">Rejected</span>
+                        </div>
+                      ) : (
+                        <div className="status pending">
+                          <span className="status-icon">⏳</span>
+                          <span className="status-text">Pending</span>
+                        </div>
+                      )
+                    ) : isLocked ? (
+                      <div className="status locked">
+                        <span className="status-icon">🔒</span>
+                        <span className="status-text">Locked</span>
+                      </div>
+                    ) : (
+                      <div className="status available">
+                        <span className="status-text">Available</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
-        <div className="submission-form-container">
+        <div className="submission-details">
           {activeAccordion !== null ? (
             <div className="submission-content">
-              <h3>Day {activeAccordion + 1} Submission</h3>
+              <div className="submission-header">
+                <h3>Day {activeAccordion + 1} Report Submission</h3>
+                <div className="submission-status">
+                  {submissions[activeAccordion] && (
+                    <span className={`status-badge ${
+                      attendance[`day${activeAccordion + 1}`] === 'P' ? 'approved' :
+                      attendance[`day${activeAccordion + 1}`] === 'A' ? 'rejected' : 'pending'
+                    }`}>
+                      {attendance[`day${activeAccordion + 1}`] === 'P' ? 'Approved' :
+                       attendance[`day${activeAccordion + 1}`] === 'A' ? 'Rejected' : 'Pending Review'}
+                    </span>
+                  )}
+                </div>
+              </div>
+
               {submissions[activeAccordion] ? (
-                <div className="submitted-message">
-                  <p>Report submitted successfully</p>
-                  <div className="submitted-link">
-                    <p>Submitted Link: <a href={submittedLinks[activeAccordion]} target="_blank" rel="noopener noreferrer">{submittedLinks[activeAccordion]}</a></p>
-                    <div className={`attendance-status ${getAttendanceStatus(activeAccordion + 1).className}`}>
-                      <p>{getAttendanceStatus(activeAccordion + 1).text}</p>
-                      {attendance[`day${activeAccordion + 1}`] === 'A' && (
-                        <button 
-                          onClick={() => handleResubmit(activeAccordion)}
-                          className="resubmit-btn"
-                        >
-                          Resubmit Report
-                        </button>
-                      )}
+                <div className="submitted-content">
+                  <div className="submitted-details">
+                    <div className="detail-item">
+                      <span className="detail-label">Submission Status:</span>
+                      <span className="detail-value">Submitted</span>
                     </div>
-                    <p className="edit-notice">Note: To edit your submission, please contact your student mentor.</p>
+                    <div className="detail-item">
+                      <span className="detail-label">Document Link:</span>
+                      <a 
+                        href={submittedLinks[activeAccordion]} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="document-link"
+                      >
+                        View Document
+                      </a>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">Review Status:</span>
+                      <span className="detail-value">
+                        {getAttendanceStatus(activeAccordion + 1).text}
+                      </span>
+                    </div>
+                  </div>
+
+                  {attendance[`day${activeAccordion + 1}`] === 'A' && (
+                    <div className="resubmission-section">
+                      <p className="rejection-note">
+                        Your submission has been rejected. Please review and resubmit your report.
+                      </p>
+                      <button 
+                        onClick={() => handleResubmit(activeAccordion)}
+                        className="resubmit-button"
+                      >
+                        Resubmit Report
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="submission-notes">
+                    <p className="note">
+                      <span className="note-icon">ℹ️</span>
+                      {attendance[`day${activeAccordion + 1}`] !== 'A' 
+                        ? "To modify your submission, please contact your student mentor."
+                        : "Please ensure your resubmission meets all the requirements."}
+                    </p>
                   </div>
                 </div>
               ) : !canSubmitDay(activeAccordion) ? (
                 <div className="locked-message">
-                  Please submit the previous day's report first
+                  <span className="lock-icon">🔒</span>
+                  <p>This day is locked. Please complete and submit the previous day's report first.</p>
                 </div>
               ) : (
-                <form onSubmit={(e) => handleSubmit(activeAccordion, e)}>
-                  <div className="upload-container">
-                    <label htmlFor={`link-${activeAccordion}`}>
-                      Submit your report for Day {activeAccordion + 1}
-                    </label>
-                    <input
-                      id={`link-${activeAccordion}`}
-                      name="link"
-                      type="url"
-                      placeholder="Enter your document link"
-                      className="link-input"
-                      required
-                    />
-                    <button type="submit" className="submit-btn">
+                <form onSubmit={(e) => handleSubmit(activeAccordion, e)} className="submission-form">
+                  <div className="form-header">
+                    <h4>Submit Your Report</h4>
+                    <p>Please ensure your document contains all required information before submitting.</p>
+                  </div>
+                  
+                  <div className="form-content">
+                    <div className="input-group">
+                      <label htmlFor={`link-${activeAccordion}`}>
+                        Document Link <span className="required">*</span>
+                      </label>
+                      <input
+                        id={`link-${activeAccordion}`}
+                        name="link"
+                        type="url"
+                        placeholder="Enter your document link (Google Docs, Drive, etc.)"
+                        className="link-input"
+                        required
+                      />
+                    </div>
+                    
+                    <div className="submission-guidelines">
+                      <h5>Submission Guidelines:</h5>
+                      <ul>
+                        <li>Ensure your document is accessible and properly shared</li>
+                        <li>Include all required sections as per the template</li>
+                        <li>Double-check your content before submitting</li>
+                      </ul>
+                    </div>
+
+                    <button type="submit" className="submit-button">
                       Submit Report
                     </button>
                   </div>
@@ -497,8 +822,29 @@ export default function StudentDashboard() {
           ) : (
             <div className="placeholder-content">
               <div className="placeholder-icon">📝</div>
-              <h3>Select a Day</h3>
-              <p>Submit your reports in order, starting from Day 1</p>
+              <h3>Select a Day to Begin</h3>
+              <p>Choose a day from the grid to view details or submit your report.</p>
+              <div className="status-legend">
+                <h4>Status Guide:</h4>
+                <div className="legend-items">
+                  <div className="legend-item">
+                    <span className="legend-icon approved">✓</span>
+                    <span>Approved</span>
+                  </div>
+                  <div className="legend-item">
+                    <span className="legend-icon pending">⏳</span>
+                    <span>Pending Review</span>
+                  </div>
+                  <div className="legend-item">
+                    <span className="legend-icon rejected">✕</span>
+                    <span>Rejected</span>
+                  </div>
+                  <div className="legend-item">
+                    <span className="legend-icon locked">🔒</span>
+                    <span>Locked</span>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -519,6 +865,18 @@ export default function StudentDashboard() {
             <span className="item-label">Overview</span>
           </button>
           <button
+            className={`sidebar-item ${activeSection === 'profile' ? 'active' : ''}`}
+            onClick={() => setActiveSection('profile')}
+          >
+            <span className="item-label">Profile</span>
+          </button>
+          <button
+            className={`sidebar-item ${activeSection === 'mentor' ? 'active' : ''}`}
+            onClick={() => setActiveSection('mentor')}
+          >
+            <span className="item-label">Mentor</span>
+          </button>
+          <button
             className={`sidebar-item ${activeSection === 'submissions' ? 'active' : ''}`}
             onClick={() => setActiveSection('submissions')}
           >
@@ -534,6 +892,8 @@ export default function StudentDashboard() {
 
         <main className="dashboard-main">
           {activeSection === 'overview' ? renderOverview() : 
+           activeSection === 'profile' ? renderProfile() :
+           activeSection === 'mentor' ? renderMentor() :
            activeSection === 'submissions' ? renderSubmissions() : 
            renderChangePassword()}
         </main>

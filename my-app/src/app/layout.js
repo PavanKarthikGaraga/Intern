@@ -12,7 +12,7 @@ const poppins = Poppins({
 
 export const metadata = {
   title: "Social Internship",
-  // description: "",
+  description: "A platform for managing social internships and community engagement",
 };
 
 export default function RootLayout({ children }) {

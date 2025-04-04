@@ -39,9 +39,7 @@ export async function POST(request) {
 
         const query = `
             SELECT 
-                r.idNumber, r.selectedDomain, u.name, 
-                r.branch, r.gender, r.year, r.phoneNumber, 
-                r.residenceType, r.hostelType
+               *
             FROM registrations r
             JOIN users u ON r.idNumber = u.idNumber
             WHERE r.idNumber = ?;
