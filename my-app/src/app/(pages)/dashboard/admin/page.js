@@ -17,6 +17,8 @@ import {
 import toast from 'react-hot-toast';
 import './page.css';
 import Loader from '@/app/components/loader/loader';
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 const COLORS = ['#2e7d32', '#66bb6a', '#81c784', '#a5d6a7', '#c8e6c9'];
 
@@ -687,21 +689,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="admin-dashboard">
-      {/* Header */}
-      <header className="dashboard-header">
-        <div className="header-left">
-          <h1>Admin Dashboard</h1>
-        </div>
-        <div className="header-right">
-          <div className="user-info">
-            <span>{user?.name}</span>
-            <span className="user-id">ID: {user?.idNumber}</span>
-          </div>
-          <button onClick={logout} className="logout-btn">
-            Logout
-          </button>
-        </div>
-      </header>
+      <Navbar title="Admin Dashboard" user={user} />
 
       <div className="dashboard-content">
         {/* Sidebar */}
@@ -748,11 +736,7 @@ export default function AdminDashboard() {
         </main>
       </div>
 
-      {/* Footer */}
-      <footer className="dashboard-footer">
-        <p>© 2024 Smart Village Revolution. All Rights Reserved.</p>
-        <p>Designed and Developed by ZeroOne CodeClub</p>
-      </footer>
+      <Footer />
 
       {/* Modals */}
       {showStudentModal && renderStudentModal()}

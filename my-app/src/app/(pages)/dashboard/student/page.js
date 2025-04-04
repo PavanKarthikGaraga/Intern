@@ -5,6 +5,8 @@ import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import './page.css';
 import Loader from '@/app/components/loader/loader';
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 export default function StudentDashboard() {
   const { user, logout } = useAuth();
@@ -366,22 +368,147 @@ export default function StudentDashboard() {
     </div>
   );
 
+  const renderOverview = () => (
+    <section className="welcome-section">
+      <div className="welcome-header">
+        <h1>Welcome, {student.name}!</h1>
+      </div>
+      <div className="student-info">
+        <div className="info-grid">
+          <div className="info-item">
+            <span className="info-label">ID Number</span>
+            <span className="info-value">{student.idNumber}</span>
+          </div>
+          <div className="info-item">
+            <span className="info-label">Branch</span>
+            <span className="info-value">{student.branch}</span>
+          </div>
+          <div className="info-item">
+            <span className="info-label">Year</span>
+            <span className="info-value">{student.year}</span>
+          </div>
+          <div className="info-item">
+            <span className="info-label">Domain</span>
+            <span className="info-value">{student.selectedDomain}</span>
+          </div>
+          <div className="info-item">
+            <span className="info-label">Phone</span>
+            <span className="info-value">{student.phoneNumber}</span>
+          </div>
+          <div className="info-item">
+            <span className="info-label">Residence</span>
+            <span className="info-value">{student.residenceType}</span>
+          </div>
+          {student.residenceType === 'Hostel' && (
+            <div className="info-item">
+              <span className="info-label">Hostel</span>
+              <span className="info-value">{student.hostelType}</span>
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="progress-bar">
+        <div
+          className="progress-fill"
+          style={{ width: `${(completedDays / 8) * 100}%` }}
+        ></div>
+        <span className="progress-text">{completedDays}/8 days Completed</span>
+      </div>
+    </section>
+  );
+
+  const renderSubmissions = () => (
+    <section className="submissions-section">
+      <h2>Daily Reports</h2>
+      <div className="submissions-layout">
+        <div className="days-list">
+          {Array(8).fill(null).map((_, index) => (
+            <div
+              key={index}
+              className={`day-item ${activeAccordion === index ? 'active' : ''} ${
+                canSubmitDay(index) ? 'submittable' : 'locked'
+              }`}
+              onClick={() => toggleAccordion(index)}
+            >
+              <span>Day {index + 1}</span>
+              {submissions[index] ? (
+                attendance[`day${index + 1}`] === 'P' ? (
+                  <span className="submission-status">✓</span>
+                ) : attendance[`day${index + 1}`] === 'A' ? (
+                  <span className="submission-status">❌</span>
+                ) : (
+                  <span className="submission-status">⏳</span>
+                )
+              ) : !canSubmitDay(index) ? (
+                <span className="lock-icon">🔒</span>
+              ) : null}
+            </div>
+          ))}
+        </div>
+
+        <div className="submission-form-container">
+          {activeAccordion !== null ? (
+            <div className="submission-content">
+              <h3>Day {activeAccordion + 1} Submission</h3>
+              {submissions[activeAccordion] ? (
+                <div className="submitted-message">
+                  <p>Report submitted successfully</p>
+                  <div className="submitted-link">
+                    <p>Submitted Link: <a href={submittedLinks[activeAccordion]} target="_blank" rel="noopener noreferrer">{submittedLinks[activeAccordion]}</a></p>
+                    <div className={`attendance-status ${getAttendanceStatus(activeAccordion + 1).className}`}>
+                      <p>{getAttendanceStatus(activeAccordion + 1).text}</p>
+                      {attendance[`day${activeAccordion + 1}`] === 'A' && (
+                        <button 
+                          onClick={() => handleResubmit(activeAccordion)}
+                          className="resubmit-btn"
+                        >
+                          Resubmit Report
+                        </button>
+                      )}
+                    </div>
+                    <p className="edit-notice">Note: To edit your submission, please contact your student mentor.</p>
+                  </div>
+                </div>
+              ) : !canSubmitDay(activeAccordion) ? (
+                <div className="locked-message">
+                  Please submit the previous day's report first
+                </div>
+              ) : (
+                <form onSubmit={(e) => handleSubmit(activeAccordion, e)}>
+                  <div className="upload-container">
+                    <label htmlFor={`link-${activeAccordion}`}>
+                      Submit your report for Day {activeAccordion + 1}
+                    </label>
+                    <input
+                      id={`link-${activeAccordion}`}
+                      name="link"
+                      type="url"
+                      placeholder="Enter your document link"
+                      className="link-input"
+                      required
+                    />
+                    <button type="submit" className="submit-btn">
+                      Submit Report
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          ) : (
+            <div className="placeholder-content">
+              <div className="placeholder-icon">📝</div>
+              <h3>Select a Day</h3>
+              <p>Submit your reports in order, starting from Day 1</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+
   return (
     <div className="student-dashboard">
-      <header className="dashboard-header">
-        <div className="header-left">
-          <h1>Student Dashboard</h1>
-        </div>
-        <div className="header-right">
-          <div className="user-info">
-            <span>{student.name}</span>
-            <span className="user-id">{student.idNumber}</span>
-          </div>
-          <button onClick={logout} className="logout-btn">
-            Logout
-          </button>
-        </div>
-      </header>
+      <Navbar title="Student Dashboard" user={user} />
 
       <div className="dashboard-content">
         <nav className="dashboard-sidebar">
@@ -406,154 +533,13 @@ export default function StudentDashboard() {
         </nav>
 
         <main className="dashboard-main">
-          {activeSection === 'overview' && (
-            <section className="welcome-section">
-              <div className="welcome-header">
-                <h1>Welcome, {student.name}!</h1>
-              </div>
-              <div className="student-info">
-                <div className="info-grid">
-                  <div className="info-item">
-                    <span className="info-label">ID Number</span>
-                    <span className="info-value">{student.idNumber}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Branch</span>
-                    <span className="info-value">{student.branch}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Year</span>
-                    <span className="info-value">{student.year}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Domain</span>
-                    <span className="info-value">{student.selectedDomain}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Phone</span>
-                    <span className="info-value">{student.phoneNumber}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Residence</span>
-                    <span className="info-value">{student.residenceType}</span>
-                  </div>
-                  {student.residenceType === 'Hostel' && (
-                    <div className="info-item">
-                      <span className="info-label">Hostel</span>
-                      <span className="info-value">{student.hostelType}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="progress-bar">
-                <div
-                  className="progress-fill"
-                  style={{ width: `${(completedDays / 8) * 100}%` }}
-                ></div>
-                <span className="progress-text">{completedDays}/8 days Completed</span>
-              </div>
-            </section>
-          )}
-
-          {activeSection === 'submissions' && (
-            <section className="submissions-section">
-              <h2>Daily Reports</h2>
-              <div className="submissions-layout">
-                <div className="days-list">
-                  {Array(8).fill(null).map((_, index) => (
-                    <div
-                      key={index}
-                      className={`day-item ${activeAccordion === index ? 'active' : ''} ${
-                        canSubmitDay(index) ? 'submittable' : 'locked'
-                      }`}
-                      onClick={() => toggleAccordion(index)}
-                    >
-                      <span>Day {index + 1}</span>
-                      {submissions[index] ? (
-                        attendance[`day${index + 1}`] === 'P' ? (
-                          <span className="submission-status">✓</span>
-                        ) : attendance[`day${index + 1}`] === 'A' ? (
-                          <span className="submission-status">❌</span>
-                        ) : (
-                          <span className="submission-status">⏳</span>
-                        )
-                      ) : !canSubmitDay(index) ? (
-                        <span className="lock-icon">🔒</span>
-                      ) : null}
-                    </div>
-                  ))}
-                </div>
-
-                <div className="submission-form-container">
-                  {activeAccordion !== null ? (
-                    <div className="submission-content">
-                      <h3>Day {activeAccordion + 1} Submission</h3>
-                      {submissions[activeAccordion] ? (
-                        <div className="submitted-message">
-                          <p>Report submitted successfully</p>
-                          <div className="submitted-link">
-                            <p>Submitted Link: <a href={submittedLinks[activeAccordion]} target="_blank" rel="noopener noreferrer">{submittedLinks[activeAccordion]}</a></p>
-                            <div className={`attendance-status ${getAttendanceStatus(activeAccordion + 1).className}`}>
-                              <p>{getAttendanceStatus(activeAccordion + 1).text}</p>
-                              {attendance[`day${activeAccordion + 1}`] === 'A' && (
-                                <button 
-                                  onClick={() => handleResubmit(activeAccordion)}
-                                  className="resubmit-btn"
-                                >
-                                  Resubmit Report
-                                </button>
-                              )}
-                            </div>
-                            <p className="edit-notice">Note: To edit your submission, please contact your student mentor.</p>
-                          </div>
-                        </div>
-                      ) : !canSubmitDay(activeAccordion) ? (
-                        <div className="locked-message">
-                          Please submit the previous day's report first
-                        </div>
-                      ) : (
-                        <form onSubmit={(e) => handleSubmit(activeAccordion, e)}>
-                          <div className="upload-container">
-                            <label htmlFor={`link-${activeAccordion}`}>
-                              Submit your report for Day {activeAccordion + 1}
-                            </label>
-                            <input
-                              id={`link-${activeAccordion}`}
-                              name="link"
-                              type="url"
-                              placeholder="Enter your document link"
-                              className="link-input"
-                              required
-                            />
-                            <button type="submit" className="submit-btn">
-                              Submit Report
-                            </button>
-                          </div>
-                        </form>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="placeholder-content">
-                      <div className="placeholder-icon">📝</div>
-                      <h3>Select a Day</h3>
-                      <p>Submit your reports in order, starting from Day 1</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </section>
-          )}
-
-          {activeSection === 'change-password' && (
-            renderChangePassword()
-          )}
+          {activeSection === 'overview' ? renderOverview() : 
+           activeSection === 'submissions' ? renderSubmissions() : 
+           renderChangePassword()}
         </main>
       </div>
 
-      <footer className="dashboard-footer">
-        <p>© 2024 Internship Management System</p>
-        <p>Developed by Karthik</p>
-      </footer>
+      <Footer />
     </div>
   );
 }

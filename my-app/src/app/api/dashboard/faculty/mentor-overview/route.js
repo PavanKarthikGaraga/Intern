@@ -30,7 +30,12 @@ export async function GET() {
                     mentorId: mentor.mentorId,
                     name: mentor.name,
                     domain: mentor.domain,
-                    students: []
+                    students: [],
+                    stats: {
+                        total: 0,
+                        active: 0,
+                        completed: 0
+                    }
                 };
             }
 
@@ -39,6 +44,7 @@ export async function GET() {
                 SELECT 
                     r.idNumber,
                     r.name,
+                    r.selectedDomain,
                     COALESCE(
                         (SELECT 
                             (CASE WHEN day1Link IS NOT NULL THEN 1 ELSE 0 END) +
@@ -57,15 +63,26 @@ export async function GET() {
                 WHERE r.idNumber IN (${studentIds.map(() => '?').join(',')})
             `, studentIds);
 
+            const processedStudents = students.map(student => ({
+                idNumber: student.idNumber,
+                name: student.name,
+                selectedDomain: student.selectedDomain,
+                daysCompleted: student.daysCompleted || 0
+            }));
+
+            // Calculate stats
+            const stats = {
+                total: processedStudents.length,
+                active: processedStudents.filter(s => s.daysCompleted < 8).length,
+                completed: processedStudents.filter(s => s.daysCompleted === 8).length
+            };
+
             return {
                 mentorId: mentor.mentorId,
                 name: mentor.name,
                 domain: mentor.domain,
-                students: students.map(student => ({
-                    idNumber: student.idNumber,
-                    name: student.name,
-                    daysCompleted: student.daysCompleted || 0
-                }))
+                students: processedStudents,
+                stats
             };
         }));
 

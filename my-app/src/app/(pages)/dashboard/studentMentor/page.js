@@ -5,6 +5,8 @@ import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import "./page.css";
 import Loader from '@/app/components/loader/loader';
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 export default function StudentMentor() {
     const { user, logout } = useAuth();
@@ -286,23 +288,10 @@ export default function StudentMentor() {
 
     return (
         <div className="student-mentor-dashboard">
-            <header className="dashboard-header">
-                <div className="header-left">
-                    <h1>Student Mentor Dashboard</h1>
-                </div>
-                <div className="header-right">
-                    <div className="user-info">
-                        <span>{user.name}</span>
-                        <span className="user-id">ID: {user.idNumber}</span>
-                    </div>
-                    <button onClick={logout} className="logout-btn">
-                        Logout
-                    </button>
-                </div>
-            </header>
+            <Navbar title="Student Mentor Dashboard" user={user} />
 
             <div className="dashboard-content">
-                <nav className="dashboard-sidebar">
+                <aside className="dashboard-sidebar">
                     <button
                         className={`sidebar-item ${activeSection === 'overview' ? 'active' : ''}`}
                         onClick={() => setActiveSection('overview')}
@@ -327,7 +316,7 @@ export default function StudentMentor() {
                     >
                         <span className="item-label">Change Password</span>
                     </button>
-                </nav>
+                </aside>
 
                 <main className="dashboard-main">
                     {activeSection === 'overview' && (
@@ -452,10 +441,7 @@ export default function StudentMentor() {
                 </main>
             </div>
 
-            <footer className="dashboard-footer">
-                <p>© 2024 Internship Management System</p>
-                <p>Developed by Karthik</p>
-            </footer>
+            <Footer />
 
             {selectedStudent && (
                 <div className="modal">

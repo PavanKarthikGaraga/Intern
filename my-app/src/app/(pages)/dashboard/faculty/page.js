@@ -5,6 +5,8 @@ import "./page.css";
 import { useAuth } from '@/context/AuthContext';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import Loader from '@/app/components/loader/loader';
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 export default function Faculty() {
     const { user, logout } = useAuth();
@@ -46,6 +48,9 @@ export default function Faculty() {
         new: false,
         confirm: false
     });
+    const [searchTerm, setSearchTerm] = useState('');
+    const [expandedMentor, setExpandedMentor] = useState(null);
+    const [activeTab, setActiveTab] = useState('active');
 
     useEffect(() => {
         fetchRegistrations();
@@ -521,7 +526,7 @@ export default function Faculty() {
                     {studentMentors
                         .filter(mentor => mentor.domain === selectedStudentForMentor?.selectedDomain)
                         .map((mentor) => (
-                            <div key={mentor.mentorId} className="mentor-item">
+                            <div key={`mentor-${mentor.mentorId}`} className="mentor-item">
                                 <div className="mentor-info">
                                     <span className="mentor-name">{mentor.name}</span>
                                     <span className="mentor-domain">{mentor.domain}</span>
@@ -554,7 +559,7 @@ export default function Faculty() {
                     {searchedStudents.length > 0 && (
                         <div className="search-results">
                             {searchedStudents.map((student) => (
-                                <div key={student.idNumber} className="student-result">
+                                <div key={`student-${student.idNumber}`} className="student-result">
                                     <div className="student-info">
                                         <span>{student.name}</span>
                                         <span>{student.idNumber}</span>
@@ -602,65 +607,207 @@ export default function Faculty() {
         }
     };
 
-    const renderMentorOverview = () => (
-        <div className="mentor-overview-section">
-            <h2>Mentor Overview</h2>
-            <div className="mentors-grid">
-                {mentorOverview.map((mentor) => (
-                    <div key={mentor.mentorId} className="mentor-card">
-                        <div className="mentor-header">
-                            <h3>{mentor.name}</h3>
-                            <span className="mentor-id">ID: {mentor.mentorId}</span>
-                            <span className="mentor-domain">Domain: {mentor.domain}</span>
-                        </div>
-                        <div className="students-list">
-                            <h4>Assigned Students ({mentor.students?.length || 0})</h4>
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Name</th>
-                                        <th>Progress</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {mentor.students?.map((student) => (
-                                        <tr key={student.idNumber}>
-                                            <td>{student.idNumber}</td>
-                                            <td>{student.name}</td>
-                                            <td>
-                                                <div className="progress-bar">
-                                                    <div 
-                                                        className="progress-fill"
-                                                        style={{ 
-                                                            width: `${(student.daysCompleted / 8) * 100}%`,
-                                                            backgroundColor: student.daysCompleted === 8 ? '#2e7d32' : '#66bb6a'
-                                                        }}
-                                                    />
-                                                </div>
-                                                <span className="progress-text">
-                                                    {student.daysCompleted}/8 days
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <button 
-                                                    onClick={() => fetchUploads(student.idNumber)}
-                                                    className="view-uploads-btn"
-                                                >
-                                                    View Progress
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+    const filteredMentors = mentorOverview?.filter(mentor => {
+        if (!mentor) return false;
+        const matchesSearch = mentor.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            mentor.mentorId?.toString().includes(searchTerm.toLowerCase());
+        const matchesDomain = selectedDomain === 'all' || mentor.domain === selectedDomain;
+        return matchesSearch && matchesDomain;
+    }) || [];
+
+    const renderMentorOverview = () => {
+        const uniqueDomains = [...new Set(mentorOverview?.map(mentor => mentor?.domain).filter(Boolean))];
+
+        return (
+            <div className="mentor-overview">
+                <div className="mentor-filters">
+                    <div className="search-box">
+                        <input
+                            type="text"
+                            placeholder="Search mentors..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
                     </div>
-                ))}
+                    <div className="domain-filter">
+                        <select
+                            value={selectedDomain}
+                            onChange={(e) => setSelectedDomain(e.target.value)}
+                        >
+                            <option value="all">All Domains</option>
+                            {uniqueDomains.map(domain => (
+                                <option key={`domain-${domain}`} value={domain}>{domain}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+
+                {expandedMentor ? (
+                    <div className="mentor-profile-main">
+                        {mentorOverview?.find(m => m.mentorId === expandedMentor) && (
+                            <>
+                                <div className="mentor-profile-header">
+                                    <div className="mentor-basic-info">
+                                        <h2>{mentorOverview.find(m => m.mentorId === expandedMentor).name}</h2>
+                                        <p>ID: {mentorOverview.find(m => m.mentorId === expandedMentor).mentorId}</p>
+                                        <p>Domain: {mentorOverview.find(m => m.mentorId === expandedMentor).domain}</p>
+                                    </div>
+                                    <div className="mentor-stats">
+                                        <div className="stat-item">
+                                            <span className="stat-label">Total Students:</span>
+                                            <span className="stat-value">{mentorOverview.find(m => m.mentorId === expandedMentor).stats.total}</span>
+                                        </div>
+                                        <div className="stat-item">
+                                            <span className="stat-label">Active Students:</span>
+                                            <span className="stat-value">{mentorOverview.find(m => m.mentorId === expandedMentor).stats.active}</span>
+                                        </div>
+                                        <div className="stat-item">
+                                            <span className="stat-label">Completed Students:</span>
+                                            <span className="stat-value">{mentorOverview.find(m => m.mentorId === expandedMentor).stats.completed}</span>
+                                        </div>
+                                    </div>
+                                    <button 
+                                        className="back-btn"
+                                        onClick={() => setExpandedMentor(null)}
+                                    >
+                                        Back to List
+                                    </button>
+                                </div>
+
+                                <div className="mentor-students">
+                                    <div className="students-tabs">
+                                        <button 
+                                            className={`tab-btn ${activeTab === 'active' ? 'active' : ''}`}
+                                            onClick={() => setActiveTab('active')}
+                                        >
+                                            Active Students ({mentorOverview.find(m => m.mentorId === expandedMentor).students?.filter(s => s.daysCompleted < 8).length || 0})
+                                        </button>
+                                        <button 
+                                            className={`tab-btn ${activeTab === 'completed' ? 'active' : ''}`}
+                                            onClick={() => setActiveTab('completed')}
+                                        >
+                                            Completed Students ({mentorOverview.find(m => m.mentorId === expandedMentor).students?.filter(s => s.daysCompleted === 8).length || 0})
+                                        </button>
+                                    </div>
+
+                                    {activeTab === 'active' ? (
+                                        <div className="student-table">
+                                            <table>
+                                                <thead>
+                                                    <tr>
+                                                        <th>Name</th>
+                                                        <th>ID</th>
+                                                        <th>Domain</th>
+                                                        <th>Progress</th>
+                                                        <th>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {mentorOverview.find(m => m.mentorId === expandedMentor).students
+                                                        ?.filter(s => s.daysCompleted < 8)
+                                                        .map(student => (
+                                                            <tr key={`student-${student.idNumber}`}>
+                                                                <td>{student.name}</td>
+                                                                <td>{student.idNumber}</td>
+                                                                <td>{student.selectedDomain}</td>
+                                                                <td>
+                                                                    <div className="progress-bar">
+                                                                        <div 
+                                                                            className="progress-fill"
+                                                                            style={{ 
+                                                                                width: `${(student.daysCompleted / 8) * 100}%`,
+                                                                                backgroundColor: '#66bb6a'
+                                                                            }}
+                                                                        />
+                                                                        <span className="progress-text">
+                                                                            {student.daysCompleted}/8 days
+                                                                        </span>
+                                                                    </div>
+                                                                </td>
+                                                                <td>
+                                                                    <button 
+                                                                        className="view-progress-btn"
+                                                                        onClick={() => fetchUploads(student.idNumber)}
+                                                                    >
+                                                                        View Progress
+                                                                    </button>
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                </tbody>
+                                            </table>
+                                            {(!mentorOverview.find(m => m.mentorId === expandedMentor).students?.filter(s => s.daysCompleted < 8).length) && (
+                                                <p className="no-students">No active students</p>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="student-table">
+                                            <table>
+                                                <thead>
+                                                    <tr>
+                                                        <th>Name</th>
+                                                        <th>ID</th>
+                                                        <th>Domain</th>
+                                                        <th>Status</th>
+                                                        <th>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {mentorOverview.find(m => m.mentorId === expandedMentor).students
+                                                        ?.filter(s => s.daysCompleted === 8)
+                                                        .map(student => (
+                                                            <tr key={`student-${student.idNumber}`}>
+                                                                <td>{student.name}</td>
+                                                                <td>{student.idNumber}</td>
+                                                                <td>{student.selectedDomain}</td>
+                                                                <td>
+                                                                    <span className="completed-status">Completed</span>
+                                                                </td>
+                                                                <td>
+                                                                    <button 
+                                                                        className="view-progress-btn"
+                                                                        onClick={() => fetchUploads(student.idNumber)}
+                                                                    >
+                                                                        View Progress
+                                                                    </button>
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                </tbody>
+                                            </table>
+                                            {(!mentorOverview.find(m => m.mentorId === expandedMentor).students?.filter(s => s.daysCompleted === 8).length) && (
+                                                <p className="no-students">No completed students</p>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            </>
+                        )}
+                    </div>
+                ) : (
+                    <div className="mentor-cards">
+                        {filteredMentors.map(mentor => (
+                            <div key={`mentor-${mentor.mentorId}`} className="mentor-card">
+                                <div 
+                                    className="mentor-card-header"
+                                    onClick={() => setExpandedMentor(mentor.mentorId)}
+                                >
+                                    <div className="mentor-info">
+                                        <h3>{mentor.name}</h3>
+                                        <p>ID: {mentor.mentorId}</p>
+                                        <p>Domain: {mentor.domain}</p>
+                                    </div>
+                                    <div className="expand-icon">
+                                        ▶
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
-        </div>
-    );
+        );
+    };
 
     const handlePasswordChange = async (e) => {
         e.preventDefault();
@@ -812,21 +959,7 @@ export default function Faculty() {
 
     return (
         <div className="faculty-dashboard">
-            {/* Header */}
-            <header className="dashboard-header">
-                <div className="header-left">
-                    <h1>Faculty Dashboard</h1>
-                </div>
-                <div className="header-right">
-                    <div className="user-info">
-                        <span>{user?.name}</span>
-                        <span className="user-id">ID: {user?.idNumber}</span>
-                    </div>
-                    <button onClick={logout} className="logout-btn">
-                        Logout
-                    </button>
-                </div>
-            </header>
+            <Navbar title="Faculty Dashboard" user={user} />
 
             <div className="dashboard-content">
                 {/* Sidebar */}
@@ -866,11 +999,7 @@ export default function Faculty() {
                 </main>
             </div>
 
-            {/* Footer */}
-            <footer className="dashboard-footer">
-                <p>© 2024 Smart Village Revolution. All Rights Reserved.</p>
-                <p>Designed and Developed by ZeroOne CodeClub</p>
-            </footer>
+            <Footer />
 
             {/* Modals */}
             {(selectedStudent || showMentorModal) && (
