@@ -9,7 +9,8 @@
 .admin-dashboard {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   background-color: #f0f7f0;
 }
 
@@ -66,16 +67,19 @@
 .dashboard-content {
   display: flex;
   flex: 1;
+  overflow: hidden;
+  position: relative;
 }
 
 .dashboard-sidebar {
   width: 250px;
-  background-color: #ffffff;
-  padding: 1rem 0;
+  background-color: #1a1a1a;
+  padding: 0;
   box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  position: sticky;
+  height: calc(100vh - 64px); /* Adjust based on header height */
 }
 
 .sidebar-item {
@@ -116,6 +120,13 @@
   flex: 1;
   padding: 2rem;
   overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.dashboard-main::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 
 .dashboard-footer {
@@ -126,6 +137,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: sticky;
+  bottom: 0;
+  z-index: 100;
 }
 
 .dashboard-footer p {
@@ -159,12 +173,13 @@
   margin: 0 0 0.5rem;
   color: rgb(151, 0, 3);
   font-size: 1rem;
+  font-weight: 600;
 }
 
 .stat-card p {
   margin: 0;
   font-size: 1.5rem;
-  font-weight: bold;
+  font-weight: 700;
   color: rgb(120, 0, 2);
 }
 
@@ -184,7 +199,8 @@
 .chart-container h2 {
   margin: 0 0 1.5rem;
   font-size: 1.2rem;
-  color: #2e7d32;
+  color: rgb(151, 0, 3);
+  font-weight: 600;
 }
 
 /* Faculty Management Section */
@@ -206,6 +222,7 @@
   margin: 0;
   font-size: 1.5rem;
   color: rgb(151, 0, 3);
+  font-weight: 700;
 }
 
 .add-faculty-btn {
@@ -409,6 +426,20 @@
     gap: 0.5rem;
     text-align: center;
   }
+
+  .dashboard-content {
+    flex-direction: column;
+  }
+
+  .dashboard-sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+  }
+
+  .dashboard-main {
+    height: calc(100vh - 64px - 56px); /* Adjust based on header and footer heights */
+  }
 }
 
 /* Students and Mentors Sections */
@@ -441,7 +472,13 @@
 .mentors-list th {
   background-color: #f5f5f5;
   font-weight: 600;
-  color: #333;
+  color: #333333;
+}
+
+.students-list td,
+.mentors-list td {
+  color: #333333;
+  font-weight: 400;
 }
 
 .students-list tr:hover,
@@ -453,15 +490,15 @@
   padding: 4px 12px;
   border-radius: 4px;
   font-size: 0.85em;
-  font-weight: 500;
+  font-weight: 600;
   display: inline-block;
   text-align: center;
   min-width: 80px;
 }
 
 .status-badge.active {
-  background-color: #e8f5e9;
-  color: #2e7d32;
+  background-color: #f8f0f0;
+  color: rgb(151, 0, 3);
 }
 
 .status-badge.pending {
@@ -741,7 +778,7 @@
   border-radius: 4px;
   text-align: center;
   font-size: 0.9em;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 @media (max-width: 768px) {

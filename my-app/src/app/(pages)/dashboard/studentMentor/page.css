@@ -9,7 +9,8 @@
 .student-mentor-dashboard {
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
     background-color: #f0f7f0;
 }
 
@@ -66,6 +67,8 @@
 .dashboard-content {
     display: flex;
     flex: 1;
+    overflow: hidden;
+    position: relative;
 }
 
 .dashboard-sidebar {
@@ -75,6 +78,8 @@
     box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
+    position: sticky;
+    height: calc(100vh - 64px); /* Adjust based on header height */
 }
 
 .sidebar-item {
@@ -109,7 +114,13 @@
     flex: 1;
     padding: 2rem;
     overflow-y: auto;
-    background-color: #f8faf8;
+    overflow-x: hidden;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+}
+
+.dashboard-main::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
 }
 
 .dashboard-footer {
@@ -120,6 +131,9 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    position: sticky;
+    bottom: 0;
+    z-index: 100;
 }
 
 .dashboard-footer p {
@@ -159,7 +173,7 @@
 
 .stat-card h3 {
     margin: 0 0 0.5rem;
-    color: black;
+    color: #333333;
     font-size: 1.1rem;
     font-weight: 600;
 }
@@ -167,8 +181,8 @@
 .stat-card p {
     margin: 0;
     font-size: 1.5rem;
-    font-weight: bold;
-    color: black;
+    font-weight: 700;
+    color: #333333;
 }
 
 /* Students Section */
@@ -181,8 +195,10 @@
 }
 
 .students-section h2 {
-    color: black;
-    margin-bottom: 1rem;
+    color: #000000;
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
 }
 
 .students-table {
@@ -200,13 +216,14 @@
 .students-table th {
     background-color: #f8f0f0;
     font-weight: 600;
-    color: black;
+    color: #000000;
 }
 
 .students-table td {
     padding: 1rem;
     border-bottom: 1px solid #e0e0e0;
-    color: #333;
+    color: #000000;
+    font-weight: 500;
 }
 
 .students-table tr:hover {
@@ -318,82 +335,90 @@
 }
 
 .completed-students-section h2 {
-    color: #2e7d32;
+    color: rgb(151, 0, 3);
     font-size: 1.5rem;
     margin-bottom: 1.5rem;
-    font-weight: 600;
+    font-weight: 700;
 }
 
 /* Change Password Section */
 .change-password-section {
     background-color: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     padding: 2rem;
-    margin-bottom: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    max-width: 500px;
+    margin: 2rem auto;
 }
 
 .change-password-section h2 {
-    color: #2e7d32;
+    color: rgb(151, 0, 3);
     font-size: 1.5rem;
     margin-bottom: 1.5rem;
     font-weight: 600;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e0e0e0;
 }
 
 .change-password-form {
-    max-width: 500px;
-    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
 }
 
 .form-group {
-    margin-bottom: 1.5rem;
     position: relative;
+    margin-bottom: 1rem;
 }
 
 .form-group label {
     display: block;
     margin-bottom: 0.5rem;
-    color: #333;
+    color: #333333;
     font-weight: 500;
 }
 
 .form-group input {
     width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #ddd;
+    padding: 0.75rem 1rem;
+    padding-right: 2.5rem;
+    border: 1px solid #e0e0e0;
     border-radius: 4px;
     font-size: 1rem;
-    transition: border-color 0.2s;
-    padding-right: 40px;
+    transition: all 0.2s ease;
 }
 
 .form-group input:focus {
     outline: none;
-    border-color: #2e7d32;
+    border-color: rgb(151, 0, 3);
+    box-shadow: 0 0 0 2px rgba(151, 0, 3, 0.1);
 }
 
 .password-toggle {
     position: absolute;
     right: 10px;
-    top: 50%;
+    top: calc(50% + 12px);
     transform: translateY(-50%);
     background: none;
     border: none;
     cursor: pointer;
-    color: #666;
+    color: #666666;
     padding: 5px;
     display: flex;
     align-items: center;
     justify-content: center;
+    min-width: 24px;
+    min-height: 24px;
 }
 
 .password-toggle:hover {
-    color: #2e7d32;
+    color: rgb(151, 0, 3);
 }
 
 .error-message {
-    color: #d32f2f;
-    background-color: #ffebee;
+    color: #dc3545;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
     padding: 0.75rem;
     border-radius: 4px;
     margin-bottom: 1rem;
@@ -403,29 +428,28 @@
 .button-group {
     display: flex;
     justify-content: flex-end;
-    margin-top: 2rem;
+    margin-top: 1rem;
 }
 
 .submit-btn {
     padding: 0.75rem 1.5rem;
-    background-color: #2e7d32;
+    background-color: rgb(151, 0, 3);
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     font-size: 1rem;
+    font-weight: 500;
     transition: all 0.2s ease;
 }
 
 .submit-btn:hover {
-    background-color: #1b5e20;
-    transform: translateY(-1px);
+    background-color: rgb(120, 0, 2);
 }
 
 .submit-btn:disabled {
-    background-color: #ccc;
+    background-color: #cccccc;
     cursor: not-allowed;
-    transform: none;
 }
 
 @media (max-width: 1024px) {
@@ -443,8 +467,18 @@
 }
 
 @media (max-width: 768px) {
+    .dashboard-content {
+        flex-direction: column;
+    }
+
+    .dashboard-sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+    }
+
     .dashboard-main {
-        padding: 1rem;
+        height: calc(100vh - 64px - 56px); /* Adjust based on header and footer heights */
     }
 
     .students-table {
@@ -458,4 +492,52 @@
     .stat-card {
         padding: 1rem;
     }
+}
+
+.mentor-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.mentor-header h1 {
+    color: #000000;
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.mentor-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.mentor-info p {
+    margin: 0;
+    color: #000000;
+    font-weight: 500;
+}
+
+.mentor-info .label {
+    color: #000000;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.mentor-info .value {
+    color: #000000;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.student-name {
+    color: #000000;
+    font-weight: 600;
+}
+
+.student-id {
+    color: #000000;
+    font-size: 0.9rem;
+    font-weight: 500;
 }

@@ -2,14 +2,23 @@
   padding: 0;
   margin: 0;
   box-sizing: border-box;
-  font-family: 'popins', sans-serif;
+  font-family: var(--font-poppins);
+  /* font-weight: 400; */
 }
 .home-component{
   width: 100%;
   height: 100vh;
-  background-color: green;
+  background-color: rgb(151, 0, 3);
   color: white;
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.home-component h1 {
+  font-weight: 700;
+}
+
+.home-component p {
+  font-weight: 400;
 }

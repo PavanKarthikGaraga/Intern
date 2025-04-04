@@ -20,25 +20,25 @@
 
 .forgot-password-header h1 {
     font-size: 2.375rem;
-    color: #111;
+    color: #333333;
     font-weight: 700;
     letter-spacing: -0.03125rem;
     margin-bottom: 1rem;
 }
 
 .forgot-password-header h1 span {
-    color: #2e7d32;
+    color: rgb(151, 0, 3);
 }
 
 .forgot-password-header p {
-    color: #666;
+    color: #333333;
     font-size: 0.9375rem;
     line-height: 1.5;
 }
 
 .forgot-password-header .success-message {
-    color: #2e7d32;
-    background: #e8f5e9;
+    color: rgb(151, 0, 3);
+    background: #f8f0f0;
     padding: 1rem;
     border-radius: 0.5rem;
     margin-top: 1rem;
@@ -58,12 +58,12 @@
     border: 0.09375rem solid #eaeaea;
     border-radius: 0.5rem;
     font-size: 0.9375rem;
-    color: #111;
+    color: #333333;
     transition: border-color 0.15s ease;
 }
 
 .form-group input::placeholder {
-    color: #888;
+    color: #666666;
     font-size: 0.9375rem;
 }
 
@@ -91,7 +91,7 @@
 }
 
 .form-group-button p {
-    color: #555;
+    color: #333333;
     font-size: 0.875rem;
     cursor: pointer;
     transition: color 0.15s ease;
@@ -99,5 +99,5 @@
 }
 
 .form-group-button p:hover {
-    color: #2e7d32;
+    color: rgb(151, 0, 3);
 } 
