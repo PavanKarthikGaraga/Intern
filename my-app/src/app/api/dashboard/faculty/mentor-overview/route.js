@@ -47,16 +47,16 @@ export async function GET() {
                     r.selectedDomain,
                     COALESCE(
                         (SELECT 
-                            (CASE WHEN day1Link IS NOT NULL THEN 1 ELSE 0 END) +
-                            (CASE WHEN day2Link IS NOT NULL THEN 1 ELSE 0 END) +
-                            (CASE WHEN day3Link IS NOT NULL THEN 1 ELSE 0 END) +
-                            (CASE WHEN day4Link IS NOT NULL THEN 1 ELSE 0 END) +
-                            (CASE WHEN day5Link IS NOT NULL THEN 1 ELSE 0 END) +
-                            (CASE WHEN day6Link IS NOT NULL THEN 1 ELSE 0 END) +
-                            (CASE WHEN day7Link IS NOT NULL THEN 1 ELSE 0 END) +
-                            (CASE WHEN day8Link IS NOT NULL THEN 1 ELSE 0 END)
-                        FROM uploads 
-                        WHERE uploads.idNumber = r.idNumber
+                            (CASE WHEN day1 = 'P' THEN 1 ELSE 0 END) +
+                            (CASE WHEN day2 = 'P' THEN 1 ELSE 0 END) +
+                            (CASE WHEN day3 = 'P' THEN 1 ELSE 0 END) +
+                            (CASE WHEN day4 = 'P' THEN 1 ELSE 0 END) +
+                            (CASE WHEN day5 = 'P' THEN 1 ELSE 0 END) +
+                            (CASE WHEN day6 = 'P' THEN 1 ELSE 0 END) +
+                            (CASE WHEN day7 = 'P' THEN 1 ELSE 0 END) +
+                            (CASE WHEN day8 = 'P' THEN 1 ELSE 0 END)
+                        FROM attendance a
+                        WHERE a.idNumber = r.idNumber
                         ), 0
                     ) as daysCompleted
                 FROM registrations r

@@ -26,24 +26,23 @@ export async function GET(request) {
             SELECT 
                 r.*,
                 COALESCE(
-                    (SELECT COUNT(*)
-                    FROM uploads u
-                    WHERE u.idNumber = r.idNumber
-                    AND (
-                        (u.day1Link IS NOT NULL) +
-                        (u.day2Link IS NOT NULL) +
-                        (u.day3Link IS NOT NULL) +
-                        (u.day4Link IS NOT NULL) +
-                        (u.day5Link IS NOT NULL) +
-                        (u.day6Link IS NOT NULL) +
-                        (u.day7Link IS NOT NULL) +
-                        (u.day8Link IS NOT NULL)
-                    )), 0
-                ) as uploadsCount,
+                    (SELECT 
+                        (CASE WHEN day1 = 'P' THEN 1 ELSE 0 END) +
+                        (CASE WHEN day2 = 'P' THEN 1 ELSE 0 END) +
+                        (CASE WHEN day3 = 'P' THEN 1 ELSE 0 END) +
+                        (CASE WHEN day4 = 'P' THEN 1 ELSE 0 END) +
+                        (CASE WHEN day5 = 'P' THEN 1 ELSE 0 END) +
+                        (CASE WHEN day6 = 'P' THEN 1 ELSE 0 END) +
+                        (CASE WHEN day7 = 'P' THEN 1 ELSE 0 END) +
+                        (CASE WHEN day8 = 'P' THEN 1 ELSE 0 END)
+                    FROM attendance a
+                    WHERE a.idNumber = r.idNumber
+                    ), 0
+                ) as daysCompleted,
                 MAX(sm.name) as mentorName,
                 MAX(sm.mentorId) as mentorId
             FROM registrations r
-            LEFT JOIN uploads u ON r.idNumber = u.idNumber
+            LEFT JOIN attendance a ON r.idNumber = a.idNumber
             LEFT JOIN studentMentors sm ON 
                 r.idNumber IN (
                     sm.student1Id, sm.student2Id, sm.student3Id,

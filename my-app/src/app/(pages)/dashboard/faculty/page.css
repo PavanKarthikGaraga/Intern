@@ -505,38 +505,108 @@
 }
 
 .mentor-list {
-    background: #f8faf8;
-    padding: 1rem;
-    border-radius: 4px;
-    margin-bottom: 1rem;
+    margin-top: 1rem;
+    background: white;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 .mentor-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.75rem;
-    border-bottom: 1px solid #e8f5e9;
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+    transition: background-color 0.2s;
 }
 
 .mentor-item:last-child {
     border-bottom: none;
 }
 
+.mentor-item:hover {
+    background-color: #f8f9fa;
+}
+
 .mentor-info {
     display: flex;
-    gap: 1rem;
+    gap: 2rem;
     align-items: center;
 }
 
 .mentor-name {
     font-weight: 500;
-    color: #2e7d32;
+    color: #333;
+    min-width: 150px;
+}
+
+.mentor-id {
+    color: #666;
+    font-family: monospace;
 }
 
 .mentor-domain {
-    color: #666;
+    color: rgb(151, 0, 3);
+    font-weight: 500;
+}
+
+.assign-btn {
+    padding: 0.5rem 1rem;
+    background-color: rgb(151, 0, 3);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
     font-size: 0.9rem;
+}
+
+.assign-btn:hover {
+    background-color: rgb(120, 0, 2);
+}
+
+.no-mentors {
+    text-align: center;
+    padding: 1rem;
+    color: #666;
+    background-color: #f8f9fa;
+    margin: 1rem;
+    border-radius: 4px;
+}
+
+.student-domain-info {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 4px;
+    margin: 1rem 0;
+    border: 1px solid #eee;
+}
+
+.student-domain-info p {
+    margin: 0.5rem 0;
+    color: #666;
+}
+
+.student-domain-info strong {
+    color: #333;
+}
+
+@media (max-width: 768px) {
+    .mentor-info {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: flex-start;
+    }
+
+    .mentor-item {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .assign-btn {
+        width: 100%;
+    }
 }
 
 /* Search Section in Mentor Modal */
@@ -998,22 +1068,74 @@
 
 .mentor-filters {
     display: flex;
-    gap: 1rem;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 1.5rem;
+    gap: 1rem;
+}
+
+.filters-left {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex: 1;
 }
 
 .search-box input {
-    padding: 0.5rem;
+    padding: 0.75rem;
     border: 1px solid #ddd;
     border-radius: 4px;
     width: 250px;
+    font-size: 0.9rem;
 }
 
 .domain-filter select {
-    padding: 0.5rem;
+    padding: 0.75rem;
     border: 1px solid #ddd;
     border-radius: 4px;
     background-color: white;
+    min-width: 200px;
+    font-size: 0.9rem;
+}
+
+.add-mentor-btn {
+    padding: 0.75rem 1.5rem;
+    background-color: rgb(151, 0, 3);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    white-space: nowrap;
+    font-size: 0.9rem;
+    margin-left: auto;
+}
+
+.add-mentor-btn:hover {
+    background-color: rgb(120, 0, 2);
+}
+
+@media (max-width: 768px) {
+    .mentor-filters {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .filters-left {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .search-box,
+    .domain-filter {
+        width: 100%;
+    }
+
+    .search-box input,
+    .domain-filter select,
+    .add-mentor-btn {
+        width: 100%;
+    }
 }
 
 .mentor-cards {
@@ -1261,7 +1383,7 @@
 
 .progress-bar {
     width: 150px;
-    height: 8px;
+    height: 1rem;
     background-color: #e9ecef;
     border-radius: 4px;
     position: relative;
@@ -1276,10 +1398,12 @@
 
 .progress-text {
     position: absolute;
-    right: 0;
-    top: -18px;
-    font-size: 0.8rem;
-    color: #666;
+    right: 20%;
+    top: 30%;
+    transform: translate(-50%, -50%);
+    font-size: 0.6rem;
+    color: #000000;
+    font-weight: 500;
 }
 
 .completed-status {
@@ -1382,6 +1506,289 @@
     .stat-item {
         flex-direction: row;
         justify-content: space-between;
+        width: 100%;
+    }
+}
+
+.domain-selection {
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.domain-selection label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #333;
+    font-weight: 500;
+}
+
+.domain-select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    color: #333;
+    background-color: white;
+}
+
+.domain-select:focus {
+    outline: none;
+    border-color: rgb(151, 0, 3);
+    box-shadow: 0 0 0 2px rgba(151, 0, 3, 0.1);
+}
+
+.student-result {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+    transition: background-color 0.2s;
+}
+
+.student-result:hover {
+    background-color: #f8f9fa;
+}
+
+.student-result:last-child {
+    border-bottom: none;
+}
+
+.student-info {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+}
+
+.student-name {
+    font-weight: 500;
+    color: #333;
+    min-width: 150px;
+}
+
+.student-id {
+    color: #666;
+    font-family: monospace;
+}
+
+.student-domain {
+    color: rgb(151, 0, 3);
+    font-weight: 500;
+}
+
+.create-btn {
+    padding: 0.5rem 1rem;
+    background-color: rgb(151, 0, 3);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    font-size: 0.9rem;
+}
+
+.create-btn:hover {
+    background-color: rgb(120, 0, 2);
+}
+
+.no-results {
+    text-align: center;
+    padding: 1rem;
+    color: #666;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    margin-top: 1rem;
+}
+
+.search-container {
+    margin-bottom: 1rem;
+}
+
+.search-results {
+    background-color: white;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+@media (max-width: 768px) {
+    .student-info {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: flex-start;
+    }
+
+    .student-result {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .create-btn {
+        width: 100%;
+    }
+}
+
+/* Domain Statistics */
+.domain-stats {
+    padding: 2rem;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.domain-stats h2 {
+    color: #333;
+    margin-bottom: 1.5rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background-color: #f8f0f0;
+    padding: 1.5rem;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.stat-card h3 {
+    color: #333;
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.stat-card p {
+    color: rgb(151, 0, 3);
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.domain-breakdown {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.domain-stat-card {
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.domain-stat-card h4 {
+    color: rgb(151, 0, 3);
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+    border-bottom: 2px solid #f8f0f0;
+    padding-bottom: 0.5rem;
+}
+
+.domain-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.domain-details p {
+    color: #666;
+    font-size: 0.9rem;
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.domain-details p:last-child {
+    border-bottom: none;
+}
+
+/* Mentor Modification */
+.remove-mentor-section {
+    margin: 1rem 0;
+    padding: 1rem;
+    background-color: #fff3f3;
+    border-radius: 8px;
+    border: 1px solid #ffcdd2;
+}
+
+.remove-mentor-btn {
+    background-color: #f44336;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.remove-mentor-btn:hover {
+    background-color: #d32f2f;
+}
+
+.assign-btn:disabled {
+    background-color: #e0e0e0;
+    cursor: not-allowed;
+}
+
+/* Student Management */
+.student-management {
+    padding: 2rem;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.student-management h2 {
+    color: #333;
+    margin-bottom: 1.5rem;
+}
+
+.filters {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.search-input {
+    flex: 1;
+    padding: 0.75rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.domain-filter {
+    min-width: 200px;
+    padding: 0.75rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .domain-breakdown {
+        grid-template-columns: 1fr;
+    }
+
+    .filters {
+        flex-direction: column;
+    }
+
+    .domain-filter {
         width: 100%;
     }
 }

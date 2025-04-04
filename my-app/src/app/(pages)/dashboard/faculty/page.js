@@ -52,6 +52,19 @@ export default function Faculty() {
     const [expandedMentor, setExpandedMentor] = useState(null);
     const [activeTab, setActiveTab] = useState('active');
 
+    const handleModalClose = () => {
+        setSelectedStudent(null);
+        setShowMentorModal(false);
+        setSelectedStudentForMentor(null);
+        setMentorSearchQuery('');
+        setSearchedStudents([]);
+        setUploads([]);
+        setStudentAttendance({});
+        if (!selectedStudentForMentor) {
+            setSelectedDomain('all');
+        }
+    };
+
     useEffect(() => {
         fetchRegistrations();
         fetchStudentMentors();
@@ -309,13 +322,13 @@ export default function Faculty() {
 
     const searchPotentialMentors = async (query) => {
         try {
-            if (!selectedStudentForMentor?.selectedDomain) {
-                toast.error('Student domain not found');
+            if (!selectedDomain) {
+                toast.error('Please select a domain first');
                 return;
             }
 
             const response = await fetch(
-                `/api/dashboard/faculty/search-students?query=${query}&studentId=${selectedStudentForMentor.idNumber}&domain=${selectedStudentForMentor.selectedDomain}`
+                `/api/dashboard/faculty/search-students?query=${query}&domain=${selectedDomain}`
             );
             if (!response.ok) throw new Error('Failed to search students');
             const data = await response.json();
@@ -328,6 +341,13 @@ export default function Faculty() {
 
     const createNewMentor = async (studentData) => {
         try {
+            // First check if the student has a mentor
+            const student = registrations.find(reg => reg.idNumber === studentData.idNumber);
+            if (student?.mentorName) {
+                toast.error('This student already has a mentor assigned. Please remove their mentor first before promoting them.');
+                return;
+            }
+
             const response = await fetch('/api/dashboard/faculty/create-mentor', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -348,35 +368,33 @@ export default function Faculty() {
         }
     };
 
-    const renderStudentManagement = () => (
-        <div className="students-section">
-            <div className="search-pagination-controls">
+    const renderStudentManagement = () => {
+        // Filter out students who are mentors
+        const nonMentorStudents = registrations.filter(student => 
+            !studentMentors.some(mentor => mentor.mentorId === student.idNumber)
+        );
+
+        return (
+            <div className="student-management">
+                <h2>Student Management</h2>
+                <div className="filters">
                 <input
                     type="text"
                     placeholder="Search by name, ID, or domain..."
                     value={searchQuery}
-                    onChange={(e) => {
-                        setSearchQuery(e.target.value);
-                        setCurrentPage(1);
-                    }}
+                        onChange={handleSearch}
                     className="search-input"
                 />
-                
-                <div className="pagination-controls">
-                    <button 
-                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                        disabled={currentPage === 1}
+                    <select
+                        value={selectedDomain}
+                        onChange={(e) => setSelectedDomain(e.target.value)}
+                        className="domain-filter"
                     >
-                        Previous
-                    </button>
-                    <span>Page {currentPage} of {totalPages}</span>
-                    <button 
-                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                        disabled={currentPage === totalPages}
-                    >
-                        Next
-                    </button>
-                </div>
+                        <option value="all">All Domains</option>
+                        {[...new Set(nonMentorStudents.map(reg => reg.selectedDomain))].map(domain => (
+                            <option key={domain} value={domain}>{domain}</option>
+                        ))}
+                    </select>
             </div>
 
             <div className="registrations-table">
@@ -394,14 +412,24 @@ export default function Faculty() {
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredRegistrations.map((reg) => (
+                            {nonMentorStudents
+                                .filter(reg => 
+                                    selectedDomain === 'all' || 
+                                    reg.selectedDomain === selectedDomain
+                                )
+                                .filter(reg => 
+                                    reg.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                    reg.idNumber.toString().includes(searchQuery) ||
+                                    reg.selectedDomain.toLowerCase().includes(searchQuery.toLowerCase())
+                                )
+                                .map((reg) => (
                             <tr key={reg.idNumber}>
                                 <td>{reg.idNumber}</td>
                                 <td>{reg.name}</td>
                                 <td>{reg.selectedDomain}</td>
                                 <td>{reg.branch}</td>
                                 <td>{reg.year}</td>
-                                <td>{reg.uploadsCount || 0}/8</td>
+                                        <td>{reg.daysCompleted || 0}/8</td>
                                 <td>{reg.mentorName || 'Not Assigned'}</td>
                                 <td>
                                     <button 
@@ -412,7 +440,7 @@ export default function Faculty() {
                                         }}
                                         className="assign-mentor-btn"
                                     >
-                                        Assign Mentor
+                                                {reg.mentorName ? 'Modify Mentor' : 'Assign Mentor'}
                                     </button>
                                     <button 
                                         onClick={() => {
@@ -431,118 +459,184 @@ export default function Faculty() {
             </div>
         </div>
     );
+    };
 
     const renderDomainStats = () => {
-        const stats = getStats();
+        // Filter out students who are mentors
+        const nonMentorStudents = registrations.filter(student => 
+            !studentMentors.some(mentor => mentor.mentorId === student.idNumber)
+        );
+
+        const stats = {
+            totalStudents: nonMentorStudents.length,
+            domains: [...new Set(nonMentorStudents.map(reg => reg.selectedDomain))],
+            studentsPerDomain: nonMentorStudents.reduce((acc, reg) => {
+                if (!acc[reg.selectedDomain]) {
+                    acc[reg.selectedDomain] = {
+                        total: 0,
+                        active: 0,
+                        completed: 0,
+                        mentors: 0
+                    };
+                }
+                acc[reg.selectedDomain].total++;
+                if ((reg.daysCompleted || 0) < 8) {
+                    acc[reg.selectedDomain].active++;
+                } else if ((reg.daysCompleted || 0) === 8) {
+                    acc[reg.selectedDomain].completed++;
+                }
+                return acc;
+            }, {})
+        };
+
+        // Count mentors per domain
+        studentMentors.forEach(mentor => {
+            if (stats.studentsPerDomain[mentor.domain]) {
+                stats.studentsPerDomain[mentor.domain].mentors++;
+            }
+        });
+
         return (
-            <div className="domain-stats-section">
-                <div className="stats-overview">
+            <div className="domain-stats">
+                <h2>Domain Statistics</h2>
+                <div className="stats-grid">
                     <div className="stat-card">
                         <h3>Total Students</h3>
                         <p>{stats.totalStudents}</p>
                     </div>
-                    {Object.entries(stats.studentsPerDomain).map(([domain, count]) => (
-                        <div key={domain} className="stat-card">
-                            <h3>{domain}</h3>
-                            <p>{count} students</p>
+                    <div className="stat-card">
+                        <h3>Total Domains</h3>
+                        <p>{stats.domains.length}</p>
+                        </div>
+                    <div className="stat-card">
+                        <h3>Total Mentors</h3>
+                        <p>{studentMentors.length}</p>
+                </div>
+                </div>
+
+                <h3>Students per Domain</h3>
+                <div className="domain-breakdown">
+                    {Object.entries(stats.studentsPerDomain).map(([domain, data]) => (
+                        <div key={domain} className="domain-stat-card">
+                            <h4>{domain}</h4>
+                            <div className="domain-details">
+                                <p>Total Students: {data.total}</p>
+                                <p>Active Students: {data.active}</p>
+                                <p>Completed Students: {data.completed}</p>
+                                <p>Assigned Mentors: {data.mentors}</p>
+                            </div>
                         </div>
                     ))}
-                </div>
-
-                <div className="domain-filter">
-                    <select 
-                        value={selectedDomain} 
-                        onChange={(e) => setSelectedDomain(e.target.value)}
-                    >
-                        <option value="all">All Domains</option>
-                        {stats.domains.map(domain => (
-                            <option key={domain} value={domain}>{domain}</option>
-                        ))}
-                    </select>
-                </div>
-
-                <div className="registrations-table">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>ID Number</th>
-                                <th>Name</th>
-                                <th>Domain</th>
-                                <th>Branch</th>
-                                <th>Year</th>
-                                <th>Days Completed</th>
-                                <th>Student Mentor</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {(activeSection === 'domains' ? filteredRegistrations : registrations).map((reg) => (
-                                <tr key={reg.idNumber}>
-                                    <td>{reg.idNumber}</td>
-                                    <td>{reg.name}</td>
-                                    <td>{reg.selectedDomain}</td>
-                                    <td>{reg.branch}</td>
-                                    <td>{reg.year}</td>
-                                    <td>{reg.uploadsCount || 0}/8</td>
-                                    <td>{reg.mentorName || 'Not Assigned'}</td>
-                                    <td>
-                                        <button 
-                                            onClick={() => {
-                                                setSelectedStudentForMentor(reg);
-                                                setShowMentorModal(true);
-                                                setSelectedStudent(null);
-                                            }}
-                                            className="assign-mentor-btn"
-                                        >
-                                            Assign Mentor
-                                        </button>
-                                        <button 
-                                            onClick={() => {
-                                                fetchUploads(reg.idNumber);
-                                                setShowMentorModal(false);
-                                            }}
-                                            className="view-uploads-btn"
-                                        >
-                                            Mark Attendance
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
                 </div>
             </div>
         );
     };
 
-    const renderMentorModal = () => (
-        <>
-            <h3>Assign Student Mentor</h3>
-            <p>Select a mentor for {selectedStudentForMentor?.name} (Domain: {selectedStudentForMentor?.selectedDomain})</p>
+    const renderMentorModal = () => {
+        // If we're assigning a mentor to a student
+        if (selectedStudentForMentor) {
+            return (
+                <>
+                    <h3>{selectedStudentForMentor.mentorName ? 'Modify Student Mentor' : 'Assign Student Mentor'}</h3>
+                    <div className="student-domain-info">
+                        <p>Student: <strong>{selectedStudentForMentor.name}</strong></p>
+                        <p>Domain: <strong>{selectedStudentForMentor.selectedDomain}</strong></p>
+                        {selectedStudentForMentor.mentorName && (
+                            <p>Current Mentor: <strong>{selectedStudentForMentor.mentorName}</strong></p>
+                        )}
+                    </div>
 
+                    {selectedStudentForMentor.mentorName ? (
+                        <div className="remove-mentor-section">
+                            <p>To assign a new mentor, first remove the current mentor.</p>
+                            <button
+                                onClick={() => handleRemoveMentor(selectedStudentForMentor.idNumber)}
+                                className="remove-mentor-btn"
+                            >
+                                Remove Current Mentor
+                            </button>
+                        </div>
+                    ) : (
             <div className="mentor-search-section">
-                <h4>Existing Mentors</h4>
+                            <h4>Available Mentors</h4>
+                            <div className="search-container">
+                                <input
+                                    type="text"
+                                    placeholder="Search mentors by name or ID..."
+                                    value={mentorSearchQuery}
+                                    onChange={(e) => setMentorSearchQuery(e.target.value)}
+                                    className="search-input"
+                                />
+                            </div>
+
                 <div className="mentor-list">
                     {studentMentors
-                        .filter(mentor => mentor.domain === selectedStudentForMentor?.selectedDomain)
+                                    .filter(mentor => 
+                                        mentor.domain === selectedStudentForMentor.selectedDomain &&
+                                        (mentorSearchQuery === '' || 
+                                        mentor.name.toLowerCase().includes(mentorSearchQuery.toLowerCase()) ||
+                                        mentor.mentorId.toString().includes(mentorSearchQuery))
+                                    )
                         .map((mentor) => (
-                            <div key={`mentor-${mentor.mentorId}`} className="mentor-item">
+                                        <div key={`mentor-${mentor.mentorId}`} className="mentor-item">
                                 <div className="mentor-info">
                                     <span className="mentor-name">{mentor.name}</span>
+                                                <span className="mentor-id">ID: {mentor.mentorId}</span>
                                     <span className="mentor-domain">{mentor.domain}</span>
                                 </div>
                                 <button
-                                    onClick={() => handleAssignMentor(selectedStudentForMentor?.idNumber, mentor.mentorId)}
+                                                onClick={() => handleAssignMentor(selectedStudentForMentor.idNumber, mentor.mentorId)}
                                     className="assign-btn"
                                 >
                                     Assign
                                 </button>
                             </div>
                         ))}
+                                {studentMentors.filter(mentor => mentor.domain === selectedStudentForMentor.selectedDomain).length === 0 && (
+                                    <p className="no-mentors">No mentors available for this domain</p>
+                                )}
                 </div>
+                        </div>
+                    )}
 
+                    <div className="modal-footer">
+                        <button
+                            onClick={handleModalClose}
+                            className="close-modal-btn"
+                        >
+                            Close
+                        </button>
+                    </div>
+                </>
+            );
+        }
+
+        // If we're creating a new mentor
+        return (
+            <>
+                <h3>Create New Mentor</h3>
+                <div className="mentor-search-section">
+                    <div className="domain-selection">
+                        <label htmlFor="mentorDomain">Select Domain</label>
+                        <select
+                            id="mentorDomain"
+                            value={selectedDomain}
+                            onChange={(e) => {
+                                setSelectedDomain(e.target.value);
+                                setSearchedStudents([]);
+                                setMentorSearchQuery('');
+                            }}
+                            className="domain-select"
+                        >
+                            <option value="all">Select a domain</option>
+                            {[...new Set(registrations.map(reg => reg.selectedDomain))].map(domain => (
+                                <option key={domain} value={domain}>{domain}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {selectedDomain !== 'all' && (
                 <div className="create-mentor-section">
-                    <h4>Create New Mentor</h4>
                     <div className="search-container">
                         <input
                             type="text"
@@ -550,7 +644,11 @@ export default function Faculty() {
                             value={mentorSearchQuery}
                             onChange={(e) => {
                                 setMentorSearchQuery(e.target.value);
+                                        if (e.target.value) {
                                 searchPotentialMentors(e.target.value);
+                                        } else {
+                                            setSearchedStudents([]);
+                                        }
                             }}
                             className="search-input"
                         />
@@ -559,32 +657,47 @@ export default function Faculty() {
                     {searchedStudents.length > 0 && (
                         <div className="search-results">
                             {searchedStudents.map((student) => (
-                                <div key={`student-${student.idNumber}`} className="student-result">
+                                        <div key={`student-${student.idNumber}`} className="student-result">
                                     <div className="student-info">
-                                        <span>{student.name}</span>
-                                        <span>{student.idNumber}</span>
-                                        <span>{student.selectedDomain}</span>
+                                                <span className="student-name">{student.name}</span>
+                                                <span className="student-id">{student.idNumber}</span>
+                                                <span className="student-domain">{student.selectedDomain}</span>
                                     </div>
                                     <button
                                         onClick={() => {
-                                            handleAssignMentor(selectedStudentForMentor?.idNumber, student.idNumber);
+                                                    // Check if student has a mentor before creating
+                                                    if (student.mentorName) {
+                                                        toast.error('This student already has a mentor assigned. Please remove their mentor first before promoting them.');
+                                                        return;
+                                                    }
+                                                    createNewMentor({
+                                                        idNumber: student.idNumber,
+                                                        name: student.name,
+                                                        domain: student.selectedDomain
+                                                    });
                                             setMentorSearchQuery('');
                                             setSearchedStudents([]);
+                                                    setShowMentorModal(false);
                                         }}
-                                        className="select-btn"
+                                                className="create-btn"
                                     >
-                                        Select
+                                                Create Mentor
                                     </button>
                                 </div>
                             ))}
                         </div>
                     )}
+
+                            {searchedStudents.length === 0 && mentorSearchQuery && (
+                                <p className="no-results">No students found matching your search</p>
+                            )}
                 </div>
+                    )}
             </div>
 
             <div className="modal-footer">
                 <button
-                    onClick={() => setShowMentorModal(false)}
+                        onClick={handleModalClose}
                     className="close-modal-btn"
                 >
                     Close
@@ -592,6 +705,7 @@ export default function Faculty() {
             </div>
         </>
     );
+    };
 
     const fetchMentorOverview = async () => {
         try {
@@ -620,29 +734,59 @@ export default function Faculty() {
 
         return (
             <div className="mentor-overview">
-                <div className="mentor-filters">
-                    <div className="search-box">
-                        <input
-                            type="text"
-                            placeholder="Search mentors..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </div>
-                    <div className="domain-filter">
-                        <select
-                            value={selectedDomain}
-                            onChange={(e) => setSelectedDomain(e.target.value)}
-                        >
-                            <option value="all">All Domains</option>
-                            {uniqueDomains.map(domain => (
-                                <option key={`domain-${domain}`} value={domain}>{domain}</option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
+                {!expandedMentor ? (
+                    <>
+                        <div className="mentor-filters">
+                            <div className="filters-left">
+                                <div className="search-box">
+                                    <input
+                                        type="text"
+                                        placeholder="Search mentors..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                    />
+                                </div>
+                                <div className="domain-filter">
+                                    <select
+                                        value={selectedDomain}
+                                        onChange={(e) => setSelectedDomain(e.target.value)}
+                                    >
+                                        <option value="all">All Domains</option>
+                                        {uniqueDomains.map(domain => (
+                                            <option key={`domain-${domain}`} value={domain}>{domain}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                            <button 
+                                className="add-mentor-btn"
+                                onClick={() => setShowMentorModal(true)}
+                            >
+                                Add New Mentor
+                            </button>
+                        </div>
 
-                {expandedMentor ? (
+                        <div className="mentor-cards">
+                            {filteredMentors.map(mentor => (
+                                <div key={`mentor-${mentor.mentorId}`} className="mentor-card">
+                                    <div 
+                                        className="mentor-card-header"
+                                        onClick={() => setExpandedMentor(mentor.mentorId)}
+                                    >
+                                        <div className="mentor-info">
+                            <h3>{mentor.name}</h3>
+                                            <p>ID: {mentor.mentorId}</p>
+                                            <p>Domain: {mentor.domain}</p>
+                        </div>
+                                        <div className="expand-icon">
+                                            ▶
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </>
+                ) : (
                     <div className="mentor-profile-main">
                         {mentorOverview?.find(m => m.mentorId === expandedMentor) && (
                             <>
@@ -692,54 +836,54 @@ export default function Faculty() {
 
                                     {activeTab === 'active' ? (
                                         <div className="student-table">
-                                            <table>
-                                                <thead>
-                                                    <tr>
-                                                        <th>Name</th>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
                                                         <th>ID</th>
                                                         <th>Domain</th>
-                                                        <th>Progress</th>
-                                                        <th>Actions</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
+                                        <th>Progress</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
                                                     {mentorOverview.find(m => m.mentorId === expandedMentor).students
                                                         ?.filter(s => s.daysCompleted < 8)
                                                         .map(student => (
                                                             <tr key={`student-${student.idNumber}`}>
-                                                                <td>{student.name}</td>
+                                            <td>{student.name}</td>
                                                                 <td>{student.idNumber}</td>
                                                                 <td>{student.selectedDomain}</td>
-                                                                <td>
-                                                                    <div className="progress-bar">
-                                                                        <div 
-                                                                            className="progress-fill"
-                                                                            style={{ 
-                                                                                width: `${(student.daysCompleted / 8) * 100}%`,
+                                            <td>
+                                                <div className="progress-bar">
+                                                    <div 
+                                                        className="progress-fill"
+                                                        style={{ 
+                                                            width: `${(student.daysCompleted / 8) * 100}%`,
                                                                                 backgroundColor: '#66bb6a'
-                                                                            }}
-                                                                        />
-                                                                        <span className="progress-text">
-                                                                            {student.daysCompleted}/8 days
-                                                                        </span>
+                                                        }}
+                                                    />
+                                                <span className="progress-text">
+                                                    {student.daysCompleted}/8 days
+                                                </span>
                                                                     </div>
-                                                                </td>
-                                                                <td>
-                                                                    <button 
+                                            </td>
+                                            <td>
+                                                <button 
                                                                         className="view-progress-btn"
-                                                                        onClick={() => fetchUploads(student.idNumber)}
-                                                                    >
-                                                                        View Progress
-                                                                    </button>
-                                                                </td>
-                                                            </tr>
-                                                        ))}
-                                                </tbody>
-                                            </table>
+                                                    onClick={() => fetchUploads(student.idNumber)}
+                                                >
+                                                    View Progress
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                                             {(!mentorOverview.find(m => m.mentorId === expandedMentor).students?.filter(s => s.daysCompleted < 8).length) && (
                                                 <p className="no-students">No active students</p>
                                             )}
-                                        </div>
+                        </div>
                                     ) : (
                                         <div className="student-table">
                                             <table>
@@ -778,35 +922,15 @@ export default function Faculty() {
                                             {(!mentorOverview.find(m => m.mentorId === expandedMentor).students?.filter(s => s.daysCompleted === 8).length) && (
                                                 <p className="no-students">No completed students</p>
                                             )}
-                                        </div>
+            </div>
                                     )}
                                 </div>
                             </>
                         )}
                     </div>
-                ) : (
-                    <div className="mentor-cards">
-                        {filteredMentors.map(mentor => (
-                            <div key={`mentor-${mentor.mentorId}`} className="mentor-card">
-                                <div 
-                                    className="mentor-card-header"
-                                    onClick={() => setExpandedMentor(mentor.mentorId)}
-                                >
-                                    <div className="mentor-info">
-                                        <h3>{mentor.name}</h3>
-                                        <p>ID: {mentor.mentorId}</p>
-                                        <p>Domain: {mentor.domain}</p>
-                                    </div>
-                                    <div className="expand-icon">
-                                        ▶
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
                 )}
-            </div>
-        );
+        </div>
+    );
     };
 
     const handlePasswordChange = async (e) => {
@@ -953,6 +1077,34 @@ export default function Faculty() {
         </div>
     );
 
+    const handleRemoveMentor = async (studentId) => {
+        try {
+            const response = await fetch('/api/dashboard/faculty/remove-mentor', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ studentId })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to remove mentor');
+            }
+
+            const data = await response.json();
+            if (data.success) {
+                toast.success('Mentor removed successfully');
+                fetchRegistrations();
+                fetchStudentMentors();
+                handleModalClose();
+            }
+        } catch (err) {
+            console.error('Error removing mentor:', err);
+            toast.error(err.message || 'Failed to remove mentor');
+        }
+    };
+
     if (!user) return <Loader />;
     if (loading) return <Loader />;
     if (error) return <div className="error">{error}</div>;
@@ -1003,14 +1155,14 @@ export default function Faculty() {
 
             {/* Modals */}
             {(selectedStudent || showMentorModal) && (
-                <div className="modal-overlay">
+                <div className="modal-overlay" onClick={handleModalClose}>
                     {selectedStudent && (
-                        <div className="modal-content">
+                        <div className="modal-content" onClick={e => e.stopPropagation()}>
                             {renderAttendanceModal()}
                         </div>
                     )}
                     {showMentorModal && (
-                        <div className="modal-content">
+                        <div className="modal-content" onClick={e => e.stopPropagation()}>
                             {renderMentorModal()}
                         </div>
                     )}
