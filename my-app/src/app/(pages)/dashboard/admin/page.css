@@ -2079,6 +2079,7 @@
 
 .delete-admin-btn:hover {
     background-color: #005204;
+}
 
 .delete-admin-btn:focus {
     outline: none; 
