@@ -1931,7 +1931,7 @@
 
 .add-admin-btn {
     padding: 8px 16px;
-    background-color: #4CAF50;
+    background-color: #007904;
     color: white;
     border: none;
     border-radius: 4px;
@@ -1941,7 +1941,8 @@
 }
 
 .add-admin-btn:hover {
-    background-color: #45a049;
+    background-color: #005204;
+
 }
 
 /* Admin Modal Styles */
@@ -2061,3 +2062,24 @@
     color: #333;
     font-size: 1.2rem;
 }
+
+
+/* Add this to your page.css file */
+
+.delete-admin-btn {
+    padding: 8px 16px;
+    background-color: #007904;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+.delete-admin-btn:hover {
+    background-color: #005204;
+
+.delete-admin-btn:focus {
+    outline: none; 
+    box-shadow: 0 0 0 2px rgba(255, 77, 77, 0.5); 

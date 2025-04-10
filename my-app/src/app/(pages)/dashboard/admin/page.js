@@ -1140,40 +1140,36 @@ export default function Admin() {
         }
     };
 
-    const renderAddAdmin = () => {
-        const handleSubmit = async (e) => {
-            e.preventDefault();
-            try {
-                const response = await fetch('/api/dashboard/admin/admin', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(newAdminData),
-                });
+    const handleDeleteAdmin = async (idNumber) => {
+        if (!window.confirm('Are you sure you want to remove this admin? This will revoke their admin privileges.')) {
+            return;
+        }
 
-                const data = await response.json();
+        try {
+            const response = await fetch('/api/dashboard/admin/admin/delete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ idNumber })
+            });
 
-                if (response.ok) {
-                    toast.success('Admin added successfully');
-                    setNewAdminData({
-                        name: '',
-                        idNumber: '',
-                        password: ''
-                    });
-                    fetchAdmins();
-                    setShowAdminModal(false);
-                } else {
-                    throw new Error(data.error || 'Failed to add admin');
-                }
-            } catch (error) {
-                console.error('Error adding admin:', error);
-                toast.error(error.message || 'Failed to add admin');
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to remove admin');
             }
-        };
 
+            toast.success('Admin removed successfully');
+            fetchAdmins(); // Refresh the admin list
+        } catch (err) {
+            console.error('Error removing admin:', err);
+            toast.error(err.message || 'Failed to remove admin');
+        }
+    };
+
+    const renderAdminList = () => {
         return (
-            <div className="add-admin-section">
+            <div className="admin-section">
                 <div className="section-header">
                     <h2>Admins</h2>
                     <button 
@@ -1193,7 +1189,8 @@ export default function Admin() {
                                 <tr>
                                     <th>Name</th>
                                     <th>ID Number</th>
-                                    <th>Role</th>
+                                    {/* <th>Role</th> */}
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -1201,7 +1198,15 @@ export default function Admin() {
                                     <tr key={admin.idNumber}>
                                         <td>{admin.name}</td>
                                         <td>{admin.idNumber}</td>
-                                        <td>{admin.role}</td>
+                                        {/* <td>{admin.role}</td> */}
+                                        <td>
+                                            <button 
+                                                className="delete-admin-btn"
+                                                onClick={() => handleDeleteAdmin(admin.idNumber)}
+                                            >
+                                                Remove Admin
+                                            </button>
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -1315,7 +1320,7 @@ export default function Admin() {
                     {activeSection === 'home' ? renderDomainStats() : 
                      activeSection === 'students' ? renderStudentManagement() : 
                      activeSection === 'mentors' ? renderMentorOverview() :
-                     activeSection === 'add-admin' ? renderAddAdmin() :
+                     activeSection === 'add-admin' ? renderAdminList() :
                      renderChangePassword()}
                 </main>
             </div>
