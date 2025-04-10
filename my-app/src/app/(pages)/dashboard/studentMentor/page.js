@@ -309,14 +309,16 @@ export default function StudentMentor() {
 
             const data = await response.json();
             if (data.success) {
+                toast.success('Student marked as completed successfully');
                 // Refresh both lists
                 fetchAssignedStudents();
                 fetchCompletedStudents();
             } else {
-                setError(data.error);
+                toast.error(data.error || 'Failed to mark student as completed');
             }
         } catch (err) {
-            setError('Failed to mark student as completed');
+            console.error('Error marking student as completed:', err);
+            toast.error('Failed to mark student as completed');
         }
     };
 

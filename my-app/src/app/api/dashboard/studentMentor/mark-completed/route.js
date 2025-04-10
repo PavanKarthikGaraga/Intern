@@ -39,7 +39,8 @@ export async function POST(request) {
 
             let studentDetails = {};
             if (existingRows.length > 0) {
-                studentDetails = JSON.parse(existingRows[0].studentDetails);
+                // studentDetails is already an object, no need to parse
+                studentDetails = existingRows[0].studentDetails;
             }
 
             // Add new student to the JSON with only required fields
@@ -90,7 +91,7 @@ export async function POST(request) {
 
             // Update registrations table to remove mentor reference
             await db.execute(
-                'UPDATE registrations SET studentMentorId = NULL WHERE idNumber = ?',
+                'UPDATE registrations SET studentMentorId = NULL, completed = TRUE  WHERE idNumber = ?',
                 [studentId]
             );
 
