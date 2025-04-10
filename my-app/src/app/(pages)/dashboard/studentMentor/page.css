@@ -341,6 +341,21 @@
     font-weight: 700;
 }
 
+.view-reports-btn {
+    padding: 0.4rem 0.8rem;
+    background-color: rgb(151, 0, 3);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    font-size: 0.9rem;
+}
+
+.view-reports-btn:hover {
+    background-color: rgb(120, 0, 2);
+}
+
 /* Change Password Section */
 .change-password-section {
     background-color: #ffffff;

@@ -17,7 +17,7 @@ export default function StudentMentor() {
     const [uploads, setUploads] = useState([]);
     const [attendance, setAttendance] = useState({});
     const [studentAttendance, setStudentAttendance] = useState({});
-    const [activeSection, setActiveSection] = useState('overview');
+    const [activeSection, setActiveSection] = useState('active-students');
     const [passwordForm, setPasswordForm] = useState({
         currentPassword: '',
         newPassword: '',
@@ -30,9 +30,8 @@ export default function StudentMentor() {
         new: false,
         confirm: false
     });
-    
+    const [completedStudents, setCompletedStudents] = useState([]);
 
- 
     useEffect(() => {
         if (!user?.idNumber) {
             setLoading(false);
@@ -81,7 +80,28 @@ export default function StudentMentor() {
         };
 
         fetchData();
+        fetchCompletedStudents();
     }, [user]);
+
+    useEffect(() => {
+        if (activeSection === 'completed-students') {
+            fetchCompletedStudents();
+        }
+    }, [activeSection]);
+
+    const fetchCompletedStudents = async () => {
+        try {
+            const response = await fetch(`/api/dashboard/studentMentor/completed-students?mentorId=${user.idNumber}`);
+            const data = await response.json();
+            if (data.success) {
+                setCompletedStudents(data.completedStudents);
+            } else {
+                setError(data.error);
+            }
+        } catch (err) {
+            setError('Failed to fetch completed students');
+        }
+    };
 
     const fetchUploads = async (studentId) => {
         try {
@@ -274,6 +294,32 @@ export default function StudentMentor() {
         </div>
     );
 
+    const handleMarkCompleted = async (studentId) => {
+        try {
+            const response = await fetch('/api/dashboard/studentMentor/mark-completed', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    studentId,
+                    mentorId: user.idNumber
+                }),
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                // Refresh both lists
+                fetchAssignedStudents();
+                fetchCompletedStudents();
+            } else {
+                setError(data.error);
+            }
+        } catch (err) {
+            setError('Failed to mark student as completed');
+        }
+    };
+
     if (!user) {
         return <Loader />;
     }
@@ -366,32 +412,36 @@ export default function StudentMentor() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {assignedStudents
-                                            .filter(student => 
-                                                Object.values(studentAttendance[student.idNumber] || {})
-                                                    .filter(status => status === 'P').length < 8
-                                            )
-                                            .map((student) => (
+                                        {assignedStudents.map((student) => {
+                                            const daysCompleted = Object.values(studentAttendance[student.idNumber] || {})
+                                                .filter(status => status === 'P').length;
+                                            return (
                                                 <tr key={student.idNumber}>
                                                     <td>{student.idNumber}</td>
                                                     <td>{student.name}</td>
                                                     <td>{student.selectedDomain}</td>
                                                     <td>{student.branch}</td>
                                                     <td>{student.year}</td>
-                                                    <td>
-                                                        {Object.values(studentAttendance[student.idNumber] || {})
-                                                            .filter(status => status === 'P').length}/8
-                                                    </td>
+                                                    <td>{daysCompleted}/8</td>
                                                     <td>
                                                         <button 
                                                             onClick={() => fetchUploads(student.idNumber)}
                                                             className="view-uploads-btn"
                                                         >
-                                                            Mark Attendance
+                                                            View Progress
                                                         </button>
+                                                        {daysCompleted === 8 && (
+                                                            <button
+                                                                onClick={() => handleMarkCompleted(student.idNumber)}
+                                                                className="mark-completed-btn"
+                                                            >
+                                                                Mark Completed
+                                                            </button>
+                                                        )}
                                                     </td>
                                                 </tr>
-                                            ))}
+                                            );
+                                        })}
                                     </tbody>
                                 </table>
                             </div>
@@ -407,30 +457,26 @@ export default function StudentMentor() {
                                         <tr>
                                             <th>ID Number</th>
                                             <th>Name</th>
-                                            <th>Domain</th>
-                                            <th>Branch</th>
-                                            <th>Year</th>
                                             <th>Completion Date</th>
+                                            <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {assignedStudents
-                                            .filter(student => 
-                                                Object.values(studentAttendance[student.idNumber] || {})
-                                                    .filter(status => status === 'P').length === 8
-                                            )
-                                            .map((student) => (
-                                                <tr key={student.idNumber}>
-                                                    <td>{student.idNumber}</td>
-                                                    <td>{student.name}</td>
-                                                    <td>{student.selectedDomain}</td>
-                                                    <td>{student.branch}</td>
-                                                    <td>{student.year}</td>
-                                                    <td>
-                                                        {new Date(student.completionDate || Date.now()).toLocaleDateString()}
-                                                    </td>
-                                                </tr>
-                                            ))}
+                                        {completedStudents.map((student) => (
+                                            <tr key={student.idNumber}>
+                                                <td>{student.idNumber}</td>
+                                                <td>{student.name}</td>
+                                                <td>{new Date(student.completionDate).toLocaleDateString()}</td>
+                                                <td>
+                                                    <button 
+                                                        onClick={() => fetchUploads(student.idNumber)}
+                                                        className="view-reports-btn"
+                                                    >
+                                                        View Reports
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
                                     </tbody>
                                 </table>
                             </div>
@@ -456,7 +502,9 @@ export default function StudentMentor() {
                                         <tr>
                                             <th>Day</th>
                                             <th>Upload</th>
-                                            <th>Actions</th>
+                                            {!completedStudents.some(student => student.idNumber === selectedStudent) && (
+                                                <th>Actions</th>
+                                            )}
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -468,22 +516,24 @@ export default function StudentMentor() {
                                                         View Upload
                                                     </a>
                                                 </td>
-                                                <td>
-                                                    <div className="attendance-actions">
-                                                        <button
-                                                            onClick={() => markAttendance(selectedStudent, upload.dayNumber, 'P')}
-                                                            className="mark-present-btn"
-                                                        >
-                                                            Mark Present
-                                                        </button>
-                                                        <button
-                                                            onClick={() => markAttendance(selectedStudent, upload.dayNumber, 'A')}
-                                                            className="mark-absent-btn"
-                                                        >
-                                                            Mark Absent
-                                                        </button>
-                                                    </div>
-                                                </td>
+                                                {!completedStudents.some(student => student.idNumber === selectedStudent) && (
+                                                    <td>
+                                                        <div className="attendance-actions">
+                                                            <button
+                                                                onClick={() => markAttendance(selectedStudent, upload.dayNumber, 'P')}
+                                                                className="mark-present-btn"
+                                                            >
+                                                                Mark Present
+                                                            </button>
+                                                            <button
+                                                                onClick={() => markAttendance(selectedStudent, upload.dayNumber, 'A')}
+                                                                className="mark-absent-btn"
+                                                            >
+                                                                Mark Absent
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                )}
                                             </tr>
                                         ))}
                                     </tbody>

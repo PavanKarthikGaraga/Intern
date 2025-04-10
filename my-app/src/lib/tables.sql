@@ -3,6 +3,7 @@ CREATE TABLE registrations (
     selectedDomain VARCHAR(255) NOT NULL,
     agreedToRules BOOLEAN NOT NULL DEFAULT FALSE,
     studentMentorId BIGINT,
+    completed BOOLEAN NOT NULL DEFAULT FALSE,
     
     -- Student Info
     name VARCHAR(100) NOT NULL,
@@ -92,4 +93,12 @@ CREATE TABLE attendance (
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (idNumber) REFERENCES registrations(idNumber)
+);
+
+CREATE TABLE completedStudents (
+    mentorId BIGINT PRIMARY KEY,
+    studentDetails JSON NOT NULL,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (mentorId) REFERENCES studentMentors(mentorId)
 );

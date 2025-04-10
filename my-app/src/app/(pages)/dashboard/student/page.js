@@ -95,7 +95,7 @@ export default function StudentDashboard() {
         }
 
         // Add fetch attendance data
-        const attendanceResponse = await fetch(`/api/dashboard/faculty/attendance?studentId=${user.idNumber}`, {
+        const attendanceResponse = await fetch(`/api/dashboard/studentMentor/attendance?studentId=${user.idNumber}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' }
         });
@@ -207,8 +207,15 @@ export default function StudentDashboard() {
     const day = `day${dayNumber}`;
     const status = attendance[day];
 
+    console.log("attendence",attendance);
+
     if (!submissions[dayNumber - 1]) {
       return { text: '', className: '' };
+    }
+
+    // If there's no attendance record and student is completed, show present
+    if (!status && student.completed) {
+      return { text: 'Present', className: 'present' };
     }
 
     if (!status) {
@@ -412,6 +419,16 @@ export default function StudentDashboard() {
                 <p>{student.studentMentorId || 'Not Assigned'}</p>
               </div>
               <UserOutlined className="stat-icon" />
+            </div>
+          </div>
+
+          <div className="stat-card">
+            <div className="stat-content">
+              <div>
+                <h3>Completion Status</h3>
+                <p>{student.completed ? 'Completed' : 'In Progress'}</p>
+              </div>
+              <CalendarOutlined className="stat-icon" />
             </div>
           </div>
         </div>
