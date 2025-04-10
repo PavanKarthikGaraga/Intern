@@ -16,8 +16,8 @@ export async function POST(request) {
         }
 
         const decoded = verifyAccessToken(accessToken.value);
-        if (!decoded || decoded.role !== 'faculty') {
-            return NextResponse.json({ error: 'Only faculty members can create admin accounts' }, { status: 403 });
+        if (!decoded || decoded.role !== 'admin') {
+            return NextResponse.json({ error: 'Only admin members can create admin accounts' }, { status: 403 });
         }
 
         const { name, idNumber, password } = await request.json();
@@ -46,7 +46,7 @@ export async function POST(request) {
         // Insert the new admin user
         await db.execute(
             'INSERT INTO users (idNumber, name, password, role) VALUES (?, ?, ?, ?)',
-            [idNumber, name, hashedPassword, 'faculty']
+            [idNumber, name, hashedPassword, 'admin']
         );
 
         return NextResponse.json({ 
@@ -75,8 +75,8 @@ export async function GET() {
         }
 
         const decoded = verifyAccessToken(accessToken.value);
-        if (!decoded || decoded.role !== 'faculty') {
-            return NextResponse.json({ error: 'Only faculty members can view faculty admins' }, { status: 403 });
+        if (!decoded || decoded.role !== 'admin') {
+            return NextResponse.json({ error: 'Only admin members can view admin admins' }, { status: 403 });
         }
 
         db = await getDBConnection();
@@ -84,7 +84,7 @@ export async function GET() {
         const [rows] = await db.execute(
             `SELECT name, idNumber, role 
              FROM users 
-             WHERE role = 'faculty' 
+             WHERE role = 'admin' 
              ORDER BY name ASC`
         );
 
@@ -93,9 +93,9 @@ export async function GET() {
             admins: rows
         });
     } catch (error) {
-        console.error('Error fetching faculty admins:', error);
+        console.error('Error fetching admin admins:', error);
         return NextResponse.json(
-            { success: false, error: 'Failed to fetch faculty admins' },
+            { success: false, error: 'Failed to fetch admin admins' },
             { status: 500 }
         );
     } finally {

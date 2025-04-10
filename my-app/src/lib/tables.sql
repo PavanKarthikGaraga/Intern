@@ -30,7 +30,7 @@ CREATE TABLE users (
     idNumber BIGINT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     password VARCHAR(100) NOT NULL,
-    role ENUM('student', 'studentMentor','faculty','admin') NOT NULL DEFAULT 'student',
+    role ENUM('student', 'studentMentor', 'admin') NOT NULL DEFAULT 'student',
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
