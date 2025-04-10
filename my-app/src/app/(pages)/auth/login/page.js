@@ -33,6 +33,7 @@ const Login = () => {
         }
 
         try {
+
             const response = await fetch('/api/auth/login', {
                 method: 'POST',
                 headers: {
@@ -44,6 +45,7 @@ const Login = () => {
                     password
                 })
             });
+            
             
             const data = await response.json();
             

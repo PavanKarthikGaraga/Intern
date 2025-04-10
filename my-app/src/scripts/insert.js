@@ -1,15 +1,15 @@
-import getDBConnection from "../lib/db.js"; // Import database connection function
+import getDBConnection from "../lib/db.js";
 import bcrypt from "bcryptjs";
 
 async function insertUsers() {
   let db;
   try {
-    db = await getDBConnection(); // Get a new DB connection
+    db = await getDBConnection();
 
     const users = [
-      { idNumber: 1, name: "Mento", password: "pass", role: "studentMentor" },
-      { idNumber: 2, name: "Bob", password: "pass", role: "faculty" },
-      { idNumber: 3, name: "Admin", password: "pass", role: "admin" },
+      // { idNumber: 1, name: "Mento", password: "pass12", role: "studentMentor" },
+      { idNumber: 2, name: "Bob", password: "pass12", role: "faculty" },
+      { idNumber: 3, name: "Admin", password: "pass21", role: "admin" },
     ];
 
     // Hash passwords

@@ -67,27 +67,32 @@ export default function AdminDashboard() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const [statsResponse, facultyResponse, studentsResponse, mentorsResponse] = await Promise.all([
+      setError(null);
+
+      // Fetch faculty list
+      const facultyResponse = await fetch('/api/dashboard/admin/faculty');
+      if (!facultyResponse.ok) throw new Error('Failed to fetch faculty list');
+      const facultyData = await facultyResponse.json();
+      if (facultyData.success) {
+        setFacultyList(facultyData.faculty);
+      }
+
+      const [statsResponse, studentsResponse, mentorsResponse] = await Promise.all([
         fetch('/api/dashboard/admin/stats'),
-        fetch('/api/dashboard/admin/faculty'),
         fetch('/api/dashboard/admin/students'),
         fetch('/api/dashboard/admin/mentors')
       ]);
 
-      if (!statsResponse.ok || !facultyResponse.ok || !studentsResponse.ok || !mentorsResponse.ok) {
+      if (!statsResponse.ok || !studentsResponse.ok || !mentorsResponse.ok) {
         throw new Error('Failed to fetch dashboard data');
       }
 
       const statsData = await statsResponse.json();
-      const facultyData = await facultyResponse.json();
       const studentsData = await studentsResponse.json();
       const mentorsData = await mentorsResponse.json();
 
       if (statsData.success) {
         setStats(statsData.data);
-      }
-      if (facultyData.success) {
-        setFacultyList(facultyData.faculty);
       }
       if (studentsData.success) {
         setStudentsList(studentsData.students);
@@ -95,10 +100,9 @@ export default function AdminDashboard() {
       if (mentorsData.success) {
         setMentorsList(mentorsData.mentors);
       }
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-      setError(error.message);
-      toast.error('Failed to load dashboard data');
+    } catch (err) {
+      setError(err.message);
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -201,6 +205,26 @@ export default function AdminDashboard() {
     }));
   };
 
+  const handleDeleteFaculty = async (idNumber) => {
+    try {
+      const response = await fetch(`/api/dashboard/admin/faculty?idNumber=${idNumber}`, {
+        method: 'DELETE'
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        toast.success('Faculty deleted successfully');
+        setFacultyList(facultyList.filter(faculty => faculty.idNumber !== idNumber));
+      } else {
+        throw new Error(data.error || 'Failed to delete faculty');
+      }
+    } catch (error) {
+      console.error('Error deleting faculty:', error);
+      toast.error(error.message || 'Failed to delete faculty');
+    }
+  };
+
   if (!user || user.role !== 'admin') {
     return <div className="error">Access denied. Admin privileges required.</div>;
   }
@@ -280,7 +304,7 @@ export default function AdminDashboard() {
   const renderFacultyManagement = () => (
     <div className="faculty-management">
       <div className="section-header">
-        <h2>Faculty Management</h2>
+        <h2>Faculties</h2>
         <button 
           className="add-faculty-btn"
           onClick={() => setShowAddFaculty(true)}
@@ -340,7 +364,6 @@ export default function AdminDashboard() {
             <tr>
               <th>Name</th>
               <th>ID Number</th>
-              <th>Students Assigned</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -349,10 +372,13 @@ export default function AdminDashboard() {
               <tr key={faculty.idNumber}>
                 <td>{faculty.name}</td>
                 <td>{faculty.idNumber}</td>
-                <td>{stats.branchStats[faculty.name] || 0}</td>
                 <td>
-                  <button className="action-btn edit">Edit</button>
-                  <button className="action-btn delete">Delete</button>
+                  <button 
+                    className="action-btn delete"
+                    onClick={() => handleDeleteFaculty(faculty.idNumber)}
+                  >
+                    Delete
+                  </button>
                 </td>
               </tr>
             ))}

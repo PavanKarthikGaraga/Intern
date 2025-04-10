@@ -33,6 +33,11 @@ export default function Faculty() {
         name: '',
         domain: ''
     });
+    const [newAdminData, setNewAdminData] = useState({
+        name: '',
+        idNumber: '',
+        password: ''
+    });
     const [mentorSearchQuery, setMentorSearchQuery] = useState('');
     const [searchedStudents, setSearchedStudents] = useState([]);
     const [mentorOverview, setMentorOverview] = useState([]);
@@ -51,6 +56,9 @@ export default function Faculty() {
     const [searchTerm, setSearchTerm] = useState('');
     const [expandedMentor, setExpandedMentor] = useState(null);
     const [activeTab, setActiveTab] = useState('active');
+    const [facultyAdmins, setFacultyAdmins] = useState([]);
+    const [isLoadingAdmins, setIsLoadingAdmins] = useState(false);
+    const [showAdminModal, setShowAdminModal] = useState(false);
 
     const handleModalClose = () => {
         setSelectedStudent(null);
@@ -69,6 +77,7 @@ export default function Faculty() {
         fetchRegistrations();
         fetchStudentMentors();
         fetchMentorOverview();
+        fetchFacultyAdmins();
     }, [currentPage, searchQuery]);
 
     useEffect(() => {
@@ -682,7 +691,7 @@ export default function Faculty() {
             if (!response.ok) throw new Error('Failed to fetch mentor overview');
             const data = await response.json();
             if (data.success) {
-                setMentorOverview(data.mentors || []);
+                setMentorOverview(data.mentors);
             }
         } catch (err) {
             console.error('Error fetching mentor overview:', err);
@@ -1113,6 +1122,150 @@ export default function Faculty() {
         }
     };
 
+    const fetchFacultyAdmins = async () => {
+        setIsLoadingAdmins(true);
+        try {
+            const response = await fetch('/api/dashboard/faculty/admin');
+            if (!response.ok) throw new Error('Failed to fetch faculty admins');
+            const data = await response.json();
+            if (data.success) {
+                setFacultyAdmins(data.admins);
+            }
+        } catch (err) {
+            console.error('Error fetching faculty admins:', err);
+            toast.error('Failed to load faculty admins');
+        } finally {
+            setIsLoadingAdmins(false);
+        }
+    };
+
+    const renderAddAdmin = () => {
+        const handleSubmit = async (e) => {
+            e.preventDefault();
+            try {
+                const response = await fetch('/api/dashboard/faculty/admin', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(newAdminData),
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    toast.success('Admin added successfully');
+                    setNewAdminData({
+                        name: '',
+                        idNumber: '',
+                        password: ''
+                    });
+                    fetchFacultyAdmins();
+                    setShowAdminModal(false);
+                } else {
+                    throw new Error(data.error || 'Failed to add admin');
+                }
+            } catch (error) {
+                console.error('Error adding admin:', error);
+                toast.error(error.message || 'Failed to add admin');
+            }
+        };
+
+        return (
+            <div className="add-admin-section">
+                <div className="section-header">
+                    <h2>Faculty Admins</h2>
+                    <button 
+                        className="add-admin-btn"
+                        onClick={() => setShowAdminModal(true)}
+                    >
+                        Add New Admin
+                    </button>
+                </div>
+
+                <div className="faculty-admins-list">
+                    {isLoadingAdmins ? (
+                        <div className="loading">Loading admins...</div>
+                    ) : facultyAdmins.length > 0 ? (
+                        <table className="admins-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>ID Number</th>
+                                    <th>Role</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {facultyAdmins.map(admin => (
+                                    <tr key={admin.idNumber}>
+                                        <td>{admin.name}</td>
+                                        <td>{admin.idNumber}</td>
+                                        <td>{admin.role}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    ) : (
+                        <p className="no-admins">No faculty admins found</p>
+                    )}
+                </div>
+
+                {showAdminModal && (
+                    <div className="modal-overlay" onClick={() => setShowAdminModal(false)}>
+                        <div className="modal-content" onClick={e => e.stopPropagation()}>
+                            <h3>Add New Admin</h3>
+                            <form onSubmit={handleSubmit} className="admin-form">
+                                <div className="form-group">
+                                    <label htmlFor="name">Name</label>
+                                    <input
+                                        type="text"
+                                        id="name"
+                                        value={newAdminData.name}
+                                        onChange={(e) => setNewAdminData(prev => ({ ...prev, name: e.target.value }))}
+                                        required
+                                        placeholder="Enter admin name"
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label htmlFor="idNumber">ID Number</label>
+                                    <input
+                                        type="text"
+                                        id="idNumber"
+                                        value={newAdminData.idNumber}
+                                        onChange={(e) => setNewAdminData(prev => ({ ...prev, idNumber: e.target.value }))}
+                                        required
+                                        placeholder="Enter admin ID number"
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label htmlFor="password">Password</label>
+                                    <input
+                                        type="password"
+                                        id="password"
+                                        value={newAdminData.password}
+                                        onChange={(e) => setNewAdminData(prev => ({ ...prev, password: e.target.value }))}
+                                        required
+                                        placeholder="Enter admin password"
+                                    />
+                                </div>
+                                <div className="modal-footer">
+                                    <button 
+                                        type="button" 
+                                        className="cancel-btn"
+                                        onClick={() => setShowAdminModal(false)}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button type="submit" className="submit-btn">Add Admin</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    };
+
     if (!user) return <Loader />;
     if (loading) return <Loader />;
     if (error) return <div className="error">{error}</div>;
@@ -1143,6 +1296,12 @@ export default function Faculty() {
                         <span className="item-label">Mentor Overview</span>
                     </button>
                     <button
+                        className={`sidebar-item ${activeSection === 'add-admin' ? 'active' : ''}`}
+                        onClick={() => setActiveSection('add-admin')}
+                    >
+                        <span className="item-label">Add Admin</span>
+                    </button>
+                    <button
                         className={`sidebar-item ${activeSection === 'change-password' ? 'active' : ''}`}
                         onClick={() => setActiveSection('change-password')}
                     >
@@ -1155,6 +1314,7 @@ export default function Faculty() {
                     {activeSection === 'home' ? renderDomainStats() : 
                      activeSection === 'students' ? renderStudentManagement() : 
                      activeSection === 'mentors' ? renderMentorOverview() :
+                     activeSection === 'add-admin' ? renderAddAdmin() :
                      renderChangePassword()}
                 </main>
             </div>
