@@ -77,6 +77,7 @@ export default function Admin() {
         activeStudents: 0,
         completedStudents: 0
     });
+    const [isLoadingStats, setIsLoadingStats] = useState(false);
 
     const handleModalClose = () => {
         setSelectedStudent(null);
@@ -118,6 +119,13 @@ export default function Admin() {
             fetchMentorOverview();
         }
     }, [currentPage, searchQuery, activeSection]);
+
+    // Reset expanded mentor when navigating away from mentors section
+    useEffect(() => {
+        if (activeSection !== 'mentors') {
+            setExpandedMentor(null);
+        }
+    }, [activeSection]);
 
     useEffect(() => {
         if (registrations && registrations.length > 0) {
@@ -236,9 +244,16 @@ export default function Admin() {
     };
 
     const getStats = async () => {
+        setIsLoadingStats(true);
         try {
-            const response = await fetch('/api/dashboard/admin/stats');
+            const response = await fetch('/api/dashboard/admin/stats', {
+                credentials: 'include'
+            });
             if (!response.ok) {
+                if (response.status === 401) {
+                    toast.error('Session expired. Please login again');
+                    return null;
+                }
                 throw new Error('Failed to fetch stats');
             }
             const data = await response.json();
@@ -255,20 +270,18 @@ export default function Admin() {
         } catch (err) {
             console.error('Error fetching stats:', err);
             toast.error('Failed to load dashboard stats');
-            return {
-                totalStudents: 0,
-                domains: [],
-                studentsPerDomain: {},
-                activeStudents: 0,
-                completedStudents: 0
-            };
+            return null;
+        } finally {
+            setIsLoadingStats(false);
         }
     };
 
     useEffect(() => {
         const fetchStats = async () => {
             const stats = await getStats();
-            setDashboardStats(stats);
+            if (stats) {
+                setDashboardStats(stats);
+            }
         };
 
         if (activeSection === 'home') {
@@ -570,6 +583,25 @@ export default function Admin() {
     );
 
     const renderDomainStats = () => {
+        if (isLoadingStats) {
+            return (
+                <div className="domain-stats">
+                    <div className="welcome-header">
+                        <h2>Welcome, {user?.name || 'admin'}</h2>
+                        <p className="welcome-subtitle">Loading statistics...</p>
+                    </div>
+                    <div className="stats-grid">
+                        {[...Array(6)].map((_, index) => (
+                            <div key={index} className="stat-card loading">
+                                <h3>Loading...</h3>
+                                <p>...</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
         return (
             <div className="domain-stats">
                 <div className="welcome-header">
@@ -902,7 +934,7 @@ export default function Admin() {
                             </div>
                             <button
                                 className="add-mentor-btn"
-                                onClick={() => setShowMentorModal(true)}
+                                onClick={handleOpenMentorModal}
                             >
                                 Add New Mentor
                             </button>
@@ -1654,6 +1686,25 @@ export default function Admin() {
             setMentorCompletedCurrentPage(1); // Reset to first page when switching to completed tab
             fetchCompletedStudentsForMentor(expandedMentor);
         }
+    };
+
+    const fetchAllRegistrations = async () => {
+        try {
+            const response = await fetch('/api/dashboard/admin/active-students?limit=1000');
+            const data = await response.json();
+            if (data.success) {
+                setRegistrations(data.students || []);
+                console.log("Fetched domains:", [...new Set(data.students.map(student => student.selectedDomain))]);
+            }
+        } catch (error) {
+            console.error('Error fetching all registrations:', error);
+            toast.error('Failed to fetch domains');
+        }
+    };
+
+    const handleOpenMentorModal = async () => {
+        setShowMentorModal(true);
+        await fetchAllRegistrations();
     };
 
     if (!user) return <Loader />;
