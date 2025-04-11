@@ -1,3 +1,4 @@
+import { NextResponse } from 'next/server';
 import getDBConnection from "@/lib/db";
 
 export async function GET(request) {
@@ -29,19 +30,16 @@ export async function GET(request) {
             ORDER BY sm.name
         `);
 
-        return new Response(
-            JSON.stringify({
-                success: true,
-                mentors
-            }),
-            { status: 200, headers: { "Content-Type": "application/json" } }
-        );
+        return NextResponse.json({
+            success: true,
+            mentors
+        });
 
     } catch (err) {
         console.error("Error fetching student mentors:", err);
-        return new Response(
-            JSON.stringify({ success: false, error: err.message }),
-            { status: 500, headers: { "Content-Type": "application/json" } }
+        return NextResponse.json(
+            { success: false, error: err.message },
+            { status: 500 }
         );
     } finally {
         if (db) await db.end();

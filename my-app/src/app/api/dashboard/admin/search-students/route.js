@@ -1,3 +1,4 @@
+import { NextResponse } from 'next/server';
 import getDBConnection from "@/lib/db";
 
 export async function GET(request) {
@@ -8,12 +9,9 @@ export async function GET(request) {
         const domain = searchParams.get('domain') || '';
         
         if (!domain) {
-            return new Response(
-                JSON.stringify({ 
-                    success: false, 
-                    error: 'Domain is required' 
-                }),
-                { status: 400, headers: { "Content-Type": "application/json" } }
+            return NextResponse.json(
+                { success: false, error: 'Domain is required' },
+                { status: 400 }
             );
         }
         
@@ -38,19 +36,16 @@ export async function GET(request) {
         const searchPattern = `%${query}%`;
         const [students] = await db.execute(searchQuery, [searchPattern, searchPattern, domain]);
 
-        return new Response(
-            JSON.stringify({
-                success: true,
-                students
-            }),
-            { status: 200, headers: { "Content-Type": "application/json" } }
-        );
+        return NextResponse.json({
+            success: true,
+            students
+        });
 
     } catch (err) {
         console.error("Error searching students:", err);
-        return new Response(
-            JSON.stringify({ success: false, error: err.message }),
-            { status: 500, headers: { "Content-Type": "application/json" } }
+        return NextResponse.json(
+            { success: false, error: err.message },
+            { status: 500 }
         );
     } finally {
         if (db) await db.end();

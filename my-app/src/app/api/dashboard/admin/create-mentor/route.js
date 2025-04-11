@@ -1,3 +1,4 @@
+import { NextResponse } from 'next/server';
 import getDBConnection from "@/lib/db";
 
 export async function POST(request) {
@@ -7,12 +8,9 @@ export async function POST(request) {
 
         // Validate required fields
         if (!idNumber || !name || !domain) {
-            return new Response(
-                JSON.stringify({ 
-                    success: false, 
-                    error: "All fields are required" 
-                }),
-                { status: 400, headers: { "Content-Type": "application/json" } }
+            return NextResponse.json(
+                { success: false, error: "All fields are required" },
+                { status: 400 }
             );
         }
 
@@ -37,12 +35,8 @@ export async function POST(request) {
             // Commit transaction
             await db.commit();
 
-            return new Response(
-                JSON.stringify({ 
-                    success: true, 
-                    message: "Student mentor created successfully" 
-                }),
-                { status: 200, headers: { "Content-Type": "application/json" } }
+            return NextResponse.json(
+                { success: true, message: "Student mentor created successfully" }
             );
 
         } catch (err) {
@@ -53,9 +47,9 @@ export async function POST(request) {
 
     } catch (err) {
         console.error("Error creating student mentor:", err);
-        return new Response(
-            JSON.stringify({ success: false, error: err.message }),
-            { status: 500, headers: { "Content-Type": "application/json" } }
+        return NextResponse.json(
+            { success: false, error: err.message },
+            { status: 500 }
         );
     } finally {
         if (db) await db.end();
