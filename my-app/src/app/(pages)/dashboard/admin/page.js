@@ -245,8 +245,10 @@ export default function Admin() {
                         <th>Day</th>
                         <th>Document</th>
                         <th>Uploaded On</th>
+                        {!activeSection== 'completed-students' &&<> 
                         <th>Actions</th>
                         <th>Status</th>
+                        </>}
                     </tr>
                 </thead>
                 <tbody>
@@ -264,7 +266,9 @@ export default function Admin() {
                                     </a>
                                 </td>
                                 <td>{formatDate(upload.createdAt)}</td>
+                                {!activeSection== 'completed-students' &&<> 
                                 <td className="attendance-actions">
+                                    
                                     <button 
                                         className={`attendance-btn present ${currentStatus === 'P' ? 'active' : ''}`}
                                         onClick={() => markAttendance(selectedStudent, upload.dayNumber, 'P')}
@@ -285,6 +289,7 @@ export default function Admin() {
                                 <td>
                                     {currentStatus || (canMark ? 'Not Marked' : 'Mark previous days first')}
                                 </td>
+                                </>}
                             </tr>
                         );
                     })}
@@ -1149,7 +1154,7 @@ export default function Admin() {
         }
     };
 
-    const fetchAdmins = async () => {
+    const fetchAdmins = async (retryCount = 0) => {
         setIsLoadingAdmins(true);
         try {
             const response = await fetch('/api/dashboard/admin/admin', {
@@ -1159,15 +1164,35 @@ export default function Admin() {
                     'Content-Type': 'application/json'
                 }
             });
-            if (!response.ok) throw new Error('Failed to fetch admins');
+
+            if (response.status === 401) {
+                toast.error('Session expired. Please login again');
+                return;
+            }
+
+            if (response.status === 403) {
+                toast.error('You do not have permission to view admins');
+                return;
+            }
+
+            if (!response.ok) {
+                if (retryCount < 3) {
+                    // Retry after 1 second
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    return fetchAdmins(retryCount + 1);
+                }
+                throw new Error(`Failed to fetch admins: ${response.status}`);
+            }
+
             const data = await response.json();
-            console.log(data);
             if (data.success) {
                 setAdmins(data.admins);
+            } else {
+                throw new Error(data.error || 'Failed to fetch admins');
             }
         } catch (err) {
             console.error('Error fetching admins:', err);
-            toast.error('Failed to load admins');
+            toast.error(err.message || 'Failed to load admins');
         } finally {
             setIsLoadingAdmins(false);
         }
@@ -1397,7 +1422,7 @@ export default function Admin() {
                                     <td>{student.name}</td>
                                     <td>{student.selectedDomain}</td>
                                     <td>{student.mentorName || 'N/A'}</td>
-                                    <td>{new Date(student.completedAt).toLocaleDateString()}</td>
+                                    <td>{new Date(student.completionDate).toLocaleDateString()}</td>
                                     <td>
                                         <button 
                                             onClick={() => fetchUploads(student.idNumber)}

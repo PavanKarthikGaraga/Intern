@@ -13,7 +13,7 @@ export async function GET(request) {
             }, { status: 401 });
         }
 
-        const decoded = verifyRefreshToken(refreshToken.value);
+        const decoded = await verifyRefreshToken(refreshToken.value);
         if (!decoded) {
             return Response.json({ 
                 success: false,
@@ -21,7 +21,7 @@ export async function GET(request) {
             }, { status: 401 });
         }
 
-        const accessToken = generateAccessToken({ 
+        const accessToken = await generateAccessToken({ 
             idNumber: decoded.idNumber,
             role: decoded.role,
             name: decoded.name

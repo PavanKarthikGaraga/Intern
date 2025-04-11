@@ -3,15 +3,15 @@ import { cookies } from "next/headers";
 
 export async function GET() {
     try {
-        const cookieStore =await cookies();
-        const accessToken =await cookieStore.get("accessToken");
+        const cookieStore = await cookies();
+        const accessToken = await cookieStore.get("accessToken");
 
         if (!accessToken?.value) {
             return Response.json({ error: "Unauthorized" }, { status: 401 });
         }
 
         try {
-            const decoded = verifyAccessToken(accessToken.value);
+            const decoded = await verifyAccessToken(accessToken.value);
             if (!decoded) {
                 // Only delete access token if invalid
                 cookieStore.set("accessToken", "", { maxAge: 0 });

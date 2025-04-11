@@ -32,7 +32,7 @@ export async function POST(request) {
             }, { status: 400 });
         }
         
-        const { accessToken, refreshToken } = generateAuthTokens({ 
+        const { accessToken, refreshToken } = await generateAuthTokens({ 
             idNumber: user.idNumber,
             name:user.name,
             role: user.role 

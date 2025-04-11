@@ -193,9 +193,10 @@
 }
 
 .students-table td {
-    padding: 1rem;
+    padding: 12px;
     border-bottom: 1px solid #dee2e6;
     color: #495057;
+    vertical-align: middle;
 }
 
 .students-table tr:hover {
@@ -210,32 +211,50 @@
 }
 
 .students-table .view-attendance-btn,
-.students-table .assign-mentor-btn {
-    padding: 0.5rem 1rem;
+.students-table .assign-mentor-btn,
+.students-table .modify-mentor-btn,
+.students-table .view-reports-btn {
+    padding: 8px 16px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 0.875rem;
-    margin-right: 0.5rem;
-    transition: background-color 0.2s;
+    font-weight: 500;
+    margin: 0 5px;
+    transition: all 0.3s ease;
 }
 
-.students-table .view-attendance-btn {
-    background-color: #007bff;
+.students-table .view-attendance-btn,
+.students-table .view-reports-btn {
+    background-color: #4CAF50;
     color: white;
 }
 
-.students-table .view-attendance-btn:hover {
-    background-color: #0056b3;
+.students-table .view-attendance-btn:hover,
+.students-table .view-reports-btn:hover {
+    background-color: #45a049;
 }
 
-.students-table .assign-mentor-btn {
-    background-color: #28a745;
+.students-table .assign-mentor-btn,
+.students-table .modify-mentor-btn {
+    background-color: #f44336;
     color: white;
 }
 
-.students-table .assign-mentor-btn:hover {
-    background-color: #218838;
+.students-table .assign-mentor-btn:hover,
+.students-table .modify-mentor-btn:hover {
+    background-color: #da190b;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.students-table td:last-child {
+    white-space: nowrap;
+    min-width: 220px;
 }
 
 @media (max-width: 768px) {
@@ -253,7 +272,9 @@
     }
 
     .students-table .view-attendance-btn,
-    .students-table .assign-mentor-btn {
+    .students-table .assign-mentor-btn,
+    .students-table .modify-mentor-btn,
+    .students-table .view-reports-btn {
         padding: 0.375rem 0.75rem;
         font-size: 0.75rem;
     }

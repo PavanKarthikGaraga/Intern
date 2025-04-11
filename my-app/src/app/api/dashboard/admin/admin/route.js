@@ -15,7 +15,7 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const decoded = verifyAccessToken(accessToken.value);
+        const decoded = await verifyAccessToken(accessToken.value);
         if (!decoded || decoded.role !== 'admin') {
             return NextResponse.json({ error: 'Only admin members can create admin accounts' }, { status: 403 });
         }
@@ -71,15 +71,24 @@ export async function GET() {
         const accessToken = await cookieStore.get('accessToken');
 
         if (!accessToken?.value) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            return NextResponse.json({ 
+                success: false, 
+                error: 'Authentication required. Please login again.' 
+            }, { status: 401 });
         }
 
-        const decoded = verifyAccessToken(accessToken.value);
+        const decoded = await verifyAccessToken(accessToken.value);
         if (!decoded || decoded.role !== 'admin') {
-            return NextResponse.json({ error: 'Only admin members can view admin admins' }, { status: 403 });
+            return NextResponse.json({ 
+                success: false, 
+                error: 'Access denied. Only admin members can view admin list.' 
+            }, { status: 403 });
         }
 
         db = await getDBConnection();
+        if (!db) {
+            throw new Error('Database connection failed');
+        }
 
         const [rows] = await db.execute(
             `SELECT name, idNumber, role 
@@ -93,12 +102,34 @@ export async function GET() {
             admins: rows
         });
     } catch (error) {
-        console.error('Error fetching admin admins:', error);
+        console.error('Error fetching admin list:', error);
+        
+        // Handle specific database errors
+        if (error.code === 'ECONNREFUSED') {
+            return NextResponse.json(
+                { success: false, error: 'Database connection failed. Please try again later.' },
+                { status: 503 }
+            );
+        }
+        
+        if (error.code === 'ER_NO_SUCH_TABLE') {
+            return NextResponse.json(
+                { success: false, error: 'Database configuration error. Please contact support.' },
+                { status: 500 }
+            );
+        }
+
         return NextResponse.json(
-            { success: false, error: 'Failed to fetch admin admins' },
+            { success: false, error: 'An unexpected error occurred while fetching admin list.' },
             { status: 500 }
         );
     } finally {
-        if (db) await db.end();
+        if (db) {
+            try {
+                await db.end();
+            } catch (error) {
+                console.error('Error closing database connection:', error);
+            }
+        }
     }
 } 

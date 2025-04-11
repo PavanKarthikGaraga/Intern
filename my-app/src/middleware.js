@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 import { verifyAccessToken } from "./lib/jwt";
 
-export function middleware(req) {
+export async function middleware(req) {
   const token = req.cookies.get("accessToken")?.value;
   const pathname = req.nextUrl.pathname;
 
   // If the user is already logged in, prevent access to login/forgot-password
   if (token && (pathname === "/auth/login" || pathname === "/auth/forgot-password")) {
     try {
-      const decoded = verifyAccessToken(token, true);
+      const decoded = await verifyAccessToken(token, true);
       const userRole = decoded.role;
       return NextResponse.redirect(new URL(`/dashboard/${userRole}`, req.url));
     } catch (err) {
@@ -25,7 +25,7 @@ export function middleware(req) {
   // If the user is logged in but accessing the wrong dashboard, redirect them
   if (token && pathname.startsWith("/dashboard")) {
     try {
-      const decoded = verifyAccessToken(token, true);
+      const decoded = await verifyAccessToken(token, true);
       const userRole = decoded.role;
       const expectedPath = `/dashboard/${userRole}`;
 

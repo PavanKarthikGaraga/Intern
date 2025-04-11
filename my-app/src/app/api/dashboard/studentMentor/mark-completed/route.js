@@ -45,9 +45,12 @@ export async function POST(request) {
 
             // Add new student to the JSON with only required fields
             studentDetails[studentId] = {
+                idNumber: studentId,
                 name: student.name,
                 domain: student.selectedDomain,
-                completionDate: new Date().toISOString()
+                completionDate: new Date().toISOString(),
+                mentorId: mentorId,
+                mentorName: mentor.name
             };
 
             // Insert or update in completedStudents table
