@@ -631,7 +631,7 @@ export default function StudentDashboard() {
             <label>Mentor Email</label>
             <div className="info-value">
               <MailOutlined className="info-icon" />
-              {mentorDetails?.email || 'Not Available'}
+              {student.studentMentorId + "@kluniversity.in" || 'Not Available'}
               <div className="value-underline"></div>
             </div>
           </div>
@@ -648,226 +648,199 @@ export default function StudentDashboard() {
     </div>
   );
 
-  const renderSubmissions = () => (
-    <section className="submissions-section">
+  const renderSubmissions = () => {
+    // Check if mentor is assigned
+    if (!student.studentMentorId && !student.completed) {
+      return (
+        <section className="submissions-section">
+          <h2>Daily Reports</h2>
+          <div className="locked-message">
+            <span className="lock-icon">🔒</span>
+            <p>Daily reports are locked. Please wait for a mentor to be assigned to you.</p>
+          </div>
+        </section>
+      );
+    }
+
+    return (
+      <section className="submissions-section">
         <h2>Daily Reports</h2>
-      <div className="submissions-header">
-        <div className="progress-tracker">
-          {/* <div className="progress-stats">
-            <div className="stat">
-              <span className="stat-label">Completed</span>
-              <span className="stat-value">{submissions.filter(Boolean).length}/8</span>
+        <div className="submissions-header">
+          <div className="progress-tracker">
+            <div className="progress-bar">
+              <div 
+                className="progress-fill" 
+                style={{ width: `${(submissions.filter(Boolean).length / 8) * 100}%` }}
+              ></div>
             </div>
-            <div className="stat">
-              <span className="stat-label">Approved</span>
-              <span className="stat-value">
-                {Object.values(attendance).filter(status => status === 'P').length}/8
-              </span>
-            </div>
-          </div> */}
-          <div className="progress-bar">
-            <div 
-              className="progress-fill" 
-              style={{ width: `${(submissions.filter(Boolean).length / 8) * 100}%` }}
-            ></div>
           </div>
         </div>
-      </div>
 
-      <div className="submissions-layout">
-        <div className="days-grid">
-          {Array(8).fill(null).map((_, index) => {
-            const status = attendance[`day${index + 1}`];
-            const isSubmitted = submissions[index];
-            const isLocked = !canSubmitDay(index);
-            
-            return (
-              <div
-                key={index}
-                className={`day-card ${activeAccordion === index ? 'active' : ''} ${
-                  isLocked ? 'locked' : isSubmitted ? 'submitted' : 'submittable'
-                }`}
-                onClick={() => toggleAccordion(index)}
-              >
-                <div className="day-header">
-                  <span className="day-number">Day {index + 1}</span>
-                  <div className="day-status">
-                    {isSubmitted ? (
-                      status === 'P' ? (
-                        <div className="status approved">
-                          <span className="status-icon">✓</span>
-                          <span className="status-text">Approved</span>
-                        </div>
-                      ) : status === 'A' ? (
-                        <div className="status rejected">
-                          <span className="status-icon">✕</span>
-                          <span className="status-text">Rejected</span>
-                        </div>
+        <div className="submissions-layout">
+          <div className="days-grid">
+            {Array(8).fill(null).map((_, index) => {
+              const status = attendance[`day${index + 1}`];
+              const isSubmitted = submissions[index];
+              const isLocked = !canSubmitDay(index);
+              
+              return (
+                <div
+                  key={index}
+                  className={`day-card ${activeAccordion === index ? 'active' : ''} ${
+                    isLocked ? 'locked' : isSubmitted ? 'submitted' : 'submittable'
+                  }`}
+                  onClick={() => toggleAccordion(index)}
+                >
+                  <div className="day-header">
+                    <span className="day-number">Day {index + 1}</span>
+                    <div className="day-status">
+                      {isSubmitted ? (
+                        <span className={`status-badge ${
+                          status === 'P' ? 'approved' :
+                          status === 'A' ? 'rejected' : 'pending'
+                        }`}>
+                          {status === 'P' ? 'Approved' :
+                           status === 'A' ? 'Rejected' : 'Pending Review'}
+                        </span>
                       ) : (
-                        <div className="status pending">
-                          <span className="status-icon">⏳</span>
-                          <span className="status-text">Pending</span>
-                        </div>
-                      )
-                    ) : isLocked ? (
-                      <div className="status locked">
-                        <span className="status-icon">🔒</span>
-                        <span className="status-text">Locked</span>
-                      </div>
-                    ) : (
-                      <div className="status available">
-                        <span className="status-text">Available</span>
-                      </div>
+                        <span className="status-badge not-submitted">
+                          Not Submitted
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="submission-details">
+            {activeAccordion !== null ? (
+              <div className="submission-content">
+                <div className="submission-header">
+                  <h3>Day {activeAccordion + 1} Report Submission</h3>
+                  <div className="submission-status">
+                    {submissions[activeAccordion] && (
+                      <span className={`status-badge ${
+                        attendance[`day${activeAccordion + 1}`] === 'P' ? 'approved' :
+                        attendance[`day${activeAccordion + 1}`] === 'A' ? 'rejected' : 'pending'
+                      }`}>
+                        {attendance[`day${activeAccordion + 1}`] === 'P' ? 'Approved' :
+                         attendance[`day${activeAccordion + 1}`] === 'A' ? 'Rejected' : 'Pending Review'}
+                      </span>
                     )}
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
 
-        <div className="submission-details">
-          {activeAccordion !== null ? (
-            <div className="submission-content">
-              <div className="submission-header">
-                <h3>Day {activeAccordion + 1} Report Submission</h3>
-                <div className="submission-status">
-                  {submissions[activeAccordion] && (
-                    <span className={`status-badge ${
-                      attendance[`day${activeAccordion + 1}`] === 'P' ? 'approved' :
-                      attendance[`day${activeAccordion + 1}`] === 'A' ? 'rejected' : 'pending'
-                    }`}>
-                      {attendance[`day${activeAccordion + 1}`] === 'P' ? 'Approved' :
-                       attendance[`day${activeAccordion + 1}`] === 'A' ? 'Rejected' : 'Pending Review'}
-                    </span>
-                  )}
-                </div>
-              </div>
+                {submissions[activeAccordion] ? (
+                  <div className="submitted-content">
+                    <div className="submitted-details">
+                      <div className="detail-item">
+                        <span className="detail-label">Submission Status:</span>
+                        <span className="detail-value">Submitted</span>
+                      </div>
+                      <div className="detail-item">
+                        <span className="detail-label">Document Link:</span>
+                        <a 
+                          href={submittedLinks[activeAccordion]} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="document-link"
+                        >
+                          View Document
+                        </a>
+                      </div>
+                      <div className="detail-item">
+                        <span className="detail-label">Review Status:</span>
+                        <span className="detail-value">
+                          {getAttendanceStatus(activeAccordion + 1).text}
+                        </span>
+                      </div>
+                    </div>
 
-              {submissions[activeAccordion] ? (
-                <div className="submitted-content">
-                  <div className="submitted-details">
-                    <div className="detail-item">
-                      <span className="detail-label">Submission Status:</span>
-                      <span className="detail-value">Submitted</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="detail-label">Document Link:</span>
-                      <a 
-                        href={submittedLinks[activeAccordion]} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="document-link"
-                      >
-                        View Document
-                      </a>
-                    </div>
-                    <div className="detail-item">
-                      <span className="detail-label">Review Status:</span>
-                      <span className="detail-value">
-                        {getAttendanceStatus(activeAccordion + 1).text}
-                      </span>
-                    </div>
-                  </div>
+                    {attendance[`day${activeAccordion + 1}`] === 'A' && (
+                      <div className="resubmission-section">
+                        <p className="rejection-note">
+                          Your submission has been rejected. Please review and resubmit your report.
+                        </p>
+                        <button 
+                          onClick={() => handleResubmit(activeAccordion)}
+                          className="resubmit-button"
+                        >
+                          Resubmit Report
+                        </button>
+                      </div>
+                    )}
 
-                  {attendance[`day${activeAccordion + 1}`] === 'A' && (
-                    <div className="resubmission-section">
-                      <p className="rejection-note">
-                        Your submission has been rejected. Please review and resubmit your report.
+                    <div className="submission-notes">
+                      <p className="note">
+                        <span className="note-icon">ℹ️</span>
+                        {attendance[`day${activeAccordion + 1}`] !== 'A' 
+                          ? "To modify your submission, please contact your student mentor."
+                          : "Please ensure your resubmission meets all the requirements."}
                       </p>
-                      <button 
-                        onClick={() => handleResubmit(activeAccordion)}
-                        className="resubmit-button"
-                      >
-                        Resubmit Report
-                      </button>
                     </div>
-                  )}
-
-                  <div className="submission-notes">
-                    <p className="note">
-                      <span className="note-icon">ℹ️</span>
-                      {attendance[`day${activeAccordion + 1}`] !== 'A' 
-                        ? "To modify your submission, please contact your student mentor."
-                        : "Please ensure your resubmission meets all the requirements."}
-                    </p>
                   </div>
-                </div>
-              ) : !canSubmitDay(activeAccordion) ? (
-                <div className="locked-message">
-                  <span className="lock-icon">🔒</span>
-                  <p>This day is locked. Please complete and submit the previous day's report first.</p>
-                </div>
-              ) : (
-                <form onSubmit={(e) => handleSubmit(activeAccordion, e)} className="submission-form">
-                  <div className="form-header">
-                    <h4>Submit Your Report</h4>
-                    <p>Please ensure your document contains all required information before submitting.</p>
+                ) : !canSubmitDay(activeAccordion) ? (
+                  <div className="locked-message">
+                    <span className="lock-icon">🔒</span>
+                    <p>This day is locked. Please complete and submit the previous day's report first.</p>
                   </div>
-                  
-                  <div className="form-content">
-                    <div className="input-group">
-                      <label htmlFor={`link-${activeAccordion}`}>
-                        Document Link <span className="required">*</span>
-                      </label>
+                ) : (
+                  <form onSubmit={(e) => handleSubmit(activeAccordion, e)} className="submission-form">
+                    <div className="form-header">
+                      <h4>Submit Your Report</h4>
+                      <p>Please ensure your document contains all required information before submitting.</p>
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="link">Document Link</label>
                       <input
-                        id={`link-${activeAccordion}`}
-                        name="link"
                         type="url"
-                        placeholder="Enter your document link (Google Docs, Drive, etc.)"
-                        className="link-input"
+                        id="link"
+                        name="link"
+                        placeholder="Enter the link to your document"
                         required
                       />
                     </div>
-                    
-                    <div className="submission-guidelines">
-                      <h5>Submission Guidelines:</h5>
-                      <ul>
-                        <li>Ensure your document is accessible and properly shared</li>
-                        <li>Include all required sections as per the template</li>
-                        <li>Double-check your content before submitting</li>
-                      </ul>
-                    </div>
-
                     <button type="submit" className="submit-button">
                       Submit Report
                     </button>
-                  </div>
-                </form>
-              )}
-            </div>
-          ) : (
-            <div className="placeholder-content">
-              <div className="placeholder-icon">📝</div>
-              <h3>Select a Day to Begin</h3>
-              <p>Choose a day from the grid to view details or submit your report.</p>
-              <div className="status-legend">
-                <h4>Status Guide:</h4>
-                <div className="legend-items">
-                  <div className="legend-item">
-                    <span className="legend-icon approved">✓</span>
-                    <span>Approved</span>
-                  </div>
-                  <div className="legend-item">
-                    <span className="legend-icon pending">⏳</span>
-                    <span>Pending Review</span>
-                  </div>
-                  <div className="legend-item">
-                    <span className="legend-icon rejected">✕</span>
-                    <span>Rejected</span>
-                  </div>
-                  <div className="legend-item">
-                    <span className="legend-icon locked">🔒</span>
-                    <span>Locked</span>
+                  </form>
+                )}
+              </div>
+            ) : (
+              <div className="placeholder-content">
+                <div className="placeholder-icon">📝</div>
+                <h3>Select a Day to Begin</h3>
+                <p>Choose a day from the grid to view details or submit your report.</p>
+                <div className="status-legend">
+                  <h4>Status Guide:</h4>
+                  <div className="legend-items">
+                    <div className="legend-item">
+                      <span className="legend-icon approved">✓</span>
+                      <span>Approved</span>
+                    </div>
+                    <div className="legend-item">
+                      <span className="legend-icon pending">⏳</span>
+                      <span>Pending Review</span>
+                    </div>
+                    <div className="legend-item">
+                      <span className="legend-icon rejected">✕</span>
+                      <span>Rejected</span>
+                    </div>
+                    <div className="legend-item">
+                      <span className="legend-icon locked">🔒</span>
+                      <span>Locked</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
-    </section>
-  );
+      </section>
+    );
+  };
 
   return (
     <div className="student-dashboard">
