@@ -35,6 +35,36 @@ export default function StudentDashboard() {
   const [mentorDetails, setMentorDetails] = useState(null);
   const [isMentorLoading, setIsMentorLoading] = useState(false);
 
+  const fetchMentorDetails = async () => {
+    if (!student.studentMentorId || mentorDetails) return;
+    
+    setIsMentorLoading(true);
+    try {
+      const response = await fetch('/api/dashboard/student/mentor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mentorId: student.studentMentorId })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setMentorDetails(data.mentor);
+      } else {
+        console.error('Failed to fetch mentor details:', data.error);
+      }
+    } catch (error) {
+      console.error('Error fetching mentor details:', error);
+    } finally {
+      setIsMentorLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (student.studentMentorId) {
+      fetchMentorDetails();
+    }
+  }, [student.studentMentorId]);
+
   useEffect(() => {
     if (!user?.idNumber) {
       setLoading(false);
@@ -118,12 +148,6 @@ export default function StudentDashboard() {
 
     fetchData();
   }, [user]);
-
-  useEffect(() => {
-    if (student.studentMentorId) {
-      fetchMentorDetails();
-    }
-  }, [student.studentMentorId]);
 
   console.log('user:', user);
 
@@ -573,30 +597,6 @@ export default function StudentDashboard() {
         </div>
       </div>
     );
-  };
-
-  const fetchMentorDetails = async () => {
-    if (!student.studentMentorId || mentorDetails) return;
-    
-    setIsMentorLoading(true);
-    try {
-      const response = await fetch('/api/dashboard/student/mentor', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mentorId: student.studentMentorId })
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        setMentorDetails(data.mentor);
-      } else {
-        console.error('Failed to fetch mentor details:', data.error);
-      }
-    } catch (error) {
-      console.error('Error fetching mentor details:', error);
-    } finally {
-      setIsMentorLoading(false);
-    }
   };
 
   const renderMentor = () => (

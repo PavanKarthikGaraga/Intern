@@ -59,6 +59,10 @@ export default function Admin() {
     const [admins, setAdmins] = useState([]);
     const [isLoadingAdmins, setIsLoadingAdmins] = useState(false);
     const [showAdminModal, setShowAdminModal] = useState(false);
+    const [completedStudents, setCompletedStudents] = useState([]);
+    const [isLoadingCompleted, setIsLoadingCompleted] = useState(false);
+    const [activeStudents, setActiveStudents] = useState([]);
+    const [isLoadingActive, setIsLoadingActive] = useState(false);
 
     const handleModalClose = () => {
         setSelectedStudent(null);
@@ -78,7 +82,13 @@ export default function Admin() {
         fetchStudentMentors();
         fetchMentorOverview();
         fetchAdmins();
-    }, [currentPage, searchQuery]);
+        if (activeSection === 'completed-students') {
+            fetchCompletedStudents();
+        }
+        if (activeSection === 'students') {
+            fetchActiveStudents();
+        }
+    }, [currentPage, searchQuery, activeSection]);
 
     useEffect(() => {
         if (registrations.length > 0) {
@@ -372,30 +382,36 @@ export default function Admin() {
         }
     };
 
+    const fetchActiveStudents = async () => {
+        setIsLoadingActive(true);
+        try {
+            const response = await fetch(`/api/dashboard/admin/active-students?search=${searchQuery}`);
+            if (!response.ok) throw new Error('Failed to fetch active students');
+            const data = await response.json();
+            if (data.success) {
+                setActiveStudents(data.students);
+            }
+        } catch (err) {
+            console.error('Error fetching active students:', err);
+            toast.error('Failed to load active students');
+        } finally {
+            setIsLoadingActive(false);
+        }
+    };
+
     const renderStudentManagement = () => (
-        <div className="student-management">
-            <h2>Student Management</h2>
-            <div className="filters">
+        <section className="students-section">
+            <h2>Active Students</h2>
+            <div className="search-pagination-controls">
                 <input
                     type="text"
                     placeholder="Search by name, ID, or domain..."
                     value={searchQuery}
-                    onChange={handleSearch}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     className="search-input"
                 />
-                <select
-                    value={selectedDomain}
-                    onChange={(e) => setSelectedDomain(e.target.value)}
-                    className="domain-filter"
-                >
-                    <option value="all">All Domains</option>
-                    {[...new Set(registrations.map(reg => reg.selectedDomain))].map(domain => (
-                        <option key={domain} value={domain}>{domain}</option>
-                    ))}
-                </select>
             </div>
-
-            <div className="registrations-table">
+            <div className="students-table">
                 <table>
                     <thead>
                         <tr>
@@ -410,42 +426,53 @@ export default function Admin() {
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredRegistrations.map((reg) => (
-                            <tr key={reg.idNumber}>
-                                <td>{reg.idNumber}</td>
-                                <td>{reg.name}</td>
-                                <td>{reg.selectedDomain}</td>
-                                <td>{reg.branch}</td>
-                                <td>{reg.year}</td>
-                                <td>{reg.daysCompleted || 0}/8</td>
-                                <td>{reg.mentorName || 'Not Assigned'}</td>
-                                <td>
-                                    <button 
-                                        onClick={() => {
-                                            setSelectedStudentForMentor(reg);
-                                            setShowMentorModal(true);
-                                            setSelectedStudent(null);
-                                        }}
-                                        className="assign-mentor-btn"
-                                    >
-                                        {reg.mentorName ? 'Modify Mentor' : 'Assign Mentor'}
-                                    </button>
-                                    <button 
-                                        onClick={() => {
-                                            fetchUploads(reg.idNumber);
-                                            setShowMentorModal(false);
-                                        }}
-                                        className="view-uploads-btn"
-                                    >
-                                        Mark Attendance
-                                    </button>
-                                </td>
+                        {isLoadingActive ? (
+                            <tr>
+                                <td colSpan="8" className="loading">Loading...</td>
                             </tr>
-                        ))}
+                        ) : activeStudents.length === 0 ? (
+                            <tr>
+                                <td colSpan="8" className="no-students">No active students found</td>
+                            </tr>
+                        ) : (
+                            activeStudents.map((student) => (
+                                <tr key={student.idNumber}>
+                                    <td>{student.idNumber}</td>
+                                    <td>{student.name}</td>
+                                    <td>{student.selectedDomain}</td>
+                                    <td>{student.branch}</td>
+                                    <td>{student.year}</td>
+                                    <td>{student.daysCompleted || 0}/8</td>
+                                    <td>{student.mentorName || 'Not Assigned'}</td>
+                                    <td>
+                                        <button 
+                                            onClick={() => {
+                                                setSelectedStudent(student.idNumber);
+                                                fetchAttendance(student.idNumber);
+                                            }}
+                                            className="view-attendance-btn"
+                                        >
+                                            View Attendance
+                                        </button>
+                                        <button 
+                                            onClick={() => {
+                                                setSelectedStudentForMentor(student);
+                                                setShowMentorModal(true);
+                                                setMentorSearchQuery('');
+                                                setSearchedStudents([]);
+                                            }}
+                                            className="assign-mentor-btn"
+                                        >
+                                            {student.mentorName ? 'Modify Mentor' : 'Assign Mentor'}
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
                     </tbody>
                 </table>
             </div>
-        </div>
+        </section>
     );
 
     const renderDomainStats = () => {
@@ -1125,7 +1152,13 @@ export default function Admin() {
     const fetchAdmins = async () => {
         setIsLoadingAdmins(true);
         try {
-            const response = await fetch('/api/dashboard/admin/admin');
+            const response = await fetch('/api/dashboard/admin/admin', {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
             if (!response.ok) throw new Error('Failed to fetch admins');
             const data = await response.json();
             console.log(data);
@@ -1164,6 +1197,41 @@ export default function Admin() {
         } catch (err) {
             console.error('Error removing admin:', err);
             toast.error(err.message || 'Failed to remove admin');
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        
+        try {
+            const response = await fetch('/api/dashboard/admin/admin', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify(newAdminData)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to create admin');
+            }
+
+            const data = await response.json();
+            if (data.success) {
+                toast.success('Admin created successfully');
+                setShowAdminModal(false);
+                setNewAdminData({
+                    name: '',
+                    idNumber: '',
+                    password: ''
+                });
+                fetchAdmins(); // Refresh the admin list
+            }
+        } catch (err) {
+            console.error('Error creating admin:', err);
+            toast.error(err.message || 'Failed to create admin');
         }
     };
 
@@ -1272,6 +1340,81 @@ export default function Admin() {
         );
     };
 
+    const fetchCompletedStudents = async () => {
+        setIsLoadingCompleted(true);
+        try {
+            const response = await fetch(`/api/dashboard/admin/completed-students?search=${searchQuery}`);
+            if (!response.ok) throw new Error('Failed to fetch completed students');
+            const data = await response.json();
+            if (data.success) {
+                setCompletedStudents(data.completedStudents);
+            }
+        } catch (err) {
+            console.error('Error fetching completed students:', err);
+            toast.error('Failed to load completed students');
+        } finally {
+            setIsLoadingCompleted(false);
+        }
+    };
+
+    const renderCompletedStudents = () => (
+        <section className="completed-students-section">
+            <h2>Completed Students</h2>
+            <div className="search-pagination-controls">
+                <input
+                    type="text"
+                    placeholder="Search by name, ID, or domain..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="search-input"
+                />
+            </div>
+            <div className="students-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID Number</th>
+                            <th>Name</th>
+                            <th>Domain</th>
+                            <th>Mentor</th>
+                            <th>Completion Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {isLoadingCompleted ? (
+                            <tr>
+                                <td colSpan="6" className="loading">Loading...</td>
+                            </tr>
+                        ) : completedStudents.length === 0 ? (
+                            <tr>
+                                <td colSpan="6" className="no-students">No completed students found</td>
+                            </tr>
+                        ) : (
+                            completedStudents.map((student) => (
+                                <tr key={student.idNumber}>
+                                    <td>{student.idNumber}</td>
+                                    <td>{student.name}</td>
+                                    <td>{student.selectedDomain}</td>
+                                    <td>{student.mentorName || 'N/A'}</td>
+                                    <td>{new Date(student.completedAt).toLocaleDateString()}</td>
+                                    <td>
+                                        <button 
+                                            onClick={() => fetchUploads(student.idNumber)}
+                                            className="view-reports-btn"
+                                        >
+                                            View Reports
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    );
+
     if (!user) return <Loader />;
     if (loading) return <Loader />;
     if (error) return <div className="error">{error}</div>;
@@ -1281,8 +1424,7 @@ export default function Admin() {
             <Navbar title="Admin Dashboard" user={user} />
 
             <div className="dashboard-content">
-                {/* Sidebar */}
-                <aside className="dashboard-sidebar">
+                <nav className="dashboard-sidebar">
                     <button
                         className={`sidebar-item ${activeSection === 'home' ? 'active' : ''}`}
                         onClick={() => setActiveSection('home')}
@@ -1293,19 +1435,25 @@ export default function Admin() {
                         className={`sidebar-item ${activeSection === 'students' ? 'active' : ''}`}
                         onClick={() => setActiveSection('students')}
                     >
-                        <span className="item-label">Student Management</span>
+                        <span className="item-label">Students</span>
+                    </button>
+                    <button
+                        className={`sidebar-item ${activeSection === 'completed-students' ? 'active' : ''}`}
+                        onClick={() => setActiveSection('completed-students')}
+                    >
+                        <span className="item-label">Completed Students</span>
                     </button>
                     <button
                         className={`sidebar-item ${activeSection === 'mentors' ? 'active' : ''}`}
                         onClick={() => setActiveSection('mentors')}
                     >
-                        <span className="item-label">Mentor Overview</span>
+                        <span className="item-label">Mentors</span>
                     </button>
                     <button
-                        className={`sidebar-item ${activeSection === 'add-admin' ? 'active' : ''}`}
-                        onClick={() => setActiveSection('add-admin')}
+                        className={`sidebar-item ${activeSection === 'admins' ? 'active' : ''}`}
+                        onClick={() => setActiveSection('admins')}
                     >
-                        <span className="item-label">Add Admin</span>
+                        <span className="item-label">Admins</span>
                     </button>
                     <button
                         className={`sidebar-item ${activeSection === 'change-password' ? 'active' : ''}`}
@@ -1313,15 +1461,25 @@ export default function Admin() {
                     >
                         <span className="item-label">Change Password</span>
                     </button>
-                </aside>
+                </nav>
 
-                {/* Main Content */}
                 <main className="dashboard-main">
-                    {activeSection === 'home' ? renderDomainStats() : 
-                     activeSection === 'students' ? renderStudentManagement() : 
-                     activeSection === 'mentors' ? renderMentorOverview() :
-                     activeSection === 'add-admin' ? renderAdminList() :
-                     renderChangePassword()}
+                    {activeSection === 'home' ? (
+                        <>
+                            {renderDomainStats()}
+                            {/* {renderStudentManagement()} */}
+                        </>
+                    ) : activeSection === 'students' ? (
+                        renderStudentManagement()
+                    ) : activeSection === 'completed-students' ? (
+                        renderCompletedStudents()
+                    ) : activeSection === 'mentors' ? (
+                        renderMentorOverview()
+                    ) : activeSection === 'admins' ? (
+                        renderAdminList()
+                    ) : (
+                        renderChangePassword()
+                    )}
                 </main>
             </div>
 

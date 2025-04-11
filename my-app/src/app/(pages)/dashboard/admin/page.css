@@ -160,81 +160,103 @@
 
 /* Students Section */
 .students-section {
-    background-color: #ffffff;
+    background: white;
     padding: 2rem;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.search-pagination-controls {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
+.students-section h2 {
+    color: #333;
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
 }
 
-.search-input {
-    padding: 0.75rem;
-    border: 1px solid #c8e6c9;
-    border-radius: 4px;
-    width: 300px;
-    font-size: 1rem;
+.students-table {
+    width: 100%;
+    overflow-x: auto;
 }
 
-.search-input:focus {
-    outline: none;
-    border-color: rgb(151, 0, 3);
-    box-shadow: 0 0 0 2px rgba(151, 0, 3, 0.2);
+.students-table table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
 }
 
-.pagination-controls {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
+.students-table th {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: #495057;
+    border-bottom: 2px solid #dee2e6;
 }
 
-.pagination-controls button {
+.students-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #dee2e6;
+    color: #495057;
+}
+
+.students-table tr:hover {
+    background-color: #f8f9fa;
+}
+
+.students-table .loading,
+.students-table .no-students {
+    text-align: center;
+    padding: 2rem;
+    color: #6c757d;
+}
+
+.students-table .view-attendance-btn,
+.students-table .assign-mentor-btn {
     padding: 0.5rem 1rem;
-    background-color: rgb(151, 0, 3);
-    color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
+    font-size: 0.875rem;
+    margin-right: 0.5rem;
+    transition: background-color 0.2s;
 }
 
-.pagination-controls button:disabled {
-    background-color: #c8e6c9;
-    cursor: not-allowed;
+.students-table .view-attendance-btn {
+    background-color: #007bff;
+    color: white;
 }
 
-.registrations-table table {
-    width: 100%;
-    border-collapse: collapse;
+.students-table .view-attendance-btn:hover {
+    background-color: #0056b3;
 }
 
-.registrations-table th,
-.registrations-table td {
-    padding: 1rem;
-    text-align: left;
-    border-bottom: 1px solid #c8e6c9;
-    color: #333333;
+.students-table .assign-mentor-btn {
+    background-color: #28a745;
+    color: white;
 }
 
-.registrations-table th {
-    background-color: #f8f0f0;
-    font-weight: 400;
-    color: #000000;
+.students-table .assign-mentor-btn:hover {
+    background-color: #218838;
 }
 
-.registrations-table td {
-    padding: 1rem;
-    border-bottom: 1px solid #e0e0e0;
-    color: #000000;
-    font-weight: 400;
-}
+@media (max-width: 768px) {
+    .students-section {
+        padding: 1rem;
+    }
 
-.registrations-table tr:hover {
-    background-color: #f1f8e9;
+    .students-table {
+        font-size: 0.875rem;
+    }
+
+    .students-table th,
+    .students-table td {
+        padding: 0.75rem;
+    }
+
+    .students-table .view-attendance-btn,
+    .students-table .assign-mentor-btn {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.75rem;
+    }
 }
 
 /* Domain Stats Section */
@@ -2108,4 +2130,112 @@
 .delete-admin-btn:focus {
     outline: none; 
     box-shadow: 0 0 0 2px rgba(255, 77, 77, 0.5); 
+}
+
+/* Completed Students Section */
+.completed-students-section {
+    background-color: #ffffff;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.completed-students-section h2 {
+    color: #333;
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+    font-weight: 500;
+}
+
+.completed-students-section .search-pagination-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.completed-students-section .search-input {
+    padding: 0.75rem;
+    border: 1px solid #c8e6c9;
+    border-radius: 4px;
+    width: 300px;
+    font-size: 1rem;
+}
+
+.completed-students-section .search-input:focus {
+    outline: none;
+    border-color: rgb(151, 0, 3);
+    box-shadow: 0 0 0 2px rgba(151, 0, 3, 0.2);
+}
+
+.completed-students-section .students-table {
+    overflow-x: auto;
+}
+
+.completed-students-section table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.completed-students-section th,
+.completed-students-section td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #c8e6c9;
+}
+
+.completed-students-section th {
+    background-color: #f8f0f0;
+    font-weight: 500;
+    color: #333;
+}
+
+.completed-students-section tr:hover {
+    background-color: #f1f8e9;
+}
+
+.completed-students-section .view-reports-btn {
+    padding: 0.5rem 1rem;
+    background-color: rgb(151, 0, 3);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.completed-students-section .view-reports-btn:hover {
+    background-color: rgb(120, 0, 2);
+}
+
+.completed-students-section .loading,
+.completed-students-section .no-students {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+    font-style: italic;
+}
+
+@media (max-width: 768px) {
+    .completed-students-section {
+        padding: 1rem;
+    }
+
+    .completed-students-section .search-pagination-controls {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .completed-students-section .search-input {
+        width: 100%;
+    }
+
+    .completed-students-section table {
+        font-size: 0.9rem;
+    }
+
+    .completed-students-section th,
+    .completed-students-section td {
+        padding: 0.75rem;
+    }
 }
