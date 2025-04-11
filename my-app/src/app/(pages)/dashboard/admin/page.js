@@ -70,6 +70,13 @@ export default function Admin() {
     const [activeSection, setActiveSection] = useState('home');
     const [mentorCompletedCurrentPage, setMentorCompletedCurrentPage] = useState(1);
     const [mentorCompletedTotalPages, setMentorCompletedTotalPages] = useState(1);
+    const [dashboardStats, setDashboardStats] = useState({
+        totalStudents: 0,
+        domains: [],
+        studentsPerDomain: {},
+        activeStudents: 0,
+        completedStudents: 0
+    });
 
     const handleModalClose = () => {
         setSelectedStudent(null);
@@ -228,17 +235,46 @@ export default function Admin() {
         }
     };
 
-    const getStats = () => {
-        const totalStudents = registrations.length;
-        const domains = [...new Set(registrations.map(reg => reg.selectedDomain))];
-        const studentsPerDomain = domains.reduce((acc, domain) => {
-            acc[domain] = registrations.filter(reg => reg.selectedDomain === domain).length;
-            return acc;
-        }, {});
-        const activeStudents = registrations.filter(reg => (reg.daysCompleted || 0) < 8).length;
-        const completedStudents = registrations.filter(reg => (reg.daysCompleted || 0) === 8).length;
-        return { totalStudents, domains, studentsPerDomain, activeStudents, completedStudents };
+    const getStats = async () => {
+        try {
+            const response = await fetch('/api/dashboard/admin/stats');
+            if (!response.ok) {
+                throw new Error('Failed to fetch stats');
+            }
+            const data = await response.json();
+            if (data.success) {
+                return {
+                    totalStudents: data.totalStudents || 0,
+                    domains: data.domains || [],
+                    studentsPerDomain: data.studentsPerDomain || {},
+                    activeStudents: data.activeStudents || 0,
+                    completedStudents: data.completedStudents || 0
+                };
+            }
+            throw new Error(data.error || 'Failed to fetch stats');
+        } catch (err) {
+            console.error('Error fetching stats:', err);
+            toast.error('Failed to load dashboard stats');
+            return {
+                totalStudents: 0,
+                domains: [],
+                studentsPerDomain: {},
+                activeStudents: 0,
+                completedStudents: 0
+            };
+        }
     };
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            const stats = await getStats();
+            setDashboardStats(stats);
+        };
+
+        if (activeSection === 'home') {
+            fetchStats();
+        }
+    }, [activeSection]);
 
     const canMarkAttendance = (dayNumber) => {
         if (dayNumber === 1) return true;
@@ -534,7 +570,6 @@ export default function Admin() {
     );
 
     const renderDomainStats = () => {
-        const stats = getStats();
         return (
             <div className="domain-stats">
                 <div className="welcome-header">
@@ -544,19 +579,19 @@ export default function Admin() {
                 <div className="stats-grid">
                     <div className="stat-card">
                         <h3>Total Students</h3>
-                        <p>{stats.totalStudents}</p>
+                        <p>{dashboardStats.totalStudents}</p>
                     </div>
                     <div className="stat-card">
                         <h3>Active Students</h3>
-                        <p>{stats.activeStudents}</p>
+                        <p>{dashboardStats.activeStudents}</p>
                     </div>
                     <div className="stat-card">
                         <h3>Completed Students</h3>
-                        <p>{stats.completedStudents}</p>
+                        <p>{dashboardStats.completedStudents}</p>
                     </div>
                     <div className="stat-card">
                         <h3>Total Domains</h3>
-                        <p>{stats.domains.length}</p>
+                        <p>{dashboardStats.domains.length}</p>
                     </div>
                     <div className="stat-card">
                         <h3>Total Mentors</h3>
@@ -564,29 +599,19 @@ export default function Admin() {
                     </div>
                     <div className="stat-card">
                         <h3>Completion Rate</h3>
-                        <p>{((stats.completedStudents / stats.totalStudents) * 100).toFixed(1)}%</p>
+                        <p>{((dashboardStats.completedStudents / dashboardStats.totalStudents) * 100 || 0).toFixed(1)}%</p>
                     </div>
                 </div>
 
                 <h3>Domain-wise Progress</h3>
                 <div className="domain-breakdown">
-                    {Object.entries(stats.studentsPerDomain).map(([domain, count]) => (
+                    {Object.entries(dashboardStats.studentsPerDomain).map(([domain, stats]) => (
                         <div key={domain} className="domain-stat-card">
                             <h4>{domain}</h4>
                             <div className="domain-details">
-                                <p>Total Students: {count}</p>
-                                <p>Active Students: {
-                                    registrations.filter(reg =>
-                                        reg.selectedDomain === domain &&
-                                        (reg.daysCompleted || 0) < 8
-                                    ).length
-                                }</p>
-                                <p>Completed Students: {
-                                    registrations.filter(reg =>
-                                        reg.selectedDomain === domain &&
-                                        (reg.daysCompleted || 0) === 8
-                                    ).length
-                                }</p>
+                                <p>Total Students: {stats.total || 0}</p>
+                                <p>Active Students: {stats.active || 0}</p>
+                                <p>Completed Students: {stats.completed || 0}</p>
                                 <p>Assigned Mentors: {
                                     studentMentors.filter(mentor =>
                                         mentor.domain === domain
