@@ -50,7 +50,7 @@ export async function POST(request) {
                 domain: student.selectedDomain,
                 completionDate: new Date().toISOString(),
                 mentorId: mentorId,
-                mentorName: mentor.name
+                // mentorName: mentor.name
             };
 
             // Insert or update in completedStudents table

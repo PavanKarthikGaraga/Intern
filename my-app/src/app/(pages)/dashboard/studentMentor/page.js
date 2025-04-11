@@ -372,25 +372,23 @@ export default function StudentMentor() {
                             <h2>Overview</h2>
                             <div className="stats-cards">
                                 <div className="stat-card">
-                                    <h3>Assigned Students</h3>
+                                    <h3>Total Students</h3>
+                                    <p>{assignedStudents.length + completedStudents.length}</p>
+                                </div>
+                                <div className="stat-card">
+                                    <h3>Active Students</h3>
                                     <p>{assignedStudents.length}</p>
                                 </div>
                                 <div className="stat-card">
                                     <h3>Completed Students</h3>
-                                    <p>
-                                        {assignedStudents.filter(student => 
-                                            Object.values(studentAttendance[student.idNumber] || {})
-                                                .filter(status => status === 'P').length === 8
-                                        ).length}
-                                    </p>
+                                    <p>{completedStudents.length}</p>
                                 </div>
                                 <div className="stat-card">
                                     <h3>Completion Rate</h3>
                                     <p>
-                                        {Math.round((assignedStudents.filter(student => 
-                                            Object.values(studentAttendance[student.idNumber] || {})
-                                                .filter(status => status === 'P').length === 8
-                                        ).length / assignedStudents.length) * 100)}%
+                                        {assignedStudents.length + completedStudents.length > 0 
+                                            ? Math.round((completedStudents.length / (assignedStudents.length + completedStudents.length)) * 100)
+                                            : 0}%
                                     </p>
                                 </div>
                             </div>
@@ -414,36 +412,42 @@ export default function StudentMentor() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {assignedStudents.map((student) => {
-                                            const daysCompleted = Object.values(studentAttendance[student.idNumber] || {})
-                                                .filter(status => status === 'P').length;
-                                            return (
-                                                <tr key={student.idNumber}>
-                                                    <td>{student.idNumber}</td>
-                                                    <td>{student.name}</td>
-                                                    <td>{student.selectedDomain}</td>
-                                                    <td>{student.branch}</td>
-                                                    <td>{student.year}</td>
-                                                    <td>{daysCompleted}/8</td>
-                                                    <td>
-                                                        <button 
-                                                            onClick={() => fetchUploads(student.idNumber)}
-                                                            className="view-uploads-btn"
-                                                        >
-                                                            View Progress
-                                                        </button>
-                                                        {daysCompleted === 8 && (
-                                                            <button
-                                                                onClick={() => handleMarkCompleted(student.idNumber)}
-                                                                className="mark-completed-btn"
+                                        {assignedStudents.length === 0 ? (
+                                            <tr>
+                                                <td colSpan="7">No Students assigned</td>
+                                            </tr>
+                                        ) : (
+                                            assignedStudents.map((student) => {
+                                                const daysCompleted = Object.values(studentAttendance[student.idNumber] || {})
+                                                    .filter(status => status === 'P').length;
+                                                return (
+                                                    <tr key={student.idNumber}>
+                                                        <td>{student.idNumber}</td>
+                                                        <td>{student.name}</td>
+                                                        <td>{student.selectedDomain}</td>
+                                                        <td>{student.branch}</td>
+                                                        <td>{student.year}</td>
+                                                        <td>{daysCompleted}/8</td>
+                                                        <td className="btns">
+                                                            <button 
+                                                                onClick={() => fetchUploads(student.idNumber)}
+                                                                className="view-uploads-btn"
                                                             >
-                                                                Mark Completed
+                                                                View Progress
                                                             </button>
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
+                                                            {daysCompleted === 8 && (
+                                                                <button
+                                                                    onClick={() => handleMarkCompleted(student.idNumber)}
+                                                                    className="view-uploads-btn"
+                                                                >
+                                                                    Mark Completed
+                                                                </button>
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })
+                                        )}
                                     </tbody>
                                 </table>
                             </div>

@@ -6,19 +6,44 @@ export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
         const searchQuery = searchParams.get('search') || '';
+        const mentorId = searchParams.get('mentorId');
 
         db = await getDBConnection();
 
-        const query = `
+        // First verify if the mentor exists if mentorId is provided
+        if (mentorId) {
+            const [mentorCheck] = await db.execute(`
+                SELECT mentorId, domain 
+                FROM studentMentors 
+                WHERE mentorId = ?
+            `, [mentorId]);
+
+            if (!mentorCheck || mentorCheck.length === 0) {
+                return NextResponse.json({
+                    success: false,
+                    error: 'Mentor not found'
+                }, { status: 404 });
+            }
+        }
+
+        let query = `
             SELECT 
                 cs.studentDetails,
                 cs.mentorId,
-                sm.name as mentorName
+                sm.name as mentorName,
+                sm.domain as mentorDomain
             FROM completedStudents cs
             LEFT JOIN studentMentors sm ON cs.mentorId = sm.mentorId
         `;
 
-        const [completedStudents] = await db.execute(query);
+        const queryParams = [];
+
+        if (mentorId) {
+            query += ' WHERE cs.mentorId = ?';
+            queryParams.push(mentorId);
+        }
+
+        const [completedStudents] = await db.execute(query, queryParams);
 
         if (completedStudents.length === 0) {
             return NextResponse.json({
@@ -36,7 +61,8 @@ export async function GET(request) {
                 name: details.name,
                 completionDate: details.completionDate,
                 mentorId: record.mentorId,
-                mentorName: record.mentorName
+                mentorName: record.mentorName,
+                selectedDomain: details.domain || record.mentorDomain
             }));
             allStudents = [...allStudents, ...students];
         });
@@ -45,7 +71,8 @@ export async function GET(request) {
         const filteredStudents = searchQuery 
             ? allStudents.filter(student => 
                 student.idNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                student.name?.toLowerCase().includes(searchQuery.toLowerCase())
+                student.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                student.selectedDomain?.toLowerCase().includes(searchQuery.toLowerCase())
             )
             : allStudents;
 
@@ -56,11 +83,17 @@ export async function GET(request) {
 
     } catch (error) {
         console.error('Error fetching completed students:', error);
-        return NextResponse.json(
-            { success: false, error: error.message },
-            { status: 500 }
-        );
+        return NextResponse.json({ 
+            success: false, 
+            error: 'Failed to fetch completed students: ' + error.message 
+        }, { status: 500 });
     } finally {
-        if (db) await db.end();
+        if (db) {
+            try {
+                await db.end();
+            } catch (error) {
+                console.error('Error closing database connection:', error);
+            }
+        }
     }
 } 

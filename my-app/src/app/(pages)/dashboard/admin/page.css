@@ -2278,13 +2278,13 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    background-color: #4caf50;
+    color: white;
+    border-radius: 50%;
     min-width: 20px;
     height: 20px;
-    padding: 0 6px;
-    margin-left: 8px;
-    background-color: #4CAF50;
-    color: white;
-    border-radius: 10px;
     font-size: 12px;
-    font-weight: 600;
+    font-weight: bold;
+    margin-left: 8px;
+    padding: 0 6px;
 }

@@ -739,6 +739,11 @@ export default function Admin() {
         return matchesSearch && matchesDomain;
     }) || [];
 
+    const handleMentorSelect = (mentorId) => {
+        setExpandedMentor(mentorId);
+        fetchCompletedStudentsForMentor(mentorId);
+    };
+
     const handleDeleteMentor = async (mentorId) => {
         if (!window.confirm('Are you sure you want to delete this mentor? This will demote them to a student role.')) {
             return;
@@ -812,7 +817,7 @@ export default function Admin() {
                                 <div key={`mentor-${mentor.mentorId}`} className="mentor-card">
                                     <div
                                         className="mentor-card-header"
-                                        onClick={() => setExpandedMentor(mentor.mentorId)}
+                                        onClick={() => handleMentorSelect(mentor.mentorId)}
                                     >
                                         <div className="mentor-info">
                                             <h3>{mentor.name}</h3>
@@ -840,7 +845,7 @@ export default function Admin() {
                                     <div className="mentor-stats">
                                         <div className="stat-item">
                                             <span className="stat-label">Total Students:</span>
-                                            <span className="stat-value">{mentorOverview.find(m => m.mentorId === expandedMentor).stats.total}</span>
+                                            <span className="stat-value">{mentorOverview.find(m => m.mentorId === expandedMentor).stats.total }</span>
                                         </div>
                                         <div className="stat-item">
                                             <span className="stat-label">Active Students:</span>
@@ -879,13 +884,11 @@ export default function Admin() {
                                             className={`tab-btn ${activeTab === 'completed' ? 'active' : ''}`}
                                             onClick={() => {
                                                 setActiveTab('completed');
-                                                // handleTabClick('completed');
+                                                handleTabClick('completed');
                                             }}
                                         >
-                                            Completed Students
-                                            {/* <span className="completed-count"> */}
-                                            ({completedStudents.length})
-                                            {/* </span> */}
+                                            Completed Students(
+                                            {completedStudents.length > 0 && (completedStudents.length)});
                                         </button>
                                     </div>
 
@@ -903,7 +906,6 @@ export default function Admin() {
                                                 </thead>
                                                 <tbody>
                                                     {mentorOverview.find(m => m.mentorId === expandedMentor).students
-                                                        ?.filter(s => s.daysCompleted < 8)
                                                         .map(student => (
                                                             <tr key={`student-${student.idNumber}`}>
                                                                 <td>{student.name}</td>
@@ -935,9 +937,9 @@ export default function Admin() {
                                                         ))}
                                                 </tbody>
                                             </table>
-                                            {(!mentorOverview.find(m => m.mentorId === expandedMentor).students?.filter(s => s.daysCompleted < 8).length) && (
+                                            {/* {(!mentorOverview.find(m => m.mentorId === expandedMentor).students?.filter(s => s.daysCompleted < 8).length) && (
                                                 <p className="no-students">No active students</p>
-                                            )}
+                                            )} */}
                                         </div>
                                     ) : (
                                         <div className="tab-content student-table">
@@ -1454,7 +1456,7 @@ export default function Admin() {
 
         setIsLoadingCompleted(true);
         try {
-            const response = await fetch(`/api/dashboard/admin/mentor/completed?mentorId=${mentorId}`, {
+            const response = await fetch(`/api/dashboard/admin/completed-students?mentorId=${mentorId}`, {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
@@ -1464,13 +1466,33 @@ export default function Admin() {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                setError("Failed to fetch completed students");
                 throw new Error(errorData.error || 'Failed to fetch completed students');
             }
 
             const data = await response.json();
             if (data.success) {
-                setCompletedStudents(data.students || []);
+                setCompletedStudents(data.completedStudents || []);
+                
+                // Update the mentor overview with the completed students count
+                if (mentorOverview) {
+                    const updatedMentorOverview = mentorOverview.map(mentor => {
+                        if (mentor.mentorId === mentorId) {
+                            const activeStudentsCount = mentor.students?.filter(s => s.daysCompleted < 8).length || 0;
+                            const completedStudentsCount = data.completedStudents.length;
+                            return {
+                                ...mentor,
+                                stats: {
+                                    ...mentor.stats,
+                                    completed: completedStudentsCount,
+                                    total: activeStudentsCount + completedStudentsCount,
+                                    active: activeStudentsCount
+                                }
+                            };
+                        }
+                        return mentor;
+                    });
+                    setMentorOverview(updatedMentorOverview);
+                }
             } else {
                 throw new Error(data.error || 'Failed to fetch completed students');
             }
