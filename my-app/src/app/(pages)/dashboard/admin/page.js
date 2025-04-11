@@ -19,11 +19,9 @@ export default function Admin() {
     const [uploads, setUploads] = useState([]);
     const [attendance, setAttendance] = useState({});
     const [studentAttendance, setStudentAttendance] = useState({});
-    const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-    const [itemsPerPage] = useState(20);
-    const [activeSection, setActiveSection] = useState('home');
+    const [itemsPerPage] = useState(10);
     const [showMentorModal, setShowMentorModal] = useState(false);
     const [selectedStudentForMentor, setSelectedStudentForMentor] = useState(null);
     const [studentMentors, setStudentMentors] = useState([]);
@@ -63,6 +61,15 @@ export default function Admin() {
     const [isLoadingCompleted, setIsLoadingCompleted] = useState(false);
     const [activeStudents, setActiveStudents] = useState([]);
     const [isLoadingActive, setIsLoadingActive] = useState(false);
+    const [completedCurrentPage, setCompletedCurrentPage] = useState(1);
+    const [completedTotalPages, setCompletedTotalPages] = useState(1);
+    const [mentorCurrentPage, setMentorCurrentPage] = useState(1);
+    const [mentorTotalPages, setMentorTotalPages] = useState(1);
+    const [isLoadingMentors, setIsLoadingMentors] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [activeSection, setActiveSection] = useState('home');
+    const [mentorCompletedCurrentPage, setMentorCompletedCurrentPage] = useState(1);
+    const [mentorCompletedTotalPages, setMentorCompletedTotalPages] = useState(1);
 
     const handleModalClose = () => {
         setSelectedStudent(null);
@@ -78,20 +85,35 @@ export default function Admin() {
     };
 
     useEffect(() => {
-        fetchRegistrations();
-        fetchStudentMentors();
-        fetchMentorOverview();
-        fetchAdmins();
-        if (activeSection === 'completed-students') {
-            fetchCompletedStudents();
-        }
+        const fetchInitialData = async () => {
+            setLoading(true);
+            try {
+                await Promise.all([
+                    fetchStudentMentors(),
+                    fetchAdmins()
+                ]);
+            } catch (error) {
+                console.error('Error fetching initial data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchInitialData();
+    }, []);
+
+    useEffect(() => {
         if (activeSection === 'students') {
             fetchActiveStudents();
+        } else if (activeSection === 'completed-students') {
+            fetchCompletedStudents();
+        } else if (activeSection === 'mentors') {
+            fetchMentorOverview();
         }
     }, [currentPage, searchQuery, activeSection]);
 
     useEffect(() => {
-        if (registrations.length > 0) {
+        if (registrations && registrations.length > 0) {
             setFilteredRegistrations(
                 selectedDomain === 'all'
                     ? registrations
@@ -101,23 +123,19 @@ export default function Admin() {
     }, [selectedDomain, registrations]);
 
     const fetchRegistrations = async () => {
+        setLoading(true);
         try {
             const response = await fetch(
-                `/api/dashboard/admin?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}`,
-                {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                }
+                `/api/dashboard/admin/active-students?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}`
             );
-            if (!response.ok) throw new Error('Failed to fetch');
             const data = await response.json();
-            setRegistrations(data.reports);
-            setTotalPages(data.pagination.totalPages);
-        } catch (err) {
-            setError('Failed to load registrations');
-            console.error(err);
+            if (data.success) {
+                setRegistrations(data.registrations || []);
+                setTotalPages(Math.ceil((data.total || 0) / itemsPerPage));
+            }
+        } catch (error) {
+            console.error('Error fetching registrations:', error);
+            setRegistrations([]);
         } finally {
             setLoading(false);
         }
@@ -390,18 +408,52 @@ export default function Admin() {
     const fetchActiveStudents = async () => {
         setIsLoadingActive(true);
         try {
-            const response = await fetch(`/api/dashboard/admin/active-students?search=${searchQuery}`);
+            const response = await fetch(
+                `/api/dashboard/admin/active-students?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}`
+            );
             if (!response.ok) throw new Error('Failed to fetch active students');
             const data = await response.json();
             if (data.success) {
-                setActiveStudents(data.students);
+                setActiveStudents(data.students || []);
+                setTotalPages(Math.ceil((data.total || 0) / itemsPerPage));
             }
         } catch (err) {
             console.error('Error fetching active students:', err);
             toast.error('Failed to load active students');
+            setActiveStudents([]);
         } finally {
             setIsLoadingActive(false);
         }
+    };
+
+    const handlePageChange = (newPage) => {
+        setCurrentPage(newPage);
+    };
+
+    const renderPagination = (totalPages, currentPage, onPageChange = handlePageChange) => {
+        if (totalPages <= 1) return null;
+
+        return (
+            <div className="pagination-controls">
+                <button
+                    className="pagination-btn"
+                    onClick={() => onPageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                >
+                    Previous
+                </button>
+                <span className="page-info">
+                    Page {currentPage} of {totalPages}
+                </span>
+                <button
+                    className="pagination-btn"
+                    onClick={() => onPageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                >
+                    Next
+                </button>
+            </div>
+        );
     };
 
     const renderStudentManagement = () => (
@@ -477,6 +529,7 @@ export default function Admin() {
                     </tbody>
                 </table>
             </div>
+            {renderPagination(totalPages, currentPage)}
         </section>
     );
 
@@ -718,26 +771,35 @@ export default function Admin() {
     };
 
     const fetchMentorOverview = async () => {
+        setIsLoadingMentors(true);
         try {
-            const response = await fetch('/api/dashboard/admin/mentor-overview');
+            const response = await fetch(
+                `/api/dashboard/admin/mentor-overview?page=${mentorCurrentPage}&limit=${itemsPerPage}&search=${searchQuery}`
+            );
             if (!response.ok) throw new Error('Failed to fetch mentor overview');
             const data = await response.json();
             if (data.success) {
-                setMentorOverview(data.mentors);
+                setMentorOverview(data.mentors || []);
+                setMentorTotalPages(Math.ceil((data.total || 0) / itemsPerPage));
             }
         } catch (err) {
             console.error('Error fetching mentor overview:', err);
             toast.error('Failed to load mentor overview');
+            setMentorOverview([]);
+        } finally {
+            setIsLoadingMentors(false);
         }
     };
 
-    const filteredMentors = mentorOverview?.filter(mentor => {
-        if (!mentor) return false;
-        const matchesSearch = mentor.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            mentor.mentorId?.toString().includes(searchTerm.toLowerCase());
-        const matchesDomain = selectedDomain === 'all' || mentor.domain === selectedDomain;
-        return matchesSearch && matchesDomain;
-    }) || [];
+    useEffect(() => {
+        if (activeSection === 'mentors') {
+            fetchMentorOverview();
+        }
+    }, [mentorCurrentPage, searchQuery, activeSection]);
+
+    const handleMentorPageChange = (newPage) => {
+        setMentorCurrentPage(newPage);
+    };
 
     const handleMentorSelect = (mentorId) => {
         setExpandedMentor(mentorId);
@@ -777,6 +839,15 @@ export default function Admin() {
 
     const renderMentorOverview = () => {
         const uniqueDomains = [...new Set(mentorOverview?.map(mentor => mentor?.domain).filter(Boolean))];
+        
+        // Add filtering logic for mentors
+        const filteredMentors = mentorOverview?.filter(mentor => {
+            if (!mentor) return false;
+            const matchesSearch = mentor.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                mentor.mentorId?.toString().includes(searchQuery.toLowerCase());
+            const matchesDomain = selectedDomain === 'all' || mentor.domain === selectedDomain;
+            return matchesSearch && matchesDomain;
+        }) || [];
 
         return (
             <div className="mentor-overview">
@@ -788,8 +859,8 @@ export default function Admin() {
                                     <input
                                         type="text"
                                         placeholder="Search mentors..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
                                     />
                                 </div>
                                 <div className="domain-filter">
@@ -813,24 +884,31 @@ export default function Admin() {
                         </div>
 
                         <div className="mentor-cards">
-                            {filteredMentors.map(mentor => (
-                                <div key={`mentor-${mentor.mentorId}`} className="mentor-card">
-                                    <div
-                                        className="mentor-card-header"
-                                        onClick={() => handleMentorSelect(mentor.mentorId)}
-                                    >
-                                        <div className="mentor-info">
-                                            <h3>{mentor.name}</h3>
-                                            <p>ID: {mentor.mentorId}</p>
-                                            <p>Domain: {mentor.domain}</p>
-                                        </div>
-                                        <div className="expand-icon">
-                                            ▶
+                            {isLoadingMentors ? (
+                                <div className="loading">Loading mentors...</div>
+                            ) : mentorOverview.length === 0 ? (
+                                <div className="no-mentors">No mentors found</div>
+                            ) : (
+                                filteredMentors.map(mentor => (
+                                    <div key={`mentor-${mentor.mentorId}`} className="mentor-card">
+                                        <div
+                                            className="mentor-card-header"
+                                            onClick={() => handleMentorSelect(mentor.mentorId)}
+                                        >
+                                            <div className="mentor-info">
+                                                <h3>{mentor.name}</h3>
+                                                <p>ID: {mentor.mentorId}</p>
+                                                <p>Domain: {mentor.domain}</p>
+                                            </div>
+                                            <div className="expand-icon">
+                                                ▶
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            ))}
+                                ))
+                            )}
                         </div>
+                        {renderPagination(mentorTotalPages, mentorCurrentPage, handleMentorPageChange)}
                     </>
                 ) : (
                     <div className="mentor-profile-main">
@@ -888,7 +966,7 @@ export default function Admin() {
                                             }}
                                         >
                                             Completed Students(
-                                            {completedStudents.length > 0 && (completedStudents.length)});
+                                                {mentorOverview.find(m => m.mentorId === expandedMentor).stats.completed})
                                         </button>
                                     </div>
 
@@ -948,35 +1026,38 @@ export default function Admin() {
                                             ) : completedStudents.length === 0 ? (
                                                 <div className="no-data">No completed students found</div>
                                             ) : (
-                                                <table>
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Name</th>
-                                                            <th>ID</th>
-                                                            <th>Domain</th>
-                                                            <th>Completion Date</th>
-                                                            <th>Actions</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {completedStudents.map(student => (
-                                                            <tr key={student.idNumber}>
-                                                                <td>{student.name}</td>
-                                                                <td>{student.idNumber}</td>
-                                                                <td>{student.selectedDomain}</td>
-                                                                <td>{new Date(student.completionDate).toLocaleDateString()}</td>
-                                                                <td>
-                                                                    <button
-                                                                        onClick={() => fetchUploads(student.idNumber)}
-                                                                        className="view-progress-btn"
-                                                                    >
-                                                                        View Reports
-                                                                    </button>
-                                                                </td>
+                                                <>
+                                                    <table>
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Name</th>
+                                                                <th>ID</th>
+                                                                <th>Domain</th>
+                                                                <th>Completion Date</th>
+                                                                <th>Actions</th>
                                                             </tr>
-                                                        ))}
-                                                    </tbody>
-                                                </table>
+                                                        </thead>
+                                                        <tbody>
+                                                            {completedStudents.map(student => (
+                                                                <tr key={student.idNumber}>
+                                                                    <td>{student.name}</td>
+                                                                    <td>{student.idNumber}</td>
+                                                                    <td>{student.selectedDomain}</td>
+                                                                    <td>{new Date(student.completionDate).toLocaleDateString()}</td>
+                                                                    <td>
+                                                                        <button
+                                                                            onClick={() => fetchUploads(student.idNumber)}
+                                                                            className="view-progress-btn"
+                                                                        >
+                                                                            View Reports
+                                                                        </button>
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                    {renderPagination(mentorCompletedTotalPages, mentorCompletedCurrentPage, handleMentorCompletedPageChange)}
+                                                </>
                                             )}
                                         </div>
                                     )}
@@ -1184,7 +1265,6 @@ export default function Admin() {
 
             if (!response.ok) {
                 if (retryCount < 3) {
-                    // Retry after 1 second
                     await new Promise(resolve => setTimeout(resolve, 1000));
                     return fetchAdmins(retryCount + 1);
                 }
@@ -1375,33 +1455,51 @@ export default function Admin() {
     const fetchCompletedStudents = async () => {
         setIsLoadingCompleted(true);
         try {
-            const response = await fetch(`/api/dashboard/admin/completed-students?search=${searchQuery}`);
+            const response = await fetch(
+                `/api/dashboard/admin/completed-students?page=${completedCurrentPage}&limit=${itemsPerPage}&search=${searchQuery}`
+            );
             if (!response.ok) throw new Error('Failed to fetch completed students');
             const data = await response.json();
             if (data.success) {
-                setCompletedStudents(data.completedStudents);
+                setCompletedStudents(data.completedStudents || []);
+                console.log("completedStudents",completedStudents);
+                setCompletedTotalPages(Math.ceil((data.total || 0) / itemsPerPage));
             }
         } catch (err) {
             console.error('Error fetching completed students:', err);
             toast.error('Failed to load completed students');
+            setCompletedStudents([]);
         } finally {
             setIsLoadingCompleted(false);
         }
     };
 
+    useEffect(() => {
+        if (activeSection === 'completed-students') {
+            fetchCompletedStudents();
+        }
+    }, [completedCurrentPage, searchQuery, activeSection]);
+
+    const handleCompletedPageChange = (newPage) => {
+        setCompletedCurrentPage(newPage);
+        // Reset to first page when changing pages
+        setCurrentPage(1);
+    };
+
     const renderCompletedStudents = () => (
         <section className="completed-students-section">
-            <h2>Completed Students</h2>
-            <div className="search-pagination-controls">
-                <input
-                    type="text"
-                    placeholder="Search by name, ID, or domain..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="search-input"
-                />
+            <div className="section-header">
+                <h2>Completed Students</h2>
+                <div className="search-bar">
+                    <input
+                        type="text"
+                        placeholder="Search completed students..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                </div>
             </div>
-            <div className="students-table">
+            <div className="table-container">
                 <table>
                     <thead>
                         <tr>
@@ -1428,12 +1526,15 @@ export default function Admin() {
                                     <td>{student.idNumber}</td>
                                     <td>{student.name}</td>
                                     <td>{student.selectedDomain}</td>
-                                    <td>{student.mentorName || 'N/A'}</td>
+                                    <td>{student.mentorName || 'Not Assigned'}</td>
                                     <td>{new Date(student.completionDate).toLocaleDateString()}</td>
                                     <td>
-                                        <button
-                                            onClick={() => fetchUploads(student.idNumber)}
-                                            className="view-reports-btn"
+                                        <button 
+                                            className="view-btn"
+                                            onClick={() => {
+                                                setSelectedStudent(student.idNumber);
+                                                fetchUploads(student.idNumber);
+                                            }}
                                         >
                                             View Reports
                                         </button>
@@ -1444,10 +1545,11 @@ export default function Admin() {
                     </tbody>
                 </table>
             </div>
+            {renderPagination(completedTotalPages, completedCurrentPage, handleCompletedPageChange)}
         </section>
     );
 
-    const fetchCompletedStudentsForMentor = async (mentorId) => {
+    const fetchCompletedStudentsForMentor = async (mentorId, pageNumber = mentorCompletedCurrentPage) => {
         if (!mentorId) {
             console.error('No mentor ID provided');
             toast.error('Please select a mentor first');
@@ -1456,13 +1558,16 @@ export default function Admin() {
 
         setIsLoadingCompleted(true);
         try {
-            const response = await fetch(`/api/dashboard/admin/completed-students?mentorId=${mentorId}`, {
-                method: 'GET',
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json'
+            const response = await fetch(
+                `/api/dashboard/admin/completed-students?mentorId=${mentorId}&page=${pageNumber}&limit=${itemsPerPage}`, 
+                {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
                 }
-            });
+            );
 
             if (!response.ok) {
                 const errorData = await response.json();
@@ -1472,13 +1577,15 @@ export default function Admin() {
             const data = await response.json();
             if (data.success) {
                 setCompletedStudents(data.completedStudents || []);
+                setMentorCompletedTotalPages(Math.ceil((data.total || 0) / itemsPerPage));
+                setMentorCompletedCurrentPage(pageNumber); // Update the current page after successful fetch
                 
                 // Update the mentor overview with the completed students count
                 if (mentorOverview) {
                     const updatedMentorOverview = mentorOverview.map(mentor => {
                         if (mentor.mentorId === mentorId) {
                             const activeStudentsCount = mentor.students?.filter(s => s.daysCompleted < 8).length || 0;
-                            const completedStudentsCount = data.completedStudents.length;
+                            const completedStudentsCount = data.total || 0;
                             return {
                                 ...mentor,
                                 stats: {
@@ -1505,9 +1612,21 @@ export default function Admin() {
         }
     };
 
+    const handleMentorCompletedPageChange = (newPage) => {
+        // Ensure the new page is within valid bounds
+        if (newPage < 1) newPage = 1;
+        if (newPage > mentorCompletedTotalPages) newPage = mentorCompletedTotalPages;
+        
+        // Only update if the page is actually changing
+        if (newPage !== mentorCompletedCurrentPage && expandedMentor) {
+            fetchCompletedStudentsForMentor(expandedMentor, newPage);
+        }
+    };
+
     const handleTabClick = (tab) => {
         setActiveTab(tab);
         if (tab === 'completed' && expandedMentor) {
+            setMentorCompletedCurrentPage(1); // Reset to first page when switching to completed tab
             fetchCompletedStudentsForMentor(expandedMentor);
         }
     };

@@ -6,10 +6,31 @@ export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
         const search = searchParams.get("search") || "";
+        const page = parseInt(searchParams.get("page")) || 1;
+        const limit = parseInt(searchParams.get("limit")) || 20;
+        const offset = (page - 1) * limit;
         const searchPattern = `%${search}%`;
 
         db = await getDBConnection();
 
+        // Query for total count (without limit/offset)
+        const [countRows] = await db.execute(
+            `
+            SELECT COUNT(*) as total
+            FROM registrations r
+            WHERE 
+                (r.name LIKE ? OR r.idNumber LIKE ? OR r.selectedDomain LIKE ?)
+                AND r.completed = FALSE
+                AND r.idNumber NOT IN (
+                    SELECT mentorId FROM studentMentors
+                )
+            `,
+            [searchPattern, searchPattern, searchPattern]
+        );
+
+        const total = countRows[0].total;
+
+        // Query for actual paginated results
         const query = `
             SELECT 
                 r.*,
@@ -57,8 +78,8 @@ export async function GET(request) {
                 r.createdAt, r.updatedAt,
                 sm.name, sm.mentorId
 
-            ORDER BY r.name;
-
+            ORDER BY r.name
+            LIMIT ${limit} OFFSET ${offset};
         `;
 
         const [students] = await db.execute(query, [
@@ -70,6 +91,10 @@ export async function GET(request) {
         return NextResponse.json({
             success: true,
             students,
+            page,
+            limit,
+            total, // 👈 this is the new field
+            totalPages: Math.ceil(total / limit),
         });
     } catch (error) {
         console.error("Error fetching active students:", error);

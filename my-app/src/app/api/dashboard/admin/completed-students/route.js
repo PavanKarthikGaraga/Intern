@@ -7,6 +7,9 @@ export async function GET(request) {
         const { searchParams } = new URL(request.url);
         const searchQuery = searchParams.get('search') || '';
         const mentorId = searchParams.get('mentorId');
+        const page = parseInt(searchParams.get('page')) || 1;
+        const limit = parseInt(searchParams.get('limit')) || 10;
+        const offset = (page - 1) * limit;
 
         db = await getDBConnection();
 
@@ -48,7 +51,11 @@ export async function GET(request) {
         if (completedStudents.length === 0) {
             return NextResponse.json({
                 success: true,
-                completedStudents: []
+                completedStudents: [],
+                total: 0,
+                page,
+                limit,
+                totalPages: 0
             });
         }
 
@@ -67,7 +74,7 @@ export async function GET(request) {
             allStudents = [...allStudents, ...students];
         });
 
-        // Filter students based on search query if provided
+        // Filter based on search query
         const filteredStudents = searchQuery 
             ? allStudents.filter(student => 
                 student.idNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -76,9 +83,16 @@ export async function GET(request) {
             )
             : allStudents;
 
+        const total = filteredStudents.length;
+        const paginatedStudents = filteredStudents.slice(offset, offset + limit);
+
         return NextResponse.json({
             success: true,
-            completedStudents: filteredStudents
+            completedStudents: paginatedStudents,
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit)
         });
 
     } catch (error) {
@@ -96,4 +110,4 @@ export async function GET(request) {
             }
         }
     }
-} 
+}
