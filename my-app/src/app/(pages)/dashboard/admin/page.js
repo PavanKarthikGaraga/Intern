@@ -93,8 +93,8 @@ export default function Admin() {
     useEffect(() => {
         if (registrations.length > 0) {
             setFilteredRegistrations(
-                selectedDomain === 'all' 
-                    ? registrations 
+                selectedDomain === 'all'
+                    ? registrations
                     : registrations.filter(reg => reg.selectedDomain === selectedDomain)
             );
         }
@@ -160,10 +160,10 @@ export default function Admin() {
                 }),
                 fetchAttendance(studentId)
             ]);
-            
+
             if (!uploadsResponse.ok) throw new Error('Failed to fetch uploads');
             const data = await uploadsResponse.json();
-            
+
             // Ensure uploads is always an array
             if (Array.isArray(data.uploads)) {
                 setUploads(data.uploads);
@@ -173,7 +173,7 @@ export default function Admin() {
                 setUploads([]);
                 console.warn('Uploads data is not in expected format:', data);
             }
-            
+
             setSelectedStudent(studentId);
         } catch (err) {
             console.error(err);
@@ -189,18 +189,18 @@ export default function Admin() {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ 
-                    studentId, 
-                    dayNumber, 
-                    status 
+                body: JSON.stringify({
+                    studentId,
+                    dayNumber,
+                    status
                 })
             });
-            
+
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.error || 'Failed to mark attendance');
             }
-            
+
             // Fetch updated attendance data immediately after marking
             await fetchAttendance(studentId);
             toast.success('Attendance marked successfully');
@@ -245,9 +245,9 @@ export default function Admin() {
                         <th>Day</th>
                         <th>Document</th>
                         <th>Uploaded On</th>
-                        {!activeSection== 'completed-students' &&<> 
-                        <th>Actions</th>
-                        <th>Status</th>
+                        {!activeSection == 'completed-students' && <>
+                            <th>Actions</th>
+                            <th>Status</th>
                         </>}
                     </tr>
                 </thead>
@@ -256,7 +256,7 @@ export default function Admin() {
                         const dayKey = `day${upload.dayNumber}`;
                         const currentStatus = studentAttendance[dayKey];
                         const canMark = canMarkAttendance(upload.dayNumber);
-                        
+
                         return (
                             <tr key={`${upload.idNumber}-${upload.dayNumber}`}>
                                 <td>Day {upload.dayNumber}</td>
@@ -266,29 +266,29 @@ export default function Admin() {
                                     </a>
                                 </td>
                                 <td>{formatDate(upload.createdAt)}</td>
-                                {!activeSection== 'completed-students' &&<> 
-                                <td className="attendance-actions">
-                                    
-                                    <button 
-                                        className={`attendance-btn present ${currentStatus === 'P' ? 'active' : ''}`}
-                                        onClick={() => markAttendance(selectedStudent, upload.dayNumber, 'P')}
-                                        disabled={!canMark}
-                                        title={!canMark ? "Mark previous days first" : ""}
-                                    >
-                                        Present
-                                    </button>
-                                    <button 
-                                        className={`attendance-btn absent ${currentStatus === 'A' ? 'active' : ''}`}
-                                        onClick={() => markAttendance(selectedStudent, upload.dayNumber, 'A')}
-                                        disabled={!canMark}
-                                        title={!canMark ? "Mark previous days first" : ""}
-                                    >
-                                        Absent
-                                    </button>
-                                </td>
-                                <td>
-                                    {currentStatus || (canMark ? 'Not Marked' : 'Mark previous days first')}
-                                </td>
+                                {!activeSection == 'completed-students' && <>
+                                    <td className="attendance-actions">
+
+                                        <button
+                                            className={`attendance-btn present ${currentStatus === 'P' ? 'active' : ''}`}
+                                            onClick={() => markAttendance(selectedStudent, upload.dayNumber, 'P')}
+                                            disabled={!canMark}
+                                            title={!canMark ? "Mark previous days first" : ""}
+                                        >
+                                            Present
+                                        </button>
+                                        <button
+                                            className={`attendance-btn absent ${currentStatus === 'A' ? 'active' : ''}`}
+                                            onClick={() => markAttendance(selectedStudent, upload.dayNumber, 'A')}
+                                            disabled={!canMark}
+                                            title={!canMark ? "Mark previous days first" : ""}
+                                        >
+                                            Absent
+                                        </button>
+                                    </td>
+                                    <td>
+                                        {currentStatus || (canMark ? 'Not Marked' : 'Mark previous days first')}
+                                    </td>
                                 </>}
                             </tr>
                         );
@@ -450,7 +450,7 @@ export default function Admin() {
                                     <td>{student.daysCompleted || 0}/8</td>
                                     <td>{student.mentorName || 'Not Assigned'}</td>
                                     <td>
-                                        <button 
+                                        <button
                                             onClick={() => {
                                                 setSelectedStudent(student.idNumber);
                                                 fetchAttendance(student.idNumber);
@@ -459,7 +459,7 @@ export default function Admin() {
                                         >
                                             View Attendance
                                         </button>
-                                        <button 
+                                        <button
                                             onClick={() => {
                                                 setSelectedStudentForMentor(student);
                                                 setShowMentorModal(true);
@@ -523,19 +523,19 @@ export default function Admin() {
                             <div className="domain-details">
                                 <p>Total Students: {count}</p>
                                 <p>Active Students: {
-                                    registrations.filter(reg => 
-                                        reg.selectedDomain === domain && 
+                                    registrations.filter(reg =>
+                                        reg.selectedDomain === domain &&
                                         (reg.daysCompleted || 0) < 8
                                     ).length
                                 }</p>
                                 <p>Completed Students: {
-                                    registrations.filter(reg => 
-                                        reg.selectedDomain === domain && 
+                                    registrations.filter(reg =>
+                                        reg.selectedDomain === domain &&
                                         (reg.daysCompleted || 0) === 8
                                     ).length
                                 }</p>
                                 <p>Assigned Mentors: {
-                                    studentMentors.filter(mentor => 
+                                    studentMentors.filter(mentor =>
                                         mentor.domain === domain
                                     ).length
                                 }</p>
@@ -572,7 +572,7 @@ export default function Admin() {
                             </button>
                         </div>
                     ) : (
-            <div className="mentor-search-section">
+                        <div className="mentor-search-section">
                             <h4>Available Mentors</h4>
                             <div className="search-container">
                                 <input
@@ -584,33 +584,33 @@ export default function Admin() {
                                 />
                             </div>
 
-                <div className="mentor-list">
-                    {studentMentors
-                                    .filter(mentor => 
+                            <div className="mentor-list">
+                                {studentMentors
+                                    .filter(mentor =>
                                         mentor.domain === selectedStudentForMentor.selectedDomain &&
-                                        (mentorSearchQuery === '' || 
-                                        mentor.name.toLowerCase().includes(mentorSearchQuery.toLowerCase()) ||
-                                        mentor.mentorId.toString().includes(mentorSearchQuery))
+                                        (mentorSearchQuery === '' ||
+                                            mentor.name.toLowerCase().includes(mentorSearchQuery.toLowerCase()) ||
+                                            mentor.mentorId.toString().includes(mentorSearchQuery))
                                     )
-                        .map((mentor) => (
+                                    .map((mentor) => (
                                         <div key={`mentor-${mentor.mentorId}`} className="mentor-item">
-                                <div className="mentor-info">
-                                    <span className="mentor-name">{mentor.name}</span>
+                                            <div className="mentor-info">
+                                                <span className="mentor-name">{mentor.name}</span>
                                                 <span className="mentor-id">ID: {mentor.mentorId}</span>
-                                    <span className="mentor-domain">{mentor.domain}</span>
-                                </div>
-                                <button
+                                                <span className="mentor-domain">{mentor.domain}</span>
+                                            </div>
+                                            <button
                                                 onClick={() => handleAssignMentor(selectedStudentForMentor.idNumber, mentor.mentorId)}
-                                    className="assign-btn"
-                                >
-                                    Assign
-                                </button>
-                            </div>
-                        ))}
+                                                className="assign-btn"
+                                            >
+                                                Assign
+                                            </button>
+                                        </div>
+                                    ))}
                                 {studentMentors.filter(mentor => mentor.domain === selectedStudentForMentor.selectedDomain).length === 0 && (
                                     <p className="no-mentors">No mentors available for this domain</p>
                                 )}
-                </div>
+                            </div>
                         </div>
                     )}
 
@@ -651,63 +651,63 @@ export default function Admin() {
                     </div>
 
                     {selectedDomain !== 'all' && (
-                <div className="create-mentor-section">
-                    <div className="search-container">
-                        <input
-                            type="text"
-                            placeholder="Search students by name or ID..."
-                            value={mentorSearchQuery}
-                            onChange={(e) => {
-                                setMentorSearchQuery(e.target.value);
+                        <div className="create-mentor-section">
+                            <div className="search-container">
+                                <input
+                                    type="text"
+                                    placeholder="Search students by name or ID..."
+                                    value={mentorSearchQuery}
+                                    onChange={(e) => {
+                                        setMentorSearchQuery(e.target.value);
                                         if (e.target.value) {
-                                searchPotentialMentors(e.target.value);
+                                            searchPotentialMentors(e.target.value);
                                         } else {
                                             setSearchedStudents([]);
                                         }
-                            }}
-                            className="search-input"
-                        />
-                    </div>
+                                    }}
+                                    className="search-input"
+                                />
+                            </div>
 
-                    {searchedStudents.length > 0 && (
-                        <div className="search-results">
-                            {searchedStudents.map((student) => (
+                            {searchedStudents.length > 0 && (
+                                <div className="search-results">
+                                    {searchedStudents.map((student) => (
                                         <div key={`student-${student.idNumber}`} className="student-result">
-                                    <div className="student-info">
+                                            <div className="student-info">
                                                 <span className="student-name">{student.name}</span>
                                                 <span className="student-id">{student.idNumber}</span>
                                                 <span className="student-domain">{student.selectedDomain}</span>
-                                    </div>
-                                    <button
-                                        onClick={() => {
+                                            </div>
+                                            <button
+                                                onClick={() => {
                                                     createNewMentor({
                                                         idNumber: student.idNumber,
                                                         name: student.name,
                                                         domain: student.selectedDomain
                                                     });
-                                            setMentorSearchQuery('');
-                                            setSearchedStudents([]);
+                                                    setMentorSearchQuery('');
+                                                    setSearchedStudents([]);
                                                     setShowMentorModal(false);
-                                        }}
+                                                }}
                                                 className="create-btn"
-                                    >
+                                            >
                                                 Create Mentor
-                                    </button>
+                                            </button>
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
-                        </div>
-                    )}
+                            )}
 
                             {searchedStudents.length === 0 && mentorSearchQuery && (
                                 <p className="no-results">No students found matching your search</p>
-                    )}
-                </div>
+                            )}
+                        </div>
                     )}
                 </div>
 
                 <div className="modal-footer">
                     <button
-                            onClick={handleModalClose}
+                        onClick={handleModalClose}
                         className="close-modal-btn"
                     >
                         Close
@@ -734,7 +734,7 @@ export default function Admin() {
     const filteredMentors = mentorOverview?.filter(mentor => {
         if (!mentor) return false;
         const matchesSearch = mentor.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            mentor.mentorId?.toString().includes(searchTerm.toLowerCase());
+            mentor.mentorId?.toString().includes(searchTerm.toLowerCase());
         const matchesDomain = selectedDomain === 'all' || mentor.domain === selectedDomain;
         return matchesSearch && matchesDomain;
     }) || [];
@@ -799,7 +799,7 @@ export default function Admin() {
                                     </select>
                                 </div>
                             </div>
-                            <button 
+                            <button
                                 className="add-mentor-btn"
                                 onClick={() => setShowMentorModal(true)}
                             >
@@ -810,15 +810,15 @@ export default function Admin() {
                         <div className="mentor-cards">
                             {filteredMentors.map(mentor => (
                                 <div key={`mentor-${mentor.mentorId}`} className="mentor-card">
-                                    <div 
+                                    <div
                                         className="mentor-card-header"
                                         onClick={() => setExpandedMentor(mentor.mentorId)}
                                     >
                                         <div className="mentor-info">
-                            <h3>{mentor.name}</h3>
+                                            <h3>{mentor.name}</h3>
                                             <p>ID: {mentor.mentorId}</p>
                                             <p>Domain: {mentor.domain}</p>
-                        </div>
+                                        </div>
                                         <div className="expand-icon">
                                             ▶
                                         </div>
@@ -852,13 +852,13 @@ export default function Admin() {
                                         </div>
                                     </div>
                                     <div className="mentor-actions">
-                                        <button 
+                                        <button
                                             className="back-btn"
                                             onClick={() => setExpandedMentor(null)}
                                         >
                                             Back to List
                                         </button>
-                                        <button 
+                                        <button
                                             className="delete-mentor-btn"
                                             onClick={() => handleDeleteMentor(expandedMentor)}
                                         >
@@ -869,71 +869,27 @@ export default function Admin() {
 
                                 <div className="mentor-students">
                                     <div className="students-tabs">
-                                        <button 
+                                        <button
                                             className={`tab-btn ${activeTab === 'active' ? 'active' : ''}`}
                                             onClick={() => setActiveTab('active')}
                                         >
                                             Active Students ({mentorOverview.find(m => m.mentorId === expandedMentor).students?.filter(s => s.daysCompleted < 8).length || 0})
                                         </button>
-                                        <button 
+                                        <button
                                             className={`tab-btn ${activeTab === 'completed' ? 'active' : ''}`}
-                                            onClick={() => setActiveTab('completed')}
+                                            onClick={() => {
+                                                setActiveTab('completed');
+                                                // handleTabClick('completed');
+                                            }}
                                         >
-                                            Completed Students ({mentorOverview.find(m => m.mentorId === expandedMentor).students?.filter(s => s.daysCompleted === 8).length || 0})
+                                            Completed Students
+                                            {/* <span className="completed-count"> */}
+                                            ({completedStudents.length})
+                                            {/* </span> */}
                                         </button>
                                     </div>
 
                                     {activeTab === 'active' ? (
-                                        <div className="student-table">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Name</th>
-                                                        <th>ID</th>
-                                                        <th>Domain</th>
-                                        <th>Progress</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                                    {mentorOverview.find(m => m.mentorId === expandedMentor).students
-                                                        ?.filter(s => s.daysCompleted < 8)
-                                                        .map(student => (
-                                                            <tr key={`student-${student.idNumber}`}>
-                                            <td>{student.name}</td>
-                                                                <td>{student.idNumber}</td>
-                                                                <td>{student.selectedDomain}</td>
-                                            <td>
-                                                <div className="progress-bar">
-                                                    <div 
-                                                        className="progress-fill"
-                                                        style={{ 
-                                                            width: `${(student.daysCompleted / 8) * 100}%`,
-                                                                                backgroundColor: '#66bb6a'
-                                                        }}
-                                                    />
-                                                <span className="progress-text">
-                                                    {student.daysCompleted}/8 days
-                                                </span>
-                                                                    </div>
-                                            </td>
-                                            <td>
-                                                <button 
-                                                                        className="view-progress-btn"
-                                                    onClick={() => fetchUploads(student.idNumber)}
-                                                >
-                                                    View Progress
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                                            {(!mentorOverview.find(m => m.mentorId === expandedMentor).students?.filter(s => s.daysCompleted < 8).length) && (
-                                                <p className="no-students">No active students</p>
-                                            )}
-                        </div>
-                                    ) : (
                                         <div className="student-table">
                                             <table>
                                                 <thead>
@@ -941,23 +897,34 @@ export default function Admin() {
                                                         <th>Name</th>
                                                         <th>ID</th>
                                                         <th>Domain</th>
-                                                        <th>Status</th>
+                                                        <th>Progress</th>
                                                         <th>Actions</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
                                                     {mentorOverview.find(m => m.mentorId === expandedMentor).students
-                                                        ?.filter(s => s.daysCompleted === 8)
+                                                        ?.filter(s => s.daysCompleted < 8)
                                                         .map(student => (
                                                             <tr key={`student-${student.idNumber}`}>
                                                                 <td>{student.name}</td>
                                                                 <td>{student.idNumber}</td>
                                                                 <td>{student.selectedDomain}</td>
                                                                 <td>
-                                                                    <span className="completed-status">Completed</span>
+                                                                    <div className="progress-bar">
+                                                                        <div
+                                                                            className="progress-fill"
+                                                                            style={{
+                                                                                width: `${(student.daysCompleted / 8) * 100}%`,
+                                                                                backgroundColor: '#66bb6a'
+                                                                            }}
+                                                                        />
+                                                                        <span className="progress-text">
+                                                                            {student.daysCompleted}/8 days
+                                                                        </span>
+                                                                    </div>
                                                                 </td>
                                                                 <td>
-                                                                    <button 
+                                                                    <button
                                                                         className="view-progress-btn"
                                                                         onClick={() => fetchUploads(student.idNumber)}
                                                                     >
@@ -968,18 +935,56 @@ export default function Admin() {
                                                         ))}
                                                 </tbody>
                                             </table>
-                                            {(!mentorOverview.find(m => m.mentorId === expandedMentor).students?.filter(s => s.daysCompleted === 8).length) && (
-                                                <p className="no-students">No completed students</p>
+                                            {(!mentorOverview.find(m => m.mentorId === expandedMentor).students?.filter(s => s.daysCompleted < 8).length) && (
+                                                <p className="no-students">No active students</p>
                                             )}
-            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="tab-content student-table">
+                                            {isLoadingCompleted ? (
+                                                <div className="loading">Loading completed students...</div>
+                                            ) : completedStudents.length === 0 ? (
+                                                <div className="no-data">No completed students found</div>
+                                            ) : (
+                                                <table>
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Name</th>
+                                                            <th>ID</th>
+                                                            <th>Domain</th>
+                                                            <th>Completion Date</th>
+                                                            <th>Actions</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {completedStudents.map(student => (
+                                                            <tr key={student.idNumber}>
+                                                                <td>{student.name}</td>
+                                                                <td>{student.idNumber}</td>
+                                                                <td>{student.selectedDomain}</td>
+                                                                <td>{new Date(student.completionDate).toLocaleDateString()}</td>
+                                                                <td>
+                                                                    <button
+                                                                        onClick={() => fetchUploads(student.idNumber)}
+                                                                        className="view-progress-btn"
+                                                                    >
+                                                                        View Reports
+                                                                    </button>
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            )}
+                                        </div>
                                     )}
                                 </div>
                             </>
                         )}
                     </div>
                 )}
-        </div>
-    );
+            </div>
+        );
     };
 
     const handlePasswordChange = async (e) => {
@@ -1045,7 +1050,7 @@ export default function Admin() {
                     {passwordError && (
                         <div className="error-message">{passwordError}</div>
                     )}
-                    
+
                     <div className="form-group">
                         <label htmlFor="currentPassword">Current Password</label>
                         <input
@@ -1113,8 +1118,8 @@ export default function Admin() {
                     </div>
 
                     <div className="button-group">
-                        <button 
-                            type="submit" 
+                        <button
+                            type="submit"
                             className="submit-btn"
                             disabled={isPasswordLoading}
                         >
@@ -1227,7 +1232,7 @@ export default function Admin() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         try {
             const response = await fetch('/api/dashboard/admin/admin', {
                 method: 'POST',
@@ -1265,7 +1270,7 @@ export default function Admin() {
             <div className="admin-section">
                 <div className="section-header">
                     <h2>Admins</h2>
-                    <button 
+                    <button
                         className="add-admin-btn"
                         onClick={() => setShowAdminModal(true)}
                     >
@@ -1293,7 +1298,7 @@ export default function Admin() {
                                         <td>{admin.idNumber}</td>
                                         {/* <td>{admin.role}</td> */}
                                         <td>
-                                            <button 
+                                            <button
                                                 className="delete-admin-btn"
                                                 onClick={() => handleDeleteAdmin(admin.idNumber)}
                                             >
@@ -1348,8 +1353,8 @@ export default function Admin() {
                                     />
                                 </div>
                                 <div className="modal-footer">
-                                    <button 
-                                        type="button" 
+                                    <button
+                                        type="button"
                                         className="cancel-btn"
                                         onClick={() => setShowAdminModal(false)}
                                     >
@@ -1424,7 +1429,7 @@ export default function Admin() {
                                     <td>{student.mentorName || 'N/A'}</td>
                                     <td>{new Date(student.completionDate).toLocaleDateString()}</td>
                                     <td>
-                                        <button 
+                                        <button
                                             onClick={() => fetchUploads(student.idNumber)}
                                             className="view-reports-btn"
                                         >
@@ -1439,6 +1444,51 @@ export default function Admin() {
             </div>
         </section>
     );
+
+    const fetchCompletedStudentsForMentor = async (mentorId) => {
+        if (!mentorId) {
+            console.error('No mentor ID provided');
+            toast.error('Please select a mentor first');
+            return;
+        }
+
+        setIsLoadingCompleted(true);
+        try {
+            const response = await fetch(`/api/dashboard/admin/mentor/completed?mentorId=${mentorId}`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                setError("Failed to fetch completed students");
+                throw new Error(errorData.error || 'Failed to fetch completed students');
+            }
+
+            const data = await response.json();
+            if (data.success) {
+                setCompletedStudents(data.students || []);
+            } else {
+                throw new Error(data.error || 'Failed to fetch completed students');
+            }
+        } catch (err) {
+            console.error('Error fetching completed students:', err);
+            toast.error(err.message || 'Failed to load completed students');
+            setCompletedStudents([]);
+        } finally {
+            setIsLoadingCompleted(false);
+        }
+    };
+
+    const handleTabClick = (tab) => {
+        setActiveTab(tab);
+        if (tab === 'completed' && expandedMentor) {
+            fetchCompletedStudentsForMentor(expandedMentor);
+        }
+    };
 
     if (!user) return <Loader />;
     if (loading) return <Loader />;

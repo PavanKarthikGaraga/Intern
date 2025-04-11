@@ -1408,33 +1408,29 @@
 }
 
 .tab-btn {
-    padding: 0.5rem 1rem;
-    background: none;
+    padding: 8px 16px;
     border: none;
+    background: none;
     cursor: pointer;
-    font-size: 1rem;
+    font-size: 14px;
     color: #666;
-    position: relative;
-    transition: color 0.2s;
+    transition: all 0.3s ease;
+    border-bottom: 2px solid transparent;
+    display: inline-flex;
+    align-items: center;
 }
 
 .tab-btn:hover {
-    color: rgb(151, 0, 3);
+    color: #333;
 }
 
 .tab-btn.active {
-    color: rgb(151, 0, 3);
-    font-weight: 500;
+    color: #4CAF50;
+    border-bottom-color: #4CAF50;
 }
 
-.tab-btn.active::after {
-    content: '';
-    position: absolute;
-    bottom: -0.5rem;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background-color: rgb(151, 0, 3);
+.tab-btn.active .completed-count {
+    background-color: #45a049;
 }
 
 .student-table {
@@ -2276,4 +2272,19 @@
     .completed-students-section td {
         padding: 0.75rem;
     }
+}
+
+.completed-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    margin-left: 8px;
+    background-color: #4CAF50;
+    color: white;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
 }
