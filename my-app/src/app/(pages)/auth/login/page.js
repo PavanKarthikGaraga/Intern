@@ -20,14 +20,18 @@ const Login = () => {
     }, []);
 
     const generateCaptcha = () => {
-        const randomNum = Math.floor(1000 + Math.random() * 9000);
-        setCaptcha(randomNum.toString());
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let captcha = '';
+        for (let i = 0; i < 6; i++) {
+            captcha += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        setCaptcha(captcha);
     };
-
+    
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (captchaInput !== captcha) {
+        if (captchaInput.toLowerCase() !== captcha.toLowerCase()) {
             toast.error('Incorrect captcha');
             return;
         }
