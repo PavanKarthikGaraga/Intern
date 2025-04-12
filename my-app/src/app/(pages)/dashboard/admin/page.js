@@ -509,13 +509,25 @@ export default function Admin() {
         <section className="students-section">
             <h2>Active Students</h2>
             <div className="search-pagination-controls">
-                <input
-                    type="text"
-                    placeholder="Search by name, ID, or domain..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="search-input"
-                />
+                <div className="filters">
+                    <input
+                        type="text"
+                        placeholder="Search by name, ID, or domain..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="search-input"
+                    />
+                    <select
+                        value={selectedDomain}
+                        onChange={(e) => setSelectedDomain(e.target.value)}
+                        className="domain-filter"
+                    >
+                        <option value="all">All Domains</option>
+                        {[...new Set(activeStudents.map(student => student.selectedDomain))].map(domain => (
+                            <option key={domain} value={domain}>{domain}</option>
+                        ))}
+                    </select>
+                </div>
             </div>
             <div className="students-table">
                 <table>
@@ -541,45 +553,47 @@ export default function Admin() {
                                 <td colSpan="8" className="no-students">No active students found</td>
                             </tr>
                         ) : (
-                            activeStudents.map((student) => (
-                                <tr key={student.idNumber}>
-                                    <td>{student.idNumber}</td>
-                                    <td>{student.name}</td>
-                                    <td>{student.selectedDomain}</td>
-                                    <td>{student.branch}</td>
-                                    <td>{student.year}</td>
-                                    <td>{student.daysCompleted || 0}/8</td>
-                                    <td>{student.mentorName || 'Not Assigned'}</td>
-                                    <td>
-                                        <button
-                                            onClick={() => {
-                                                setSelectedStudent(student.idNumber);
-                                                fetchAttendance(student.idNumber);
-                                            }}
-                                            className="view-attendance-btn"
-                                        >
-                                            View Attendance
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                setSelectedStudentForMentor(student);
-                                                setShowMentorModal(true);
-                                                setMentorSearchQuery('');
-                                                setSearchedStudents([]);
-                                            }}
-                                            className="assign-mentor-btn"
-                                        >
-                                            {student.mentorName ? 'Modify Mentor' : 'Assign Mentor'}
-                                        </button>
-                                        <button
-                                            onClick={() => handleDeleteStudent(student.idNumber)}
-                                            className="delete-student-btn"
-                                        >
-                                            Delete
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))
+                            activeStudents
+                                .filter(student => selectedDomain === 'all' || student.selectedDomain === selectedDomain)
+                                .map((student) => (
+                                    <tr key={student.idNumber}>
+                                        <td>{student.idNumber}</td>
+                                        <td>{student.name}</td>
+                                        <td>{student.selectedDomain}</td>
+                                        <td>{student.branch}</td>
+                                        <td>{student.year}</td>
+                                        <td>{student.daysCompleted || 0}/8</td>
+                                        <td>{student.mentorName || 'Not Assigned'}</td>
+                                        <td>
+                                            <button
+                                                onClick={() => {
+                                                    setSelectedStudent(student.idNumber);
+                                                    fetchAttendance(student.idNumber);
+                                                }}
+                                                className="view-attendance-btn"
+                                            >
+                                                View Attendance
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    setSelectedStudentForMentor(student);
+                                                    setShowMentorModal(true);
+                                                    setMentorSearchQuery('');
+                                                    setSearchedStudents([]);
+                                                }}
+                                                className="assign-mentor-btn"
+                                            >
+                                                {student.mentorName ? 'Modify Mentor' : 'Assign Mentor'}
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteStudent(student.idNumber)}
+                                                className="delete-student-btn"
+                                            >
+                                                Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
                         )}
                     </tbody>
                 </table>
@@ -1553,13 +1567,24 @@ export default function Admin() {
         <section className="completed-students-section">
             <div className="section-header">
                 <h2>Completed Students</h2>
-                <div className="search-bar">
+                <div className="filters">
                     <input
                         type="text"
                         placeholder="Search completed students..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
+                        className="search-input"
                     />
+                    <select
+                        value={selectedDomain}
+                        onChange={(e) => setSelectedDomain(e.target.value)}
+                        className="domain-filter"
+                    >
+                        <option value="all">All Domains</option>
+                        {[...new Set(completedStudents.map(student => student.selectedDomain))].map(domain => (
+                            <option key={domain} value={domain}>{domain}</option>
+                        ))}
+                    </select>
                 </div>
             </div>
             <div className="table-container">
@@ -1584,26 +1609,28 @@ export default function Admin() {
                                 <td colSpan="6" className="no-students">No completed students found</td>
                             </tr>
                         ) : (
-                            completedStudents.map((student) => (
-                                <tr key={student.idNumber}>
-                                    <td>{student.idNumber}</td>
-                                    <td>{student.name}</td>
-                                    <td>{student.selectedDomain}</td>
-                                    <td>{student.mentorName || 'Not Assigned'}</td>
-                                    <td>{new Date(student.completionDate).toLocaleDateString()}</td>
-                                    <td>
-                                        <button 
-                                            className="view-btn"
-                                            onClick={() => {
-                                                setSelectedStudent(student.idNumber);
-                                                fetchUploads(student.idNumber);
-                                            }}
-                                        >
-                                            View Reports
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))
+                            completedStudents
+                                .filter(student => selectedDomain === 'all' || student.selectedDomain === selectedDomain)
+                                .map((student) => (
+                                    <tr key={student.idNumber}>
+                                        <td>{student.idNumber}</td>
+                                        <td>{student.name}</td>
+                                        <td>{student.selectedDomain}</td>
+                                        <td>{student.mentorName || 'Not Assigned'}</td>
+                                        <td>{new Date(student.completionDate).toLocaleDateString()}</td>
+                                        <td>
+                                            <button 
+                                                className="view-progress-btn"
+                                                onClick={() => {
+                                                    setSelectedStudent(student.idNumber);
+                                                    fetchUploads(student.idNumber);
+                                                }}
+                                            >
+                                                View Reports
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
                         )}
                     </tbody>
                 </table>
