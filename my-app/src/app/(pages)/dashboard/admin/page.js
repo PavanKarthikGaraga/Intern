@@ -571,6 +571,12 @@ export default function Admin() {
                                         >
                                             {student.mentorName ? 'Modify Mentor' : 'Assign Mentor'}
                                         </button>
+                                        <button
+                                            onClick={() => handleDeleteStudent(student.idNumber)}
+                                            className="delete-student-btn"
+                                        >
+                                            Delete
+                                        </button>
                                     </td>
                                 </tr>
                             ))
@@ -1705,6 +1711,36 @@ export default function Admin() {
     const handleOpenMentorModal = async () => {
         setShowMentorModal(true);
         await fetchAllRegistrations();
+    };
+
+    const handleDeleteStudent = async (studentId) => {
+        if (!window.confirm('Are you sure you want to delete this student? This action cannot be undone.')) {
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/dashboard/admin/delete-student', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ studentId })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to delete student');
+            }
+
+            const data = await response.json();
+            if (data.success) {
+                toast.success('Student deleted successfully');
+                fetchRegistrations(); // Refresh the list
+            }
+        } catch (err) {
+            console.error('Error deleting student:', err);
+            toast.error(err.message || 'Failed to delete student');
+        }
     };
 
     if (!user) return <Loader />;

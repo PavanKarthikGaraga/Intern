@@ -2353,3 +2353,22 @@
         opacity: 0.7;
     }
 }
+
+.delete-student-btn {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.delete-student-btn:hover {
+    background-color: #c82333;
+}
+
+.delete-student-btn:active {
+    background-color: #bd2130;
+}
