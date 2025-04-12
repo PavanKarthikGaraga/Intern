@@ -31,6 +31,11 @@ export default function StudentMentor() {
         confirm: false
     });
     const [completedStudents, setCompletedStudents] = useState([]);
+    const [availableStudents, setAvailableStudents] = useState([]);
+    const [isLoadingAvailable, setIsLoadingAvailable] = useState(false);
+    const [showAvailableStudents, setShowAvailableStudents] = useState(false);
+    const [isAddingStudent, setIsAddingStudent] = useState(false);
+    const [isAssigningStudents, setIsAssigningStudents] = useState(false);
 
     useEffect(() => {
         if (!user?.idNumber) {
@@ -311,7 +316,6 @@ export default function StudentMentor() {
             if (data.success) {
                 toast.success('Student marked as completed successfully');
                 // Refresh both lists
-                fetchAssignedStudents();
                 fetchCompletedStudents();
             } else {
                 toast.error(data.error || 'Failed to mark student as completed');
@@ -319,6 +323,74 @@ export default function StudentMentor() {
         } catch (err) {
             console.error('Error marking student as completed:', err);
             toast.error('Failed to mark student as completed');
+        }
+    };
+
+    const assignStudents = async () => {
+        setIsAssigningStudents(true);
+        try {
+            const response = await fetch('/api/dashboard/studentMentor/assign-student', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    mentorId: user.idNumber
+                }),
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                toast.success(`Successfully assigned ${data.assignedStudents.length} students`);
+                
+                // Refresh the assigned students list
+                const assignedResponse = await fetch('/api/dashboard/studentMentor/assigned-students', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        mentorId: user.idNumber
+                    }),
+                });
+                
+                if (assignedResponse.ok) {
+                    const assignedData = await assignedResponse.json();
+                    if (assignedData.success) {
+                        setAssignedStudents(assignedData.students);
+                        
+                        // Also fetch attendance for the newly assigned students
+                        const attendancePromises = assignedData.students.map(async (student) => {
+                            const attendanceResponse = await fetch('/api/dashboard/studentMentor/attendance', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ studentId: student.idNumber })
+                            });
+                            if (attendanceResponse.ok) {
+                                const attendanceData = await attendanceResponse.json();
+                                if (attendanceData.success) {
+                                    return { studentId: student.idNumber, attendance: attendanceData.data };
+                                }
+                            }
+                            return { studentId: student.idNumber, attendance: {} };
+                        });
+
+                        const attendanceResults = await Promise.all(attendancePromises);
+                        const attendanceMap = attendanceResults.reduce((acc, { studentId, attendance }) => {
+                            acc[studentId] = attendance;
+                            return acc;
+                        }, {});
+                        setStudentAttendance(attendanceMap);
+                    }
+                }
+            } else {
+                toast.error(data.error || 'Failed to assign students');
+            }
+        } catch (err) {
+            console.error('Error assigning students:', err);
+            toast.error('Failed to assign students');
+        } finally {
+            setIsAssigningStudents(false);
         }
     };
 
@@ -399,6 +471,71 @@ export default function StudentMentor() {
                         <section className="students-section">
                             <h2>Active Students</h2>
                             <div className="students-table">
+                                <div className="table-header">
+                                    <h3>Your Assigned Students</h3>
+                                    {assignedStudents.length < 10 && (
+                                        <button 
+                                            className="add-student-btn"
+                                            onClick={assignStudents}
+                                            disabled={isAssigningStudents}
+                                        >
+                                            {isAssigningStudents ? 'Assigning Students...' : 'Assign New Students'}
+                                        </button>
+                                    )}
+                                </div>
+                                
+                                {showAvailableStudents && (
+                                    <div className="available-students-section">
+                                        <h3>Available Students</h3>
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th>ID Number</th>
+                                                    <th>Name</th>
+                                                    <th>Domain</th>
+                                                    <th>Branch</th>
+                                                    <th>Year</th>
+                                                    <th>Days Completed</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {availableStudents.length === 0 ? (
+                                                    <tr>
+                                                        <td colSpan="7">No available students found</td>
+                                                    </tr>
+                                                ) : (
+                                                    availableStudents.map((student) => (
+                                                        <tr key={student.idNumber}>
+                                                            <td>{student.idNumber}</td>
+                                                            <td>{student.name}</td>
+                                                            <td>{student.selectedDomain}</td>
+                                                            <td>{student.branch}</td>
+                                                            <td>{student.year}</td>
+                                                            <td>{student.daysCompleted || 0}/8</td>
+                                                            <td>
+                                                                <button 
+                                                                    onClick={() => assignStudents()}
+                                                                    className="add-student-btn"
+                                                                    disabled={isAssigningStudents}
+                                                                >
+                                                                    {isAssigningStudents ? 'Assigning...' : 'Assign Student'}
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    ))
+                                                )}
+                                            </tbody>
+                                        </table>
+                                        <button 
+                                            className="close-btn"
+                                            onClick={() => setShowAvailableStudents(false)}
+                                        >
+                                            Close
+                                        </button>
+                                    </div>
+                                )}
+                                
                                 <table>
                                     <thead>
                                         <tr>
