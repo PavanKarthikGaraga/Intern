@@ -1,9 +1,24 @@
 import getDBConnection  from '@/lib/db';
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { verifyAccessToken } from '@/lib/jwt';
 
 export async function POST(request) {
     let db;
     try {
+        // Check authentication
+        const cookieStore = await cookies();
+        const accessToken = await cookieStore.get('accessToken');
+
+        if (!accessToken?.value) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const decoded = await verifyAccessToken(accessToken.value);
+        if (!decoded || decoded.role !== 'admin') {
+            return NextResponse.json({ error: 'Only admin members can assign mentors' }, { status: 403 });
+        }
+
         const { studentId, mentorId } = await request.json();
         console.log(`Attempting to assign student ${studentId} to mentor ${mentorId}`);
 

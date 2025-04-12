@@ -1,9 +1,24 @@
 import { NextResponse } from 'next/server';
 import getDBConnection from '@/lib/db';
+import { cookies } from 'next/headers';
+import { verifyAccessToken } from '@/lib/jwt';
 
 export async function GET() {
     let db;
     try {
+        // Check authentication
+        const cookieStore = await cookies();
+        const accessToken = await cookieStore.get('accessToken');
+
+        if (!accessToken?.value) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const decoded = await verifyAccessToken(accessToken.value);
+        if (!decoded || decoded.role !== 'admin') {
+            return NextResponse.json({ error: 'Only admin members can access this resource' }, { status: 403 });
+        }
+
         db = await getDBConnection();
         
         // First, get all mentors

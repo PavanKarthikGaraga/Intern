@@ -1,8 +1,24 @@
 import getDBConnection from "@/lib/db";
+import { cookies } from 'next/headers';
+import { verifyAccessToken } from '@/lib/jwt';
+import { NextResponse } from 'next/server';
 
 export async function GET(request) {
     let db;
     try {
+        // Check authentication
+        const cookieStore = await cookies();
+        const accessToken = await cookieStore.get('accessToken');
+
+        if (!accessToken?.value) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const decoded = await verifyAccessToken(accessToken.value);
+        if (!decoded || decoded.role !== 'admin') {
+            return NextResponse.json({ error: 'Only admin members can access this resource' }, { status: 403 });
+        }
+
         const { searchParams } = new URL(request.url);
         const page = parseInt(searchParams.get('page')) || 1;
         const limit = parseInt(searchParams.get('limit')) || 20;
@@ -100,6 +116,19 @@ export async function GET(request) {
 export async function POST(request) {
     let db;
     try {
+        // Check authentication
+        const cookieStore = await cookies();
+        const accessToken = await cookieStore.get('accessToken');
+
+        if (!accessToken?.value) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const decoded = await verifyAccessToken(accessToken.value);
+        if (!decoded || decoded.role !== 'admin') {
+            return NextResponse.json({ error: 'Only admin members can access this resource' }, { status: 403 });
+        }
+
         db = await getDBConnection();
         const { studentId } = await request.json();
 

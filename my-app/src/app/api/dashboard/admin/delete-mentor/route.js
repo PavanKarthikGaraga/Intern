@@ -1,8 +1,23 @@
 import { NextResponse } from 'next/server';
-import  getDBConnection from '@/lib/db';
+import getDBConnection from '@/lib/db';
+import { cookies } from 'next/headers';
+import { verifyAccessToken } from '@/lib/jwt';
 
 export async function POST(request) {
     try {
+        // Check authentication
+        const cookieStore = await cookies();
+        const accessToken = await cookieStore.get('accessToken');
+
+        if (!accessToken?.value) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const decoded = await verifyAccessToken(accessToken.value);
+        if (!decoded || decoded.role !== 'admin') {
+            return NextResponse.json({ error: 'Only admin members can delete mentors' }, { status: 403 });
+        }
+
         const { mentorId } = await request.json();
 
         if (!mentorId) {

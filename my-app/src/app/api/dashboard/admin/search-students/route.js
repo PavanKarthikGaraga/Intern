@@ -1,9 +1,24 @@
 import { NextResponse } from 'next/server';
 import getDBConnection from "@/lib/db";
+import { cookies } from 'next/headers';
+import { verifyAccessToken } from '@/lib/jwt';
 
 export async function GET(request) {
     let db;
     try {
+        // Check authentication
+        const cookieStore = await cookies();
+        const accessToken = await cookieStore.get('accessToken');
+
+        if (!accessToken?.value) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const decoded = await verifyAccessToken(accessToken.value);
+        if (!decoded || decoded.role !== 'admin') {
+            return NextResponse.json({ error: 'Only admin members can search students' }, { status: 403 });
+        }
+
         const { searchParams } = new URL(request.url);
         const query = searchParams.get('query') || '';
         const domain = searchParams.get('domain') || '';
