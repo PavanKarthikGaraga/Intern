@@ -1,5 +1,6 @@
 import getDBConnection from "../../../lib/db.js";
 import bcrypt from 'bcryptjs';
+import { sendEmail } from '../../../lib/email.js';
 
 export async function POST(request) {
   let db;
@@ -57,6 +58,17 @@ export async function POST(request) {
             await db.execute(query1, values1);
             // Insert user record
             await db.execute(query2, values2);
+
+            // Send welcome email
+            const emailData = {
+                name: formData.studentInfo.name,
+                idNumber: formData.studentInfo.idNumber,
+                selectedDomain: formData.selectedDomain,
+                branch: formData.studentInfo.branch,
+                year: formData.studentInfo.year
+            };
+
+            await sendEmail(formData.studentInfo.email, 'registration', emailData);
 
             // Find available mentor with same domain
             const [mentors] = await db.execute(`

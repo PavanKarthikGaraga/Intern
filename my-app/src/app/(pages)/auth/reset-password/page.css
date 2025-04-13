@@ -1,0 +1,100 @@
+.reset-password-component {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f0f7f0;
+    padding: 20px;
+}
+
+.reset-password-component-in {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+}
+
+.reset-password-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.reset-password-header h1 {
+    font-size: 1.8rem;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+.reset-password-header h1 span {
+    color: rgb(151, 0, 3);
+}
+
+.reset-password-header p {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #333;
+    font-size: 0.9rem;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: rgb(151, 0, 3);
+}
+
+.form-group-button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.form-group-button button {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: rgb(151, 0, 3);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.form-group-button button:hover {
+    background-color: rgb(120, 0, 2);
+}
+
+.form-group-button button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.form-group-button a {
+    color: rgb(151, 0, 3);
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+.form-group-button a:hover {
+    text-decoration: underline;
+} 

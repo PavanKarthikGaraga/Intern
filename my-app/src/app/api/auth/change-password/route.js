@@ -17,6 +17,10 @@ export async function POST(request) {
             return Response.json({ error: "Invalid token" }, { status: 401 });
         }
 
+        if (!decoded?.idNumber) {
+            return Response.json({ error: "Invalid token data" }, { status: 401 });
+        }
+
         const { currentPassword, newPassword } = await request.json();
 
         if (!currentPassword || !newPassword) {
@@ -32,10 +36,11 @@ export async function POST(request) {
         }
 
         const db = await getDBConnection();
+
         try {
             // Get current user's password hash
             const [user] = await db.execute(
-                'SELECT password FROM users WHERE idNumber = ?',
+                "SELECT password FROM users WHERE idNumber = ?",
                 [decoded.idNumber]
             );
 
@@ -43,7 +48,6 @@ export async function POST(request) {
                 return Response.json({ error: "User not found" }, { status: 404 });
             }
 
-            // Verify current password
             const isValidPassword = await bcrypt.compare(
                 currentPassword,
                 user[0].password
@@ -61,7 +65,7 @@ export async function POST(request) {
 
             // Update password
             await db.execute(
-                'UPDATE users SET password = ? WHERE idNumber = ?',
+                "UPDATE users SET password = ? WHERE idNumber = ?",
                 [hashedPassword, decoded.idNumber]
             );
 
@@ -83,4 +87,4 @@ export async function POST(request) {
             { status: 500 }
         );
     }
-} 
+}

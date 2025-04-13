@@ -2,15 +2,29 @@
 import { useState } from "react";
 import Link from "next/link";
 import "./page.css";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 const ForgotPassword = () => {
     const [email, setEmail] = useState('');
     const [submitted, setSubmitted] = useState(false);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Handle password reset logic here
-        setSubmitted(true);
+        
+        try {
+            const response = await axios.post('/api/auth/forgot-password', { email });
+            
+            if (response.data.success) {
+                setSubmitted(true);
+                toast.success(response.data.message);
+            } else {
+                toast.error(response.data.error || 'Failed to process request');
+            }
+        } catch (error) {
+            console.error('Password reset error:', error);
+            toast.error(error.response?.data?.error || 'Failed to process request');
+        }
     };
 
     return (
@@ -50,6 +64,6 @@ const ForgotPassword = () => {
             </div>
         </div>
     );
-}
+};
 
 export default ForgotPassword; 

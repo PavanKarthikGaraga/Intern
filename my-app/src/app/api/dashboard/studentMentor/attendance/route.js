@@ -1,4 +1,5 @@
 import getDBConnection from "@/lib/db";
+import { sendEmail } from '@/lib/email';
 
 // GET method to fetch attendance
 export async function GET(request) {
@@ -82,6 +83,22 @@ export async function POST(request) {
                 `UPDATE attendance SET day${dayNumber} = ? WHERE idNumber = ?`,
                 [status, studentId]
             );
+        }
+
+        // Get student details for email notification
+        const [studentDetails] = await db.execute(`
+            SELECT name, email FROM registrations WHERE idNumber = ?
+        `, [studentId]);
+
+        if (studentDetails.length > 0) {
+            const student = studentDetails[0];
+            // Send email notification
+            await sendEmail(student.email, 'attendanceMarked', {
+                name: student.name,
+                idNumber: studentId,
+                day: dayNumber,
+                status: status === 'P' ? 'Present' : 'Absent'
+            });
         }
 
         return new Response(

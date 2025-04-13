@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import getDBConnection from '@/lib/db';
 import { cookies } from 'next/headers';
 import { verifyAccessToken } from '@/lib/jwt';
+import { sendEmail } from '@/lib/email';
 
 export async function GET(request) {
     let db;
@@ -130,6 +131,22 @@ export async function POST(request) {
                 SET day${dayNumber} = ?
                 WHERE idNumber = ?
             `, [status, studentId]);
+        }
+
+        // Get student details for email notification
+        const [studentDetails] = await db.execute(`
+            SELECT name, email FROM registrations WHERE idNumber = ?
+        `, [studentId]);
+
+        if (studentDetails.length > 0) {
+            const student = studentDetails[0];
+            // Send email notification
+            await sendEmail(student.email, 'attendanceMarked', {
+                name: student.name,
+                idNumber: studentId,
+                day: dayNumber,
+                status: status === 'P' ? 'Present' : 'Absent'
+            });
         }
 
         return NextResponse.json({

@@ -3,7 +3,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: white;
+    background-color: #f0f7f0;
 }
 
 .login-component-in {
@@ -14,8 +14,9 @@
 
 .login-header {
     text-align: center;
-    margin-bottom: 3rem;
+    /* margin-bottom: 3rem; */
     padding: 1rem;
+    width: 100%;
 }
 
 .login-header h1 {
@@ -60,7 +61,7 @@
 
 .form-group input:focus {
     outline: none;
-    border-color: #2e7d32;
+    border-color: rgb(151, 0, 3);
 }
 
 .form-group-recaptive {
@@ -79,7 +80,7 @@
     text-align: center;
     font-size: 1.125rem;
     font-family: monospace;
-    color: #2e7d32;
+    color: rgb(151, 0, 3);
     letter-spacing: 0.1875rem;
     font-weight: 500;
     background: white;
@@ -99,13 +100,13 @@
 
 .form-group-recaptive input:focus {
     outline: none;
-    border-color: #2e7d32;
+    border-color: rgb(151, 0, 3);
 }
 
 .form-group-button button {
     width: 100%;
     padding: 1rem;
-    background: #2e7d32;
+    background: rgb(151, 0, 3);
     color: white;
     border: none;
     border-radius: 0.5rem;
@@ -117,7 +118,7 @@
 }
 
 .form-group-button button:hover {
-    background: #246b27;
+    background: rgb(120, 0, 2);
 }
 
 .form-group-button p {
