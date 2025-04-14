@@ -57,6 +57,7 @@ export default function Register() {
       district: '',
       pincode: '',
     },
+    internshipMode: '',
   });
 
   const [selectedDomainInfo, setSelectedDomainInfo] = useState('');
@@ -125,34 +126,34 @@ export default function Register() {
     switch (currentStep) {
       case 1: {
         // Program details - no validation needed
-        toast.success('Moving to domain selection...');
+        toast.success('Moving to rules...');
         setCurrentStep(prev => prev + 1);
         break;
       }
       
       case 2: {
-        if (!formData.selectedDomain) {
-          toast.error('Please select a domain to continue');
-          return;
-        }
-        toast.success('Domain selected successfully!');
-        setCurrentStep(prev => prev + 1);
-        break;
-      }
-      
-      case 3: {
         // Rules - no validation needed
         toast.success('Moving to undertaking...');
         setCurrentStep(prev => prev + 1);
         break;
       }
       
-      case 4: {
+      case 3: {
         if (!formData.agreedToRules) {
           toast.error('Please agree to the terms to continue');
           return;
         }
         toast.success('Terms accepted!');
+        setCurrentStep(prev => prev + 1);
+        break;
+      }
+      
+      case 4: {
+        if (!formData.selectedDomain) {
+          toast.error('Please select a domain to continue');
+          return;
+        }
+        toast.success('Domain selected successfully!');
         setCurrentStep(prev => prev + 1);
         break;
       }
@@ -319,15 +320,15 @@ export default function Register() {
                 <div className="program-highlights">
                   <div className="highlight-item">
                     <span className="highlight-label">Duration</span>
-                    <span className="highlight-value">6 weeks</span>
+                    <span className="highlight-value">7 Days</span>
                   </div>
                   <div className="highlight-item">
                     <span className="highlight-label">Credits</span>
-                    <span className="highlight-value">2</span>
+                    <span className="highlight-value">1</span>
                   </div>
                   <div className="highlight-item">
                     <span className="highlight-label">Start Date</span>
-                    <span className="highlight-value">June 1, 2024</span>
+                    <span className="highlight-value">June 1, 2025</span>
                   </div>
                 </div>
               </div>
@@ -387,63 +388,13 @@ export default function Register() {
       case 2:
         return (
           <section className="section">
-            <h2>Select Your Domain</h2>
-            <div className="domain-container">
-              <div className="domain-list">
-                {DOMAINS.map(domain => (
-                  <button 
-                    key={domain.id} 
-                    className={`domain-list-item ${formData.selectedDomain === domain.name ? 'selected' : ''}`}
-                    onClick={() => handleDomainClick(domain)}
-                  >
-                    {domain.name}
-                  </button>
-                ))}
-              </div>
-              <div className="domain-details">
-                {selectedDomainInfo ? (
-                  <>
-                    <h3>About this Domain</h3>
-                    <p className="domain-description">{selectedDomainInfo}</p>
-                    <h4>Key Activities:</h4>
-                    <ul className="domain-activities">
-                      {DOMAINS.find(d => d.name === formData.selectedDomain)?.details.map((detail, index) => (
-                        <li key={index}>{detail}</li>
-                      ))}
-                    </ul>
-                  </>
-                ) : (
-                  <div className="select-prompt">
-                    <p>Select a domain from the list to view details</p>
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="button-group">
-              <button className="back-button" onClick={handleBack}>Back</button>
-              <button 
-                className="next-button" 
-                onClick={handleNext}
-                disabled={!formData.selectedDomain}
-              >
-                Next
-              </button>
-            </div>
-          </section>
-        );
-
-      case 3:
-        return (
-          <section className="section">
             <h2>Rules and Guidelines</h2>
-            <div className="content-container">
-              <div className="rules-content">
-                <ul className="rules-list">
-                  {RULES.map((rule, index) => (
-                    <li key={index}>{rule}</li>
-                  ))}
-                </ul>
-              </div>
+            <div className="rules-content">
+              <ul className="rules-list">
+                {RULES.map((rule, index) => (
+                  <li key={index}>{rule}</li>
+                ))}
+              </ul>
             </div>
             <div className="button-group">
               <button className="back-button" onClick={handleBack}>Back</button>
@@ -452,7 +403,7 @@ export default function Register() {
           </section>
         );
 
-      case 4:
+      case 3:
         return (
           <section className="section">
             <h2>Undertaking</h2>
@@ -478,6 +429,69 @@ export default function Register() {
                 className="next-button" 
                 onClick={handleNext}
                 disabled={!formData.agreedToRules}
+              >
+                Next
+              </button>
+            </div>
+          </section>
+        );
+
+      case 4:
+        return (
+          <section className="section">
+            <div className="internship-mode-container">
+              <h2>Select Internship Mode</h2>
+              <select
+                value={formData.internshipMode}
+                onChange={(e) => setFormData(prev => ({...prev, internshipMode: e.target.value}))}
+                className="internship-mode-select"
+              >
+                <option value="">Select Mode</option>
+                <option value="in-campus">In Campus</option>
+                <option value="remote">Remote</option>
+              </select>
+            </div>   
+            <div className="domain-container">
+              <h2>Select Your Domain</h2>
+              <select
+                value={formData.selectedDomain}
+                onChange={(e) => {
+                  const selectedDomain = DOMAINS.find(d => d.name === e.target.value);
+                  setSelectedDomainInfo(selectedDomain ? selectedDomain.description : '');
+                  setFormData(prev => ({...prev, selectedDomain: e.target.value}));
+                }}
+                className="domain-select"
+              >
+                <option value="">Select Domain</option>
+                {DOMAINS.map(domain => (
+                  <option key={domain.id} value={domain.name}>{domain.name}</option>
+                ))}
+              </select>
+            </div>
+              <div className="domain-details">
+                {selectedDomainInfo ? (
+                  <>
+                    <h3>About this Domain</h3>
+                    <p className="domain-description">{selectedDomainInfo}</p>
+                    <h4>Key Activities:</h4>
+                    <ul className="domain-activities">
+                      {DOMAINS.find(d => d.name === formData.selectedDomain)?.details.map((detail, index) => (
+                        <li key={index}>{detail}</li>
+                      ))}
+                    </ul>
+                  </>
+                ) : (
+                  <div className="select-prompt">
+                    <p>Select a domain from the list to view details</p>
+                  </div>
+                )}
+              </div>
+            <div className="button-group">
+              <button className="back-button" onClick={handleBack}>Back</button>
+              <button 
+                className="next-button" 
+                onClick={handleNext}
+                disabled={!formData.selectedDomain || !formData.internshipMode}
               >
                 Next
               </button>
@@ -583,7 +597,7 @@ export default function Register() {
                   value={formData.residence.type}
                   onChange={(e) => handleInputChange('residence', 'type', e.target.value)}
                 >
-                  <option value="">Select Residence Type</option>
+                  <option value="" disabled>Select Residence Type</option>
                   <option value="hostel">Hostel</option>
                   <option value="dayscholar">Day Scholar</option>
                 </select>
@@ -602,7 +616,7 @@ export default function Register() {
                           <option key={hostel} value={hostel}>{hostel}</option>
                         ))
                     }
-                  </select> 
+                  </select>
                 )}
 
                 {formData.residence.type === 'dayscholar' && (
@@ -624,7 +638,7 @@ export default function Register() {
                   value={formData.residence.country}
                   onChange={(e) => handleInputChange('residence', 'country', e.target.value)}
                 >
-                  <option value="">Select Country</option>
+                  <option value="ko">Select Country</option>
                   {COUNTRIES.map(country => (
                     <option
                     className="residence-form-select"
@@ -637,6 +651,12 @@ export default function Register() {
 
                 {formData.residence.country === 'IN' && (
                   <div className="residence-section">
+                    <input
+                      type="text"
+                      placeholder="District"
+                      value={formData.residence.district}
+                      onChange={(e) => handleInputChange('residence', 'district', e.target.value)}
+                    />
                     <select
                       value={formData.residence.state}
                       onChange={(e) => handleInputChange('residence', 'state', e.target.value)}
@@ -646,12 +666,6 @@ export default function Register() {
                         <option key={state} value={state}>{state}</option>
                       ))}
                     </select>
-                    <input
-                      type="text"
-                      placeholder="District"
-                      value={formData.residence.district}
-                      onChange={(e) => handleInputChange('residence', 'district', e.target.value)}
-                    />
                     <input
                       type="text"
                       placeholder="PIN Code"
@@ -788,15 +802,15 @@ export default function Register() {
           </div>
           <div className="progress-step">
             <div className={`step-number ${currentStep >= 2 ? 'active' : ''}`}>2</div>
-            <span>Domain Selection</span>
-          </div>
-          <div className="progress-step">
-            <div className={`step-number ${currentStep >= 3 ? 'active' : ''}`}>3</div>
             <span>Rules</span>
           </div>
           <div className="progress-step">
-            <div className={`step-number ${currentStep >= 4 ? 'active' : ''}`}>4</div>
+            <div className={`step-number ${currentStep >= 3 ? 'active' : ''}`}>3</div>
             <span>Undertaking</span>
+          </div>
+          <div className="progress-step">
+            <div className={`step-number ${currentStep >= 4 ? 'active' : ''}`}>4</div>
+            <span>Domain Selection</span>
           </div>
           <div className="progress-step">
             <div className={`step-number ${currentStep >= 5 ? 'active' : ''}`}>5</div>

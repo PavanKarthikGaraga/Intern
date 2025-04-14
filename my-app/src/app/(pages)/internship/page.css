@@ -333,69 +333,93 @@
   
   /* Domain selection styles */
   .domain-container {
+    margin-bottom: 1rem;
+    padding: 1rem 0;
+    border-radius: 8px;
+    background-color: #f8f8f8;
     display: flex;
-    gap: 2rem;
-    height: calc(100vh - 250px);
-    margin: 1rem 0;
+    justify-content: flex-start;
+    gap: 10%;
+    align-items: center;
   }
   
-  .domain-list {
-    flex: 0 0 300px;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    border-right: 2px solid #e0e0e0;
-    padding-right: 1rem;
+  .internship-mode-container h2, .domain-container h2 {
+    /* margin-bottom: 1rem; */
+    width: 24%;
+    color: #000000;
+    font-size: 1.5rem;
+    padding-left: 1rem;
   }
   
-  .domain-list-item {
-    padding: 1rem;
-    text-align: left;
-    background: none;
+  .domain-select {
+    width: 15%;
+    padding: 0.8rem;
     border: 2px solid #006400;
     border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
     font-size: 1rem;
-    color: #006400;
+    background-color: white;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23006400' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    padding-right: 2.5rem;
+    cursor: pointer;
+    margin-bottom: 1.5rem;
   }
   
-  .domain-list-item:hover {
-    background-color: #006400;
-    color: white;
+  .domain-select:hover {
+    border-color: #008000;
   }
   
-  .domain-list-item.selected {
-    background-color: #006400;
-    color: white;
-    font-weight: 600;
+  .domain-select:focus {
+    border-color: #008000;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 100, 0, 0.1);
   }
   
   .domain-details {
-    flex: 1;
-    padding: 1rem;
-    background-color: #f8f8f8;
+    background-color: white;
+    padding: 0.5rem 1rem;
     border-radius: 8px;
+    border: 2px solid #006400;
+    border-left: 4px solid #006400;
+    /* margin-bottom: -1rem; */
+    height: 100%;
   }
   
   .domain-description {
-    font-size: 1.1rem;
+    /* height: 90%; */
+    font-size: 1rem;
     line-height: 1.6;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     color: #333;
   }
   
   .domain-activities {
     list-style-type: none;
     padding: 0;
+    /* height: 50%; */
   }
   
   .domain-activities li {
     padding: 0.8rem;
     margin-bottom: 0.5rem;
-    background-color: white;
+    background-color: #f8f8f8;
     border-radius: 6px;
     border-left: 4px solid #006400;
+  }
+  
+  .select-prompt {
+    color: #666;
+    font-style: italic;
+    text-align: center;
+    padding: 2rem 0;
+  }
+  
+  @media (max-width: 768px) {
+    .domain-container {
+      margin-bottom: 1.5rem;
+    }
   }
   
   /* Common content container style */
@@ -833,4 +857,90 @@
     color: #666;
     font-size: 0.85rem;
     margin-left: 0.25rem;
+  }
+  
+  .internship-mode-container {
+    /* margin-bottom: 1rem; */
+    padding: 1rem 0;
+    border-radius: 8px;
+    background-color: #f8f8f8;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 10%;
+  }
+  
+  .internship-mode-container h3 {
+    margin-bottom: 1rem;
+    color: #006400;
+    font-size: 1.1rem;
+  }
+  
+  .internship-mode-select {
+    width: 15%;
+    padding: 0.8rem;
+    border: 2px solid #006400;
+    border-radius: 8px;
+    font-size: 1rem;
+    background-color: white;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23006400' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    padding-right: 2.5rem;
+    cursor: pointer;
+  }
+  
+  .internship-mode-select:hover {
+    border-color: #008000;
+  }
+  
+  .internship-mode-select:focus {
+    border-color: #008000;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 100, 0, 0.1);
+  }
+  
+  @media (max-width: 768px) {
+    .internship-mode-container {
+      margin-bottom: 1.5rem;
+    }
+  }
+  
+  .mode-options {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+  }
+  
+  .mode-option {
+    padding: 1rem 2rem;
+    border: 2px solid rgb(151, 0, 3);
+    border-radius: 8px;
+    background: none;
+    cursor: pointer;
+    font-size: 1rem;
+    color: black;
+    transition: all 0.2s ease;
+    min-width: 150px;
+  }
+  
+  .mode-option:hover {
+    background-color: #f8f0f0;
+    color: black;
+  }
+  
+  .mode-option.selected {
+    background-color: rgb(151, 0, 3);
+    color: white;
+  }
+  
+  @media (max-width: 768px) {
+    .mode-options {
+      flex-direction: column;
+    }
+    
+    .mode-option {
+      width: 100%;
+    }
   } 
