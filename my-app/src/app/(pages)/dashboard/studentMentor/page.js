@@ -130,14 +130,28 @@ export default function StudentMentor() {
 
     const markAttendance = async (studentId, dayNumber, status) => {
         try {
+            // Find the upload for this day to get the document URL
+            const upload = uploads.find(u => u.dayNumber === dayNumber);
+            const documentUrl = upload ? upload.link : null;
+            
             const response = await fetch('/api/dashboard/studentMentor/attendance', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ studentId, dayNumber, status })
+                body: JSON.stringify({ 
+                    studentId, 
+                    dayNumber, 
+                    status,
+                    documentUrl 
+                })
             });
 
-            if (!response.ok) throw new Error('Failed to mark attendance');
             const data = await response.json();
+            
+            if (!response.ok) {
+                toast.error(data.error || 'Failed to mark attendance');
+                return;
+            }
+
             if (data.success) {
                 toast.success('Attendance marked successfully');
                 // Update local state

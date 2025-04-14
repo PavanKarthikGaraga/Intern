@@ -78,7 +78,7 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Only admin members can access this resource' }, { status: 403 });
         }
 
-        const { studentId, dayNumber, status } = await request.json();
+        const { studentId, dayNumber, status, documentUrl } = await request.json();
 
         if (!studentId || !dayNumber || !status) {
             return NextResponse.json(
@@ -145,7 +145,8 @@ export async function POST(request) {
                 name: student.name,
                 idNumber: studentId,
                 day: dayNumber,
-                status: status === 'P' ? 'Present' : 'Absent'
+                status: status === 'P' ? 'Present' : 'Absent',
+                documentUrl: documentUrl || null
             });
         }
 
