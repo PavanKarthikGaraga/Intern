@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import getDBConnection from "@/lib/db";
+import getDBConnection from "@/config/db";
 import { cookies } from 'next/headers';
 import { verifyAccessToken } from '@/lib/jwt';
 
@@ -34,16 +34,16 @@ export async function GET(request) {
         
         const searchQuery = `
             SELECT 
-                r.idNumber,
+                r.username,
                 r.name,
                 r.selectedDomain,
                 r.branch,
                 r.year
             FROM registrations r
-            LEFT JOIN users u ON r.idNumber = u.idNumber
-            WHERE (r.name LIKE ? OR r.idNumber LIKE ?)
+            LEFT JOIN users u ON r.username = u.username
+            WHERE (r.name LIKE ? OR r.username LIKE ?)
             AND (u.role = 'student' OR u.role IS NULL)
-            AND r.idNumber NOT IN (SELECT mentorId FROM studentMentors)
+            AND r.username NOT IN (SELECT mentorId FROM studentMentors)
             AND r.selectedDomain = ?
             LIMIT 10
         `;

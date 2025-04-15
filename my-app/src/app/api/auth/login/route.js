@@ -1,52 +1,53 @@
-import getDBConnection from '../../../../lib/db';
+import { pool } from '../../../../config/db';
 import { generateAuthTokens } from '../../../../lib/jwt';
 import bcrypt from 'bcryptjs';
 import { cookies } from 'next/headers';
 
 export async function POST(request) {
-    let db;
     try {
-        const { idNumber, password } = await request.json();
+        const { username, password } = await request.json();
 
-         db = await getDBConnection();
+        // console.log("username",username);
 
-        // Query to find user by idNumber
-        const [existingUser] = await db.query(
-            'SELECT * FROM users WHERE idNumber = ?',
-            [idNumber]
-        );
+        // Query to find user by username using the pool (connection pool)
+        const [rows] = await pool.query('SELECT * FROM users WHERE username = ?', [username]);
 
-        if (!existingUser || existingUser.length === 0) {
-            return Response.json({
-                error: 'ID Number does not exist'
-            }, { status: 400 });
+        if (!rows || rows.length === 0) {
+            return new Response(
+                JSON.stringify({ error: 'ID Number does not exist' }),
+                { status: 400, headers: { 'Content-Type': 'application/json' } }
+            );
         }
 
-        const user = existingUser[0]; // Get first user since idNumber should be unique
+        const user = rows[0]; // Get the first user, as username is unique
         
-        const hashPassword = await bcrypt.compare(password, user.password);
+        // Compare provided password with stored hash
+        const isPasswordValid = await bcrypt.compare(password, user.password);
 
-        if (!hashPassword) {
-            return Response.json({
-                error: 'Invalid Password'
-            }, { status: 400 });
+        if (!isPasswordValid) {
+            return new Response(
+                JSON.stringify({ error: 'Invalid Password' }),
+                { status: 400, headers: { 'Content-Type': 'application/json' } }
+            );
         }
-        
-        const { accessToken, refreshToken } = await generateAuthTokens({ 
-            idNumber: user.idNumber,
-            name:user.name,
-            role: user.role 
+
+        // Generate auth tokens
+        const { accessToken, refreshToken } = await generateAuthTokens({
+            id: user.id,
+            username:user.username,
+            name: user.name,
+            role: user.role
         });
-        
-        // Get cookies instance
+
+        // Get cookies instance to set cookies
         const cookieStore = await cookies();
-        
+
         // Set access token cookie
         await cookieStore.set('accessToken', accessToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
-            maxAge: 5 * 60 
+            maxAge: 5 * 60 // 5 minutes
         });
 
         // Set refresh token cookie
@@ -54,23 +55,26 @@ export async function POST(request) {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
-            maxAge: 15 *60 
+            maxAge: 15 * 60 // 15 minutes
         });
 
-        return Response.json({
-            message: "User Successfully Logged In",
-            user: {
-                idNumber: user.idNumber,
-                id: user.id,
-                role: user.role 
-            }
-        }, { status: 200 });
-        
+        return new Response(
+            JSON.stringify({
+                message: 'User Successfully Logged In',
+                user: {
+                    id: user.id,
+                    username: user.username,
+                    role: user.role
+                }
+            }),
+            { status: 200, headers: { 'Content-Type': 'application/json' } }
+        );
+
     } catch (err) {
-        return Response.json({
-            error: err.message
-        }, { status: 500 });
-    } finally {
-        await db.end();
+        console.error(err); // Log the error for debugging purposes
+        return new Response(
+            JSON.stringify({ error: err.message }),
+            { status: 500, headers: { 'Content-Type': 'application/json' } }
+        );
     }
 }

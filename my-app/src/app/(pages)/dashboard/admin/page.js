@@ -27,13 +27,13 @@ export default function Admin() {
     const [studentMentors, setStudentMentors] = useState([]);
     const [showNewMentorForm, setShowNewMentorForm] = useState(false);
     const [newMentorData, setNewMentorData] = useState({
-        idNumber: '',
+        username: '',
         name: '',
         domain: ''
     });
     const [newAdminData, setNewAdminData] = useState({
         name: '',
-        idNumber: '',
+        username: '',
         password: ''
     });
     const [mentorSearchQuery, setMentorSearchQuery] = useState('');
@@ -325,7 +325,7 @@ export default function Admin() {
                         const canMark = canMarkAttendance(upload.dayNumber);
 
                         return (
-                            <tr key={`${upload.idNumber}-${upload.dayNumber}`}>
+                            <tr key={`${upload.username}-${upload.dayNumber}`}>
                                 <td>Day {upload.dayNumber}</td>
                                 <td>
                                     <a href={upload.link} target="_blank" rel="noopener noreferrer">
@@ -556,8 +556,8 @@ export default function Admin() {
                             activeStudents
                                 .filter(student => selectedDomain === 'all' || student.selectedDomain === selectedDomain)
                                 .map((student) => (
-                                    <tr key={student.idNumber}>
-                                        <td>{student.idNumber}</td>
+                                    <tr key={student.username}>
+                                        <td>{student.username}</td>
                                         <td>{student.name}</td>
                                         <td>{student.selectedDomain}</td>
                                         <td>{student.branch}</td>
@@ -567,8 +567,8 @@ export default function Admin() {
                                         <td>
                                             <button
                                                 onClick={() => {
-                                                    setSelectedStudent(student.idNumber);
-                                                    fetchAttendance(student.idNumber);
+                                                    setSelectedStudent(student.username);
+                                                    fetchAttendance(student.username);
                                                 }}
                                                 className="view-attendance-btn"
                                             >
@@ -586,7 +586,7 @@ export default function Admin() {
                                                 {student.mentorName ? 'Modify Mentor' : 'Assign Mentor'}
                                             </button>
                                             <button
-                                                onClick={() => handleDeleteStudent(student.idNumber)}
+                                                onClick={() => handleDeleteStudent(student.username)}
                                                 className="delete-student-btn"
                                             >
                                                 Delete
@@ -695,7 +695,7 @@ export default function Admin() {
                         <div className="remove-mentor-section">
                             <p>To assign a new mentor, first remove the current mentor.</p>
                             <button
-                                onClick={() => handleRemoveMentor(selectedStudentForMentor.idNumber)}
+                                onClick={() => handleRemoveMentor(selectedStudentForMentor.username)}
                                 className="remove-mentor-btn"
                             >
                                 Remove Current Mentor
@@ -730,7 +730,7 @@ export default function Admin() {
                                                 <span className="mentor-domain">{mentor.domain}</span>
                                             </div>
                                             <button
-                                                onClick={() => handleAssignMentor(selectedStudentForMentor.idNumber, mentor.mentorId)}
+                                                onClick={() => handleAssignMentor(selectedStudentForMentor.username, mentor.mentorId)}
                                                 className="assign-btn"
                                             >
                                                 Assign
@@ -802,16 +802,16 @@ export default function Admin() {
                             {searchedStudents.length > 0 && (
                                 <div className="search-results">
                                     {searchedStudents.map((student) => (
-                                        <div key={`student-${student.idNumber}`} className="student-result">
+                                        <div key={`student-${student.username}`} className="student-result">
                                             <div className="student-info">
                                                 <span className="student-name">{student.name}</span>
-                                                <span className="student-id">{student.idNumber}</span>
+                                                <span className="student-id">{student.username}</span>
                                                 <span className="student-domain">{student.selectedDomain}</span>
                                             </div>
                                             <button
                                                 onClick={() => {
                                                     createNewMentor({
-                                                        idNumber: student.idNumber,
+                                                        username: student.username,
                                                         name: student.name,
                                                         domain: student.selectedDomain
                                                     });
@@ -1062,9 +1062,9 @@ export default function Admin() {
                                                 <tbody>
                                                     {mentorOverview.find(m => m.mentorId === expandedMentor).students
                                                         .map(student => (
-                                                            <tr key={`student-${student.idNumber}`}>
+                                                            <tr key={`student-${student.username}`}>
                                                                 <td>{student.name}</td>
-                                                                <td>{student.idNumber}</td>
+                                                                <td>{student.username}</td>
                                                                 <td>{student.selectedDomain}</td>
                                                                 <td>
                                                                     <div className="progress-bar">
@@ -1083,7 +1083,7 @@ export default function Admin() {
                                                                 <td>
                                                                     <button
                                                                         className="view-progress-btn"
-                                                                        onClick={() => fetchUploads(student.idNumber)}
+                                                                        onClick={() => fetchUploads(student.username)}
                                                                     >
                                                                         View Progress
                                                                     </button>
@@ -1116,14 +1116,14 @@ export default function Admin() {
                                                         </thead>
                                                         <tbody>
                                                             {completedStudents.map(student => (
-                                                                <tr key={student.idNumber}>
+                                                                <tr key={student.username}>
                                                                     <td>{student.name}</td>
-                                                                    <td>{student.idNumber}</td>
+                                                                    <td>{student.username}</td>
                                                                     <td>{student.selectedDomain}</td>
                                                                     <td>{new Date(student.completionDate).toLocaleDateString()}</td>
                                                                     <td>
                                                                         <button
-                                                                            onClick={() => fetchUploads(student.idNumber)}
+                                                                            onClick={() => fetchUploads(student.username)}
                                                                             className="view-progress-btn"
                                                                         >
                                                                             View Reports
@@ -1362,7 +1362,7 @@ export default function Admin() {
         }
     };
 
-    const handleDeleteAdmin = async (idNumber) => {
+    const handleDeleteAdmin = async (username) => {
         if (!window.confirm('Are you sure you want to remove this admin? This will revoke their admin privileges.')) {
             return;
         }
@@ -1373,7 +1373,7 @@ export default function Admin() {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ idNumber })
+                body: JSON.stringify({ username })
             });
 
             if (!response.ok) {
@@ -1413,7 +1413,7 @@ export default function Admin() {
                 setShowAdminModal(false);
                 setNewAdminData({
                     name: '',
-                    idNumber: '',
+                    username: '',
                     password: ''
                 });
                 fetchAdmins(); // Refresh the admin list
@@ -1452,14 +1452,14 @@ export default function Admin() {
                             </thead>
                             <tbody>
                                 {admins.map(admin => (
-                                    <tr key={admin.idNumber}>
+                                    <tr key={admin.username}>
                                         <td>{admin.name}</td>
-                                        <td>{admin.idNumber}</td>
+                                        <td>{admin.username}</td>
                                         {/* <td>{admin.role}</td> */}
                                         <td>
                                             <button
                                                 className="delete-admin-btn"
-                                                onClick={() => handleDeleteAdmin(admin.idNumber)}
+                                                onClick={() => handleDeleteAdmin(admin.username)}
                                             >
                                                 Remove Admin
                                             </button>
@@ -1490,12 +1490,12 @@ export default function Admin() {
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label htmlFor="idNumber">ID Number</label>
+                                    <label htmlFor="username">ID Number</label>
                                     <input
                                         type="text"
-                                        id="idNumber"
-                                        value={newAdminData.idNumber}
-                                        onChange={(e) => setNewAdminData(prev => ({ ...prev, idNumber: e.target.value }))}
+                                        id="username"
+                                        value={newAdminData.username}
+                                        onChange={(e) => setNewAdminData(prev => ({ ...prev, username: e.target.value }))}
                                         required
                                         placeholder="Enter admin ID number"
                                     />
@@ -1612,8 +1612,8 @@ export default function Admin() {
                             completedStudents
                                 .filter(student => selectedDomain === 'all' || student.selectedDomain === selectedDomain)
                                 .map((student) => (
-                                    <tr key={student.idNumber}>
-                                        <td>{student.idNumber}</td>
+                                    <tr key={student.username}>
+                                        <td>{student.username}</td>
                                         <td>{student.name}</td>
                                         <td>{student.selectedDomain}</td>
                                         <td>{student.mentorName || 'Not Assigned'}</td>
@@ -1622,8 +1622,8 @@ export default function Admin() {
                                             <button 
                                                 className="view-progress-btn"
                                                 onClick={() => {
-                                                    setSelectedStudent(student.idNumber);
-                                                    fetchUploads(student.idNumber);
+                                                    setSelectedStudent(student.username);
+                                                    fetchUploads(student.username);
                                                 }}
                                             >
                                                 View Reports

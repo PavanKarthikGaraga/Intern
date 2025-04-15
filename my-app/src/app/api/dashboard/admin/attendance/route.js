@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import getDBConnection from '@/lib/db';
+import getDBConnection from '@/config/db';
 import { cookies } from 'next/headers';
 import { verifyAccessToken } from '@/lib/jwt';
 import { sendEmail } from '@/lib/email';
@@ -31,7 +31,7 @@ export async function GET(request) {
         const [rows] = await db.execute(`
             SELECT day1, day2, day3, day4, day5, day6, day7, day8
             FROM attendance
-            WHERE idNumber = ?
+            WHERE username = ?
         `, [studentId]);
 
         // Transform the data into a more usable format
@@ -102,7 +102,7 @@ export async function POST(request) {
             const [prevDayResult] = await db.execute(`
                 SELECT day${dayNumber - 1} as prevDay
                 FROM attendance
-                WHERE idNumber = ?
+                WHERE username = ?
             `, [studentId]);
             
             if (!prevDayResult[0] || !prevDayResult[0].prevDay) {
@@ -115,13 +115,13 @@ export async function POST(request) {
 
         // First, check if an attendance record exists
         const [existingRecord] = await db.execute(`
-            SELECT idNumber FROM attendance WHERE idNumber = ?
+            SELECT username FROM attendance WHERE username = ?
         `, [studentId]);
 
         if (existingRecord.length === 0) {
             // Create new record
             await db.execute(`
-                INSERT INTO attendance (idNumber, day${dayNumber})
+                INSERT INTO attendance (username, day${dayNumber})
                 VALUES (?, ?)
             `, [studentId, status]);
         } else {
@@ -129,13 +129,13 @@ export async function POST(request) {
             await db.execute(`
                 UPDATE attendance
                 SET day${dayNumber} = ?
-                WHERE idNumber = ?
+                WHERE username = ?
             `, [status, studentId]);
         }
 
         // Get student details for email notification
         const [studentDetails] = await db.execute(`
-            SELECT name, email FROM registrations WHERE idNumber = ?
+            SELECT name, email FROM registrations WHERE username = ?
         `, [studentId]);
 
         if (studentDetails.length > 0) {
@@ -143,7 +143,7 @@ export async function POST(request) {
             // Send email notification
             await sendEmail(student.email, 'attendanceMarked', {
                 name: student.name,
-                idNumber: studentId,
+                username: studentId,
                 day: dayNumber,
                 status: status === 'P' ? 'Present' : 'Absent',
                 documentUrl: documentUrl || null

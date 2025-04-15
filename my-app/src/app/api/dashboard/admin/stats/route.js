@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import getDBConnection from '@/lib/db';
+import getDBConnection from '@/config/db';
 import { verifyAccessToken } from '@/lib/jwt';
 import { cookies } from 'next/headers';
 

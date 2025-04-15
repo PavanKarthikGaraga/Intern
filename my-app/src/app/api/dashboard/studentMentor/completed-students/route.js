@@ -1,4 +1,4 @@
-import getDBConnection from "@/lib/db";
+import getDBConnection from "@/config/db";
 import { NextResponse } from 'next/server';
 
 export async function GET(request) {
@@ -32,8 +32,8 @@ export async function GET(request) {
 
         // Transform the JSON object into array format
         const studentDetails = completedStudents[0].studentDetails;
-        const parsedStudents = Object.entries(studentDetails).map(([idNumber, details]) => ({
-            idNumber,
+        const parsedStudents = Object.entries(studentDetails).map(([username, details]) => ({
+            username,
             ...details
         }));
 

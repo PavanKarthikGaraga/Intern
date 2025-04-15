@@ -38,7 +38,7 @@ export default function StudentMentor() {
     const [isAssigningStudents, setIsAssigningStudents] = useState(false);
 
     useEffect(() => {
-        if (!user?.idNumber) {
+        if (!user?.username) {
             setLoading(false);
             setError('Please log in to view your dashboard');
             return;
@@ -50,7 +50,7 @@ export default function StudentMentor() {
                 setError(null);
                 
                 // Fetch assigned students
-                const response = await fetch(`/api/dashboard/studentMentor/assigned-students?mentorId=${user.idNumber}`);
+                const response = await fetch(`/api/dashboard/studentMentor/assigned-students?mentorId=${user.username}`);
                 if (!response.ok) throw new Error('Failed to fetch assigned students');
                 const data = await response.json();
                 if (data.success) {
@@ -58,14 +58,14 @@ export default function StudentMentor() {
                     
                     // Fetch attendance for each student
                     const attendancePromises = data.students.map(async (student) => {
-                        const attendanceResponse = await fetch(`/api/dashboard/studentMentor/attendance?studentId=${student.idNumber}`);
+                        const attendanceResponse = await fetch(`/api/dashboard/studentMentor/attendance?studentId=${student.username}`);
                         if (attendanceResponse.ok) {
                             const attendanceData = await attendanceResponse.json();
                             if (attendanceData.success) {
-                                return { studentId: student.idNumber, attendance: attendanceData.data };
+                                return { studentId: student.username, attendance: attendanceData.data };
                             }
                         }
-                        return { studentId: student.idNumber, attendance: {} };
+                        return { studentId: student.username, attendance: {} };
                     });
 
                     const attendanceResults = await Promise.all(attendancePromises);
@@ -96,7 +96,7 @@ export default function StudentMentor() {
 
     const fetchCompletedStudents = async () => {
         try {
-            const response = await fetch(`/api/dashboard/studentMentor/completed-students?mentorId=${user.idNumber}`);
+            const response = await fetch(`/api/dashboard/studentMentor/completed-students?mentorId=${user.username}`);
             const data = await response.json();
             if (data.success) {
                 setCompletedStudents(data.completedStudents);
@@ -322,7 +322,7 @@ export default function StudentMentor() {
                 },
                 body: JSON.stringify({
                     studentId,
-                    mentorId: user.idNumber
+                    mentorId: user.username
                 }),
             });
 
@@ -349,7 +349,7 @@ export default function StudentMentor() {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    mentorId: user.idNumber
+                    mentorId: user.username
                 }),
             });
 
@@ -364,7 +364,7 @@ export default function StudentMentor() {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        mentorId: user.idNumber
+                        mentorId: user.username
                     }),
                 });
                 
@@ -378,15 +378,15 @@ export default function StudentMentor() {
                             const attendanceResponse = await fetch('/api/dashboard/studentMentor/attendance', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ studentId: student.idNumber })
+                                body: JSON.stringify({ studentId: student.username })
                             });
                             if (attendanceResponse.ok) {
                                 const attendanceData = await attendanceResponse.json();
                                 if (attendanceData.success) {
-                                    return { studentId: student.idNumber, attendance: attendanceData.data };
+                                    return { studentId: student.username, attendance: attendanceData.data };
                                 }
                             }
-                            return { studentId: student.idNumber, attendance: {} };
+                            return { studentId: student.username, attendance: {} };
                         });
 
                         const attendanceResults = await Promise.all(attendancePromises);
@@ -520,8 +520,8 @@ export default function StudentMentor() {
                                                     </tr>
                                                 ) : (
                                                     availableStudents.map((student) => (
-                                                        <tr key={student.idNumber}>
-                                                            <td>{student.idNumber}</td>
+                                                        <tr key={student.username}>
+                                                            <td>{student.username}</td>
                                                             <td>{student.name}</td>
                                                             <td>{student.selectedDomain}</td>
                                                             <td>{student.branch}</td>
@@ -569,11 +569,11 @@ export default function StudentMentor() {
                                             </tr>
                                         ) : (
                                             assignedStudents.map((student) => {
-                                                const daysCompleted = Object.values(studentAttendance[student.idNumber] || {})
+                                                const daysCompleted = Object.values(studentAttendance[student.username] || {})
                                                     .filter(status => status === 'P').length;
                                                 return (
-                                                    <tr key={student.idNumber}>
-                                                        <td>{student.idNumber}</td>
+                                                    <tr key={student.username}>
+                                                        <td>{student.username}</td>
                                                         <td>{student.name}</td>
                                                         <td>{student.selectedDomain}</td>
                                                         <td>{student.branch}</td>
@@ -581,14 +581,14 @@ export default function StudentMentor() {
                                                         <td>{daysCompleted}/8</td>
                                                         <td className="btns">
                                                             <button 
-                                                                onClick={() => fetchUploads(student.idNumber)}
+                                                                onClick={() => fetchUploads(student.username)}
                                                                 className="view-uploads-btn"
                                                             >
                                                                 View Progress
                                                             </button>
                                                             {daysCompleted === 8 && (
                                                                 <button
-                                                                    onClick={() => handleMarkCompleted(student.idNumber)}
+                                                                    onClick={() => handleMarkCompleted(student.username)}
                                                                     className="view-uploads-btn"
                                                                 >
                                                                     Mark Completed
@@ -620,13 +620,13 @@ export default function StudentMentor() {
                                     </thead>
                                     <tbody>
                                         {completedStudents.map((student) => (
-                                            <tr key={student.idNumber}>
-                                                <td>{student.idNumber}</td>
+                                            <tr key={student.username}>
+                                                <td>{student.username}</td>
                                                 <td>{student.name}</td>
                                                 <td>{new Date(student.completionDate).toLocaleDateString()}</td>
                                                 <td>
                                                     <button 
-                                                        onClick={() => fetchUploads(student.idNumber)}
+                                                        onClick={() => fetchUploads(student.username)}
                                                         className="view-reports-btn"
                                                     >
                                                         View Reports
@@ -659,7 +659,7 @@ export default function StudentMentor() {
                                         <tr>
                                             <th>Day</th>
                                             <th>Upload</th>
-                                            {!completedStudents.some(student => student.idNumber === selectedStudent) && (
+                                            {!completedStudents.some(student => student.username === selectedStudent) && (
                                                 <th>Actions</th>
                                             )}
                                         </tr>
@@ -673,7 +673,7 @@ export default function StudentMentor() {
                                                         View Upload
                                                     </a>
                                                 </td>
-                                                {!completedStudents.some(student => student.idNumber === selectedStudent) && (
+                                                {!completedStudents.some(student => student.username === selectedStudent) && (
                                                     <td>
                                                         <div className="attendance-actions">
                                                             <button

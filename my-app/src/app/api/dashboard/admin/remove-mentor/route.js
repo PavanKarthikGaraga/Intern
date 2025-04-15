@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import getDBConnection from '@/lib/db';
+import getDBConnection from '@/config/db';
 import { cookies } from 'next/headers';
 import { verifyAccessToken } from '@/lib/jwt';
 
@@ -86,7 +86,7 @@ export async function POST(request) {
 
             // Update registrations table to remove mentor assignment
             await db.execute(
-                'UPDATE registrations SET studentMentorId = NULL WHERE idNumber = ?',
+                'UPDATE registrations SET studentMentorId = NULL WHERE username = ?',
                 [studentId]
             );
 

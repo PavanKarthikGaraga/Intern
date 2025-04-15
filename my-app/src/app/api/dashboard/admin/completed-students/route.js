@@ -1,4 +1,4 @@
-import getDBConnection from "@/lib/db";
+import getDBConnection from "@/config/db";
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { verifyAccessToken } from '@/lib/jwt';
@@ -78,8 +78,8 @@ export async function GET(request) {
         let allStudents = [];
         completedStudents.forEach(record => {
             const studentDetails = record.studentDetails;
-            const students = Object.entries(studentDetails).map(([idNumber, details]) => ({
-                idNumber,
+            const students = Object.entries(studentDetails).map(([username, details]) => ({
+                username,
                 name: details.name,
                 completionDate: details.completionDate,
                 mentorId: record.mentorId,
@@ -92,7 +92,7 @@ export async function GET(request) {
         // Filter based on search query
         const filteredStudents = searchQuery 
             ? allStudents.filter(student => 
-                student.idNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                student.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 student.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 student.selectedDomain?.toLowerCase().includes(searchQuery.toLowerCase())
             )

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import getDBConnection from '@/lib/db';
+import getDBConnection from '@/config/db';
 import { cookies } from 'next/headers';
 import { verifyAccessToken } from '@/lib/jwt';
 
@@ -30,7 +30,7 @@ export async function GET() {
                 sm.student1Id, sm.student2Id, sm.student3Id, sm.student4Id, sm.student5Id,
                 sm.student6Id, sm.student7Id, sm.student8Id, sm.student9Id, sm.student10Id
             FROM studentMentors sm
-            JOIN users u ON sm.mentorId = u.idNumber
+            JOIN users u ON sm.mentorId = u.username
             WHERE u.role = 'studentMentor'
         `);
         
@@ -58,7 +58,7 @@ export async function GET() {
             // Get student details and their progress
             const [students] = await db.execute(`
                 SELECT 
-                    r.idNumber,
+                    r.username,
                     r.name,
                     r.selectedDomain,
                     COALESCE(
@@ -72,20 +72,20 @@ export async function GET() {
                             (CASE WHEN day7 = 'P' THEN 1 ELSE 0 END) +
                             (CASE WHEN day8 = 'P' THEN 1 ELSE 0 END)
                         FROM attendance a
-                        WHERE a.idNumber = r.idNumber
+                        WHERE a.username = r.username
                         ), 0
                     ) as daysCompleted
                 FROM registrations r
-                WHERE r.idNumber IN (${studentIds.map(() => '?').join(',')})
+                WHERE r.username IN (${studentIds.map(() => '?').join(',')})
                 AND NOT EXISTS (
                     SELECT 1 FROM users u 
-                    WHERE u.idNumber = r.idNumber 
+                    WHERE u.username = r.username 
                     AND u.role = 'studentMentor'
                 )
             `, studentIds);
 
             const processedStudents = students.map(student => ({
-                idNumber: student.idNumber,
+                username: student.username,
                 name: student.name,
                 selectedDomain: student.selectedDomain,
                 daysCompleted: student.daysCompleted || 0

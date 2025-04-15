@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import getDBConnection from "@/lib/db";
+import getDBConnection from "@/config/db";
 import { cookies } from 'next/headers';
 import { verifyAccessToken } from '@/lib/jwt';
 
@@ -26,11 +26,11 @@ export async function GET(request) {
                 sm.mentorId,
                 sm.name,
                 sm.domain,
-                COUNT(DISTINCT r.idNumber) as assignedStudents
+                COUNT(DISTINCT r.username) as assignedStudents
             FROM studentMentors sm
-            JOIN users u ON sm.mentorId = u.idNumber AND u.role = 'studentMentor'
+            JOIN users u ON sm.mentorId = u.username AND u.role = 'studentMentor'
             LEFT JOIN registrations r ON 
-                r.idNumber IN (
+                r.username IN (
                     sm.student1Id, sm.student2Id, sm.student3Id,
                     sm.student4Id, sm.student5Id, sm.student6Id,
                     sm.student7Id, sm.student8Id, sm.student9Id,
@@ -38,7 +38,7 @@ export async function GET(request) {
                 )
                 AND NOT EXISTS (
                     SELECT 1 FROM users u2 
-                    WHERE u2.idNumber = r.idNumber 
+                    WHERE u2.username = r.username 
                     AND u2.role = 'studentMentor'
                 )
             GROUP BY sm.mentorId, sm.name, sm.domain

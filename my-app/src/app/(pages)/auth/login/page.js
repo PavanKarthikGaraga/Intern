@@ -9,7 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 
 const Login = () => {
     const [captcha, setCaptcha] = useState('');
-    const [idNumber, setIdNumber] = useState('');
+    const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [captchaInput, setCaptchaInput] = useState('');
     const router = useRouter();
@@ -24,6 +24,7 @@ const Login = () => {
         let captcha = '';
         for (let i = 0; i < 6; i++) {
             captcha += characters.charAt(Math.floor(Math.random() * characters.length));
+            // captcha += " ";
         }
         setCaptcha(captcha);
     };
@@ -45,7 +46,7 @@ const Login = () => {
                 },
                 credentials: 'include',
                 body: JSON.stringify({
-                    idNumber,
+                    username,
                     password
                 })
             });
@@ -76,13 +77,13 @@ const Login = () => {
                 </div>
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
-                        <label htmlFor="idNumber">ID Number</label>
+                        <label htmlFor="username">ID Number</label>
                         <input 
                             type="text" 
-                            id="idNumber" 
-                            value={idNumber} 
+                            id="username" 
+                            value={username} 
                             autoComplete="Id-Number"
-                            onChange={(e)=>setIdNumber(e.target.value)} 
+                            onChange={(e)=>setUsername(e.target.value)} 
                             placeholder="Enter your ID number"
                             required
                         />
@@ -100,12 +101,12 @@ const Login = () => {
                         />
                     </div>
                     <div className="form-group-recaptive">
-                        <label className="captcha">{captcha}</label>
+                        <label className="captcha" onClick={generateCaptcha}>{captcha}</label>
                         <input
                             value={captchaInput} 
                             onChange={(e)=>setCaptchaInput(e.target.value)}
                             type="text" 
-                            placeholder="Enter the code above"
+                            placeholder="Enter the code "
                             required
                         />
                     </div>

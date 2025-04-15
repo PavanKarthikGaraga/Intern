@@ -1,4 +1,4 @@
-import getDBConnection from "@/lib/db";
+import getDBConnection from "@/config/db";
 
 export async function GET(request) {
     let db;
@@ -27,8 +27,8 @@ export async function GET(request) {
                    COALESCE(a.day7, '') as day7,
                    COALESCE(a.day8, '') as day8
             FROM registrations r
-            LEFT JOIN attendance a ON r.idNumber = a.idNumber
-            WHERE r.idNumber IN (
+            LEFT JOIN attendance a ON r.username = a.username
+            WHERE r.username IN (
                 SELECT student1Id FROM studentMentors WHERE mentorId = ?
                 UNION
                 SELECT student2Id FROM studentMentors WHERE mentorId = ?

@@ -1,4 +1,4 @@
-import getDBConnection from '../../../../lib/db';
+import getDBConnection from '../../../../config/db';
 import { generateAuthTokens } from '../../../../lib/jwt';
 import { sendEmail } from '../../../../lib/email';
 
@@ -27,7 +27,7 @@ export async function POST(request) {
 
         // Generate a temporary token for password reset
         const { accessToken } = await generateAuthTokens({
-            idNumber: user.idNumber,
+            username: user.username,
             type: 'password_reset'
         });
 

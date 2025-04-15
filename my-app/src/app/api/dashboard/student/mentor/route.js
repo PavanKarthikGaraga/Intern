@@ -1,6 +1,5 @@
+import { pool } from '@/config/db';
 import { NextResponse } from 'next/server';
-// import mysql from 'mysql2/promise';
-import getDBConnection from '@/lib/db';
 
 export async function POST(request) {
   try {
@@ -10,21 +9,20 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: 'Mentor ID is required' }, { status: 400 });
     }
 
-    // Create MySQL connection
-    const connection = await getDBConnection();
-
-    // Join users and studentMentors tables to get all required information
-    const [rows] = await connection.execute(
-      `SELECT u.name, u.idNumber as mentorId, sm.domain, r.email 
-       FROM users u 
-       JOIN studentMentors sm ON u.idNumber = sm.mentorId 
-       JOIN registrations r ON u.idNumber = r.studentMentorId
-       WHERE u.idNumber = ? AND u.role = 'studentMentor'
+    // Query to get mentor's info along with assigned student emails and domain
+    const [rows] = await pool.query(
+      `SELECT 
+          u.name AS mentorName, 
+          u.username AS mentorId, 
+          r.selectedDomain AS domain, 
+          r.email AS studentEmail 
+       FROM users u
+       JOIN studentLeads sl ON u.username = sl.username
+       JOIN registrations r ON r.leadId = sl.username
+       WHERE u.username = ? AND u.role = 'studentLead'
        LIMIT 1`,
       [mentorId]
     );
-
-    await connection.end();
 
     if (!rows || rows.length === 0) {
       return NextResponse.json({ success: false, error: 'Mentor not found' }, { status: 404 });
@@ -35,8 +33,8 @@ export async function POST(request) {
     return NextResponse.json({
       success: true,
       mentor: {
-        name: mentor.name,
-        email: mentor.email,
+        name: mentor.mentorName,
+        email: mentor.studentEmail,
         domain: mentor.domain
       }
     });
@@ -48,4 +46,4 @@ export async function POST(request) {
       { status: 500 }
     );
   }
-} 
+}

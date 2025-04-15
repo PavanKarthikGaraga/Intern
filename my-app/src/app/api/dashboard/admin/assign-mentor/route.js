@@ -1,4 +1,4 @@
-import getDBConnection  from '@/lib/db';
+import getDBConnection  from '@/config/db';
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { verifyAccessToken } from '@/lib/jwt';
@@ -45,7 +45,7 @@ export async function POST(request) {
 
         // First verify the student exists and get their domain
         const [studentRows] = await db.execute(
-            'SELECT selectedDomain, name FROM registrations WHERE idNumber = ?',
+            'SELECT selectedDomain, name FROM registrations WHERE username = ?',
             [studentId]
         );
 
@@ -72,7 +72,7 @@ export async function POST(request) {
         //     console.log(`Mentor not found in studentMentors table: ${mentorId}, attempting to create`);
         //     // Get potential mentor's details
         //     const [potentialMentorRows] = await db.execute(
-        //         'SELECT name, selectedDomain FROM registrations WHERE idNumber = ?',
+        //         'SELECT name, selectedDomain FROM registrations WHERE username = ?',
         //         [mentorId]
         //     );
             
@@ -91,7 +91,7 @@ export async function POST(request) {
         //     try {
         //         // Update user role to studentMentor
         //         await db.execute(
-        //             "UPDATE users SET role = 'studentMentor' WHERE idNumber = ?",
+        //             "UPDATE users SET role = 'studentMentor' WHERE username = ?",
         //             [mentorId]
         //         );
         //         console.log(`Updated user role to studentMentor for ID: ${mentorId}`);
@@ -152,7 +152,7 @@ export async function POST(request) {
 
         // Also check registrations table
         const [registrationMentorRows] = await db.execute(
-            'SELECT studentMentorId FROM registrations WHERE idNumber = ? AND studentMentorId IS NOT NULL',
+            'SELECT studentMentorId FROM registrations WHERE username = ? AND studentMentorId IS NOT NULL',
             [studentId]
         );
 
@@ -210,7 +210,7 @@ export async function POST(request) {
             
             // Update registrations table
             await db.execute(
-                'UPDATE registrations SET studentMentorId = ? WHERE idNumber = ?',
+                'UPDATE registrations SET studentMentorId = ? WHERE username = ?',
                 [mentorId, studentId]
             );
             console.log(`Updated registrations table for student ${studentId}`);

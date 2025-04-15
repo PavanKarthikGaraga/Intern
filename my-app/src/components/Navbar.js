@@ -12,7 +12,7 @@ export default function Navbar({ title, user }) {
       <div className="header-right">
         <div className="user-info">
           <span>{user?.name}</span>
-          <span className="user-id">ID: {user?.idNumber}</span>
+          <span className="user-id">ID: {user?.username}</span>
         </div>
         <button onClick={logout} className="logout-btn">
           Logout

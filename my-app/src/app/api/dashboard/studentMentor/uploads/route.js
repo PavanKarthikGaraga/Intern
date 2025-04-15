@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import getDBConnection from '@/lib/db';
+import pool from '@/config/db';
 
 export async function POST(request) {
     try {
@@ -19,8 +19,8 @@ export async function POST(request) {
             const [uploads] = await connection.execute(
                 `SELECT u.*, r.name as student_name 
                  FROM uploads u 
-                 JOIN registrations r ON u.idNumber = r.idNumber 
-                 WHERE u.idNumber = ?`,
+                 JOIN registrations r ON u.username = r.username 
+                 WHERE u.username = ?`,
                 [studentId]
             );
 

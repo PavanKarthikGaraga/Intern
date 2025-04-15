@@ -1,4 +1,4 @@
-import getDBConnection from "@/lib/db";
+import { pool } from "@/config/db";  // Use pool from db configuration
 import { sendEmail } from '@/lib/email';
 import { cookies } from 'next/headers';
 import { verifyAccessToken } from '@/lib/jwt';
@@ -18,9 +18,9 @@ export async function GET(request) {
             );
         }
 
-        db = await getDBConnection();
-        const [attendance] = await db.execute(
-            "SELECT day1, day2, day3, day4, day5, day6, day7, day8 FROM attendance WHERE idNumber = ?",
+        // Use pool.query for fetching attendance
+        const [attendance] = await pool.query(
+            "SELECT day1, day2, day3, day4, day5, day6, day7, day8 FROM attendance WHERE username = ?",
             [studentId]
         );
 
@@ -35,8 +35,6 @@ export async function GET(request) {
             JSON.stringify({ success: false, error: err.message }),
             { status: 500, headers: { "Content-Type": "application/json" } }
         );
-    } finally {
-        if (db) await db.end();
     }
 }
 
@@ -74,16 +72,15 @@ export async function POST(request) {
             );
         }
 
-        db = await getDBConnection();
-
+        // Use pool.query for DB interaction
         // Check if previous day's attendance is marked (except for day 1)
         if (dayNumber > 1) {
-            const [prevDayResult] = await db.execute(`
+            const [prevDayResult] = await pool.query(`
                 SELECT day${dayNumber - 1} as prevDay
                 FROM attendance
-                WHERE idNumber = ?
+                WHERE username = ?
             `, [studentId]);
-            
+
             if (!prevDayResult[0] || !prevDayResult[0].prevDay) {
                 return NextResponse.json(
                     { error: 'Previous day\'s attendance must be marked first' },
@@ -93,28 +90,28 @@ export async function POST(request) {
         }
 
         // First, check if an attendance record exists
-        const [existingRecord] = await db.execute(`
-            SELECT idNumber FROM attendance WHERE idNumber = ?
+        const [existingRecord] = await pool.query(`
+            SELECT username FROM attendance WHERE username = ?
         `, [studentId]);
 
         if (existingRecord.length === 0) {
             // Create new record
-            await db.execute(`
-                INSERT INTO attendance (idNumber, day${dayNumber})
+            await pool.query(`
+                INSERT INTO attendance (username, day${dayNumber})
                 VALUES (?, ?)
             `, [studentId, status]);
         } else {
             // Update existing record
-            await db.execute(`
+            await pool.query(`
                 UPDATE attendance
                 SET day${dayNumber} = ?
-                WHERE idNumber = ?
+                WHERE username = ?
             `, [status, studentId]);
         }
 
         // Get student details for email notification
-        const [studentDetails] = await db.execute(`
-            SELECT name, email FROM registrations WHERE idNumber = ?
+        const [studentDetails] = await pool.query(`
+            SELECT name, email FROM registrations WHERE username = ?
         `, [studentId]);
 
         if (studentDetails.length > 0) {
@@ -122,7 +119,7 @@ export async function POST(request) {
             // Send email notification
             await sendEmail(student.email, 'attendanceMarked', {
                 name: student.name,
-                idNumber: studentId,
+                username: studentId,
                 day: dayNumber,
                 status: status === 'P' ? 'Present' : 'Absent',
                 documentUrl: documentUrl || null
@@ -140,7 +137,5 @@ export async function POST(request) {
             { error: 'Failed to mark attendance' },
             { status: 500 }
         );
-    } finally {
-        if (db) await db.end();
     }
-} 
+}

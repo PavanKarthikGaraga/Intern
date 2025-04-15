@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import getDBConnection from "@/lib/db";
+import getDBConnection from "@/config/db";
 import { cookies } from 'next/headers';
 import { verifyAccessToken } from '@/lib/jwt';
 
@@ -19,10 +19,10 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Only admin members can create mentors' }, { status: 403 });
         }
 
-        const { idNumber, name, domain } = await request.json();
+        const { username, name, domain } = await request.json();
 
         // Validate required fields
-        if (!idNumber || !name || !domain) {
+        if (!username || !name || !domain) {
             return NextResponse.json(
                 { success: false, error: "All fields are required" },
                 { status: 400 }
@@ -37,14 +37,14 @@ export async function POST(request) {
         try {
             // Update user role to studentMentor
             await db.execute(
-                "UPDATE users SET role = 'studentMentor' WHERE idNumber = ?",
-                [idNumber]
+                "UPDATE users SET role = 'studentMentor' WHERE username = ?",
+                [username]
             );
 
             // Create entry in studentMentors table
             await db.execute(
                 "INSERT INTO studentMentors (mentorId, name, domain) VALUES (?, ?, ?)",
-                [idNumber, name, domain]
+                [username, name, domain]
             );
 
             // Commit transaction

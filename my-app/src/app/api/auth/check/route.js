@@ -21,7 +21,7 @@ export async function GET() {
             return Response.json(
                 {
                     user: {
-                        idNumber: decoded.idNumber,
+                        username: decoded.username,
                         name: decoded.name,
                         role: decoded.role
                     },

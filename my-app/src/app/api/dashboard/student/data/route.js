@@ -1,7 +1,6 @@
-import getDBConnection from "../../../../../lib/db";
+import { pool } from "../../../../../config/db";
 
 export async function POST(request) {
-    let db;
     try {
         if (!request.body) {
             return new Response(
@@ -11,41 +10,27 @@ export async function POST(request) {
         }
 
         const body = await request.json();
-        const { idNumber } = body;
+        const { username } = body;
 
-        // Enhanced validation
-        if (!idNumber) {
+        // Basic validation
+        if (!username) {
             return new Response(
-                JSON.stringify({ success: false, error: "Missing idNumber" }),
+                JSON.stringify({ success: false, error: "Missing username" }),
                 { status: 400, headers: { "Content-Type": "application/json" } }
             );
         }
 
-        // Convert to string if number is provided
-        const studentId = idNumber.toString();
-
-        // Validate format (assuming student IDs are alphanumeric)
-        // if (!/^[A-Za-z0-9]+$/.test(studentId)) {
-        //     return new Response(
-        //         JSON.stringify({ success: false, error: "Invalid student ID format" }),
-        //         { status: 400, headers: { "Content-Type": "application/json" } }
-        //     );
-        // }
-
-        db = await getDBConnection();
-        if (!db) {
-            throw new Error("Database connection failed");
-        }
+        const userId = username.toString();
 
         const query = `
             SELECT 
-               *
+                * 
             FROM registrations r
-            JOIN users u ON r.idNumber = u.idNumber
-            WHERE r.idNumber = ?;
+            JOIN users u ON r.username = u.username
+            WHERE r.username = ?;
         `;
 
-        const [rows] = await db.execute(query, [studentId]);
+        const [rows] = await pool.query(query, [userId]);
 
         if (rows.length === 0) {
             return new Response(
@@ -68,13 +53,5 @@ export async function POST(request) {
             JSON.stringify({ success: false, error: errorMessage }),
             { status: 500, headers: { "Content-Type": "application/json" } }
         );
-    } finally {
-        if (db) {
-            try {
-                await db.end();
-            } catch (err) {
-                console.error("Error closing database connection:", err);
-            }
-        }
     }
 }

@@ -1,4 +1,4 @@
-import getDBConnection from "@/lib/db";
+import getDBConnection from "@/config/db";
 import { NextResponse } from 'next/server';
 
 export async function POST(request) {
@@ -47,13 +47,13 @@ export async function POST(request) {
             // Fetch students matching criteria
             const [availableStudents] = await db.execute(
                 `SELECT r.*, 
-                    (SELECT COUNT(*) FROM uploads u WHERE u.idNumber = r.idNumber) AS daysCompleted
+                    (SELECT COUNT(*) FROM uploads u WHERE u.username = r.username) AS daysCompleted
                 FROM registrations r
                 WHERE r.selectedDomain = ?
                 AND r.completed = FALSE
                 AND r.studentMentorId IS NULL
-                AND r.idNumber NOT IN (
-                    SELECT idNumber FROM users WHERE role = 'studentMentor'
+                AND r.username NOT IN (
+                    SELECT username FROM users WHERE role = 'studentMentor'
                 )
                 ORDER BY r.createdAt ASC
                 LIMIT ${availableSlots.length}`,
@@ -73,13 +73,13 @@ export async function POST(request) {
                 // Update studentMentors table
                 await db.execute(
                     `UPDATE studentMentors SET ${studentField} = ? WHERE mentorId = ?`,
-                    [student.idNumber, mentorId]
+                    [student.username, mentorId]
                 );
 
                 // Update registrations table
                 await db.execute(
-                    'UPDATE registrations SET studentMentorId = ? WHERE idNumber = ?',
-                    [mentorId, student.idNumber]
+                    'UPDATE registrations SET studentMentorId = ? WHERE username = ?',
+                    [mentorId, student.username]
                 );
             }
 

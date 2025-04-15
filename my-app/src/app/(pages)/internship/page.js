@@ -41,7 +41,7 @@ export default function Register() {
     agreedToRules: false,
     studentInfo: {
       name: '',
-      idNumber: '',
+      username: '',
       email: '',
       branch: '',
       gender: '',
@@ -80,13 +80,13 @@ export default function Register() {
 
   const handleInputChange = (section, field, value) => {
     if (section === 'studentInfo') {
-      if (field === 'idNumber') {
+      if (field === 'username') {
         // When ID changes, update email with default format
         setFormData(prev => ({
           ...prev,
           studentInfo: {
             ...prev.studentInfo,
-            idNumber: value,
+            username: value,
             email: value ? `${value}@kluniversity.in` : ''
           }
         }));
@@ -115,7 +115,7 @@ export default function Register() {
       ...prev,
       studentInfo: {
         ...prev.studentInfo,
-        idNumber: '',
+        username: '',
         email: ''
       }
     }));
@@ -161,7 +161,7 @@ export default function Register() {
       case 5: {
         // Student Information validation
         const studentValidation = [
-          { field: 'idNumber', message: 'Please enter your ID number' },
+          { field: 'username', message: 'Please enter your ID number' },
           { field: 'name', message: 'Please enter your name' },
           { field: 'email', message: 'Please enter your email' },
           { field: 'branch', message: 'Please select your branch' },
@@ -256,7 +256,7 @@ export default function Register() {
   const handleSubmit = async () => {
     try {
       // Basic validation
-      if (!formData.studentInfo.idNumber || !formData.studentInfo.name || !formData.selectedDomain) {
+      if (!formData.studentInfo.username || !formData.studentInfo.name || !formData.selectedDomain) {
         toast.error('Please fill in all required fields');
         return;
       }
@@ -508,10 +508,10 @@ export default function Register() {
                 <input
                   type="text"
                   placeholder="ID Number"
-                  value={formData.studentInfo.idNumber}
-                  onChange={(e) => handleInputChange('studentInfo', 'idNumber', e.target.value)}
+                  value={formData.studentInfo.username}
+                  onChange={(e) => handleInputChange('studentInfo', 'username', e.target.value)}
                 />
-                {formData.studentInfo.idNumber && (
+                {formData.studentInfo.username && (
                   <button 
                     className="delete-button"
                     onClick={handleDeleteId}
@@ -529,7 +529,7 @@ export default function Register() {
                   onChange={(e) => handleInputChange('studentInfo', 'email', e.target.value)}
                 />
                 <small className="email-note">
-                  * Registration confirmation will be sent to your KL University email ({formData.studentInfo.idNumber ? `${formData.studentInfo.idNumber}@kluniversity.in` : 'based on your ID number'})
+                  * Registration confirmation will be sent to your KL University email ({formData.studentInfo.username ? `${formData.studentInfo.username}@kluniversity.in` : 'based on your ID number'})
                 </small>
               </div>
               <input
@@ -579,7 +579,7 @@ export default function Register() {
               <button 
                 className="next-button" 
                 onClick={handleNext}
-                disabled={!formData.studentInfo.name || !formData.studentInfo.idNumber}
+                disabled={!formData.studentInfo.name || !formData.studentInfo.username}
               >
                 Next
               </button>
@@ -706,7 +706,7 @@ export default function Register() {
                 <div className="confirm-grid">
                   <div className="confirm-item">
                     <span>ID Number:</span>
-                    <span>{formData.studentInfo.idNumber}</span>
+                    <span>{formData.studentInfo.username}</span>
                   </div>
                   <div className="confirm-item">
                     <span>Name:</span>

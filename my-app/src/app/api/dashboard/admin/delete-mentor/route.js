@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import getDBConnection from '@/lib/db';
+import getDBConnection from '@/config/db';
 import { cookies } from 'next/headers';
 import { verifyAccessToken } from '@/lib/jwt';
 
@@ -41,7 +41,7 @@ export async function POST(request) {
 
             // Then, update the user's role back to student in users table
             await db.query(
-                'UPDATE users SET role = "student" WHERE idNumber = ?',
+                'UPDATE users SET role = "student" WHERE username = ?',
                 [mentorId]
             );
 

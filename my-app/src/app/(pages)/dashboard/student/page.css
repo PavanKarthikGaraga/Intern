@@ -351,29 +351,29 @@
     font-weight: 700;
 }
 
-.mentor-info-card {
+.lead-info-card {
     background-color: #ffffff;
     padding: 1.5rem;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.mentor-info-card h3 {
+.lead-info-card h3 {
     margin: 0 0 1rem;
     color: #2e7d32;
 }
 
-.mentor-details {
+.lead-details {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
 }
 
-.mentor-details p {
+.lead-details p {
     margin: 0;
 }
 
-.contact-mentor-btn {
+.contact-lead-btn {
     margin-top: 1rem;
     padding: 0.75rem 1.5rem;
     background-color: #2e7d32;
@@ -384,7 +384,7 @@
     font-weight: 500;
 }
 
-.contact-mentor-btn:hover {
+.contact-lead-btn:hover {
     background-color: #1b5e20;
 }
 
@@ -1277,49 +1277,49 @@
   }
 }
 
-/* Mentor Section Styles */
-.mentor-section {
+/* lead Section Styles */
+.lead-section {
   margin-top: 30px;
   background: white;
   border-radius: 8px;
   padding: 20px;
 }
 
-.mentor-section h2 {
+.lead-section h2 {
   color: #000;
   font-size: 20px;
   font-weight: 600;
   margin-bottom: 20px;
 }
 
-.mentor-card {
+.lead-card {
   background: #f0f0f0;
   border-radius: 6px;
   padding: 20px;
 }
 
-.mentor-info {
+.lead-info {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-.mentor-info .info-group {
+.lead-info .info-group {
   margin-bottom: 0;
 }
 
-.mentor-info .info-value {
+.lead-info .info-value {
   background: transparent;
   border: none;
   padding: 0;
 }
 
 @media (max-width: 768px) {
-  .mentor-section {
+  .lead-section {
     padding: 15px;
   }
 
-  .mentor-card {
+  .lead-card {
     padding: 15px;
   }
 }
@@ -1759,3 +1759,10 @@
   margin: 0;
 }
 
+.loading{
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

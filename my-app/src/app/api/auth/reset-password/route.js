@@ -1,5 +1,5 @@
 import { verifyAccessToken } from "../../../../lib/jwt";
-import getDBConnection from "../../../../lib/db";
+import getDBConnection from "../../../../config/db";
 import bcrypt from "bcryptjs";
 
 export async function POST(request) {
@@ -31,8 +31,8 @@ export async function POST(request) {
 
         // Update the user's password
         const [result] = await db.execute(
-            "UPDATE users SET password = ? WHERE idNumber = ?",
-            [hashedPassword, decoded.idNumber]
+            "UPDATE users SET password = ? WHERE username = ?",
+            [hashedPassword, decoded.username]
         );
 
         if (result.affectedRows === 0) {

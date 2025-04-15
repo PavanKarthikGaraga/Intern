@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 // import { b } from 'bcrypt';
 import bcrypt from 'bcryptjs';
-import getDBConnection from '@/lib/db';
+import {pool} from '@/config/db';
 import { verifyAccessToken } from '@/lib/jwt';
 import { cookies } from 'next/headers';
 
@@ -20,22 +20,22 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Only admin members can create admin accounts' }, { status: 403 });
         }
 
-        const { name, idNumber, password } = await request.json();
+        const { name, username, password } = await request.json();
 
         // Validate input
-        if (!name || !idNumber || !password) {
+        if (!name || !username || !password) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
         // Validate ID number format (assuming it should be a number)
-        if (isNaN(idNumber)) {
+        if (isNaN(username)) {
             return NextResponse.json({ error: 'ID Number must be a valid number' }, { status: 400 });
         }
 
         db = await getDBConnection();
 
         // Check if user already exists
-        const [existingUser] = await db.execute('SELECT * FROM users WHERE idNumber = ?', [idNumber]);
+        const [existingUser] = await db.execute('SELECT * FROM users WHERE username = ?', [username]);
         if (existingUser.length > 0) {
             return NextResponse.json({ error: 'User with this ID already exists' }, { status: 400 });
         }
@@ -45,8 +45,8 @@ export async function POST(request) {
 
         // Insert the new admin user
         await db.execute(
-            'INSERT INTO users (idNumber, name, password, role) VALUES (?, ?, ?, ?)',
-            [idNumber, name, hashedPassword, 'admin']
+            'INSERT INTO users (username, name, password, role) VALUES (?, ?, ?, ?)',
+            [username, name, hashedPassword, 'admin']
         );
 
         return NextResponse.json({ 
@@ -91,7 +91,7 @@ export async function GET() {
         }
 
         const [rows] = await db.execute(
-            `SELECT name, idNumber, role 
+            `SELECT name, username, role 
              FROM users 
              WHERE role = 'admin' 
              ORDER BY name ASC`

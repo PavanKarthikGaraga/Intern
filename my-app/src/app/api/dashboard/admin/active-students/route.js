@@ -1,4 +1,4 @@
-import getDBConnection from "@/lib/db";
+import getDBConnection from "@/config/db";
 import { NextResponse } from "next/server";
 import { cookies } from 'next/headers';
 import { verifyAccessToken } from '@/lib/jwt';
@@ -34,9 +34,9 @@ export async function GET(request) {
             SELECT COUNT(*) as total
             FROM registrations r
             WHERE 
-                (r.name LIKE ? OR r.idNumber LIKE ? OR r.selectedDomain LIKE ?)
+                (r.name LIKE ? OR r.username LIKE ? OR r.selectedDomain LIKE ?)
                 AND r.completed = FALSE
-                AND r.idNumber NOT IN (
+                AND r.username NOT IN (
                     SELECT mentorId FROM studentMentors
                 )
             `,
@@ -60,7 +60,7 @@ export async function GET(request) {
                         (CASE WHEN day7 = 'P' THEN 1 ELSE 0 END) +
                         (CASE WHEN day8 = 'P' THEN 1 ELSE 0 END)
                     FROM attendance a
-                    WHERE a.idNumber = r.idNumber
+                    WHERE a.username = r.username
                 ), 0) AS daysCompleted,
 
                 sm.name AS mentorName,
@@ -68,10 +68,10 @@ export async function GET(request) {
 
             FROM registrations r
 
-            LEFT JOIN attendance a ON r.idNumber = a.idNumber
+            LEFT JOIN attendance a ON r.username = a.username
 
             LEFT JOIN studentMentors sm ON 
-                r.idNumber IN (
+                r.username IN (
                     sm.student1Id, sm.student2Id, sm.student3Id,
                     sm.student4Id, sm.student5Id, sm.student6Id,
                     sm.student7Id, sm.student8Id, sm.student9Id,
@@ -79,14 +79,14 @@ export async function GET(request) {
                 )
 
             WHERE 
-                (r.name LIKE ? OR r.idNumber LIKE ? OR r.selectedDomain LIKE ?)
+                (r.name LIKE ? OR r.username LIKE ? OR r.selectedDomain LIKE ?)
                 AND r.completed = FALSE
-                AND r.idNumber NOT IN (
+                AND r.username NOT IN (
                     SELECT mentorId FROM studentMentors
                 )
 
             GROUP BY 
-                r.idNumber, r.name, r.email, r.selectedDomain, 
+                r.username, r.name, r.email, r.selectedDomain, 
                 r.branch, r.gender, r.year, r.phoneNumber,
                 r.residenceType, r.hostelType, r.busRoute,
                 r.country, r.state, r.district, r.pincode,

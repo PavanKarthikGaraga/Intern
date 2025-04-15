@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import getDBConnection from "@/lib/db";
+import getDBConnection from "@/config/db";
 import { cookies } from 'next/headers';
 import { verifyAccessToken } from '@/lib/jwt';
 
@@ -36,7 +36,7 @@ export async function POST(request) {
         try {
             // Check if student exists
             const [studentRows] = await db.execute(
-                'SELECT * FROM registrations WHERE idNumber = ?',
+                'SELECT * FROM registrations WHERE username = ?',
                 [studentId]
             );
 
@@ -86,25 +86,25 @@ export async function POST(request) {
 
             // Delete from attendance table
             await db.execute(
-                'DELETE FROM attendance WHERE idNumber = ?',
+                'DELETE FROM attendance WHERE username = ?',
                 [studentId]
             );
 
             // Delete from uploads table
             await db.execute(
-                'DELETE FROM uploads WHERE idNumber = ?',
+                'DELETE FROM uploads WHERE username = ?',
                 [studentId]
             );
 
             // Delete from registrations table
             await db.execute(
-                'DELETE FROM registrations WHERE idNumber = ?',
+                'DELETE FROM registrations WHERE username = ?',
                 [studentId]
             );
 
             // Delete from users table
             await db.execute(
-                'DELETE FROM users WHERE idNumber = ?',
+                'DELETE FROM users WHERE username = ?',
                 [studentId]
             );
 

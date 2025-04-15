@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import getDBConnection from "@/lib/db";
+import getDBConnection from "@/config/db";
 import { cookies } from 'next/headers';
 import { verifyAccessToken } from '@/lib/jwt';
 
@@ -20,9 +20,9 @@ export async function POST(request) {
         }
 
         db = await getDBConnection();
-        const { idNumber } = await request.json();
+        const { username } = await request.json();
 
-        if (!idNumber) {
+        if (!username) {
             return NextResponse.json(
                 { error: 'Admin ID number is required' },
                 { status: 400 }
@@ -31,8 +31,8 @@ export async function POST(request) {
 
         // Update the user's role to null instead of deleting
         const [result] = await db.execute(
-            'DELETE FROM users WHERE idNumber = ? AND role = ?',
-            [idNumber, 'admin']
+            'DELETE FROM users WHERE username = ? AND role = ?',
+            [username, 'admin']
         );
 
         if (result.affectedRows === 0) {

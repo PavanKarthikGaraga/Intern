@@ -1,4 +1,4 @@
-import getDBConnection from "@/lib/db";
+import getDBConnection from "@/config/db";
 import { NextResponse } from 'next/server';
 
 export async function POST(request) {
@@ -21,7 +21,7 @@ export async function POST(request) {
         try {
             // Get student details from registrations
             const [studentRows] = await db.execute(
-                'SELECT name FROM registrations WHERE idNumber = ?',
+                'SELECT name FROM registrations WHERE username = ?',
                 [studentId]
             );
 
@@ -45,7 +45,7 @@ export async function POST(request) {
 
             // Add new student to the JSON with only required fields
             studentDetails[studentId] = {
-                idNumber: studentId,
+                username: studentId,
                 name: student.name,
                 domain: student.selectedDomain,
                 completionDate: new Date().toISOString(),
@@ -94,7 +94,7 @@ export async function POST(request) {
 
             // Update registrations table to remove mentor reference
             await db.execute(
-                'UPDATE registrations SET studentMentorId = NULL, completed = TRUE  WHERE idNumber = ?',
+                'UPDATE registrations SET studentMentorId = NULL, completed = TRUE  WHERE username = ?',
                 [studentId]
             );
 
