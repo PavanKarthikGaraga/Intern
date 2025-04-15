@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 
 export default function Submissions({ user }) {
-  const [submissions, setSubmissions] = useState(Array(8).fill(false));
+  const [submissions, setSubmissions] = useState(Array(10).fill(false));
   const [student, setStudent] = useState('');
   const [activeAccordion, setActiveAccordion] = useState(null);
   const [submittedLinks, setSubmittedLinks] = useState({});
@@ -59,7 +59,7 @@ export default function Submissions({ user }) {
 
         if (reportsData.success) {
           const submittedDays = reportsData.data.map((report) => report.dayNumber - 1);
-          const updatedSubmissions = Array(8).fill(false);
+          const updatedSubmissions = Array(10).fill(false);
           const links = {};
 
           reportsData.data.forEach((report) => {
@@ -71,8 +71,8 @@ export default function Submissions({ user }) {
           setSubmittedLinks(links);
         }
 
-        // Add fetch attendance data
-        const attendanceResponse = await fetch(`/api/dashboard/studentMentor/attendance?studentId=${user.username}`, {
+        // Fetch attendance data from new endpoint
+        const attendanceResponse = await fetch(`/api/dashboard/student/attendance?username=${user.username}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' }
         });
@@ -104,7 +104,7 @@ export default function Submissions({ user }) {
     return <div className="error">{error}</div>;
   }
 
-  const completedDays = Object.values(attendance).filter(status => status === 'P').length;
+  const completedDays = Object.values(attendance).filter(status => status.status === 'P').length;
 
   const canSubmitDay = (dayIndex) => {
     if (dayIndex === 0) return true;
@@ -135,7 +135,7 @@ export default function Submissions({ user }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           username: user.username,
-          day: index + 1,
+          dayNumber: index + 1,
           link
         })
       });
@@ -170,7 +170,7 @@ export default function Submissions({ user }) {
 
   const getAttendanceStatus = (dayNumber) => {
     const day = `day${dayNumber}`;
-    const status = attendance[day];
+    const status = attendance[day]?.status;
 
     if (!submissions[dayNumber - 1]) {
       return { text: '', className: '' };
@@ -225,7 +225,7 @@ export default function Submissions({ user }) {
           <div className="progress-bar">
             <div 
               className="progress-fill" 
-              style={{ width: `${(submissions.filter(Boolean).length / 8) * 100}%` }}
+              style={{ width: `${(submissions.filter(Boolean).length / 10) * 100}%` }}
             ></div>
           </div>
         </div>
@@ -233,8 +233,8 @@ export default function Submissions({ user }) {
 
       <div className="submissions-layout">
         <div className="days-grid">
-          {Array(8).fill(null).map((_, index) => {
-            const status = attendance[`day${index + 1}`];
+          {Array(10).fill(null).map((_, index) => {
+            const status = attendance[`day${index + 1}`]?.status;
             const isSubmitted = submissions[index];
             const isLocked = !canSubmitDay(index);
             
@@ -277,11 +277,11 @@ export default function Submissions({ user }) {
                 <div className="submission-status">
                   {submissions[activeAccordion] && (
                     <span className={`status-badge ${
-                      attendance[`day${activeAccordion + 1}`] === 'P' ? 'approved' :
-                      attendance[`day${activeAccordion + 1}`] === 'A' ? 'rejected' : 'pending'
+                      attendance[`day${activeAccordion + 1}`]?.status === 'P' ? 'approved' :
+                      attendance[`day${activeAccordion + 1}`]?.status === 'A' ? 'rejected' : 'pending'
                     }`}>
-                      {attendance[`day${activeAccordion + 1}`] === 'P' ? 'Approved' :
-                       attendance[`day${activeAccordion + 1}`] === 'A' ? 'Rejected' : 'Pending Review'}
+                      {attendance[`day${activeAccordion + 1}`]?.status === 'P' ? 'Approved' :
+                       attendance[`day${activeAccordion + 1}`]?.status === 'A' ? 'Rejected' : 'Pending Review'}
                     </span>
                   )}
                 </div>
@@ -313,7 +313,7 @@ export default function Submissions({ user }) {
                     </div>
                   </div>
 
-                  {attendance[`day${activeAccordion + 1}`] === 'A' && (
+                  {attendance[`day${activeAccordion + 1}`]?.status === 'A' && (
                     <div className="resubmission-section">
                       <p className="rejection-note">
                         Your submission has been rejected. Please review and resubmit your report.
@@ -330,7 +330,7 @@ export default function Submissions({ user }) {
                   <div className="submission-notes">
                     <p className="note">
                       <span className="note-icon">ℹ️</span>
-                      {attendance[`day${activeAccordion + 1}`] !== 'A' 
+                      {attendance[`day${activeAccordion + 1}`]?.status !== 'A' 
                         ? "To modify your submission, please contact your student Lead."
                         : "Please ensure your resubmission meets all the requirements."}
                     </p>

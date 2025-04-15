@@ -5,13 +5,13 @@ export async function GET(request) {
     try {
         db = pool;
         const { searchParams } = new URL(request.url);
-        const studentId = searchParams.get('studentId');
+        const username = searchParams.get('username');
 
-        if (!studentId) {
+        if (!username) {
             return new Response(
                 JSON.stringify({ 
                     success: false, 
-                    error: "Student ID is required" 
+                    error: "Username is required" 
                 }),
                 { status: 400, headers: { "Content-Type": "application/json" } }
             );
@@ -24,14 +24,14 @@ export async function GET(request) {
                 day6, day7, day8, day9, day10
             FROM attendance 
             WHERE username = ?`,
-            [studentId]
+            [username]
         );
 
         if (attendance.length === 0) {
             return new Response(
                 JSON.stringify({ 
                     success: false, 
-                    error: "No attendance records found for this student" 
+                    error: "No attendance records found" 
                 }),
                 { status: 404, headers: { "Content-Type": "application/json" } }
             );

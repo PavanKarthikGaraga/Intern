@@ -57,3 +57,68 @@ export async function GET(request) {
         );
     }
 }
+
+export async function POST(request) {
+    let db;
+    try {
+        db = pool;
+        const body = await request.json();
+        const { username, dayNumber, link } = body;
+
+        if (!username || !dayNumber || !link) {
+            return new Response(
+                JSON.stringify({ 
+                    success: false, 
+                    error: "Username, day number, and link are required" 
+                }),
+                { status: 400, headers: { "Content-Type": "application/json" } }
+            );
+        }
+
+        // Check if the day number is valid (1-10)
+        if (dayNumber < 1 || dayNumber > 10) {
+            return new Response(
+                JSON.stringify({ 
+                    success: false, 
+                    error: "Day number must be between 1 and 10" 
+                }),
+                { status: 400, headers: { "Content-Type": "application/json" } }
+            );
+        }
+
+        // First check if a record exists for this username
+        const [existingRecord] = await db.query(
+            "SELECT * FROM uploads WHERE username = ?",
+            [username]
+        );
+
+        if (existingRecord.length === 0) {
+            // Create a new record
+            await db.query(
+                `INSERT INTO uploads (username, day${dayNumber}Link) VALUES (?, ?)`,
+                [username, link]
+            );
+        } else {
+            // Update existing record
+            await db.query(
+                `UPDATE uploads SET day${dayNumber}Link = ? WHERE username = ?`,
+                [link, username]
+            );
+        }
+
+        return new Response(
+            JSON.stringify({
+                success: true,
+                message: "Report submitted successfully"
+            }),
+            { status: 200, headers: { "Content-Type": "application/json" } }
+        );
+
+    } catch (err) {
+        console.error("Error submitting report:", err);
+        return new Response(
+            JSON.stringify({ success: false, error: err.message }),
+            { status: 500, headers: { "Content-Type": "application/json" } }
+        );
+    }
+}
