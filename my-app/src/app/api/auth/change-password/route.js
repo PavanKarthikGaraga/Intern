@@ -12,7 +12,7 @@ export async function POST(request) {
             return Response.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const decoded = verifyAccessToken(accessToken.value);
+        const decoded =await verifyAccessToken(accessToken.value);
         if (!decoded) {
             return Response.json({ error: "Invalid token" }, { status: 401 });
         }
