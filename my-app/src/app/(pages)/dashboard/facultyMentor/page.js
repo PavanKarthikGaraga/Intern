@@ -22,53 +22,50 @@ export default function FacultyMentorDashboard() {
   return (
     <div className="faculty-dashboard">
       <Navbar title="Faculty Mentor Dashboard" user={user} />
-      <div className="dashboard-content">
-        <div className="dashboard-sidebar">
-          <div className="sidebar-header">
-            <h2>Menu</h2>
-          </div>
-          <nav className="sidebar-nav">
-            <button
-              className={`nav-item ${activeSection === 'overview' ? 'active' : ''}`}
-              onClick={() => setActiveSection('overview')}
-            >
-              Overview
-            </button>
-            <button
-              className={`nav-item ${activeSection === 'profile' ? 'active' : ''}`}
-              onClick={() => setActiveSection('profile')}
-            >
-              Profile
-            </button>
-            <button
-              className={`nav-item ${activeSection === 'studentLeads' ? 'active' : ''}`}
-              onClick={() => setActiveSection('studentLeads')}
-            >
-              Student Leads
-            </button>
-            <button
-              className={`nav-item ${activeSection === 'submissions' ? 'active' : ''}`}
-              onClick={() => setActiveSection('submissions')}
-            >
-              Verified Submissions
-            </button>
-            <button
-              className={`nav-item ${activeSection === 'changePassword' ? 'active' : ''}`}
-              onClick={() => setActiveSection('changePassword')}
-            >
-              Change Password
-            </button>
-          </nav>
-        </div>
 
-        <div className="dashboard-main">
-          {activeSection === 'overview' && <Overview user={user} />}
-          {activeSection === 'profile' && <Profile user={user} />}
-          {activeSection === 'studentLeads' && <StudentLeads user={user} />}
-          {activeSection === 'submissions' && <Submissions user={user} />}
-          {activeSection === 'changePassword' && <ChangePassword user={user} />}
-        </div>
+      <div className="dashboard-content">
+        <nav className="dashboard-sidebar">
+          <button
+            className={`sidebar-item ${activeSection === 'overview' ? 'active' : ''}`}
+            onClick={() => setActiveSection('overview')}
+          >
+            <span className="item-label">Overview</span>
+          </button>
+          <button
+            className={`sidebar-item ${activeSection === 'profile' ? 'active' : ''}`}
+            onClick={() => setActiveSection('profile')}
+          >
+            <span className="item-label">Profile</span>
+          </button>
+          <button
+            className={`sidebar-item ${activeSection === 'studentLeads' ? 'active' : ''}`}
+            onClick={() => setActiveSection('studentLeads')}
+          >
+            <span className="item-label">Student Leads</span>
+          </button>
+          <button
+            className={`sidebar-item ${activeSection === 'submissions' ? 'active' : ''}`}
+            onClick={() => setActiveSection('submissions')}
+          >
+            <span className="item-label">Verified Submissions</span>
+          </button>
+          <button
+            className={`sidebar-item ${activeSection === 'changePassword' ? 'active' : ''}`}
+            onClick={() => setActiveSection('changePassword')}
+          >
+            <span className="item-label">Change Password</span>
+          </button>
+        </nav>
+
+        <main className="dashboard-main">
+          {activeSection === 'overview' ? <Overview user={user}/> : 
+           activeSection === 'profile' ? <Profile user={user}/> :
+           activeSection === 'studentLeads' ? <StudentLeads user={user}/> :
+           activeSection === 'submissions' ? <Submissions user={user}/> : 
+            <ChangePassword/>}
+        </main>
       </div>
+
       <Footer />
     </div>
   );

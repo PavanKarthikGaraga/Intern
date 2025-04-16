@@ -10,6 +10,9 @@ export default function StudentLeads() {
     const [totalPages, setTotalPages] = useState(1);
     const [itemsPerPage] = useState(10);
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedLead, setSelectedLead] = useState(null);
+    const [assignedStudents, setAssignedStudents] = useState([]);
+    const [showModal, setShowModal] = useState(false);
 
     useEffect(() => {
         fetchStudentLeads();
@@ -36,6 +39,31 @@ export default function StudentLeads() {
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handleViewStudents = async (leadId) => {
+        try {
+            const response = await fetch(`/api/dashboard/admin/student-leads/${leadId}/students`);
+            if (!response.ok) throw new Error('Failed to fetch assigned students');
+            const data = await response.json();
+            
+            if (data.success) {
+                setAssignedStudents(data.students || []);
+                setSelectedLead(studentLeads.find(lead => lead.id === leadId));
+                setShowModal(true);
+            } else {
+                toast.error(data.error || 'Failed to fetch assigned students');
+            }
+        } catch (error) {
+            console.error('Error fetching assigned students:', error);
+            toast.error('Failed to load assigned students');
+        }
+    };
+
+    const handleCloseModal = () => {
+        setShowModal(false);
+        setSelectedLead(null);
+        setAssignedStudents([]);
     };
 
     const handlePageChange = (newPage) => {
@@ -70,6 +98,7 @@ export default function StudentLeads() {
                                     <th>ID</th>
                                     <th>Username</th>
                                     <th>Name</th>
+                                    <th>Assigned Students</th>
                                     <th>Created At</th>
                                     <th>Last Updated</th>
                                     <th>Actions</th>
@@ -81,6 +110,7 @@ export default function StudentLeads() {
                                         <td>{lead.id}</td>
                                         <td>{lead.username}</td>
                                         <td>{lead.name}</td>
+                                        <td>{lead.assignedStudents || 0}</td>
                                         <td>{new Date(lead.createdAt).toLocaleDateString()}</td>
                                         <td>{new Date(lead.updatedAt).toLocaleDateString()}</td>
                                         <td>
@@ -119,6 +149,47 @@ export default function StudentLeads() {
                 </>
             ) : (
                 <p className="no-leads">No student leads found</p>
+            )}
+
+            {showModal && selectedLead && (
+                <div className="modal-overlay" onClick={handleCloseModal}>
+                    <div className="modal-content" onClick={e => e.stopPropagation()}>
+                        <h3>Students Assigned to {selectedLead.name}</h3>
+                        {assignedStudents.length > 0 ? (
+                            <table className="assigned-students-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Domain</th>
+                                        <th>Branch</th>
+                                        <th>Year</th>
+                                        <th>Days Completed</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {assignedStudents.map((student) => (
+                                        <tr key={student.username}>
+                                            <td>{student.username}</td>
+                                            <td>{student.name}</td>
+                                            <td>{student.selectedDomain}</td>
+                                            <td>{student.branch}</td>
+                                            <td>{student.year}</td>
+                                            <td>{student.daysCompleted || 0}/8</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        ) : (
+                            <p>No students assigned to this lead</p>
+                        )}
+                        <div className="modal-footer">
+                            <button onClick={handleCloseModal} className="close-modal-btn">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

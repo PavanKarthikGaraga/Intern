@@ -118,7 +118,7 @@ export default function CompletedStudents() {
                             <th>ID Number</th>
                             <th>Name</th>
                             <th>Domain</th>
-                            <th>Mentor</th>
+                            <th>Student Lead</th>
                             <th>Completion Date</th>
                             <th>Actions</th>
                         </tr>
@@ -136,7 +136,7 @@ export default function CompletedStudents() {
                                         <td>{student.username}</td>
                                         <td>{student.name}</td>
                                         <td>{student.selectedDomain}</td>
-                                        <td>{student.mentorName || 'Not Assigned'}</td>
+                                        <td>{student.leadName || 'Not Assigned'}</td>
                                         <td>{formatDate(student.completionDate)}</td>
                                         <td>
                                             <button 

@@ -21,25 +21,25 @@ export async function GET(request) {
 
         const { searchParams } = new URL(request.url);
         const searchQuery = searchParams.get('search') || '';
-        const mentorId = searchParams.get('mentorId');
+        const leadId = searchParams.get('leadId');
         const page = parseInt(searchParams.get('page')) || 1;
         const limit = parseInt(searchParams.get('limit')) || 10;
         const offset = (page - 1) * limit;
 
         // db = await getDBConnection();
 
-        // First verify if the mentor exists if mentorId is provided
-        if (mentorId) {
-            const [mentorCheck] = await pool.query(`
-                SELECT mentorId, domain 
-                FROM studentMentors 
-                WHERE mentorId = ?
-            `, [mentorId]);
+        // First verify if the lead exists if leadId is provided
+        if (leadId) {
+            const [leadCheck] = await pool.query(`
+                SELECT id, username 
+                FROM studentLeads 
+                WHERE id = ?
+            `, [leadId]);
 
-            if (!mentorCheck || mentorCheck.length === 0) {
+            if (!leadCheck || leadCheck.length === 0) {
                 return NextResponse.json({
                     success: false,
-                    error: 'Mentor not found'
+                    error: 'Student Lead not found'
                 }, { status: 404 });
             }
         }
@@ -47,18 +47,18 @@ export async function GET(request) {
         let query = `
             SELECT 
                 cs.studentDetails,
-                cs.mentorId,
-                sm.name as mentorName,
-                sm.domain as mentorDomain
+                cs.id,
+                sl.username as leadUsername,
+                sl.name as leadName
             FROM completedStudents cs
-            LEFT JOIN studentMentors sm ON cs.mentorId = sm.mentorId
+            LEFT JOIN studentLeads sl ON cs.id = sl.id
         `;
 
         const queryParams = [];
 
-        if (mentorId) {
-            query += ' WHERE cs.mentorId = ?';
-            queryParams.push(mentorId);
+        if (leadId) {
+            query += ' WHERE cs.id = ?';
+            queryParams.push(leadId);
         }
 
         const [completedStudents] = await pool.query(query, queryParams);
@@ -82,9 +82,9 @@ export async function GET(request) {
                 username,
                 name: details.name,
                 completionDate: details.completionDate,
-                mentorId: record.id,
-                mentorName: record.mentorName,
-                mentorUsername: record.mentorUsername,
+                leadId: record.id,
+                leadName: record.leadName,
+                leadUsername: record.leadUsername,
                 selectedDomain: details.domain
             }));
             allStudents = [...allStudents, ...students];
