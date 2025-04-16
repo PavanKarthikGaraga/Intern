@@ -140,64 +140,231 @@
     font-weight: 700;
 }
 
+/* Profile Section */
+.profile-section {
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin: 20px;
+}
+
+.profile-header {
+    margin-bottom: 20px;
+}
+
+.profile-header h2 {
+    color: #333;
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+/* Profile Navigation Tabs */
+.profile-nav {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 30px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.profile-nav-item {
+    padding: 10px 20px;
+    color: #666;
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: none;
+    background: none;
+    font-size: 16px;
+}
+
+.profile-nav-item.active {
+    color: rgb(151, 0, 3);
+    font-weight: 500;
+}
+
+.profile-nav-item.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: rgb(151, 0, 3);
+}
+
+/* Profile Content */
+.profile-content {
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+}
+
+.info-section {
+    margin-bottom: 30px;
+}
+
+.info-section h3 {
+    color: rgb(151, 0, 3);
+    font-size: 20px;
+    font-weight: 500;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid rgb(151, 0, 3);
+}
+
+.info-grid {
+    display: grid;
+    gap: 20px;
+}
+
+.info-field {
+    margin-bottom: 20px;
+}
+
+.info-label {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+.info-value {
+    color: #333;
+    font-size: 16px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    border: 1px solid #e0e0e0;
+}
+
+.role-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    background-color: #28a745;
+    color: white;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Welcome Section */
+.welcome-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.welcome-text h1 {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+@media (max-width: 768px) {
+    .profile-nav {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .profile-nav-item {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .welcome-section {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* Overview Section */
 .overview-section {
     padding: 20px;
     background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .overview-section h1 {
     font-size: 22px;
-    color: #333;
-    margin-bottom: 10px;
+    font-weight: 600;
+    margin: 0;
+    color: #000;
 }
 
 .role-text {
+    font-size: 14px;
     color: #666;
-    margin-bottom: 20px;
+    margin: 4px 0 20px 0;
 }
 
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    margin-top: 20px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
 }
 
 .stat-card {
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    transition: transform 0.2s ease;
-}
-
-.stat-card:hover {
-    transform: translateY(-2px);
+    background: #f0f0f0;
+    border-radius: 6px;
+    padding: 16px;
 }
 
 .stat-content {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
 }
 
 .stat-content h3 {
-    color: #333;
     font-size: 16px;
-    margin-bottom: 8px;
+    font-weight: 600;
+    color: #000;
+    margin: 0 0 6px 0;
 }
 
-.stat-content p {
-    color: #666;
-    font-size: 14px;
+.stat-content div > p {
+    color: #000;
+    margin: 0;
 }
 
 .stat-icon {
-    font-size: 24px;
-    color: rgb(151, 0, 3);
+    font-size: 20px;
+    color: #000;
+}
+
+.beta-note {
+    color: #666;
+    font-size: 12px;
+    margin: 20px 0 0 0;
+    font-style: italic;
+}
+
+@media (max-width: 768px) {
+    .overview-section {
+        padding: 20px;
+    }
+
+    .welcome-header h1 {
+        font-size: 24px;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .stat-card {
+        padding: 20px;
+    }
 }
 
 /* Students Section */
@@ -1964,17 +2131,13 @@
 
 /* Welcome Header */
 .welcome-header {
-    margin-bottom: 2rem;
-    padding: 1.5rem;
-    background-color: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 24px;
 }
 
 .welcome-header h2 {
     color: rgb(151, 0, 3);
     margin: 0;
-    font-size: 1.8rem;
+    font-size: 28px;
     font-weight: 500;
 }
 
@@ -1983,7 +2146,6 @@
     margin: 0.5rem 0 0 0;
     font-size: 1rem;
 }
-
 
 .admins-table {
     width: 100%;
@@ -2049,7 +2211,6 @@
 
 .add-admin-btn:hover {
     background-color: #005204;
-
 }
 
 /* Admin Modal Styles */
@@ -2170,9 +2331,7 @@
     font-size: 1.2rem;
 }
 
-
 /* Add this to your page.css file */
-
 .delete-admin-btn {
     padding: 8px 16px;
     background-color: #007904;

@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
 import SubmissionModal from './SubmissionModal';
-import './page.css';
+// import './page.css';
 
 export default function Submissions({ user }) {
   const [submissions, setSubmissions] = useState([]);
