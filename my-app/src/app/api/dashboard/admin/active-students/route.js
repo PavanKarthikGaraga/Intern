@@ -1,123 +1,57 @@
-import getDBConnection from "@/config/db";
-import { NextResponse } from "next/server";
-import { cookies } from 'next/headers';
-import { verifyAccessToken } from '@/lib/jwt';
+import { NextResponse } from 'next/server';
+import { pool } from '@/config/db';
 
 export async function GET(request) {
-    let db;
     try {
-        // Check authentication
-        const cookieStore = await cookies();
-        const accessToken = await cookieStore.get('accessToken');
-
-        if (!accessToken?.value) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
-
-        const decoded = await verifyAccessToken(accessToken.value);
-        if (!decoded || decoded.role !== 'admin') {
-            return NextResponse.json({ error: 'Only admin members can access this resource' }, { status: 403 });
-        }
-
         const { searchParams } = new URL(request.url);
-        const search = searchParams.get("search") || "";
-        const page = parseInt(searchParams.get("page")) || 1;
-        const limit = parseInt(searchParams.get("limit")) || 20;
+        const page = parseInt(searchParams.get('page')) || 1;
+        const limit = parseInt(searchParams.get('limit')) || 10;
+        const search = searchParams.get('search') || '';
         const offset = (page - 1) * limit;
-        const searchPattern = `%${search}%`;
 
-        db = await getDBConnection();
+        // Get active students (where completed = false)
+        const [students] = await pool.query(`
+            SELECT 
+                r.id,
+                r.username,
+                r.name,
+                r.selectedDomain,
+                r.branch,
+                r.year,
+                r.leadId,
+                sl.name as leadName,
+                (
+                    SELECT COUNT(*) 
+                    FROM attendance a 
+                    WHERE a.username = r.username AND (a.day1 = 'P' OR a.day2 = 'P' OR a.day3 = 'P' OR 
+                          a.day4 = 'P' OR a.day5 = 'P' OR a.day6 = 'P' OR a.day7 = 'P' OR a.day8 = 'P')
+                ) as daysCompleted
+            FROM registrations r
+            LEFT JOIN studentLeads sl ON r.leadId = sl.username
+            WHERE r.completed = FALSE
+            AND (r.name LIKE ? OR r.username LIKE ? OR r.selectedDomain LIKE ?)
+            ORDER BY r.id DESC
+            LIMIT ? OFFSET ?
+        `, [`%${search}%`, `%${search}%`, `%${search}%`, limit, offset]);
 
-        // Query for total count (without limit/offset)
-        const [countRows] = await db.execute(
-            `
+        // Get total count for pagination
+        const [total] = await pool.query(`
             SELECT COUNT(*) as total
             FROM registrations r
-            WHERE 
-                (r.name LIKE ? OR r.username LIKE ? OR r.selectedDomain LIKE ?)
-                AND r.completed = FALSE
-                AND r.username NOT IN (
-                    SELECT mentorId FROM studentMentors
-                )
-            `,
-            [searchPattern, searchPattern, searchPattern]
-        );
-
-        const total = countRows[0].total;
-
-        // Query for actual paginated results
-        const query = `
-            SELECT 
-                r.*,
-                COALESCE((
-                    SELECT 
-                        (CASE WHEN day1 = 'P' THEN 1 ELSE 0 END) +
-                        (CASE WHEN day2 = 'P' THEN 1 ELSE 0 END) +
-                        (CASE WHEN day3 = 'P' THEN 1 ELSE 0 END) +
-                        (CASE WHEN day4 = 'P' THEN 1 ELSE 0 END) +
-                        (CASE WHEN day5 = 'P' THEN 1 ELSE 0 END) +
-                        (CASE WHEN day6 = 'P' THEN 1 ELSE 0 END) +
-                        (CASE WHEN day7 = 'P' THEN 1 ELSE 0 END) +
-                        (CASE WHEN day8 = 'P' THEN 1 ELSE 0 END)
-                    FROM attendance a
-                    WHERE a.username = r.username
-                ), 0) AS daysCompleted,
-
-                sm.name AS mentorName,
-                sm.mentorId
-
-            FROM registrations r
-
-            LEFT JOIN attendance a ON r.username = a.username
-
-            LEFT JOIN studentMentors sm ON 
-                r.username IN (
-                    sm.student1Id, sm.student2Id, sm.student3Id,
-                    sm.student4Id, sm.student5Id, sm.student6Id,
-                    sm.student7Id, sm.student8Id, sm.student9Id,
-                    sm.student10Id
-                )
-
-            WHERE 
-                (r.name LIKE ? OR r.username LIKE ? OR r.selectedDomain LIKE ?)
-                AND r.completed = FALSE
-                AND r.username NOT IN (
-                    SELECT mentorId FROM studentMentors
-                )
-
-            GROUP BY 
-                r.username, r.name, r.email, r.selectedDomain, 
-                r.branch, r.gender, r.year, r.phoneNumber,
-                r.residenceType, r.hostelType, r.busRoute,
-                r.country, r.state, r.district, r.pincode,
-                r.createdAt, r.updatedAt,
-                sm.name, sm.mentorId
-
-            ORDER BY r.name
-            LIMIT ${limit} OFFSET ${offset};
-        `;
-
-        const [students] = await db.execute(query, [
-            searchPattern,
-            searchPattern,
-            searchPattern,
-        ]);
+            WHERE r.completed = FALSE
+            AND (r.name LIKE ? OR r.username LIKE ? OR r.selectedDomain LIKE ?)
+        `, [`%${search}%`, `%${search}%`, `%${search}%`]);
 
         return NextResponse.json({
             success: true,
             students,
-            page,
-            limit,
-            total, // 👈 this is the new field
-            totalPages: Math.ceil(total / limit),
+            total: total[0].total
         });
     } catch (error) {
-        console.error("Error fetching active students:", error);
+        console.error('Error fetching active students:', error);
         return NextResponse.json(
-            { success: false, error: error.message },
+            { success: false, error: 'Failed to fetch active students' },
             { status: 500 }
         );
-    } finally {
-        if (db) await db.end();
     }
-}
+} 

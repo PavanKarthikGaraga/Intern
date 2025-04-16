@@ -1,107 +1,64 @@
 import { NextResponse } from 'next/server';
-import getDBConnection from '@/config/db';
-import { verifyAccessToken } from '@/lib/jwt';
-import { cookies } from 'next/headers';
+import { pool } from '@/config/db';
 
 export async function GET() {
-    let db;
     try {
-        // Validate admin session using JWT
-        const cookieStore = await cookies();
-        const accessToken = await cookieStore.get('accessToken');
+        // Get total students
+        const [totalStudents] = await pool.query(`
+            SELECT COUNT(*) as total FROM registrations
+        `);
 
-        if (!accessToken?.value) {
-            return NextResponse.json({ 
-                success: false, 
-                error: 'Authentication required. Please login again.' 
-            }, { status: 401 });
-        }
+        // Get active students
+        const [activeStudents] = await pool.query(`
+            SELECT COUNT(*) as total FROM registrations WHERE completed = FALSE
+        `);
 
-        const decoded = await verifyAccessToken(accessToken.value);
-        if (!decoded || decoded.role !== 'admin') {
-            return NextResponse.json({ 
-                success: false, 
-                error: 'Access denied. Only admin members can view statistics.' 
-            }, { status: 403 });
-        }
+        // Get completed students
+        const [completedStudents] = await pool.query(`
+            SELECT COUNT(*) as total FROM registrations WHERE completed = TRUE
+        `);
 
-        // Connect to database
-        db = await getDBConnection();
-        if (!db) {
-            throw new Error('Database connection failed');
-        }
+        // Get total domains
+        const [totalDomains] = await pool.query(`
+            SELECT COUNT(DISTINCT selectedDomain) as total FROM registrations
+        `);
 
-        // Get all students and mentors in parallel for better performance
-        const [students, mentors] = await Promise.all([
-            db.execute('SELECT * FROM registrations'),
-            db.execute('SELECT * FROM studentMentors')
-        ]);
+        // Get total mentors
+        const [totalMentors] = await pool.query(`
+            SELECT COUNT(*) as total FROM facultyMentors
+        `);
 
-        if (!students || !students[0]) {
-            return NextResponse.json({
-                success: false,
-                error: 'Failed to fetch student data'
-            }, { status: 500 });
-        }
-
-        const studentData = students[0];
-        const mentorData = mentors[0];
-
-        // Get unique domains with validation
-        const domains = [...new Set(studentData
-            .map(student => student.selectedDomain)
-            .filter(domain => domain && typeof domain === 'string')
-        )];
-
-        // Calculate domain-wise statistics with validation
-        const studentsPerDomain = domains.reduce((acc, domain) => {
-            const domainStudents = studentData.filter(student => student.selectedDomain === domain);
-            const mentorsInDomain = mentorData.filter(mentor => mentor.domain === domain);
-
-            acc[domain] = {
-                total: domainStudents.length,
-                active: domainStudents.filter(student => !student.completed).length,
-                completed: domainStudents.filter(student => student.completed).length,
-                mentors: mentorsInDomain.length
-            };
-            return acc;
-        }, {});
-
-        // Calculate overall statistics
-        const totalStudents = studentData.length;
-        const activeStudents = studentData.filter(student => !student.completed).length;
-        const completedStudents = studentData.filter(student => student.completed).length;
-        const totalMentors = mentorData.length;
-
-        // Calculate completion rate
-        const completionRate = totalStudents > 0 
-            ? ((completedStudents / totalStudents) * 100).toFixed(2) 
-            : 0;
+        // Get domain-wise progress
+        const [domainProgress] = await pool.query(`
+            SELECT 
+                selectedDomain as domain,
+                COUNT(*) as total,
+                SUM(CASE WHEN completed = FALSE THEN 1 ELSE 0 END) as active,
+                SUM(CASE WHEN completed = TRUE THEN 1 ELSE 0 END) as completed,
+                COUNT(DISTINCT leadId) as mentors
+            FROM registrations
+            GROUP BY selectedDomain
+        `);
 
         return NextResponse.json({
             success: true,
-            totalStudents,
-            activeStudents,
-            completedStudents,
-            totalMentors,
-            completionRate,
-            domains,
-            studentsPerDomain
+            stats: {
+                totalStudents: totalStudents[0].total,
+                activeStudents: activeStudents[0].total,
+                completedStudents: completedStudents[0].total,
+                totalDomains: totalDomains[0].total,
+                totalMentors: totalMentors[0].total,
+                completionRate: totalStudents[0].total > 0 
+                    ? (completedStudents[0].total / totalStudents[0].total) * 100 
+                    : 0
+            },
+            domainProgress
         });
-
     } catch (error) {
-        console.error('Error in admin stats endpoint:', error);
-        return NextResponse.json({
-            success: false,
-            error: 'Internal server error while fetching statistics'
-        }, { status: 500 });
-    } finally {
-        if (db) {
-            try {
-                await db.end();
-            } catch (error) {
-                console.error('Error closing database connection:', error);
-            }
-        }
+        console.error('Error fetching dashboard stats:', error);
+        return NextResponse.json(
+            { success: false, error: 'Failed to fetch dashboard statistics' },
+            { status: 500 }
+        );
     }
 } 

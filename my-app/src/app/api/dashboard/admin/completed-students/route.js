@@ -1,10 +1,10 @@
-import getDBConnection from "@/config/db";
+import {pool} from "@/config/db";
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { verifyAccessToken } from '@/lib/jwt';
 
 export async function GET(request) {
-    let db;
+    // let db;
     try {
         // Check authentication
         const cookieStore = await cookies();
@@ -26,11 +26,11 @@ export async function GET(request) {
         const limit = parseInt(searchParams.get('limit')) || 10;
         const offset = (page - 1) * limit;
 
-        db = await getDBConnection();
+        // db = await getDBConnection();
 
         // First verify if the mentor exists if mentorId is provided
         if (mentorId) {
-            const [mentorCheck] = await db.execute(`
+            const [mentorCheck] = await pool.query(`
                 SELECT mentorId, domain 
                 FROM studentMentors 
                 WHERE mentorId = ?
@@ -61,7 +61,7 @@ export async function GET(request) {
             queryParams.push(mentorId);
         }
 
-        const [completedStudents] = await db.execute(query, queryParams);
+        const [completedStudents] = await pool.query(query, queryParams);
 
         if (completedStudents.length === 0) {
             return NextResponse.json({
@@ -82,9 +82,10 @@ export async function GET(request) {
                 username,
                 name: details.name,
                 completionDate: details.completionDate,
-                mentorId: record.mentorId,
+                mentorId: record.id,
                 mentorName: record.mentorName,
-                selectedDomain: details.domain || record.mentorDomain
+                mentorUsername: record.mentorUsername,
+                selectedDomain: details.domain
             }));
             allStudents = [...allStudents, ...students];
         });
@@ -116,13 +117,5 @@ export async function GET(request) {
             success: false, 
             error: 'Failed to fetch completed students: ' + error.message 
         }, { status: 500 });
-    } finally {
-        if (db) {
-            try {
-                await db.end();
-            } catch (error) {
-                console.error('Error closing database connection:', error);
-            }
-        }
     }
 }
