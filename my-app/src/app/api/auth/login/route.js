@@ -1,45 +1,48 @@
-import { pool } from '../../../../config/db';
+import pool from '../../../../lib/db';
 import { generateAuthTokens } from '../../../../lib/jwt';
 import bcrypt from 'bcryptjs';
 import { cookies } from 'next/headers';
 
 export async function POST(request) {
+    let db;
     try {
         const { username, password } = await request.json();
+        console.log("user",username,password);
 
-        // console.log("username",username);
+        db = await pool.getConnection();
 
-        // Query to find user by username using the pool (connection pool)
-        const [rows] = await pool.query('SELECT * FROM users WHERE username = ?', [username]);
+        // Query to find user by username
+        const [existingUser] = await db.query(
+            'SELECT * FROM users WHERE username = ?',
+            [username]
+        );
 
-        if (!rows || rows.length === 0) {
-            return new Response(
-                JSON.stringify({ error: 'ID Number does not exist' }),
-                { status: 400, headers: { 'Content-Type': 'application/json' } }
-            );
+        // Log existingUser to check what's returned from the DB
+        console.log(existingUser); 
+
+        if (!existingUser || existingUser.length === 0) {
+            return Response.json({
+                error: 'ID Number does not exist'
+            }, { status: 400 });
         }
 
-        const user = rows[0]; // Get the first user, as username is unique
-        
-        // Compare provided password with stored hash
-        const isPasswordValid = await bcrypt.compare(password, user.password);
+        const user = existingUser[0]; // Get first user since username should be unique
 
-        if (!isPasswordValid) {
-            return new Response(
-                JSON.stringify({ error: 'Invalid Password' }),
-                { status: 400, headers: { 'Content-Type': 'application/json' } }
-            );
+        const hashPassword = await bcrypt.compare(password, user.password);
+
+        if (!hashPassword) {
+            return Response.json({
+                error: 'Invalid Password'
+            }, { status: 400 });
         }
 
-        // Generate auth tokens
-        const { accessToken, refreshToken } = await generateAuthTokens({
-            id: user.id,
-            username:user.username,
+        const { accessToken, refreshToken } = await generateAuthTokens({ 
+            username: user.username,
             name: user.name,
-            role: user.role
+            role: user.role 
         });
 
-        // Get cookies instance to set cookies
+        // Get cookies instance
         const cookieStore = await cookies();
 
         // Set access token cookie
@@ -47,7 +50,7 @@ export async function POST(request) {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
-            maxAge: 5 * 60 // 5 minutes
+            maxAge: 5 * 60 
         });
 
         // Set refresh token cookie
@@ -55,26 +58,25 @@ export async function POST(request) {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
-            maxAge: 15 * 60 // 15 minutes
+            maxAge: 15 * 60 
         });
 
-        return new Response(
-            JSON.stringify({
-                message: 'User Successfully Logged In',
-                user: {
-                    id: user.id,
-                    username: user.username,
-                    role: user.role
-                }
-            }),
-            { status: 200, headers: { 'Content-Type': 'application/json' } }
-        );
+        return Response.json({
+            message: "User Successfully Logged In",
+            user: {
+                username: user.username,
+                id: user.id,
+                role: user.role 
+            }
+        }, { status: 200 });
 
     } catch (err) {
-        console.error(err); // Log the error for debugging purposes
-        return new Response(
-            JSON.stringify({ error: err.message }),
-            { status: 500, headers: { 'Content-Type': 'application/json' } }
-        );
+        return Response.json({
+            error: err.message
+        }, { status: 500 });
+    } finally {
+        if (db) {
+            await db.release();
+        }
     }
 }

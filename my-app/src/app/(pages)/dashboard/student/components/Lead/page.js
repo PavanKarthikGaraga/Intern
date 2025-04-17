@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { UserOutlined, IdcardOutlined, MailOutlined, TeamOutlined } from '@ant-design/icons';
 import Loader from '@/app/components/loader/loader';

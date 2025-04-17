@@ -5,7 +5,7 @@ import "./page.css";
 import axios from "axios";
 import toast, { Toaster } from 'react-hot-toast';
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "../../../../context/AuthContext"
 
 const Login = () => {
     const [captcha, setCaptcha] = useState('');
@@ -24,7 +24,6 @@ const Login = () => {
         let captcha = '';
         for (let i = 0; i < 6; i++) {
             captcha += characters.charAt(Math.floor(Math.random() * characters.length));
-            // captcha += " ";
         }
         setCaptcha(captcha);
     };
@@ -101,12 +100,12 @@ const Login = () => {
                         />
                     </div>
                     <div className="form-group-recaptive">
-                        <label className="captcha" onClick={generateCaptcha}>{captcha}</label>
+                        <label className="captcha">{captcha}</label>
                         <input
                             value={captchaInput} 
                             onChange={(e)=>setCaptchaInput(e.target.value)}
                             type="text" 
-                            placeholder="Enter the code "
+                            placeholder="Enter the code above"
                             required
                         />
                     </div>
@@ -115,7 +114,7 @@ const Login = () => {
                         <Link href="/auth/forgot-password">
                             <p>Forgot Password?</p>
                         </Link>
-                        <Link href="/internship">
+                        <Link href="/register">
                             <p>Don't have an account? Register here</p>
                         </Link>
                     </div>

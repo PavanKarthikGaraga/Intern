@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { TeamOutlined, CalendarOutlined, UserOutlined } from '@ant-design/icons';
-import Loader from '@/app/components/loader/loader';
+// import Loader from '@/app/components/loader/loader';
 import toast from 'react-hot-toast';
 
 export default function Overview({ user }) {
@@ -42,17 +42,17 @@ export default function Overview({ user }) {
         }
 
         // Fetch attendance data
-        const attendanceResponse = await fetch(`/api/dashboard/studentMentor/attendance?studentId=${user.username}`, {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' }
-        });
+        // const attendanceResponse = await fetch(`/api/dashboard/studentMentor/attendance?studentId=${user.username}`, {
+        //   method: 'GET',
+        //   headers: { 'Content-Type': 'application/json' }
+        // });
 
-        if (attendanceResponse.ok) {
-          const attendanceData = await attendanceResponse.json();
-          if (attendanceData.success) {
-            setAttendance(attendanceData.data || {});
-          }
-        }
+        // if (attendanceResponse.ok) {
+        //   const attendanceData = await attendanceResponse.json();
+        //   if (attendanceData.success) {
+        //     setAttendance(attendanceData.data || {});
+        //   }
+        // }
 
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -97,7 +97,7 @@ export default function Overview({ user }) {
           <div className="stat-content">
             <div>
               <h3>Days Completed</h3>
-              <p>{completedDays || '0'}/8</p>
+              <p>{completedDays || '0'}/7</p>
             </div>
             <CalendarOutlined className="stat-icon" />
           </div>

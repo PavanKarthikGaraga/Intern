@@ -1,29 +1,65 @@
-'use client';
 import { useState } from 'react';
-import { EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 
 export default function ChangePassword() {
-  const [formData, setFormData] = useState({
+  const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
     newPassword: '',
-    confirmPassword: '',
+    confirmPassword: ''
   });
+  const [passwordError, setPasswordError] = useState('');
+  const [isPasswordLoading, setIsPasswordLoading] = useState(false);
   const [showPasswords, setShowPasswords] = useState({
     current: false,
     new: false,
-    confirm: false,
+    confirm: false
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    setError('');
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    setPasswordError('');
+    setIsPasswordLoading(true);
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordError('New passwords do not match');
+      setIsPasswordLoading(false);
+      return;
+    }
+
+    if (passwordForm.newPassword.length < 6) {
+      setPasswordError('New password must be at least 6 characters long');
+      setIsPasswordLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentPassword: passwordForm.currentPassword,
+          newPassword: passwordForm.newPassword
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success('Password changed successfully');
+        setPasswordForm({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        });
+      } else {
+        throw new Error(data.error || 'Failed to change password');
+      }
+    } catch (error) {
+      toast.error(error.message || 'Failed to change password');
+    } finally {
+      setIsPasswordLoading(false);
+    }
   };
 
   const togglePasswordVisibility = (field) => {
@@ -33,142 +69,94 @@ export default function ChangePassword() {
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    // Validation
-    if (!formData.currentPassword || !formData.newPassword || !formData.confirmPassword) {
-      setError('All fields are required');
-      return;
-    }
-
-    if (formData.newPassword !== formData.confirmPassword) {
-      setError('New passwords do not match');
-      return;
-    }
-
-    if (formData.newPassword.length < 6) {
-      setError('New password must be at least 6 characters long');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError('');
-
-      const response = await fetch('/api/dashboard/studentLead/changePassword', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          currentPassword: formData.currentPassword,
-          newPassword: formData.newPassword,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        toast.success('Password changed successfully');
-        setFormData({
-          currentPassword: '',
-          newPassword: '',
-          confirmPassword: '',
-        });
-      } else {
-        throw new Error(data.error || 'Failed to change password');
-      }
-    } catch (error) {
-      console.error('Error changing password:', error);
-      setError(error.message || 'Failed to change password');
-      toast.error(error.message || 'Failed to change password');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="change-password-section">
-      <h2>Change Password</h2>
-      
-      <form onSubmit={handleSubmit} className="change-password-form">
-        {error && <div className="error-message">{error}</div>}
-        
-        <div className="form-group">
-          <label htmlFor="currentPassword">
-            Current Password <span className="required">*</span>
-          </label>
-          <div className="password-field">
+      <div className="section-header">
+        <h2>Change Password</h2>
+      </div>
+      <div className="change-password-form">
+        <form onSubmit={handlePasswordChange}>
+          {passwordError && (
+            <div className="error-message">{passwordError}</div>
+          )}
+          
+          <div className="form-group">
+            <label htmlFor="currentPassword">Current Password</label>
             <input
               type={showPasswords.current ? "text" : "password"}
               id="currentPassword"
-              name="currentPassword"
-              value={formData.currentPassword}
-              onChange={handleChange}
+              value={passwordForm.currentPassword}
+              onChange={(e) => setPasswordForm({
+                ...passwordForm,
+                currentPassword: e.target.value
+              })}
+              required
             />
             <button
               type="button"
               className="password-toggle"
               onClick={() => togglePasswordVisibility('current')}
+              aria-label={showPasswords.current ? "Hide password" : "Show password"}
             >
-              {showPasswords.current ? <EyeInvisibleOutlined /> : <EyeOutlined />}
+              {showPasswords.current ? <FaEyeSlash /> : <FaEye />}
             </button>
           </div>
-        </div>
 
-        <div className="form-group">
-          <label htmlFor="newPassword">
-            New Password <span className="required">*</span>
-          </label>
-          <div className="password-field">
+          <div className="form-group">
+            <label htmlFor="newPassword">New Password</label>
             <input
               type={showPasswords.new ? "text" : "password"}
               id="newPassword"
-              name="newPassword"
-              value={formData.newPassword}
-              onChange={handleChange}
+              value={passwordForm.newPassword}
+              onChange={(e) => setPasswordForm({
+                ...passwordForm,
+                newPassword: e.target.value
+              })}
+              required
             />
             <button
               type="button"
               className="password-toggle"
               onClick={() => togglePasswordVisibility('new')}
+              aria-label={showPasswords.new ? "Hide password" : "Show password"}
             >
-              {showPasswords.new ? <EyeInvisibleOutlined /> : <EyeOutlined />}
+              {showPasswords.new ? <FaEyeSlash /> : <FaEye />}
             </button>
           </div>
-        </div>
 
-        <div className="form-group">
-          <label htmlFor="confirmPassword">
-            Confirm New Password <span className="required">*</span>
-          </label>
-          <div className="password-field">
+          <div className="form-group">
+            <label htmlFor="confirmPassword">Confirm New Password</label>
             <input
               type={showPasswords.confirm ? "text" : "password"}
               id="confirmPassword"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
+              value={passwordForm.confirmPassword}
+              onChange={(e) => setPasswordForm({
+                ...passwordForm,
+                confirmPassword: e.target.value
+              })}
+              required
             />
             <button
               type="button"
               className="password-toggle"
               onClick={() => togglePasswordVisibility('confirm')}
+              aria-label={showPasswords.confirm ? "Hide password" : "Show password"}
             >
-              {showPasswords.confirm ? <EyeInvisibleOutlined /> : <EyeOutlined />}
+              {showPasswords.confirm ? <FaEyeSlash /> : <FaEye />}
             </button>
           </div>
-        </div>
 
-        <div className="button-group">
-          <button
-            type="submit"
-            className="submit-btn"
-            disabled={loading}
-          >
-            {loading ? 'Changing Password...' : 'Change Password'}
-          </button>
-        </div>
-      </form>
+          <div className="button-group">
+            <button 
+              type="submit" 
+              className="submit-btn"
+              disabled={isPasswordLoading}
+            >
+              {isPasswordLoading ? 'Changing...' : 'Change Password'}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
-} 
+}

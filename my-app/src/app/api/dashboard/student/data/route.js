@@ -1,57 +1,118 @@
-import { pool } from "../../../../../config/db";
+import { NextResponse } from 'next/server';
+import pool from '@/lib/db';
 
 export async function POST(request) {
+    let db;
     try {
         if (!request.body) {
-            return new Response(
-                JSON.stringify({ success: false, error: "Missing request body" }),
-                { status: 400, headers: { "Content-Type": "application/json" } }
+            return NextResponse.json(
+                { success: false, error: "Missing request body" },
+                { status: 400 }
             );
         }
 
         const body = await request.json();
         const { username } = body;
 
-        // Basic validation
         if (!username) {
-            return new Response(
-                JSON.stringify({ success: false, error: "Missing username" }),
-                { status: 400, headers: { "Content-Type": "application/json" } }
+            return NextResponse.json(
+                { success: false, error: "Missing username" },
+                { status: 400 }
             );
         }
 
-        const userId = username.toString();
+        db = await pool.getConnection();
+        if (!db) {
+            throw new Error("Database connection failed");
+        }
 
+        // Query to get student data with mentor and lead information
         const query = `
             SELECT 
-                * 
+                r.*,
+                u.username,
+                u.name,
+                u.role,
+                sl.name as leadName,
+                sl.username,
+                fm.name as mentorName,
+                fm.username as mentorId
             FROM registrations r
             JOIN users u ON r.username = u.username
+            LEFT JOIN studentLeads sl ON r.studentLeadId = sl.username
+            LEFT JOIN facultyMentors fm ON r.facultyMentorId = fm.username
             WHERE r.username = ?;
         `;
 
-        const [rows] = await pool.query(query, [userId]);
+        const [rows] = await db.execute(query, [username]);
 
         if (rows.length === 0) {
-            return new Response(
-                JSON.stringify({ success: false, error: "Student not found" }),
-                { status: 404, headers: { "Content-Type": "application/json" } }
+            return NextResponse.json(
+                { success: false, error: "Student not found" },
+                { status: 404 }
             );
         }
 
-        return new Response(
-            JSON.stringify({ success: true, student: rows[0] }),
-            { status: 200, headers: { "Content-Type": "application/json" } }
-        );
+        // Get attendance data
+        const attendanceQuery = `
+            SELECT 
+                day1, day2, day3, day4, day5, day6, day7
+            FROM attendance
+            WHERE username = ?;
+        `;
 
-    } catch (err) {
-        console.error("Error fetching student data:", err);
-        const errorMessage = err.code === 'ECONNREFUSED' 
-            ? "Database connection failed" 
-            : "Failed to fetch student data";
-        return new Response(
-            JSON.stringify({ success: false, error: errorMessage }),
-            { status: 500, headers: { "Content-Type": "application/json" } }
+        const [attendanceRows] = await db.execute(attendanceQuery, [username]);
+
+        // Get uploads data
+        const uploadsQuery = `
+            SELECT 
+                day1, day2, day3, day4, day5, day6, day7
+            FROM uploads
+            WHERE username = ?;
+        `;
+
+        const [uploadsRows] = await db.execute(uploadsQuery, [username]);
+
+        // Calculate attendance stats
+        const attendance = attendanceRows[0] || {};
+        const attendanceValues = Object.values(attendance);
+        const presentDays = attendanceValues.filter(status => status === 'P').length;
+        const totalDays = attendanceValues.filter(status => status !== null).length;
+
+        // Calculate uploads stats
+        const uploads = uploadsRows[0] || {};
+        const uploadValues = Object.values(uploads);
+        const totalUploads = uploadValues.filter(link => link !== null).length;
+        const lastUpload = uploadValues.filter(link => link !== null).pop() || null;
+
+        // Combine all data
+        const studentData = {
+            ...rows[0],
+            attendance: {
+                totalDays,
+                presentDays,
+                absentDays: totalDays - presentDays,
+                details: attendance
+            },
+            uploads: {
+                totalUploads,
+                lastUpload,
+                details: uploads
+            }
+        };
+
+        return NextResponse.json({
+            success: true,
+            student: studentData
+        });
+
+    } catch (error) {
+        console.error('Error in student data endpoint:', error);
+        return NextResponse.json(
+            { success: false, error: error.message },
+            { status: 500 }
         );
+    } finally {
+        if (db) await db.release();
     }
 }

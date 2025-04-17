@@ -1,10 +1,10 @@
-import {pool} from "@/config/db";
+import getDBConnection from "@/lib/db";
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { verifyAccessToken } from '@/lib/jwt';
 
 export async function GET(request) {
-    // let db;
+    let db;
     try {
         // Check authentication
         const cookieStore = await cookies();
@@ -21,25 +21,25 @@ export async function GET(request) {
 
         const { searchParams } = new URL(request.url);
         const searchQuery = searchParams.get('search') || '';
-        const leadId = searchParams.get('leadId');
+        const mentorId = searchParams.get('mentorId');
         const page = parseInt(searchParams.get('page')) || 1;
         const limit = parseInt(searchParams.get('limit')) || 10;
         const offset = (page - 1) * limit;
 
-        // db = await getDBConnection();
+        db = await getDBConnection();
 
-        // First verify if the lead exists if leadId is provided
-        if (leadId) {
-            const [leadCheck] = await pool.query(`
-                SELECT id, username 
-                FROM studentLeads 
-                WHERE id = ?
-            `, [leadId]);
+        // First verify if the mentor exists if mentorId is provided
+        if (mentorId) {
+            const [mentorCheck] = await db.execute(`
+                SELECT mentorId, domain 
+                FROM studentMentors 
+                WHERE mentorId = ?
+            `, [mentorId]);
 
-            if (!leadCheck || leadCheck.length === 0) {
+            if (!mentorCheck || mentorCheck.length === 0) {
                 return NextResponse.json({
                     success: false,
-                    error: 'Student Lead not found'
+                    error: 'Mentor not found'
                 }, { status: 404 });
             }
         }
@@ -47,21 +47,21 @@ export async function GET(request) {
         let query = `
             SELECT 
                 cs.studentDetails,
-                cs.id,
-                sl.username as leadUsername,
-                sl.name as leadName
+                cs.mentorId,
+                sm.name as mentorName,
+                sm.domain as mentorDomain
             FROM completedStudents cs
-            LEFT JOIN studentLeads sl ON cs.id = sl.id
+            LEFT JOIN studentMentors sm ON cs.mentorId = sm.mentorId
         `;
 
         const queryParams = [];
 
-        if (leadId) {
-            query += ' WHERE cs.id = ?';
-            queryParams.push(leadId);
+        if (mentorId) {
+            query += ' WHERE cs.mentorId = ?';
+            queryParams.push(mentorId);
         }
 
-        const [completedStudents] = await pool.query(query, queryParams);
+        const [completedStudents] = await db.execute(query, queryParams);
 
         if (completedStudents.length === 0) {
             return NextResponse.json({
@@ -78,14 +78,13 @@ export async function GET(request) {
         let allStudents = [];
         completedStudents.forEach(record => {
             const studentDetails = record.studentDetails;
-            const students = Object.entries(studentDetails).map(([username, details]) => ({
-                username,
+            const students = Object.entries(studentDetails).map(([idNumber, details]) => ({
+                idNumber,
                 name: details.name,
                 completionDate: details.completionDate,
-                leadId: record.id,
-                leadName: record.leadName,
-                leadUsername: record.leadUsername,
-                selectedDomain: details.domain
+                mentorId: record.mentorId,
+                mentorName: record.mentorName,
+                selectedDomain: details.domain || record.mentorDomain
             }));
             allStudents = [...allStudents, ...students];
         });
@@ -93,7 +92,7 @@ export async function GET(request) {
         // Filter based on search query
         const filteredStudents = searchQuery 
             ? allStudents.filter(student => 
-                student.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                student.idNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 student.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 student.selectedDomain?.toLowerCase().includes(searchQuery.toLowerCase())
             )
@@ -117,5 +116,13 @@ export async function GET(request) {
             success: false, 
             error: 'Failed to fetch completed students: ' + error.message 
         }, { status: 500 });
+    } finally {
+        if (db) {
+            try {
+                await db.end();
+            } catch (error) {
+                console.error('Error closing database connection:', error);
+            }
+        }
     }
 }

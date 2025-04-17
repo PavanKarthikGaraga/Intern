@@ -1,22 +1,42 @@
 'use client';
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import toast from 'react-hot-toast';
 import './page.css';
-import Overview from './components/overview/page';
-import ChangePassword from './components/changePassword/page';
-import Profile from './components/profile/page';
-import Students from './components/students/page';
-import Loader from '@/app/components/loader/loader';
+// import Loader from '@/components/loader/loader';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Overview from './components/overview/page';
+import Profile from './components/profile/page';
+import ChangePassword from './components/changePassword/page';
+import Students from './components/students/page';
+import CompletedStudents from './components/completedStudents/page';
 
 export default function StudentLeadDashboard() {
   const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [activeSection, setActiveSection] = useState('overview');
 
+  console.log('StudentDashboard mounted with user:', user);
+
   if (!user) {
-    return <Loader />;
+    console.log('No user found, showing loader');
+    // return <Loader />;
   }
+
+  if (loading) {
+    // return <Loader />;
+  }
+
+  if (error) {
+    return <div className="error">{error}</div>;
+  }
+
+  const handleSectionClick = (section) => {
+    console.log('Section clicked:', section);
+    setActiveSection(section);
+  };
 
   return (
     <div className="student-dashboard">
@@ -26,35 +46,42 @@ export default function StudentLeadDashboard() {
         <nav className="dashboard-sidebar">
           <button
             className={`sidebar-item ${activeSection === 'overview' ? 'active' : ''}`}
-            onClick={() => setActiveSection('overview')}
+            onClick={() => handleSectionClick('overview')}
           >
             <span className="item-label">Overview</span>
           </button>
           <button
             className={`sidebar-item ${activeSection === 'profile' ? 'active' : ''}`}
-            onClick={() => setActiveSection('profile')}
+            onClick={() => handleSectionClick('profile')}
           >
             <span className="item-label">Profile</span>
           </button>
           <button
             className={`sidebar-item ${activeSection === 'students' ? 'active' : ''}`}
-            onClick={() => setActiveSection('students')}
+            onClick={() => handleSectionClick('students')}
           >
             <span className="item-label">Students</span>
           </button>
           <button
+            className={`sidebar-item ${activeSection === 'completed-students' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('completed-students')}
+          >
+            <span className="item-label">Completed Students</span>
+          </button>
+          <button
             className={`sidebar-item ${activeSection === 'change-password' ? 'active' : ''}`}
-            onClick={() => setActiveSection('change-password')}
+            onClick={() => handleSectionClick('change-password')}
           >
             <span className="item-label">Change Password</span>
           </button>
         </nav>
 
         <main className="dashboard-main">
-          {activeSection === 'overview' ? <Overview user={user}/> : 
-           activeSection === 'profile' ? <Profile user={user}/> :
-           activeSection === 'students' ? <Students user={user}/> : 
-            <ChangePassword/>}
+          {activeSection === 'overview' ? <Overview user={user} /> : 
+           activeSection === 'profile' ? <Profile user={user} /> :
+           activeSection === 'students' ? <Students user={user} /> :
+           activeSection === 'completed-students' ? <CompletedStudents user={user} /> :
+           <ChangePassword user={user} />}
         </main>
       </div>
 

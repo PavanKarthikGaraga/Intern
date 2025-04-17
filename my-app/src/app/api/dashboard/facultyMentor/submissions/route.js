@@ -1,129 +1,148 @@
 import { NextResponse } from 'next/server';
-import { pool } from '@/config/db';
+import pool from '@/lib/db';
 import { verifyAccessToken } from '@/lib/jwt';
 import { cookies } from 'next/headers';
 
-export async function POST(req) {
-  try {
-    const cookieStore = await cookies();
-    const accessToken = await cookieStore.get('accessToken');
-
-    if (!accessToken?.value) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Access token is missing. Please login again.' 
-      }, { status: 401 });
-    }
-
-    let decoded;
+export async function GET(req) {
     try {
-      decoded = await verifyAccessToken(accessToken.value);
+        const cookieStore = await cookies();
+        const accessToken = await cookieStore.get('accessToken')?.value;
+        
+        if (!accessToken) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const decoded = await verifyAccessToken(accessToken);
+        if (decoded.role !== 'facultyMentor') {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const { username } = decoded.username;
+
+        // Get all verified uploads for students under this faculty mentor
+        const [submissions] = await pool.query(
+            `SELECT 
+                r.username,
+                r.name as studentName,
+                r.studentLeadId,
+                u.day1,
+                u.day2,
+                u.day3,
+                u.day4,
+                u.day5,
+                u.day6,
+                u.day7,
+                u.createdAt,
+                v.day1 as verified1,
+                v.day2 as verified2,
+                v.day3 as verified3,
+                v.day4 as verified4,
+                v.day5 as verified5,
+                v.day6 as verified6,
+                v.day7 as verified7,
+                a.day1 as attendance1,
+                a.day2 as attendance2,
+                a.day3 as attendance3,
+                a.day4 as attendance4,
+                a.day5 as attendance5,
+                a.day6 as attendance6,
+                a.day7 as attendance7
+             FROM registrations r
+             JOIN studentLeads s ON r.studentLeadId = s.username
+             JOIN uploads u ON r.username = u.username
+             JOIN verify v ON r.username = v.username
+             LEFT JOIN attendance a ON r.username = a.username
+             WHERE s.facultyMentorId = ? 
+             AND (
+                 (u.day1 IS NOT NULL AND v.day1 = TRUE) OR
+                 (u.day2 IS NOT NULL AND v.day2 = TRUE) OR
+                 (u.day3 IS NOT NULL AND v.day3 = TRUE) OR
+                 (u.day4 IS NOT NULL AND v.day4 = TRUE) OR
+                 (u.day5 IS NOT NULL AND v.day5 = TRUE) OR
+                 (u.day6 IS NOT NULL AND v.day6 = TRUE) OR
+                 (u.day7 IS NOT NULL AND v.day7 = TRUE)
+             )`,
+            [decoded.username]
+        );
+
+        return NextResponse.json({ submissions });
     } catch (error) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Invalid or expired token. Please login again.' 
-      }, { status: 401 });
+        console.error('Error in submissions GET:', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
+}
 
-    if (!decoded) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Token verification failed. Please login again.' 
-      }, { status: 401 });
+export async function POST(req) {
+    try {
+        const cookieStore = await cookies();
+        const accessToken = await cookieStore.get('accessToken')?.value;
+        
+        if (!accessToken) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const decoded = await verifyAccessToken(accessToken);
+        if (decoded.role !== 'facultyMentor') {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const { username, day, attendance } = await req.json();
+
+        // Check if the day is uploaded and verified
+        const [verifiedUploads] = await pool.query(
+            `SELECT 1 FROM uploads u 
+             JOIN verify v ON u.username = v.username 
+             WHERE u.username = ? 
+             AND u.day${day} IS NOT NULL 
+             AND v.day${day} = TRUE`,
+            [username]
+        );
+
+        if (verifiedUploads.length === 0) {
+            return NextResponse.json(
+                { error: 'Cannot mark attendance for unverified or not uploaded day' }, 
+                { status: 400 }
+            );
+        }
+
+        // For days after day 1, check if previous day is marked as Present
+        if (day > 1) {
+            const [previousDay] = await pool.query(
+                `SELECT day${day - 1} FROM attendance WHERE username = ?`,
+                [username]
+            );
+
+            if (!previousDay.length || previousDay[0][`day${day - 1}`] !== 'P') {
+                return NextResponse.json(
+                    { error: `Cannot mark attendance for Day ${day} until Day ${day - 1} is marked as Present` },
+                    { status: 400 }
+                );
+            }
+        }
+
+        // First check if a record exists
+        const [existingRecord] = await pool.query(
+            'SELECT id FROM attendance WHERE username = ?',
+            [username]
+        );
+
+        if (existingRecord.length > 0) {
+            // Update existing record
+            await pool.query(
+                `UPDATE attendance SET day${day} = ? WHERE username = ?`,
+                [attendance, username]
+            );
+        } else {
+            // Insert new record
+            await pool.query(
+                `INSERT INTO attendance (username, day${day}) VALUES (?, ?)`,
+                [username, attendance]
+            );
+        }
+
+        return NextResponse.json({ message: 'Attendance updated successfully' });
+    } catch (error) {
+        console.error('Error in submissions POST:', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
-
-    const { username } = await req.json();
-
-    // Verify that the user is a faculty mentor
-    const userQuery = 'SELECT role FROM users WHERE username = ?';
-    const [userRows] = await pool.query(userQuery, [username]);
-
-    if (!userRows || userRows.length === 0) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'User not found in database' 
-      }, { status: 404 });
-    }
-
-    const userRole = userRows[0].role;
-
-    if (userRole !== 'facultyMentor') {
-      return NextResponse.json({ 
-        success: false, 
-        error: `User role is ${userRole}, but facultyMentor role is required` 
-      }, { status: 403 });
-    }
-
-    // Get all submissions from students under these leads that are verified by student leads
-    const submissionsQuery = `
-      SELECT 
-        r.username as studentUsername,
-        r.name as studentName,
-        sl.name as leadName,
-        u.day1Link,
-        u.day2Link,
-        u.day3Link,
-        u.day4Link,
-        u.day5Link,
-        u.day6Link,
-        u.day7Link,
-        u.day8Link,
-        u.day9Link,
-        u.day10Link,
-        u.day1Verified,
-        u.day2Verified,
-        u.day3Verified,
-        u.day4Verified,
-        u.day5Verified,
-        u.day6Verified,
-        u.day7Verified,
-        u.day8Verified,
-        u.day9Verified,
-        u.day10Verified,
-        a.day1 as day1Attendance,
-        a.day2 as day2Attendance,
-        a.day3 as day3Attendance,
-        a.day4 as day4Attendance,
-        a.day5 as day5Attendance,
-        a.day6 as day6Attendance,
-        a.day7 as day7Attendance,
-        a.day8 as day8Attendance,
-        a.day9 as day9Attendance,
-        a.day10 as day10Attendance
-      FROM registrations r
-      JOIN studentLeads sl ON r.leadId = sl.username
-      JOIN facultyStudentLeads fsl ON sl.id = fsl.studentLeadId
-      JOIN facultyMentors fm ON fsl.facultyMentorId = fm.id
-      LEFT JOIN uploads u ON r.username = u.username
-      LEFT JOIN attendance a ON r.username = a.username
-      WHERE fm.username = ?
-        AND (
-          u.day1Verified = 1 OR
-          u.day2Verified = 1 OR
-          u.day3Verified = 1 OR
-          u.day4Verified = 1 OR
-          u.day5Verified = 1 OR
-          u.day6Verified = 1 OR
-          u.day7Verified = 1 OR
-          u.day8Verified = 1 OR
-          u.day9Verified = 1 OR
-          u.day10Verified = 1
-        )
-      ORDER BY r.name ASC
-    `;
-
-    const [submissions] = await pool.query(submissionsQuery, [username]);
-
-    return NextResponse.json({
-      success: true,
-      submissions
-    });
-
-  } catch (error) {
-    console.error('Error in faculty mentor submissions API:', error);
-    return NextResponse.json(
-      { success: false, error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
 } 

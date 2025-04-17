@@ -1,11 +1,10 @@
-'use client';
 import { useState, useEffect } from 'react';
-import { UserOutlined } from '@ant-design/icons';
-import Loader from '@/app/components/loader/loader';
+import { UserOutlined, TeamOutlined } from '@ant-design/icons';
+// import Loader from '@/components/loader/loader';
 import toast from 'react-hot-toast';
 
 export default function Profile({ user }) {
-  const [profile, setProfile] = useState(null);
+  const [studentLead, setStudentLead] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -15,12 +14,12 @@ export default function Profile({ user }) {
       return;
     }
 
-    const fetchProfile = async () => {
+    const fetchData = async () => {
       try {
         setError(null);
-        console.log('Fetching profile for student lead:', user.username);
+        console.log('Fetching data for student lead:', user.username);
 
-        const response = await fetch('/api/dashboard/studentLead/profile', {
+        const response = await fetch('/api/dashboard/studentLead/overview', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username: user.username })
@@ -28,32 +27,31 @@ export default function Profile({ user }) {
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+          throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
-        console.log('Received profile data:', data);
+        console.log('Received student lead data:', data);
 
-        if (data.success) {
-          setProfile(data.profile);
+        if (data.success && data.studentLead) {
+          setStudentLead(data.studentLead);
         } else {
-          throw new Error(data.error || 'Failed to fetch profile data');
+          throw new Error(data.error || 'Failed to fetch student lead data');
         }
-
       } catch (error) {
-        console.error('Error fetching profile:', error);
-        setError(error.message || 'Failed to load profile data');
-        toast.error(error.message || 'Failed to load profile data');
+        console.error('Error fetching data:', error);
+        setError(error.message || 'Failed to load student lead data');
+        toast.error(error.message || 'Failed to load student lead data');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProfile();
+    fetchData();
   }, [user]);
 
   if (loading) {
-    return <div className="loading">Loading Profile Data .......</div>;
+    return <div className="loading">Loading Profile data...</div>;
   }
 
   if (error) {
@@ -61,42 +59,50 @@ export default function Profile({ user }) {
   }
 
   return (
-    <div className="profile-section">
-      <div className="profile-header">
-        <h2>Profile Information</h2>
+    <div className="student-profile">
+      <div className="profile-tabs">
+          <UserOutlined className="tab-icon" />
+          Personal Information
       </div>
 
       <div className="profile-content">
-        <div className="info-card">
-          <h3>Personal Information</h3>
-          <div className="info-grid">
-            <div className="info-item">
-              <span className="info-label">Name</span>
-              <span className="info-value">
-                <UserOutlined /> {profile?.name || 'N/A'}
-              </span>
+          <div className="section-content">
+            <div className="section-header">
+              <h1>Personal Information</h1>
+              <div className="header-underline"></div>
             </div>
-            <div className="info-item">
-              <span className="info-label">Username</span>
-              <span className="info-value">
-                <UserOutlined /> {profile?.username || 'N/A'}
-              </span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">Member Since</span>
-              <span className="info-value">
-                {profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString() : 'N/A'}
-              </span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">Last Updated</span>
-              <span className="info-value">
-                {profile?.updatedAt ? new Date(profile.updatedAt).toLocaleDateString() : 'N/A'}
-              </span>
+            <div className="info-container">
+              <div className="info-group">
+                <label>Name</label>
+                <div className="info-value">
+                  {studentLead.name}
+                  <div className="value-underline"></div>
+                </div>
+              </div>
+              <div className="info-group">
+                <label>ID Number</label>
+                <div className="info-value">
+                  {studentLead.username}
+                  <div className="value-underline"></div>
+                </div>
+              </div>
+              <div className="info-group">
+                <label>Faculty Mentor</label>
+                <div className="info-value">
+                  {studentLead.mentorName || 'Not assigned'}
+                  <div className="value-underline"></div>
+                </div>
+              </div>
+              <div className="info-group">
+                <label>Total Students</label>
+                <div className="info-value">
+                  {studentLead.totalStudents || 0}
+                  <div className="value-underline"></div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
       </div>
     </div>
   );
-} 
+}

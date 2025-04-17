@@ -1,13 +1,18 @@
 export const RULES = [
-    'Regular attendance is mandatory with minimum 90% attendance requirement',
-    'Weekly progress reports must be submitted to the assigned mentor',
-    'Professional conduct must be maintained at all internship locations',
-    'Any absence must be informed and approved in advance',
-    'Proper dress code must be followed as per organization guidelines',
-    'Confidentiality of organizational data must be maintained',
-    'Use of mobile phones during working hours is restricted',
-    'Punctuality is mandatory for all sessions and activities'
-  ];
+  'You are required to submit weekly progress reports to your assigned mentor for review.',
+  'Maintain professional conduct at all times, both in remote and in-campus internship locations.',
+  'Notify your StudentLead or FacultyMentor in advance if you need to be absent from any scheduled activities.',
+  'You must maintain confidentiality regarding any organizational or project-related data throughout the internship.',
+  'Adhere to the internship schedule and promptly submit daily reports as required by your mentor.',
+  'Ensure accurate attendance records are marked daily and verified by your StudentLead.',
+  'Store all internship-related documents and materials securely, and do not share them without prior consent from your mentor or admin.',
+  'Your FacultyMentor will provide timely feedback to help you improve and meet your internship goals.',
+  'Engage actively in meetings, discussions, and teamwork to foster collaboration and personal development.',
+  'Any performance concerns or conflicts should be addressed with your StudentLead, FacultyMentor, or Admin as soon as possible.',
+  'You must submit your final internship report by the 10th day for review and approval by the Admin.',
+  'Always communicate respectfully and professionally with peers, mentors, and faculty members.'
+];
+
   
   export const UNDERTAKING_POINTS = [
     'I will maintain the dignity and reputation of KL University during the internship',

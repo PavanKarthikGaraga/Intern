@@ -1,4 +1,4 @@
-import getDBConnection from "@/config/db";
+import getDBConnection from "@/lib/db";
 import { cookies } from 'next/headers';
 import { verifyAccessToken } from '@/lib/jwt';
 import { NextResponse } from 'next/server';
@@ -29,10 +29,10 @@ export async function GET(request) {
 
         // Get total count for pagination
         const countQuery = `
-            SELECT COUNT(DISTINCT r.username) as count
+            SELECT COUNT(DISTINCT r.idNumber) as count
             FROM registrations r
             WHERE r.name LIKE ? 
-            OR r.username LIKE ? 
+            OR r.idNumber LIKE ? 
             OR r.selectedDomain LIKE ?
         `;
         const searchPattern = `%${search}%`;
@@ -52,38 +52,38 @@ export async function GET(request) {
                         (CASE WHEN day7 = 'P' THEN 1 ELSE 0 END) +
                         (CASE WHEN day8 = 'P' THEN 1 ELSE 0 END)
                     FROM attendance a
-                    WHERE a.username = r.username
+                    WHERE a.idNumber = r.idNumber
                     ), 0
                 ) as daysCompleted,
                 MAX(sm.name) as mentorName,
                 MAX(sm.mentorId) as mentorId
             FROM registrations r
-            LEFT JOIN attendance a ON r.username = a.username
+            LEFT JOIN attendance a ON r.idNumber = a.idNumber
             LEFT JOIN studentMentors sm ON 
-                r.username IN (
+                r.idNumber IN (
                     sm.student1Id, sm.student2Id, sm.student3Id,
                     sm.student4Id, sm.student5Id, sm.student6Id,
                     sm.student7Id, sm.student8Id, sm.student9Id,
                     sm.student10Id
                 )
             WHERE (r.name LIKE ? 
-            OR r.username LIKE ? 
+            OR r.idNumber LIKE ? 
             OR r.selectedDomain LIKE ?)
             AND (
                 sm.mentorId IS NOT NULL OR 
                 NOT EXISTS (
                     SELECT 1 FROM users u 
-                    WHERE u.username = r.username 
+                    WHERE u.idNumber = r.idNumber 
                     AND u.role = 'studentMentor'
                 )
             )
             GROUP BY 
-                r.username, r.name, r.email, r.selectedDomain, 
+                r.idNumber, r.name, r.email, r.selectedDomain, 
                 r.branch, r.gender, r.year, r.phoneNumber,
                 r.residenceType, r.hostelType, r.busRoute,
                 r.country, r.state, r.district, r.pincode,
                 r.createdAt, r.updatedAt
-            ORDER BY r.username
+            ORDER BY r.idNumber
             LIMIT ${parseInt(limit)} OFFSET ${parseInt(offset)}
         `;
         
@@ -134,7 +134,7 @@ export async function POST(request) {
 
         const query = `
             SELECT 
-                username,
+                idNumber,
                 day1Link,
                 day2Link,
                 day3Link,
@@ -144,7 +144,7 @@ export async function POST(request) {
                 day7Link,
                 day8Link
             FROM uploads
-            WHERE username = ?
+            WHERE idNumber = ?
         `;
         const [uploads] = await db.execute(query, [studentId]);
 

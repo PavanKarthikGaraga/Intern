@@ -1,70 +1,67 @@
 import { NextResponse } from 'next/server';
-import pool from '@/config/db';
-import { verifyAccessToken } from '@/lib/jwt';
-import { cookies } from 'next/headers';
+import pool from '@/lib/db';
 
-export async function POST(req) {
+export async function POST(request) {
   try {
-    // Get token from cookies and verify
-    const cookieStore = await cookies();
-    const accessToken = await cookieStore.get('accessToken');
+    const { username, day, status } = await request.json();
 
-    if (!accessToken?.value) {
-      return NextResponse.json({ 
-        success: false, 
-        message: 'Authentication token is missing. Please login again.' 
-      }, { status: 401 });
+    // Validate input
+    if (!username || !day || !status) {
+      return NextResponse.json(
+        { success: false, error: 'Missing required fields' },
+        { status: 400 }
+      );
     }
 
-    const decoded = await verifyAccessToken(accessToken.value);
-    if (!decoded) {
-      return NextResponse.json({ 
-        success: false, 
-        message: 'Invalid or expired token. Please login again.' 
-      }, { status: 401 });
+    // Validate day is between 1 and 7
+    if (day < 1 || day > 7) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid day number' },
+        { status: 400 }
+      );
     }
 
-    const { username } = decoded;
-
-    // Verify that the user is a student lead
-    const userQuery = 'SELECT role FROM users WHERE username = ?';
-    const [userResult] = await pool.query(userQuery, [username]);
-
-    if (!userResult || userResult.role !== 'studentLead') {
-      return NextResponse.json({ 
-        success: false, 
-        message: 'You do not have permission to access this resource. Only student leads can access this page.' 
-      }, { status: 403 });
+    // Validate status is either 'P' or 'A'
+    if (status !== 'P' && status !== 'A') {
+      return NextResponse.json(
+        { success: false, error: 'Invalid status' },
+        { status: 400 }
+      );
     }
 
-    // Get attendance records for all students assigned to this lead
-    const attendanceQuery = `
-      SELECT 
-        r.name,
-        r.username,
-        a.date,
-        a.status,
-        a.remarks
-      FROM registrations r
-      LEFT JOIN attendance a ON a.studentUsername = r.username
-      WHERE r.leadId = ?
-      ORDER BY a.date DESC, r.name ASC
-    `;
+    // Get a connection from the pool
+    const db = await pool.getConnection();
 
-    const [attendanceRecords] = await pool.query(attendanceQuery, [username]);
+    try {
+      // Check if attendance record exists
+      const [existingRecords] = await db.execute(
+        'SELECT * FROM attendance WHERE username = ?',
+        [username]
+      );
 
-    return NextResponse.json({
-      success: true,
-      attendance: attendanceRecords
-    });
+      if (existingRecords.length === 0) {
+        // Create new attendance record
+        await db.execute(
+          `INSERT INTO attendance (username, day${day}) VALUES (?, ?)`,
+          [username, status]
+        );
+      } else {
+        // Update existing attendance record
+        await db.execute(
+          `UPDATE attendance SET day${day} = ? WHERE username = ?`,
+          [status, username]
+        );
+      }
 
+      return NextResponse.json({ success: true });
+    } finally {
+      // Release the connection back to the pool
+      db.release();
+    }
   } catch (error) {
-    console.error('Error in student lead attendance API:', error);
+    console.error('Error updating attendance:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        message: 'An unexpected error occurred while fetching attendance records. Please try again later.' 
-      },
+      { success: false, error: 'Failed to update attendance' },
       { status: 500 }
     );
   }

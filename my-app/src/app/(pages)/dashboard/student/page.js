@@ -1,23 +1,42 @@
 'use client';
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import toast from 'react-hot-toast';
 import './page.css';
-import Overview from './components/overview/page';
-import ChangePassword from './components/changePassword/page';
-import Profile from './components/profile/page';
-import Lead from './components/Lead/page';
-import Submissions from './components/submissions/page';
 import Loader from '@/app/components/loader/loader';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Overview from './components/overview/page';
+import Profile from './components/profile/page';
+import ChangePassword from './components/changePassword/page';
+import Lead from './components/Lead/page';
+import Reports from './components/submissions/reports';
 
 export default function StudentDashboard() {
   const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [activeSection, setActiveSection] = useState('overview');
 
+  console.log('StudentDashboard mounted with user:', user);
+
   if (!user) {
+    console.log('No user found, showing loader');
     return <Loader />;
   }
+
+  if (loading) {
+    return <Loader />;
+  }
+
+  if (error) {
+    return <div className="error">{error}</div>;
+  }
+
+  const handleSectionClick = (section) => {
+    console.log('Section clicked:', section);
+    setActiveSection(section);
+  };
 
   return (
     <div className="student-dashboard">
@@ -27,42 +46,42 @@ export default function StudentDashboard() {
         <nav className="dashboard-sidebar">
           <button
             className={`sidebar-item ${activeSection === 'overview' ? 'active' : ''}`}
-            onClick={() => setActiveSection('overview')}
+            onClick={() => handleSectionClick('overview')}
           >
             <span className="item-label">Overview</span>
           </button>
           <button
             className={`sidebar-item ${activeSection === 'profile' ? 'active' : ''}`}
-            onClick={() => setActiveSection('profile')}
+            onClick={() => handleSectionClick('profile')}
           >
             <span className="item-label">Profile</span>
           </button>
           <button
-            className={`sidebar-item ${activeSection === 'studentLead' ? 'active' : ''}`}
-            onClick={() => setActiveSection('studentLead')}
+            className={`sidebar-item ${activeSection === 'mentor' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('mentor')}
           >
-            <span className="item-label">Student Lead</span>
+            <span className="item-label">Mentor</span>
           </button>
           <button
             className={`sidebar-item ${activeSection === 'submissions' ? 'active' : ''}`}
-            onClick={() => setActiveSection('submissions')}
+            onClick={() => handleSectionClick('submissions')}
           >
             <span className="item-label">Daily Reports</span>
           </button>
           <button
             className={`sidebar-item ${activeSection === 'change-password' ? 'active' : ''}`}
-            onClick={() => setActiveSection('change-password')}
+            onClick={() => handleSectionClick('change-password')}
           >
             <span className="item-label">Change Password</span>
           </button>
         </nav>
 
         <main className="dashboard-main">
-          {activeSection === 'overview' ? <Overview user={user}/> : 
-           activeSection === 'profile' ? <Profile user={user}/> :
-           activeSection === 'studentLead' ? <Lead user={user}/> :
-           activeSection === 'submissions' ? <Submissions user={user}/> : 
-            <ChangePassword/>}
+          {activeSection === 'overview' ? <Overview user={user} /> : 
+           activeSection === 'profile' ? <Profile user={user} /> :
+           activeSection === 'mentor' ? <Lead user={user} /> :
+           activeSection === 'submissions' ? <Reports user={user} /> : 
+           <ChangePassword user={user} />}
         </main>
       </div>
 

@@ -1,5 +1,5 @@
 import { verifyAccessToken } from "../../../../lib/jwt";
-import getDBConnection from "../../../../config/db";
+import pool from "../../../../lib/db";
 import bcrypt from "bcryptjs";
 
 export async function POST(request) {
@@ -23,7 +23,7 @@ export async function POST(request) {
             }, { status: 400 });
         }
 
-        db = await getDBConnection();
+        db = await pool.getConnection();
 
         // Hash the new password
         const salt = await bcrypt.genSalt(10);
@@ -54,6 +54,6 @@ export async function POST(request) {
             message: "Failed to reset password" 
         }, { status: 500 });
     } finally {
-        if (db) await db.end();
+        if (db) await db.release();
     }
 } 

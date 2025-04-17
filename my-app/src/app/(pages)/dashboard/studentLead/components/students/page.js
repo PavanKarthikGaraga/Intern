@@ -1,177 +1,167 @@
 'use client';
 import { useState, useEffect } from 'react';
-import Loader from '@/app/components/loader/loader';
+import { useAuth } from '@/context/AuthContext';
+// import Loader from '@/components/loader/loader';
 import toast from 'react-hot-toast';
-import SubmissionModal from './SubmissionModal';
+import './page.css';
+import VerifyModal from './VerifyModal';
 
 export default function Students({ user }) {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [error, setError] = useState(null);
+  const [totalStudents, setTotalStudents] = useState(0);
   const [selectedStudent, setSelectedStudent] = useState(null);
-  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    if (!user?.username) {
-      setLoading(false);
-      return;
-    }
-
     const fetchStudents = async () => {
       try {
-        console.log('Fetching students for lead:', user.username);
-
+        setError(null);
         const response = await fetch('/api/dashboard/studentLead/students', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: user.username })
+          body: JSON.stringify({ username: user?.username })
         });
 
-        const data = await response.json();
-
         if (!response.ok) {
-          toast.error(data.message || 'Failed to fetch students data');
-          return;
+          throw new Error('Failed to fetch students');
         }
 
+        const data = await response.json();
         if (data.success) {
-          setStudents(data.students || []);
-        } else {
-          toast.error(data.message || 'Failed to fetch students data');
+          setStudents(data.students);
+          setTotalStudents(data.total);
         }
-
-      } catch (error) {
-        console.error('Error fetching students:', error);
-        toast.error('An unexpected error occurred while fetching students data');
+      } catch (err) {
+        console.error('Error fetching students:', err);
+        setError(err.message);
+        toast.error(err.message);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchStudents();
+    if (user?.username) {
+      fetchStudents();
+    }
   }, [user]);
 
-  const handleViewStudent = (student) => {
-    setSelectedStudent(student);
-    setShowModal(true);
-  };
-
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setSelectedStudent(null);
-  };
-
-  const handleVerifySubmission = (day, verified) => {
-    // Update the local state to reflect the verification
-    const updatedStudents = students.map(student => {
-      if (student.username === selectedStudent.username) {
-        return {
-          ...student,
-          [`day${day}Verified`]: verified
-        };
+  const getUploadCount = (uploads) => {
+    if (!uploads) return 0;
+    let count = 0;
+    for (let i = 1; i <= 7; i++) {
+      if (uploads[`day${i}`]) {
+        count++;
       }
-      return student;
-    });
-    setStudents(updatedStudents);
+    }
+    return count;
   };
 
-  // Pagination logic
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = students.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(students.length / itemsPerPage);
-
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
+  const handleVerify = (day, status) => {
+    setStudents(prevStudents => 
+      prevStudents.map(student => {
+        if (student.username === selectedStudent.username) {
+          return {
+            ...student,
+            verify: {
+              ...student.verify,
+              [`day${day}`]: status
+            }
+          };
+        }
+        return student;
+      })
+    );
   };
 
   if (loading) {
-    return <div className="loading">Loading Students Data .......</div>;
+    // return <Loader />;
+    return <div className="loading">Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="error">{error}</div>;
   }
 
   return (
-    <div className="students-container">
-      <h2>Your Students</h2>
+    <div className="students-section">
+      <div className="section-header">
+        <h1>Your Students</h1>
+        <div className="total-students">
+          Total Students: {totalStudents}
+        </div>
+      </div>
       
-      {students.length === 0 ? (
-        <div className="no-students">No students assigned to you yet.</div>
-      ) : (
-        <>
-          <div className="table-container">
-            <table className="students-table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Username</th>
-                  <th>Domain</th>
-                  <th>Mode</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentItems.map((student) => (
-                  <tr key={student.username}>
-                    <td>{student.name}</td>
-                    <td>{student.username}</td>
-                    <td>{student.selectedDomain}</td>
-                    <td>{student.mode}</td>
-                    <td>
-                      <button
-                        className="view-btn"
-                        onClick={() => handleViewStudent(student)}
+      <div className="table-container">
+        <table className="students-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>ID</th>
+              {/* <th>Branch</th> */}
+              {/* <th>Year</th> */}
+              <th>Domain</th>
+              <th>Mode</th>
+              <th>Slot</th>
+              <th>Uploads</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {students.map((student) => {
+              const uploadCount = getUploadCount(student.uploads);
+              return (
+                <tr key={student.username}>
+                  <td>{student.name}</td>
+                  <td>{student.username}</td>
+                  {/* <td>{student.branch}</td> */}
+                  {/* <td>{student.year}</td> */}
+                  <td>{student.selectedDomain}</td>
+                  <td>{student.mode}</td>
+                  <td>{student.slot}</td>
+                  <td>
+                    <div className="upload-status">
+                      <span className={`upload-count ${uploadCount === 7 ? 'completed' : 'pending'}`}>
+                        {uploadCount}/7
+                      </span>
+                      {/* <div className="upload-days">
+                        {[1, 2, 3, 4, 5, 6, 7].map(day => (
+                          <span 
+                            key={day} 
+                            className={`upload-day ${student.uploads[`day${day}Link`] ? 'uploaded' : 'pending'}`}
+                            title={student.uploads[`day${day}Link`] ? 'Uploaded' : 'Pending'}
+                          >
+                            {day}
+                          </span>
+                        ))}
+                      </div> */}
+                    </div>
+                  </td>
+                  <td>
+                    <div className="action-buttons">
+                      <button 
+                        className="verify-btn"
+                        onClick={() => setSelectedStudent(student)}
                       >
-                        View Submissions
+                        Verify Docs
                       </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                      {/* <button className="contact-btn">Contact</button> */}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
 
-          {students.length > 0 && (
-            <div className="pagination">
-              <div className="pagination-info">
-                Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, students.length)} of {students.length} students
-              </div>
-              <div className="pagination-controls">
-                <button
-                  className="pagination-btn"
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                >
-                  Previous
-                </button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNumber) => (
-                  <button
-                    key={pageNumber}
-                    className={`pagination-btn ${pageNumber === currentPage ? 'active' : ''}`}
-                    onClick={() => handlePageChange(pageNumber)}
-                  >
-                    {pageNumber}
-                  </button>
-                ))}
-                <button
-                  className="pagination-btn"
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                >
-                  Next
-                </button>
-              </div>
-            </div>
-          )}
-        </>
-      )}
-
-      {showModal && selectedStudent && (
-        <SubmissionModal
+      {selectedStudent && (
+        <VerifyModal
           student={selectedStudent}
-          onClose={handleCloseModal}
-          onVerify={handleVerifySubmission}
+          onClose={() => setSelectedStudent(null)}
+          onVerify={handleVerify}
         />
       )}
     </div>
   );
-} 
+}

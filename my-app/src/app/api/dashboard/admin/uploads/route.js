@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import getDBConnection from '@/config/db';
+import getDBConnection from '@/lib/db';
 import { cookies } from 'next/headers';
 import { verifyAccessToken } from '@/lib/jwt';
 
@@ -31,7 +31,7 @@ export async function GET(request) {
         // Get all uploads for the student
         const [uploads] = await db.execute(`
             SELECT 
-                username,
+                idNumber,
                 day1Link,
                 day2Link,
                 day3Link,
@@ -42,7 +42,7 @@ export async function GET(request) {
                 day8Link,
                 createdAt
             FROM uploads 
-            WHERE username = ?
+            WHERE idNumber = ?
         `, [studentId]);
 
         // Transform the data into the expected format

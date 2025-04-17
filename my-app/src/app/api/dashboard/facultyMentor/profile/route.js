@@ -1,88 +1,44 @@
 import { NextResponse } from 'next/server';
-import { pool } from '@/config/db';
+import pool from '@/lib/db';
 import { verifyAccessToken } from '@/lib/jwt';
 import { cookies } from 'next/headers';
 
-export async function POST(req) {
-  try {
-    const cookieStore = await cookies();
-    const accessToken = await cookieStore.get('accessToken');
-
-    if (!accessToken?.value) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Access token is missing. Please login again.' 
-      }, { status: 401 });
-    }
-
-    let decoded;
+export async function GET(req) {
     try {
-      decoded = await verifyAccessToken(accessToken.value);
+        const cookieStore = await cookies();
+        const accessToken = cookieStore.get('accessToken')?.value;
+        
+        if (!accessToken) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const decoded = await verifyAccessToken(accessToken);
+        if (decoded.role !== 'facultyMentor') {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const connection = await pool.getConnection();
+        try {
+            // Get faculty mentor's basic info
+            const [facultyInfo] = await connection.query(
+                `SELECT f.*, u.name as facultyName, u.role
+                 FROM facultyMentors f 
+                 JOIN users u ON f.username = u.username 
+                 WHERE f.username = ?`,
+                [decoded.username]
+            );
+
+            return NextResponse.json({
+                username: facultyInfo[0].username,
+                name: facultyInfo[0].facultyName,
+                role: facultyInfo[0].role,
+                // domain: facultyInfo[0].domain
+            });
+        } finally {
+            connection.release();
+        }
     } catch (error) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Invalid or expired token. Please login again.' 
-      }, { status: 401 });
+        console.error('Error in profile GET:', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
-
-    if (!decoded) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Token verification failed. Please login again.' 
-      }, { status: 401 });
-    }
-
-    const { username } = await req.json();
-
-    // Verify that the user is a faculty mentor
-    const userQuery = 'SELECT role FROM users WHERE username = ?';
-    const [userRows] = await pool.query(userQuery, [username]);
-
-    if (!userRows || userRows.length === 0) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'User not found in database' 
-      }, { status: 404 });
-    }
-
-    const userRole = userRows[0].role;
-
-    if (userRole !== 'facultyMentor') {
-      return NextResponse.json({ 
-        success: false, 
-        error: `User role is ${userRole}, but facultyMentor role is required` 
-      }, { status: 403 });
-    }
-
-    // Get faculty mentor profile
-    const profileQuery = `
-      SELECT 
-        u.username,
-        u.name,
-        u.createdAt
-      FROM users u
-      WHERE u.username = ?
-    `;
-
-    const [profileRows] = await pool.query(profileQuery, [username]);
-
-    if (!profileRows || profileRows.length === 0) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Profile not found' 
-      }, { status: 404 });
-    }
-
-    return NextResponse.json({
-      success: true,
-      profile: profileRows[0]
-    });
-
-  } catch (error) {
-    console.error('Error in faculty mentor profile API:', error);
-    return NextResponse.json(
-      { success: false, error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
 } 

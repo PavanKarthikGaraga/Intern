@@ -1,85 +1,94 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { UserOutlined } from '@ant-design/icons';
 import toast from 'react-hot-toast';
-// import './page.css';
 
 export default function Profile({ user }) {
-  const [profile, setProfile] = useState(null);
+  const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchProfileData = async () => {
       try {
+        setError(null);
         const response = await fetch('/api/dashboard/facultyMentor/profile', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: user.username })
+          credentials: 'include'
         });
 
-        const data = await response.json();
-
         if (!response.ok) {
-          throw new Error(data.error || 'Failed to fetch profile');
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to fetch profile data');
         }
 
-        if (data.success) {
-          setProfile(data.profile);
-        }
-      } catch (error) {
-        console.error('Error fetching profile:', error);
-        toast.error(error.message || 'Failed to fetch profile');
+        const data = await response.json();
+        setProfileData(data);
+      } catch (err) {
+        console.error('Error fetching profile data:', err);
+        setError(err.message);
+        toast.error(err.message);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProfile();
-  }, [user.username]);
+    if (user?.username) {
+      fetchProfileData();
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
 
   if (loading) {
-    return <div className="loading">Loading profile...</div>;
+    return <div className="loading">Loading Profile data...</div>;
   }
 
-  if (!profile) {
-    return <div className="error">Failed to load profile</div>;
+  if (error) {
+    return <div className="error">{error}</div>;
+  }
+
+  if (!profileData) {
+    return <div className="no-data">No profile data available</div>;
   }
 
   return (
-    <div className="profile-section">
-      <h2>Profile</h2>
-      <div className="profile-card">
-        <div className="profile-header">
-          <h3>{profile.name}</h3>
-          <span className="role-badge">Faculty Mentor</span>
-        </div>
-        <div className="profile-details">
-          <div className="detail-group">
-            <label>Username</label>
-            <p>{profile.username}</p>
+    <div className="student-profile">
+      <div className="profile-tabs">
+        <UserOutlined className="tab-icon" />
+        Personal Information
+      </div>
+
+      <div className="profile-content">
+        <div className="section-content">
+          <div className="section-header">
+            <h1>Personal Information</h1>
+            <div className="header-underline"></div>
           </div>
-          <div className="detail-group">
-            <label>Email</label>
-            <p>{profile.email}</p>
-          </div>
-          <div className="detail-group">
-            <label>Phone</label>
-            <p>{profile.phone}</p>
-          </div>
-          <div className="detail-group">
-            <label>College</label>
-            <p>{profile.college}</p>
-          </div>
-          <div className="detail-group">
-            <label>Department</label>
-            <p>{profile.department}</p>
-          </div>
-          <div className="detail-group">
-            <label>Joined On</label>
-            <p>{new Date(profile.createdAt).toLocaleDateString()}</p>
+          <div className="info-container">
+            <div className="info-group">
+              <label>Name</label>
+              <div className="info-value">
+                {profileData.name}
+                <div className="value-underline"></div>
+              </div>
+            </div>
+            <div className="info-group">
+              <label>Username</label>
+              <div className="info-value">
+                {profileData.username}
+                <div className="value-underline"></div>
+              </div>
+            </div>
+            <div className="info-group">
+              <label>Role</label>
+              <div className="info-value">
+                {profileData.role}
+                <div className="value-underline"></div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
-} 
+}

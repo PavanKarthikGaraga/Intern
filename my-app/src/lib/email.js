@@ -195,7 +195,7 @@ const emailTemplates = {
           <p>As a registered member, you are now officially part of a diverse community committed to excellence, innovation, and social impact. The Smart Village Revolution program is designed to foster holistic growth by providing you with opportunities to collaborate, lead, and excel in your chosen areas of interest.</p>
           <p><strong>Your Registration Details:</strong></p>
           <ul>
-            <li><strong>ID Number:</strong> ${userData.username}</li>
+            <li><strong>ID Number:</strong> ${userData.idNumber}</li>
             <li><strong>Selected Domain:</strong> ${userData.selectedDomain}</li>
             <li><strong>Branch:</strong> ${userData.branch}</li>
             <li><strong>Year:</strong> ${userData.year}</li>
@@ -627,7 +627,7 @@ const emailTemplates = {
           <p>Your attendance for <strong>Day ${studentData.day || 'N/A'}</strong> has been marked as <span class="status-badge ${studentData.status === 'Present' ? 'status-present' : 'status-absent'}">${studentData.status || 'Not Specified'}</span>.</p>
           
           <div class="details-box">
-            <p><strong>ID Number:</strong> ${studentData.username || 'N/A'}</p>
+            <p><strong>ID Number:</strong> ${studentData.idNumber || 'N/A'}</p>
             <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
             <p><strong>Status:</strong> ${studentData.status || 'Not Specified'}</p>
           </div>

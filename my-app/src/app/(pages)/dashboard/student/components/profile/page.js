@@ -181,7 +181,7 @@ export default function Profile({ user }) {
                   <label>Hostel</label>
                   <div className="info-value">
                     <HomeOutlined className="info-icon" />
-                    {student.hostelType}
+                    {student.hostelName}
                     <div className="value-underline"></div>
                   </div>
                 </div>
