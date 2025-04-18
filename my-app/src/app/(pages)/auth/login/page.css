@@ -4,26 +4,31 @@
     justify-content: center;
     align-items: center;
     background-color: #f0f7f0;
+    padding: 1rem;
+    box-sizing: border-box;
+    width: 100%;
+    overflow-x: hidden;
 }
 
 .login-component-in {
     width: 100%;
-    max-width: 27.5rem;
-    padding: 0 1.5rem;
+    padding: 0 1rem;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .login-header {
     text-align: center;
-    /* margin-bottom: 3rem; */
     padding: 1rem;
     width: 100%;
 }
 
 .login-header h1 {
-    font-size: 2.375rem;
+    font-size: clamp(1.5rem, 5vw, 2.375rem);
     color: #333333;
     font-weight: 700;
     letter-spacing: -0.03125rem;
+    margin-bottom: 0.5rem;
 }
 
 .login-header h1 span {
@@ -37,6 +42,7 @@
 
 .form-group {
     margin-bottom: 1.25rem;
+    position: relative;
 }
 
 .form-group label {
@@ -48,7 +54,7 @@
     padding: 1rem;
     border: 0.09375rem solid #eaeaea;
     border-radius: 0.5rem;
-    font-size: 0.9375rem;
+    font-size: 1rem;
     color: #333333;
     font-weight: 400;
     transition: border-color 0.15s ease;
@@ -56,7 +62,7 @@
 
 .form-group input::placeholder {
     color: #666666;
-    font-size: 0.9375rem;
+    font-size: 1rem;
 }
 
 .form-group input:focus {
@@ -73,10 +79,14 @@
     padding: 1rem;
     border-radius: 0.5rem;
     border: 0.09375rem solid #eaeaea;
+    flex-wrap: wrap;
+    box-sizing: border-box;
 }
 
 .form-group-recaptive label {
-    min-width: 6.25rem;
+    min-width: auto;
+    width: 100%;
+    max-width: 6.25rem;
     text-align: center;
     font-size: 1.125rem;
     font-family: monospace;
@@ -84,18 +94,21 @@
     letter-spacing: 0.1875rem;
     font-weight: 500;
     background: white;
-    padding: 0.5rem;
+    padding: 1rem;
     border-radius: 0.375rem;
     border: 0.09375rem solid #eaeaea;
+    box-sizing: border-box;
 }
 
 .form-group-recaptive input {
     flex: 1;
+    min-width: 0;
     padding: 1rem;
     border: 0.09375rem solid #eaeaea;
     border-radius: 0.5rem;
-    font-size: 0.9375rem;
+    font-size: 1rem;
     background: white;
+    box-sizing: border-box;
 }
 
 .form-group-recaptive input:focus {
@@ -110,11 +123,21 @@
     color: white;
     border: none;
     border-radius: 0.5rem;
-    font-size: 0.9375rem;
+    font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
     margin-bottom: 1.5rem;
     transition: background-color 0.15s ease;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.form-group-button button:disabled {
+    opacity: 0.8;
+    cursor: not-allowed;
 }
 
 .form-group-button button:hover {
@@ -139,6 +162,97 @@
     color: rgb(151, 0, 3);
 }
 
-.captcha{
+.captcha {
     user-select: none;
+}
+
+.loader {
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 0.125rem solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s ease-in-out infinite;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #666666;
+    padding: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.password-toggle:hover {
+    color: rgb(151, 0, 3);
+}
+
+.password-toggle svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Media Queries */
+@media screen and (min-width: 36rem) {
+    .login-component-in {
+        width: 80%;
+        padding: 0 1.5rem;
+        margin: 0 auto;
+    }
+
+    .form-group-recaptive {
+        flex-wrap: nowrap;
+    }
+
+    .form-group-recaptive label {
+        width: auto;
+    }
+}
+
+@media screen and (min-width: 48rem) {
+    .login-component-in {
+        width: 60%;
+    }
+
+    .login-header h1 {
+        font-size: clamp(2rem, 4vw, 2.5rem);
+    }
+
+    .form-group input,
+    .form-group-recaptive input {
+        font-size: 1.125rem;
+    }
+
+    .form-group-button button {
+        font-size: 1.125rem;
+    }
+}
+
+@media screen and (min-width: 64rem) {
+    .login-component-in {
+        width: 40%;
+    }
+
+    /* .form-group-recaptive {
+        padding: 1.25rem;
+    } */
+}
+
+@media screen and (min-width: 80rem) {
+    .login-component-in {
+        width: 30%;
+    }
 }

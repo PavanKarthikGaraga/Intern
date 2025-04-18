@@ -1,4 +1,4 @@
-import getDBConnection from '../../../../lib/db';
+import pool from '../../../../lib/db';
 import { generateAuthTokens } from '../../../../lib/jwt';
 import { sendEmail } from '../../../../lib/email';
 
@@ -7,7 +7,7 @@ export async function POST(request) {
     try {
         const { email } = await request.json();
         
-        db = await getDBConnection();
+        db = await pool.getConnection();
 
         // Find user by email
         const [users] = await db.query(
@@ -19,7 +19,7 @@ export async function POST(request) {
             // Return success even if email doesn't exist for security
             return Response.json({
                 success: true,
-                message: "If an account exists with this email, you will receive password reset instructions."
+                message: "No Account found."
             });
         }
 
@@ -27,19 +27,19 @@ export async function POST(request) {
 
         // Generate a temporary token for password reset
         const { accessToken } = await generateAuthTokens({
-            idNumber: user.idNumber,
+            username: user.username,
             type: 'password_reset'
         });
 
         // Create reset link
-        const resetLink = `http://localhost:3000//auth/reset-password?token=${accessToken}`;
+        const resetLink = `http://localhost:3000/auth/reset-password?token=${accessToken}`;
 
         // Send reset email
         await sendEmail(email, 'forgotPassword', resetLink);
 
         return Response.json({
             success: true,
-            message: "If an account exists with this email, you will receive password reset instructions."
+            message: "Mail sent"
         });
 
     } catch (error) {
@@ -49,6 +49,6 @@ export async function POST(request) {
             error: "Failed to process password reset request"
         }, { status: 500 });
     } finally {
-        if (db) await db.end();
+        if (db) await db.release();
     }
 } 

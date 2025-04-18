@@ -1,7 +1,7 @@
 import { Poppins } from "next/font/google";
 import "./globals.css";
 // import PropTypes from 'prop-types';
-import { AuthProvider } from "@/context/AuthContext";
+import { AuthProvider } from "../context/AuthContext";
 import { Toaster } from 'react-hot-toast';
 
 const poppins = Poppins({

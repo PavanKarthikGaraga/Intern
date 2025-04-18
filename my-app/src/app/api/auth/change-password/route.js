@@ -1,7 +1,7 @@
 import { verifyAccessToken } from "../../../../lib/jwt";
 import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
-import getDBConnection from "../../../../lib/db";
+import pool from "../../../../lib/db";
 
 export async function POST(request) {
     try {
@@ -17,7 +17,7 @@ export async function POST(request) {
             return Response.json({ error: "Invalid token" }, { status: 401 });
         }
 
-        if (!decoded?.idNumber) {
+        if (!decoded?.username) {
             return Response.json({ error: "Invalid token data" }, { status: 401 });
         }
 
@@ -35,13 +35,13 @@ export async function POST(request) {
             }, { status: 400 });
         }
 
-        const db = await getDBConnection();
+        const db = await pool.getConnection();
 
         try {
             // Get current user's password hash
             const [user] = await db.execute(
-                "SELECT password FROM users WHERE idNumber = ?",
-                [decoded.idNumber]
+                "SELECT password FROM users WHERE username = ?",
+                [decoded.username]
             );
 
             if (!user || user.length === 0) {
@@ -65,8 +65,8 @@ export async function POST(request) {
 
             // Update password
             await db.execute(
-                "UPDATE users SET password = ? WHERE idNumber = ?",
-                [hashedPassword, decoded.idNumber]
+                "UPDATE users SET password = ? WHERE username = ?",
+                [hashedPassword, decoded.username]
             );
 
             return Response.json({ 
@@ -74,7 +74,7 @@ export async function POST(request) {
             }, { status: 200 });
 
         } finally {
-            await db.end();
+            await db.release();
         }
 
     } catch (error) {

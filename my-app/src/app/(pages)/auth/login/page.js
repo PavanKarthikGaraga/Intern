@@ -1,43 +1,47 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import "./page.css";
 import axios from "axios";
 import toast, { Toaster } from 'react-hot-toast';
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "../../../../context/AuthContext"
 
 const Login = () => {
     const [captcha, setCaptcha] = useState('');
-    const [idNumber, setIdNumber] = useState('');
+    const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [captchaInput, setCaptchaInput] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const router = useRouter();
     const { setIsAuthenticated, checkAuth } = useAuth();
 
-    useEffect(() => {
-        generateCaptcha();
-    }, []);
-
-    const generateCaptcha = () => {
+    const generateCaptcha = useCallback(() => {
         const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
         let captcha = '';
         for (let i = 0; i < 6; i++) {
             captcha += characters.charAt(Math.floor(Math.random() * characters.length));
         }
         setCaptcha(captcha);
-    };
+    }, []);
+
+    useEffect(() => {
+        generateCaptcha();
+    }, [generateCaptcha]);
     
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (isSubmitting) return;
 
         if (captchaInput.toLowerCase() !== captcha.toLowerCase()) {
             toast.error('Incorrect captcha');
+            generateCaptcha();
             return;
         }
 
+        setIsSubmitting(true);
         try {
-
             const response = await fetch('/api/auth/login', {
                 method: 'POST',
                 headers: {
@@ -45,25 +49,32 @@ const Login = () => {
                 },
                 credentials: 'include',
                 body: JSON.stringify({
-                    idNumber,
+                    username,
                     password
                 })
             });
             
-            
             const data = await response.json();
             
             if (response.ok) {
-                await checkAuth(); // This will set the user and isAuthenticated state
+                await checkAuth();
                 toast.success('Login successful');
                 router.push(`/dashboard/${data.user.role}`);
             } else {
                 toast.error(data.error || 'Login failed');
+                generateCaptcha();
             }
         } catch (error) {
             console.log('Login error:', error);
             toast.error('Login failed');
+            generateCaptcha();
+        } finally {
+            setIsSubmitting(false);
         }
+    };
+
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
     };
 
     return (
@@ -71,33 +82,54 @@ const Login = () => {
             {/* <Toaster position="top-center" /> */}
             <div className="login-component-in">
                 <div className="login-header">
-                    <h1>Smart Village <span>Revolution</span></h1>
+                    <h1>Social Internship <span>dashboard</span></h1>
                     <h2>Please sign in to continue</h2>
                 </div>
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
-                        <label htmlFor="idNumber">ID Number</label>
+                        <label htmlFor="username">ID Number</label>
                         <input 
                             type="text" 
-                            id="idNumber" 
-                            value={idNumber} 
+                            id="username" 
+                            value={username} 
                             autoComplete="Id-Number"
-                            onChange={(e)=>setIdNumber(e.target.value)} 
+                            onChange={(e)=>setUsername(e.target.value)} 
                             placeholder="Enter your ID number"
                             required
+                            disabled={isSubmitting}
                         />
                     </div>
                     <div className="form-group">
                         <label htmlFor="password">Password</label>
                         <input 
-                            type="text" 
+                            type={showPassword ? "text" : "password"} 
                             value={password} 
                             autoComplete="current-password"
                             onChange={(e)=>setPassword(e.target.value)} 
                             id="password" 
                             placeholder="Enter your password"
                             required
+                            disabled={isSubmitting}
                         />
+                        <button 
+                            type="button" 
+                            className="password-toggle"
+                            onClick={togglePasswordVisibility}
+                            disabled={isSubmitting}
+                        >
+                            {showPassword ? (
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M3.53 2.47a.75.75 0 00-1.06 1.06l18 18a.75.75 0 101.06-1.06l-18-18zM22.676 12.553a11.249 11.249 0 01-2.631 4.31l-3.099-3.099a5.25 5.25 0 00-6.71-6.71L7.759 4.577a11.217 11.217 0 014.242-.827c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113z" />
+                                    <path d="M15.75 12c0 .18-.013.357-.037.53l-4.244-4.243A3.75 3.75 0 0115.75 12zM12.53 15.713l-4.243-4.244a3.75 3.75 0 004.243 4.243z" />
+                                    <path d="M6.75 12c0-.619.107-1.213.304-1.764l-3.1-3.1a11.25 11.25 0 00-2.63 4.31c-.12.362-.12.752 0 1.114 1.489 4.467 5.704 7.69 10.675 7.69 1.5 0 2.933-.294 4.242-.827l-2.477-2.477A5.25 5.25 0 016.75 12z" />
+                                </svg>
+                            ) : (
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 15a3 3 0 100-6 3 3 0 000 6z" />
+                                    <path fillRule="evenodd" d="M1.323 11.447C2.811 6.976 7.028 3.75 12.001 3.75c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113-1.487 4.471-5.705 7.697-10.677 7.697-4.97 0-9.186-3.223-10.675-7.69a1.762 1.762 0 010-1.113zM17.25 12a5.25 5.25 0 11-10.5 0 5.25 5.25 0 0110.5 0z" clipRule="evenodd" />
+                                </svg>
+                            )}
+                        </button>
                     </div>
                     <div className="form-group-recaptive">
                         <label className="captcha">{captcha}</label>
@@ -107,14 +139,22 @@ const Login = () => {
                             type="text" 
                             placeholder="Enter the code above"
                             required
+                            disabled={isSubmitting}
                         />
                     </div>
                     <div className="form-group-button">
-                        <button type="submit">Sign In</button>
-                        <Link href="/auth/forgot-password">
+                        <button type="submit" disabled={isSubmitting}>
+                            {isSubmitting ? (
+                                <>
+                                    <span className="loader"></span>
+                                    Signing in...
+                                </>
+                            ) : 'Sign In'}
+                        </button>
+                        <Link href="/auth/forgot-password" prefetch={true}>
                             <p>Forgot Password?</p>
                         </Link>
-                        <Link href="/internship">
+                        <Link href="/register" prefetch={true}>
                             <p>Don't have an account? Register here</p>
                         </Link>
                     </div>

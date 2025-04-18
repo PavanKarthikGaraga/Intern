@@ -1,151 +1,176 @@
-import getDBConnection from "../../../../../lib/db";
+import pool from "../../../../../lib/db";
+import { cookies } from 'next/headers';
+import { verifyAccessToken } from '@/lib/jwt';
+import { NextResponse } from 'next/server';
 
 export async function POST(request) {
-    let db;
     try {
-        db = await getDBConnection();
-        const { idNumber, day, link } = await request.json();
+        const cookieStore = await cookies();
+        const accessToken = await cookieStore.get('accessToken');
 
-        if (!idNumber || !day || !link) {
+        if (!accessToken?.value) {
+            return NextResponse.json({ 
+                success: false, 
+                error: 'Authentication required. Please login again.' 
+            }, { status: 401 });
+        }
+
+        const decoded = await verifyAccessToken(accessToken.value);
+        if (!decoded || decoded.role !== 'student') {
+            return NextResponse.json({ 
+                success: false, 
+                error: 'Access denied. Only students can submit reports.' 
+            }, { status: 403 });
+        }
+
+        let db;
+        try {
+            db = await pool.getConnection();
+            const { username, day, link } = await request.json();
+            if(username !== decoded.username) {
+                return new Response(
+                    JSON.stringify({ success: false, error: "You cannot submit reports for other" }),
+                    { status: 400, headers: { "Content-Type": "application/json" } }
+                );
+            }
+
+            if (!username || !day || !link) {
+                return new Response(
+                    JSON.stringify({ success: false, error: "Missing required fields" }),
+                    { status: 400, headers: { "Content-Type": "application/json" } }
+                );
+            }
+
+            // Check if the student already has an entry
+            const checkQuery = `SELECT username FROM uploads WHERE username = ?`;
+            const [existing] = await db.execute(checkQuery, [username]);
+
+            const dayColumn = `day${day}`;
+
+            if (existing.length === 0) {
+                // Create new record
+                const insertQuery = `INSERT INTO uploads (username, ${dayColumn}) VALUES (?, ?)`;
+                await db.execute(insertQuery, [username, link]);
+            } else {
+                // Update existing record
+                const updateQuery = `UPDATE uploads SET ${dayColumn} = ? WHERE username = ?`;
+                await db.execute(updateQuery, [link, username]);
+            }
+
             return new Response(
-                JSON.stringify({ success: false, error: "Missing required fields" }),
-                { status: 400, headers: { "Content-Type": "application/json" } }
+                JSON.stringify({ success: true, message: "Report submitted successfully" }),
+                { status: 200, headers: { "Content-Type": "application/json" } }
             );
+
+        } catch (err) {
+            console.error("Error submitting report", err);
+            return new Response(
+                JSON.stringify({ success: false, error: err.message }),
+                { status: 500, headers: { "Content-Type": "application/json" } }
+            );
+        } finally {
+            if (db) await db.release();
         }
-
-        // Check if the student already has an entry
-        const checkQuery = `SELECT idNumber FROM uploads WHERE idNumber = ?`;
-        const [existing] = await db.execute(checkQuery, [idNumber]);
-
-        const dayColumn = `day${day}Link`;
-
-        if (existing.length === 0) {
-            // Create new record
-            const insertQuery = `INSERT INTO uploads (idNumber, ${dayColumn}) VALUES (?, ?)`;
-            await db.execute(insertQuery, [idNumber, link]);
-        } else {
-            // Update existing record
-            const updateQuery = `UPDATE uploads SET ${dayColumn} = ? WHERE idNumber = ?`;
-            await db.execute(updateQuery, [link, idNumber]);
-        }
-
-        return new Response(
-            JSON.stringify({ success: true, message: "Report submitted successfully" }),
-            { status: 200, headers: { "Content-Type": "application/json" } }
-        );
-
     } catch (err) {
-        console.error("Error submitting report", err);
-        return new Response(
-            JSON.stringify({ success: false, error: err.message }),
-            { status: 500, headers: { "Content-Type": "application/json" } }
-        );
-    } finally {
-        if (db) await db.end();
+        console.error("Error in POST route", err);
+        return NextResponse.json({ 
+            success: false, 
+            error: 'An error occurred. Please try again later.' 
+        }, { status: 500 });
     }
 }
 
 // GET Route: Fetch all reports submitted by a student
 export async function GET(request) {
-    let db;
     try {
-        db = await getDBConnection();
+        const cookieStore = await cookies();
+        const accessToken = await cookieStore.get('accessToken');
 
-        // Extract query parameters from the request URL
-        const { searchParams } = new URL(request.url);
-        const idNumber = searchParams.get('idNumber');
-
-        if (!idNumber) {
-            return new Response(
-                JSON.stringify({ success: false, error: "Student ID is required" }),
-                { status: 400, headers: { "Content-Type": "application/json" } }
-            );
+        if (!accessToken?.value) {
+            return NextResponse.json({ 
+                success: false, 
+                error: 'Authentication required. Please login again.' 
+            }, { status: 401 });
         }
 
-        const query = `
-            SELECT 
-                idNumber,
-                CASE WHEN day1Link IS NOT NULL THEN 1 ELSE NULL END as dayNumber,
-                day1Link as link,
-                createdAt
-            FROM uploads 
-            WHERE idNumber = ? AND day1Link IS NOT NULL
-            UNION ALL
-            SELECT 
-                idNumber,
-                CASE WHEN day2Link IS NOT NULL THEN 2 ELSE NULL END,
-                day2Link,
-                createdAt
-            FROM uploads 
-            WHERE idNumber = ? AND day2Link IS NOT NULL
-            UNION ALL
-            SELECT 
-                idNumber,
-                CASE WHEN day3Link IS NOT NULL THEN 3 ELSE NULL END,
-                day3Link,
-                createdAt
-            FROM uploads 
-            WHERE idNumber = ? AND day3Link IS NOT NULL
-            UNION ALL
-            SELECT 
-                idNumber,
-                CASE WHEN day4Link IS NOT NULL THEN 4 ELSE NULL END,
-                day4Link,
-                createdAt
-            FROM uploads 
-            WHERE idNumber = ? AND day4Link IS NOT NULL
-            UNION ALL
-            SELECT 
-                idNumber,
-                CASE WHEN day5Link IS NOT NULL THEN 5 ELSE NULL END,
-                day5Link,
-                createdAt
-            FROM uploads 
-            WHERE idNumber = ? AND day5Link IS NOT NULL
-            UNION ALL
-            SELECT 
-                idNumber,
-                CASE WHEN day6Link IS NOT NULL THEN 6 ELSE NULL END,
-                day6Link,
-                createdAt
-            FROM uploads 
-            WHERE idNumber = ? AND day6Link IS NOT NULL
-            UNION ALL
-            SELECT 
-                idNumber,
-                CASE WHEN day7Link IS NOT NULL THEN 7 ELSE NULL END,
-                day7Link,
-                createdAt
-            FROM uploads 
-            WHERE idNumber = ? AND day7Link IS NOT NULL
-            UNION ALL
-            SELECT 
-                idNumber,
-                CASE WHEN day8Link IS NOT NULL THEN 8 ELSE NULL END,
-                day8Link,
-                createdAt
-            FROM uploads 
-            WHERE idNumber = ? AND day8Link IS NOT NULL
-            ORDER BY dayNumber ASC
-        `;
-        const [reports] = await db.execute(query, Array(8).fill(idNumber));
+        const decoded = await verifyAccessToken(accessToken.value);
+        if (!decoded || decoded.role !== 'student') {
+            return NextResponse.json({ 
+                success: false, 
+                error: 'Access denied. Only students can view reports.' 
+            }, { status: 403 });
+        }
 
-        return new Response(
-            JSON.stringify({ 
-                success: true, 
-                data: reports,
-                message: "Reports fetched successfully"
-            }),
-            { status: 200, headers: { "Content-Type": "application/json" } }
-        );
+        let db;
+        try {
+            db = await pool.getConnection();
 
+            // Extract query parameters from the request URL
+            const { searchParams } = new URL(request.url);
+            const username = searchParams.get('username');
+
+            if (!username) {
+                return new Response(
+                    JSON.stringify({ success: false, error: "Student username is required" }),
+                    { status: 400, headers: { "Content-Type": "application/json" } }
+                );
+            }
+
+            // First, get the uploads data
+            const [uploads] = await db.execute(
+                `SELECT * FROM uploads WHERE username = ?`,
+                [username]
+            );
+
+            if (uploads.length === 0) {
+                return new Response(
+                    JSON.stringify({ 
+                        success: true, 
+                        data: [],
+                        message: "No reports found"
+                    }),
+                    { status: 200, headers: { "Content-Type": "application/json" } }
+                );
+            }
+
+            // Transform the data into the required format
+            const reports = [];
+            const upload = uploads[0];
+
+            for (let day = 1; day <= 7; day++) {
+                const dayColumn = `day${day}`;
+                if (upload[dayColumn]) {
+                    reports.push({
+                        dayNumber: day,
+                        link: upload[dayColumn],
+                        createdAt: upload.createdAt
+                    });
+                }
+            }
+
+            return new Response(
+                JSON.stringify({ 
+                    success: true, 
+                    data: reports,
+                    message: "Reports fetched successfully"
+                }),
+                { status: 200, headers: { "Content-Type": "application/json" } }
+            );
+
+        } catch (err) {
+            console.error("Error fetching reports:", err);
+            return new Response(
+                JSON.stringify({ success: false, error: err.message }),
+                { status: 500, headers: { "Content-Type": "application/json" } }
+            );
+        } finally {
+            if (db) await db.release();
+        }
     } catch (err) {
-        console.error("Error fetching reports:", err);
-        return new Response(
-            JSON.stringify({ success: false, error: err.message }),
-            { status: 500, headers: { "Content-Type": "application/json" } }
-        );
-    } finally {
-        if (db) await db.end();
+        console.error("Error in GET route", err);
+        return NextResponse.json({ 
+            success: false, 
+            error: 'An error occurred. Please try again later.' 
+        }, { status: 500 });
     }
 }

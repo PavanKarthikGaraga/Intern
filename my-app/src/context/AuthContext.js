@@ -13,11 +13,17 @@ export function AuthProvider({children}) {
 
     const checkAuth = async () => {
         try {
+            // Check if we have a cached valid auth state
+            if (isAuthenticated && user) {
+                return true;
+            }
+
             // First check if user is valid
             const checkResponse = await fetch("/api/auth/check", {
                 method: "GET",
                 credentials: 'include',
                 headers: { "Content-Type": "application/json" },
+                cache: 'no-store' // Prevent caching of auth check
             });
             
             const checkData = await checkResponse.json();
@@ -28,6 +34,7 @@ export function AuthProvider({children}) {
                     method: "GET",
                     credentials: 'include',
                     headers: { "Content-Type": "application/json" },
+                    cache: 'no-store' // Prevent caching of refresh
                 });
                 
                 const refreshData = await refreshResponse.json();
@@ -103,31 +110,54 @@ export function AuthProvider({children}) {
 
     // Initial auth check
     useEffect(() => {
-        checkAuth().finally(() => setIsLoading(false));
+        let mounted = true;
+        
+        const initializeAuth = async () => {
+            try {
+                await checkAuth();
+            } finally {
+                if (mounted) {
+                    setIsLoading(false);
+                }
+            }
+        };
+
+        initializeAuth();
+
+        return () => {
+            mounted = false;
+        };
     }, []);
 
     // Handle automatic token refresh
     useEffect(() => {
         let intervalId;
+        let mounted = true;
 
         const refreshToken = async () => {
-            const success = await checkAuth();
-            if (!success) {
-                clearInterval(intervalId);
-                toast.error("Session expired. Please login again.");
-                router.replace('/auth/login');
+            if (!mounted) return;
+            
+            // Only refresh if we're actually authenticated
+            if (isAuthenticated && user) {
+                const success = await checkAuth();
+                if (!success) {
+                    clearInterval(intervalId);
+                    toast.error("Session expired. Please login again.");
+                    router.replace('/auth/login');
+                }
             }
         };
 
         if (isAuthenticated) {
-            // Check auth every 4.5 minutes (access token is 5 minutes)
-            intervalId = setInterval(refreshToken, 270000);
+            // Increase the interval to 8 minutes (access token is 5 minutes)
+            intervalId = setInterval(refreshToken, 480000);
         }
 
         return () => {
+            mounted = false;
             if (intervalId) clearInterval(intervalId);
         };
-    }, [isAuthenticated, router]);
+    }, [isAuthenticated, router, user]);
 
     return (
         <AuthContext.Provider value={{ 

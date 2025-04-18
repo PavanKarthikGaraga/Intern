@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server';
-import getDBConnection from '@/lib/db';
+import pool from '@/lib/db';
 import { verifyAccessToken } from '@/lib/jwt';
 import { cookies } from 'next/headers';
 
 export async function GET() {
-    let db;
     try {
         // Validate admin session using JWT
         const cookieStore = await cookies();
@@ -25,83 +24,124 @@ export async function GET() {
             }, { status: 403 });
         }
 
-        // Connect to database
-        db = await getDBConnection();
-        if (!db) {
-            throw new Error('Database connection failed');
-        }
-
-        // Get all students and mentors in parallel for better performance
-        const [students, mentors] = await Promise.all([
-            db.execute('SELECT * FROM registrations'),
-            db.execute('SELECT * FROM studentMentors')
-        ]);
-
-        if (!students || !students[0]) {
+        // Get stats from the stats table
+        const [statsResult] = await pool.query('SELECT * FROM stats ORDER BY id DESC LIMIT 1');
+        
+        // If no stats found, return empty stats
+        if (!statsResult || statsResult.length === 0) {
             return NextResponse.json({
-                success: false,
-                error: 'Failed to fetch student data'
-            }, { status: 500 });
+                success: true,
+                stats: {
+                    overview: {
+                        totalStudents: 0,
+                        totalCompleted: 0,
+                        totalActive: 0,
+                        completionRate: "0.00"
+                    },
+                    slots: {
+                        slot1: { total: 0, remote: 0, incampus: 0 },
+                        slot2: { total: 0, remote: 0, incampus: 0 },
+                        slot3: { total: 0, remote: 0, incampus: 0 },
+                        slot4: { total: 0, remote: 0, incampus: 0 }
+                    },
+                    modes: {
+                        remote: 0,
+                        incampus: 0
+                    },
+                    domainStats: [],
+                    modeStats: []
+                }
+            });
         }
 
-        const studentData = students[0];
-        const mentorData = mentors[0];
+        const stats = statsResult[0];
 
-        // Get unique domains with validation
-        const domains = [...new Set(studentData
-            .map(student => student.selectedDomain)
-            .filter(domain => domain && typeof domain === 'string')
-        )];
+        // Get domain-wise statistics
+        const [domainStats] = await pool.query(`
+            SELECT 
+                selectedDomain,
+                COUNT(*) as total,
+                SUM(CASE WHEN completed = 1 THEN 1 ELSE 0 END) as completed,
+                SUM(CASE WHEN completed = 0 THEN 1 ELSE 0 END) as active
+            FROM registrations 
+            GROUP BY selectedDomain
+        `);
 
-        // Calculate domain-wise statistics with validation
-        const studentsPerDomain = domains.reduce((acc, domain) => {
-            const domainStudents = studentData.filter(student => student.selectedDomain === domain);
-            const mentorsInDomain = mentorData.filter(mentor => mentor.domain === domain);
-
-            acc[domain] = {
-                total: domainStudents.length,
-                active: domainStudents.filter(student => !student.completed).length,
-                completed: domainStudents.filter(student => student.completed).length,
-                mentors: mentorsInDomain.length
-            };
-            return acc;
-        }, {});
-
-        // Calculate overall statistics
-        const totalStudents = studentData.length;
-        const activeStudents = studentData.filter(student => !student.completed).length;
-        const completedStudents = studentData.filter(student => student.completed).length;
-        const totalMentors = mentorData.length;
-
-        // Calculate completion rate
-        const completionRate = totalStudents > 0 
-            ? ((completedStudents / totalStudents) * 100).toFixed(2) 
-            : 0;
+        // Get mode-wise statistics
+        const [modeStats] = await pool.query(`
+            SELECT 
+                mode,
+                COUNT(*) as total,
+                SUM(CASE WHEN completed = 1 THEN 1 ELSE 0 END) as completed,
+                SUM(CASE WHEN completed = 0 THEN 1 ELSE 0 END) as active
+            FROM registrations 
+            GROUP BY mode
+        `);
 
         return NextResponse.json({
             success: true,
-            totalStudents,
-            activeStudents,
-            completedStudents,
-            totalMentors,
-            completionRate,
-            domains,
-            studentsPerDomain
+            stats: {
+                overview: {
+                    totalStudents: stats.totalStudents,
+                    totalCompleted: stats.totalCompleted,
+                    totalActive: stats.totalActive,
+                    completionRate: ((stats.totalCompleted / stats.totalStudents) * 100).toFixed(2)
+                },
+                slots: {
+                    slot1: {
+                        total: stats.slot1,
+                        remote: stats.slot1Remote,
+                        incampus: stats.slot1Incamp
+                    },
+                    slot2: {
+                        total: stats.slot2,
+                        remote: stats.slot2Remote,
+                        incampus: stats.slot2Incamp
+                    },
+                    slot3: {
+                        total: stats.slot3,
+                        remote: stats.slot3Remote,
+                        incampus: stats.slot3Incamp
+                    },
+                    slot4: {
+                        total: stats.slot4,
+                        remote: stats.slot4Remote,
+                        incampus: stats.slot4Incamp
+                    }
+                },
+                modes: {
+                    remote: stats.remote,
+                    incampus: stats.incampus
+                },
+                domainStats: domainStats || [],
+                modeStats: modeStats || []
+            }
         });
 
     } catch (error) {
         console.error('Error in admin stats endpoint:', error);
         return NextResponse.json({
-            success: false,
-            error: 'Internal server error while fetching statistics'
-        }, { status: 500 });
-    } finally {
-        if (db) {
-            try {
-                await db.end();
-            } catch (error) {
-                console.error('Error closing database connection:', error);
+            success: true,
+            stats: {
+                overview: {
+                    totalStudents: 0,
+                    totalCompleted: 0,
+                    totalActive: 0,
+                    completionRate: "0.00"
+                },
+                slots: {
+                    slot1: { total: 0, remote: 0, incampus: 0 },
+                    slot2: { total: 0, remote: 0, incampus: 0 },
+                    slot3: { total: 0, remote: 0, incampus: 0 },
+                    slot4: { total: 0, remote: 0, incampus: 0 }
+                },
+                modes: {
+                    remote: 0,
+                    incampus: 0
+                },
+                domainStats: [],
+                modeStats: []
             }
-        }
+        });
     }
 } 

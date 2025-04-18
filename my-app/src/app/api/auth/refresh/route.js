@@ -22,7 +22,7 @@ export async function GET(request) {
         }
 
         const accessToken = await generateAccessToken({ 
-            idNumber: decoded.idNumber,
+            username: decoded.username,
             role: decoded.role,
             name: decoded.name
         });
@@ -38,7 +38,7 @@ export async function GET(request) {
         return Response.json({
             success: true,
             user: {
-                idNumber: decoded.idNumber,
+                username: decoded.username,
                 name: decoded.name,
                 role: decoded.role
             }

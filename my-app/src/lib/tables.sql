@@ -1,87 +1,141 @@
-CREATE TABLE registrations (
-    idNumber BIGINT PRIMARY KEY,
-    selectedDomain VARCHAR(255) NOT NULL,
-    agreedToRules BOOLEAN NOT NULL DEFAULT FALSE,
-    studentMentorId BIGINT,
-    completed BOOLEAN NOT NULL DEFAULT FALSE,
-    
-    -- Student Info
-    name VARCHAR(100) NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    branch VARCHAR(50) NOT NULL,
-    gender ENUM('Male', 'Female', 'Other') NOT NULL,
-    year ENUM('1st', '2nd', '3rd', '4th') NOT NULL,
-    phoneNumber VARCHAR(15) UNIQUE NOT NULL,
+-- Create the database
+CREATE DATABASE IF NOT EXISTS `Social`;
 
-    -- Residence Info
-    residenceType ENUM('Hostel', 'Day Scholar') NOT NULL,
-    hostelType VARCHAR(100) DEFAULT 'N/A',
-    busRoute VARCHAR(100) DEFAULT NULL,
-    country VARCHAR(50) DEFAULT 'IN',
-    state VARCHAR(50) NOT NULL,
-    district VARCHAR(50) NOT NULL,
-    pincode VARCHAR(10) NOT NULL,
+USE `Social`;
 
-    -- Timestamps
-    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
+-- Create users table first
 CREATE TABLE users (
-    idNumber BIGINT PRIMARY KEY,
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(10) NOT NULL UNIQUE,
     name VARCHAR(100) NOT NULL,
     password VARCHAR(100) NOT NULL,
-    role ENUM('student', 'studentMentor', 'admin') NOT NULL DEFAULT 'student',
+    role ENUM('student', 'studentLead', 'facultyMentor', 'admin') NOT NULL DEFAULT 'student',
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
-CREATE TABLE studentMentors (
-    mentorId BIGINT PRIMARY KEY,
+-- Create studentLeads table after users
+CREATE TABLE studentLeads (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(10) NOT NULL UNIQUE,
+    name VARCHAR(100) NOT NULL,
+    facultyMentorId VARCHAR(10),
+    slot INT NOT NULL,
+    student1Username VARCHAR(10),
+    student2Username VARCHAR(10),
+    student3Username VARCHAR(10),
+    student4Username VARCHAR(10),
+    student5Username VARCHAR(10),
+    student6Username VARCHAR(10),
+    student7Username VARCHAR(10),
+    student8Username VARCHAR(10),
+    student9Username VARCHAR(10),
+    student10Username VARCHAR(10),
+    student11Username VARCHAR(10),
+    student12Username VARCHAR(10),
+    student13Username VARCHAR(10),
+    student14Username VARCHAR(10),
+    student15Username VARCHAR(10),
+    student16Username VARCHAR(10),
+    student17Username VARCHAR(10),
+    student18Username VARCHAR(10),
+    student19Username VARCHAR(10),
+    student20Username VARCHAR(10),
+    student21Username VARCHAR(10),
+    student22Username VARCHAR(10),
+    student23Username VARCHAR(10),
+    student24Username VARCHAR(10),
+    student25Username VARCHAR(10),
+    student26Username VARCHAR(10),
+    student27Username VARCHAR(10),
+    student28Username VARCHAR(10),
+    student29Username VARCHAR(10),
+    student30Username VARCHAR(10),
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (leadId) REFERENCES users(username)
+);
+
+-- Create facultyMentors table after studentLeads is created
+CREATE TABLE facultyMentors (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(10) NOT NULL UNIQUE,
     name VARCHAR(100) NOT NULL,
     domain VARCHAR(255) NOT NULL,
-    student1Id BIGINT,
-    student2Id BIGINT,
-    student3Id BIGINT,
-    student4Id BIGINT,
-    student5Id BIGINT,
-    student6Id BIGINT,
-    student7Id BIGINT,
-    student8Id BIGINT,
-    student9Id BIGINT,
-    student10Id BIGINT,
+    lead1Id VARCHAR(10),
+    lead2Id VARCHAR(10),
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (mentorId) REFERENCES users(idNumber),
-    FOREIGN KEY (student1Id) REFERENCES registrations(idNumber),
-    FOREIGN KEY (student2Id) REFERENCES registrations(idNumber),
-    FOREIGN KEY (student3Id) REFERENCES registrations(idNumber),
-    FOREIGN KEY (student4Id) REFERENCES registrations(idNumber),
-    FOREIGN KEY (student5Id) REFERENCES registrations(idNumber),
-    FOREIGN KEY (student6Id) REFERENCES registrations(idNumber),
-    FOREIGN KEY (student7Id) REFERENCES registrations(idNumber),
-    FOREIGN KEY (student8Id) REFERENCES registrations(idNumber),
-    FOREIGN KEY (student9Id) REFERENCES registrations(idNumber),
-    FOREIGN KEY (student10Id) REFERENCES registrations(idNumber)
+    FOREIGN KEY (username) REFERENCES users(username),
+    FOREIGN KEY (lead1Id) REFERENCES studentLeads(leadId),
+    FOREIGN KEY (lead2Id) REFERENCES studentLeads(leadId)
 );
 
+-- Create registrations table after user and studentLeads
+    CREATE TABLE registrations (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        username VARCHAR(10) NOT NULL UNIQUE,
+        selectedDomain VARCHAR(255) NOT NULL,
+        mode ENUM('Remote', 'Incampus') NOT NULL,
+        slot INT NOT NULL,
+        studentLeadId VARCHAR(10),
+        facultyMentorId VARCHAR(10),
+        completed BOOLEAN NOT NULL DEFAULT FALSE,
+        name VARCHAR(100) NOT NULL,
+        email VARCHAR(100) UNIQUE NOT NULL,
+        branch VARCHAR(50) NOT NULL,
+        gender ENUM('Male', 'Female', 'Other') NOT NULL,
+        year ENUM('1st', '2nd', '3rd', '4th') NOT NULL,
+        phoneNumber VARCHAR(15) UNIQUE NOT NULL,
+        residenceType ENUM('Hostel', 'Day Scholar') NOT NULL,
+        hostelName VARCHAR(100) DEFAULT 'N/A',
+        busRoute VARCHAR(100) DEFAULT NULL,
+        country VARCHAR(50) DEFAULT 'IN',
+        state VARCHAR(50) NOT NULL,
+        district VARCHAR(50) NOT NULL,
+        pincode VARCHAR(10) NOT NULL,   
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (studentLeadId) REFERENCES studentLeads(leadId),
+        FOREIGN KEY (facultyMentorId) REFERENCES facultyMentors(username)
+    );
+
+-- Create uploads table
 CREATE TABLE uploads (
-    idNumber BIGINT PRIMARY KEY,
-    day1Link VARCHAR(200) DEFAULT NULL,
-    day2Link VARCHAR(200) DEFAULT NULL,
-    day3Link VARCHAR(200) DEFAULT NULL,
-    day4Link VARCHAR(200) DEFAULT NULL,
-    day5Link VARCHAR(200) DEFAULT NULL,
-    day6Link VARCHAR(200) DEFAULT NULL,
-    day7Link VARCHAR(200) DEFAULT NULL,
-    day8Link VARCHAR(200) DEFAULT NULL,
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(10) NOT NULL UNIQUE,
+    day1 VARCHAR(200) DEFAULT NULL,
+    day2 VARCHAR(200) DEFAULT NULL,
+    day3 VARCHAR(200) DEFAULT NULL,
+    day4 VARCHAR(200) DEFAULT NULL,
+    day5 VARCHAR(200) DEFAULT NULL,
+    day6 VARCHAR(200) DEFAULT NULL,
+    day7 VARCHAR(200) DEFAULT NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (idNumber) REFERENCES registrations(idNumber)
+    FOREIGN KEY (username) REFERENCES registrations(username)
 );
 
+CREATE TABLE verify (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(10) NOT NULL UNIQUE,
+    day1 BOOLEAN DEFAULT FALSE,
+    day2 BOOLEAN DEFAULT FALSE,
+    day3 BOOLEAN DEFAULT FALSE,
+    day4 BOOLEAN DEFAULT FALSE,
+    day5 BOOLEAN DEFAULT FALSE,
+    day6 BOOLEAN DEFAULT FALSE,
+    day7 BOOLEAN DEFAULT FALSE,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (username) REFERENCES registrations(username)
+);
+
+
+-- Create attendance table
 CREATE TABLE attendance (
-    idNumber BIGINT PRIMARY KEY,
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(10) NOT NULL UNIQUE,
     day1 ENUM('P', 'A') DEFAULT NULL,
     day2 ENUM('P', 'A') DEFAULT NULL,
     day3 ENUM('P', 'A') DEFAULT NULL,
@@ -89,16 +143,43 @@ CREATE TABLE attendance (
     day5 ENUM('P', 'A') DEFAULT NULL,
     day6 ENUM('P', 'A') DEFAULT NULL,
     day7 ENUM('P', 'A') DEFAULT NULL,
-    day8 ENUM('P', 'A') DEFAULT NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (idNumber) REFERENCES registrations(idNumber)
+    FOREIGN KEY (username) REFERENCES registrations(username)
 );
 
+-- Create completedStudents table
 CREATE TABLE completedStudents (
-    mentorId BIGINT PRIMARY KEY,
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    studentLeadId VARCHAR(10) NOT NULL UNIQUE,
+    facultyMentorId VARCHAR(10),
     studentDetails JSON NOT NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (mentorId) REFERENCES studentMentors(mentorId)
+    FOREIGN KEY (studentLeadId) REFERENCES studentLeads(leadId),
+    FOREIGN KEY (mentorId) REFERENCES facultyMentors(username)
+);
+
+-- Create stats table
+CREATE TABLE stats (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    totalStudents INT NOT NULL,
+    totalCompleted INT NOT NULL,
+    totalActive INT NOT NULL,
+    slot1 INT NOT NULL,
+    slot2 INT NOT NULL,
+    slot3 INT NOT NULL,
+    slot4 INT NOT NULL,
+    remote INT NOT NULL,
+    incampus INT NOT NULL,
+    slot1Remote INT NOT NULL,
+    slot1Incamp INT NOT NULL,
+    slot2Remote INT NOT NULL,
+    slot2Incamp INT NOT NULL,
+    slot3Remote INT NOT NULL,
+    slot3Incamp INT NOT NULL,
+    slot4Remote INT NOT NULL,
+    slot4Incamp INT NOT NULL,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );

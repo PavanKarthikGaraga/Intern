@@ -1,4 +1,4 @@
-import getDBConnection from '../../../../lib/db';
+import pool from '../../../../lib/db';
 import { generateAuthTokens } from '../../../../lib/jwt';
 import bcrypt from 'bcryptjs';
 import { cookies } from 'next/headers';
@@ -6,15 +6,19 @@ import { cookies } from 'next/headers';
 export async function POST(request) {
     let db;
     try {
-        const { idNumber, password } = await request.json();
+        const { username, password } = await request.json();
+        console.log("user",username,password);
 
-         db = await getDBConnection();
+        db = await pool.getConnection();
 
-        // Query to find user by idNumber
+        // Query to find user by username
         const [existingUser] = await db.query(
-            'SELECT * FROM users WHERE idNumber = ?',
-            [idNumber]
+            'SELECT * FROM users WHERE username = ?',
+            [username]
         );
+
+        // Log existingUser to check what's returned from the DB
+        console.log(existingUser); 
 
         if (!existingUser || existingUser.length === 0) {
             return Response.json({
@@ -22,8 +26,8 @@ export async function POST(request) {
             }, { status: 400 });
         }
 
-        const user = existingUser[0]; // Get first user since idNumber should be unique
-        
+        const user = existingUser[0]; // Get first user since username should be unique
+
         const hashPassword = await bcrypt.compare(password, user.password);
 
         if (!hashPassword) {
@@ -31,16 +35,16 @@ export async function POST(request) {
                 error: 'Invalid Password'
             }, { status: 400 });
         }
-        
+
         const { accessToken, refreshToken } = await generateAuthTokens({ 
-            idNumber: user.idNumber,
-            name:user.name,
+            username: user.username,
+            name: user.name,
             role: user.role 
         });
-        
+
         // Get cookies instance
         const cookieStore = await cookies();
-        
+
         // Set access token cookie
         await cookieStore.set('accessToken', accessToken, {
             httpOnly: true,
@@ -54,23 +58,25 @@ export async function POST(request) {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
-            maxAge: 15 *60 
+            maxAge: 15 * 60 
         });
 
         return Response.json({
             message: "User Successfully Logged In",
             user: {
-                idNumber: user.idNumber,
+                username: user.username,
                 id: user.id,
                 role: user.role 
             }
         }, { status: 200 });
-        
+
     } catch (err) {
         return Response.json({
             error: err.message
         }, { status: 500 });
     } finally {
-        await db.end();
+        if (db) {
+            await db.release();
+        }
     }
 }
