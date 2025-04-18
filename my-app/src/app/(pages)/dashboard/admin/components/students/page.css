@@ -12,6 +12,12 @@
   margin-bottom: 20px;
 }
 
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
 .section-header h1 {
   margin: 0;
   color: #333;
@@ -136,6 +142,27 @@
 
 .students-table tr:hover {
   background-color: #f8f9fa;
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  color: #dc3545;
+  cursor: pointer;
+  padding: 5px;
+  transition: color 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-btn:hover {
+  color: #c82333;
+}
+
+.delete-btn svg {
+  width: 16px;
+  height: 16px;
 }
 
 .status-badge {
@@ -410,6 +437,81 @@
   background-color: #f5f5f5;
   border-radius: 4px;
   display: inline-block;
+}
+
+.search-group {
+  flex: 1;
+  margin-bottom: 1rem;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+}
+
+.search-group input {
+  width: 100%;
+  padding: 8px 12px;
+  padding-right: 40px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: border-color 0.3s ease;
+}
+
+.search-group input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.search-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #333;
+}
+
+.search-button {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  background: none;
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  color: #666;
+  transition: color 0.3s ease;
+}
+
+.search-button:hover {
+  color: #007bff;
+}
+
+.search-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.download-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+}
+
+.download-btn:hover {
+  background-color: #218838;
+}
+
+.download-btn svg {
+  width: 16px;
+  height: 16px;
 }
 
 @media (max-width: 768px) {

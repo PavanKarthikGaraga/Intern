@@ -43,50 +43,49 @@ export async function GET(req) {
       }, { status: 403 });
     }
 
-    // Get query parameters
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get('page')) || 1;
-    const limit = parseInt(searchParams.get('limit')) || 20;
     const domain = searchParams.get('domain');
     const slot = searchParams.get('slot');
     const mode = searchParams.get('mode');
+    const search = searchParams.get('search');
 
-    // Build query conditions
-    const conditions = [];
-    const params = [];
+    const itemsPerPage = 10;
+    const offset = (page - 1) * itemsPerPage;
+
+    let conditions = [];
+    let params = [];
 
     if (domain) {
       conditions.push('r.selectedDomain = ?');
       params.push(domain);
     }
-
     if (slot) {
       conditions.push('r.slot = ?');
       params.push(slot);
     }
-
     if (mode) {
       conditions.push('r.mode = ?');
       params.push(mode);
     }
+    if (search) {
+      conditions.push('(r.name LIKE ? OR r.email LIKE ?)');
+      params.push(`%${search}%`, `%${search}%`);
+    }
 
-    const whereClause = conditions.length > 0 
-      ? `WHERE ${conditions.join(' AND ')}` 
-      : '';
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
-    // Get total count
-    const [totalCount] = await pool.query(
-      `SELECT COUNT(*) as total FROM registrations r ${whereClause}`,
-      params
-    );
+    const countQuery = `
+      SELECT COUNT(*) as total
+      FROM registrations r
+      ${whereClause}
+    `;
 
-    // Calculate pagination
-    const total = totalCount[0].total;
-    const totalPages = Math.ceil(total / limit);
-    const offset = (page - 1) * limit;
+    const [countResult] = await pool.query(countQuery, params);
+    const totalItems = countResult[0].total;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-    // Get students with pagination
-    const [students] = await pool.query(`
+    const studentsQuery = `
       SELECT 
         r.username,
         r.name,
@@ -105,7 +104,9 @@ export async function GET(req) {
       ${whereClause}
       ORDER BY r.name ASC
       LIMIT ? OFFSET ?
-    `, [...params, limit, offset]);
+    `;
+
+    const [students] = await pool.query(studentsQuery, [...params, itemsPerPage, offset]);
 
     return NextResponse.json({
       success: true,
@@ -114,14 +115,82 @@ export async function GET(req) {
         pagination: {
           currentPage: page,
           totalPages,
-          totalStudents: total,
-          limit
+          totalItems,
+          itemsPerPage
         }
       }
     });
 
   } catch (error) {
     console.error('Error in admin students API:', error);
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request) {
+  try {
+    const cookieStore =await cookies();
+    const accessToken =await cookieStore.get('accessToken');
+
+    if (!accessToken?.value) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Authentication required. Please login again.' 
+      }, { status: 401 });
+    }
+
+    const decoded = await verifyAccessToken(accessToken.value);
+    if (!decoded || decoded.role !== 'admin') {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Access denied. Only admin members can perform this action.' 
+      }, { status: 403 });
+    }
+
+    const data = await request.json();
+    const { username } = data;
+
+    if (!username) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Username is required' 
+      }, { status: 400 });
+    }
+
+    // Start a transaction
+    const connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    try {
+      // Delete from tables in correct order to handle foreign key constraints
+      await connection.query('DELETE FROM uploads WHERE username = ?', [username]);
+      await connection.query('DELETE FROM final WHERE username = ?', [username]);
+      await connection.query('DELETE FROM verify WHERE username = ?', [username]);
+      await connection.query('DELETE FROM attendance WHERE username = ?', [username]);
+      await connection.query('DELETE FROM registrations WHERE username = ?', [username]);
+      await connection.query('DELETE FROM users WHERE username = ?', [username]);
+
+      await connection.commit();
+      
+      return NextResponse.json({
+        success: true,
+        message: 'Student deleted successfully'
+      });
+    } catch (error) {
+      await connection.rollback();
+      console.error('Database error:', error);
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Failed to delete student' 
+      }, { status: 500 });
+    } finally {
+      connection.release();
+    }
+  } catch (error) {
+    console.error('Error in delete student API:', error);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }

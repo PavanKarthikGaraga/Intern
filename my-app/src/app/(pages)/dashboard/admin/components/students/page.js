@@ -5,6 +5,9 @@ import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
 import './page.css';
 import VerifyModal from './VerifyModal';
+import { FaSearch, FaTrash, FaDownload } from 'react-icons/fa';
+
+;
 
 export default function Students() {
   const [students, setStudents] = useState([]);
@@ -14,12 +17,14 @@ export default function Students() {
   const [filters, setFilters] = useState({
     domain: '',
     slot: '',
-    mode: ''
+    mode: '',
+    search: '',
+    pendingSearch: '',
   });
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
-    totalStudents: 0,
+    totalItems: 0,
     limit: 20
   });
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -45,6 +50,7 @@ export default function Students() {
   }, []);
 
   const fetchStudents = async () => {
+    setLoading(true);
     try {
       setError(null);
       const queryParams = new URLSearchParams({
@@ -52,7 +58,8 @@ export default function Students() {
         limit: pagination.limit,
         ...(filters.domain && { domain: filters.domain }),
         ...(filters.slot && { slot: filters.slot }),
-        ...(filters.mode && { mode: filters.mode })
+        ...(filters.mode && { mode: filters.mode }),
+        ...(filters.search && { search: filters.search }),
       });
 
       const response = await fetch(`/api/dashboard/admin/students?${queryParams}`, {
@@ -81,27 +88,22 @@ export default function Students() {
 
   useEffect(() => {
     fetchStudents();
-  }, [filters, pagination.currentPage, pagination.limit]);
+  }, [filters.search, filters.domain, filters.slot, filters.mode, pagination.currentPage, pagination.limit]);
 
   const handleFilterChange = (field, value) => {
-    setFilters(prev => ({ ...prev, [field]: value }));
-    setPagination(prev => ({ ...prev, currentPage: 1 }));
+    if (field === 'search') {
+      setFilters(prev => ({ ...prev, pendingSearch: value }));
+    } else {
+      setFilters(prev => ({ ...prev, [field]: value }));
+      setPagination(prev => ({ ...prev, currentPage: 1 }));
+    }
   };
 
   const handlePageChange = (newPage) => {
     setPagination(prev => ({ ...prev, currentPage: newPage }));
   };
 
-  const getUploadCount = (submissions) => {
-    if (!submissions) return 0;
-    let count = 0;
-    for (let i = 1; i <= 7; i++) {
-      if (submissions[`day${i}`]) {
-        count++;
-      }
-    }
-    return count;
-  };
+
 
   const handleVerify = async (day, status) => {
     try {
@@ -143,6 +145,81 @@ export default function Students() {
     }
   };
 
+  const handleSearch = () => {
+    if (filters.pendingSearch !== filters.search) {
+      setFilters(prev => ({ 
+        ...prev, 
+        search: prev.pendingSearch
+      }));
+      setPagination(prev => ({ ...prev, currentPage: 1 }));
+    }
+  };
+
+  const handleSearchKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  const handleDeleteStudent = async (username) => {
+    if (!window.confirm('Are you sure you want to delete this student?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/dashboard/admin/students', {
+        method: 'DELETE',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete student');
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        setStudents(prevStudents => prevStudents.filter(student => student.username !== username));
+        toast.success('Student deleted successfully');
+        // Refresh the total count
+        fetchStudents();
+      } else {
+        throw new Error(data.error || 'Failed to delete student');
+      }
+    } catch (err) {
+      console.error('Error deleting student:', err);
+      toast.error(err.message);
+    }
+  };
+
+  const handleDownloadExcel = async () => {
+    try {
+      const response = await fetch('/api/dashboard/admin/students/download', {
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to download data');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'students.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error('Error downloading excel:', err);
+      toast.error('Failed to download excel file');
+    }
+  };
+
   if (loading) {
     // return <Loader />;
     return <div className="loading">Loading...</div>;
@@ -155,13 +232,32 @@ export default function Students() {
   return (
     <div className="students-section">
       <div className="section-header">
-        <h1>Students</h1>
-        <div className="total-students">
-          Total Students: {pagination.totalStudents}
+        <div className="header-left">
+          <h1>Students</h1>
+          <div className="total-students">
+            Total Students: {pagination.totalItems || 0}
+          </div>
         </div>
+        <button className="download-btn" onClick={handleDownloadExcel}>
+          <FaDownload /> Download Excel
+        </button>
       </div>
 
       <div className="filters-container">
+        <div className="search-group">
+          {/* <label htmlFor="search">Search Students</label> */}
+          <input
+            type="text"
+            id="search"
+            placeholder="Search by name or email..."
+            value={filters.pendingSearch}
+            onChange={(e) => setFilters(prev => ({ ...prev, pendingSearch: e.target.value }))}
+            onKeyPress={handleSearchKeyPress}
+          />
+          <button className="search-button" onClick={handleSearch} aria-label="Search">
+            <FaSearch />
+          </button>
+        </div>
         <div className="filters">
           <div className="filter-group">
             <label htmlFor="domain">Domain</label>
@@ -217,6 +313,7 @@ export default function Students() {
               <th>Mode</th>
               <th>Slot</th>
               <th>Status</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -228,9 +325,18 @@ export default function Students() {
                 <td>{student.mode}</td>
                 <td>{student.slot}</td>
                 <td>
-                  <span className={`status ${student.completed ? 'completed' : 'active'}`}>
+                  <span className={`status-badge ${student.completed ? 'completed' : 'active'}`}>
                     {student.completed ? 'Completed' : 'Active'}
                   </span>
+                </td>
+                <td>
+                  <button
+                    className="delete-btn"
+                    onClick={() => handleDeleteStudent(student.username)}
+                    aria-label="Delete student"
+                  >
+                    <FaTrash />
+                  </button>
                 </td>
               </tr>
             ))}

@@ -13,12 +13,14 @@ import CompletedStudents from './components/completedStudents/page';
 import Stats from './components/stats/page';
 import StudentLeads from './components/studentLeads/page';
 import FacultyMentors from './components/facultyMentors/page';
+import Admins from './components/admins/page';
 
 export default function AdminDashboard() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [activeSection, setActiveSection] = useState('overview');
+  const [showUsersDropdown, setShowUsersDropdown] = useState(false);
 
   if (!user) {
     return <div className="loading">Loading...</div>;
@@ -34,6 +36,7 @@ export default function AdminDashboard() {
 
   const handleSectionClick = (section) => {
     setActiveSection(section);
+    setShowUsersDropdown(false);
   };
 
   return (
@@ -66,6 +69,36 @@ export default function AdminDashboard() {
           >
             <span className="item-label">Students</span>
           </button>
+          <div className="dropdown">
+            <button
+              className={`sidebar-item ${['student-leads', 'faculty-mentors', 'admins'].includes(activeSection) ? 'active' : ''}`}
+              onClick={() => setShowUsersDropdown(!showUsersDropdown)}
+            >
+              <span className="item-label">Users</span>
+            </button>
+            {showUsersDropdown && (
+              <div className="dropdown-content">
+                  <button
+                  className={`dropdown-item ${activeSection === 'student-leads' ? 'active' : ''}`}
+                  onClick={() => handleSectionClick('student-leads')}
+                >
+                  Student Leads
+                </button>
+                <button
+                  className={`dropdown-item ${activeSection === 'faculty-mentors' ? 'active' : ''}`}
+                  onClick={() => handleSectionClick('faculty-mentors')}
+                >
+                  Faculty Mentors
+                </button>
+                <button
+                  className={`dropdown-item ${activeSection === 'admins' ? 'active' : ''}`}
+                  onClick={() => handleSectionClick('admins')}
+                >
+                  Administrators
+                </button>
+              </div>
+            )}
+          </div>
           <button
             className={`sidebar-item ${activeSection === 'completed-students' ? 'active' : ''}`}
             onClick={() => handleSectionClick('completed-students')}
@@ -78,19 +111,6 @@ export default function AdminDashboard() {
           >
             <span className="item-label">Change Password</span>
           </button>
-          <button
-            className={`sidebar-item ${activeSection === 'student-leads' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('student-leads')}
-          >
-            <span className="item-label">Student Leads</span>
-          </button>
-          <button
-            className={`sidebar-item ${activeSection === 'faculty-mentors' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('faculty-mentors')}
-          >
-            <span className="item-label">Faculty Mentors</span>
-          </button>
-          
         </nav>
 
         <main className="dashboard-main">
@@ -101,6 +121,7 @@ export default function AdminDashboard() {
            activeSection === 'completed-students' ? <CompletedStudents /> :
            activeSection === 'student-leads' ? <StudentLeads /> :
            activeSection === 'faculty-mentors' ? <FacultyMentors /> :
+           activeSection === 'admins' ? <Admins /> :
            <ChangePassword />}
         </main>
       </div>
