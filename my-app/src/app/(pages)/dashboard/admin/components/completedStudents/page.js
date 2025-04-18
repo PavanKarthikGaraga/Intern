@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
-// import './page.css';
+import './page.css';
 
 export default function CompletedStudents() {
   const [students, setStudents] = useState([]);
@@ -119,42 +119,50 @@ export default function CompletedStudents() {
       </div>
 
       <div className="table-container">
-        <table className="students-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>ID</th>
-              <th>Domain</th>
-              <th>Mode</th>
-              <th>Slot</th>
-              <th>Student Lead</th>
-              <th>Faculty Mentor</th>
-              <th>Details</th>
-            </tr>
-          </thead>
-          <tbody>
-            {students.map((student) => (
-              <tr key={student.username}>
-                <td>{student.name}</td>
-                <td>{student.username}</td>
-                <td>{student.selectedDomain}</td>
-                <td>{student.mode}</td>
-                <td>{student.slot}</td>
-                <td>{student.leadName || '-'}</td>
-                <td>{student.facultyName || '-'}</td>
-                <td>
-                  <div className="student-details">
-                    {student.studentDetails ? (
-                      <pre>{JSON.stringify(student.studentDetails, null, 2)}</pre>
-                    ) : (
-                      <span className="no-details">No details available</span>
-                    )}
-                  </div>
-                </td>
+        {students.length === 0 ? (
+          <div className="no-students-message">
+            No students found with completed registration and verified final report.
+          </div>
+        ) : (
+          <table className="students-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>ID</th>
+                <th>Domain</th>
+                <th>Mode</th>
+                <th>Slot</th>
+                <th>Student Lead</th>
+                <th>Faculty Mentor</th>
+                <th>Details</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {students.map((student) => (
+                <tr key={student.username}>
+                  <td>{student.name}</td>
+                  <td>{student.username}</td>
+                  <td>{student.selectedDomain}</td>
+                  <td>{student.mode}</td>
+                  <td>{student.slot}</td>
+                  <td>{student.leadName || '-'}</td>
+                  <td>{student.facultyName || '-'}</td>
+                  <td>
+                    <div className="student-details">
+                      {student.finalReport ? (
+                        <a href={student.finalReport} target="_blank" rel="noopener noreferrer">
+                          View Final Report
+                        </a>
+                      ) : (
+                        <span className="no-details">No final report</span>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       <div className="pagination">

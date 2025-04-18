@@ -95,10 +95,11 @@ export async function GET(req) {
         r.slot,
         r.email,
         r.phoneNumber,
-        r.completed,
+        f.completed,
         sl.name as leadName,
         fm.name as facultyName
       FROM registrations r
+      LEFT JOIN final f ON r.username = f.username
       LEFT JOIN studentLeads sl ON r.studentLeadId = sl.username
       LEFT JOIN facultyMentors fm ON r.facultyMentorId = fm.username
       ${whereClause}

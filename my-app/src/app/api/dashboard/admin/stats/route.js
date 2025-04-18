@@ -59,23 +59,25 @@ export async function GET() {
         // Get domain-wise statistics
         const [domainStats] = await pool.query(`
             SELECT 
-                selectedDomain,
+                r.selectedDomain,
                 COUNT(*) as total,
-                SUM(CASE WHEN completed = 1 THEN 1 ELSE 0 END) as completed,
-                SUM(CASE WHEN completed = 0 THEN 1 ELSE 0 END) as active
-            FROM registrations 
-            GROUP BY selectedDomain
+                SUM(CASE WHEN f.completed = true THEN 1 ELSE 0 END) as completed,
+                SUM(CASE WHEN f.completed = false OR f.completed IS NULL THEN 1 ELSE 0 END) as active
+            FROM registrations r
+            LEFT JOIN final f ON r.username = f.username
+            GROUP BY r.selectedDomain
         `);
 
         // Get mode-wise statistics
         const [modeStats] = await pool.query(`
             SELECT 
-                mode,
+                r.mode,
                 COUNT(*) as total,
-                SUM(CASE WHEN completed = 1 THEN 1 ELSE 0 END) as completed,
-                SUM(CASE WHEN completed = 0 THEN 1 ELSE 0 END) as active
-            FROM registrations 
-            GROUP BY mode
+                SUM(CASE WHEN f.completed = true THEN 1 ELSE 0 END) as completed,
+                SUM(CASE WHEN f.completed = false OR f.completed IS NULL THEN 1 ELSE 0 END) as active
+            FROM registrations r
+            LEFT JOIN final f ON r.username = f.username
+            GROUP BY r.mode
         `);
 
         return NextResponse.json({

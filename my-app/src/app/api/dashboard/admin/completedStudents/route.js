@@ -52,7 +52,7 @@ export async function GET(req) {
     const mode = searchParams.get('mode');
 
     // Build query conditions
-    const conditions = ['r.completed = 1'];
+    const conditions = ['f.completed = true'];
     const params = [];
 
     if (domain) {
@@ -74,7 +74,9 @@ export async function GET(req) {
 
     // Get total count
     const [totalCount] = await pool.query(
-      `SELECT COUNT(*) as total FROM registrations r ${whereClause}`,
+      `SELECT COUNT(*) as total FROM registrations r 
+       JOIN final f ON r.username = f.username 
+       ${whereClause}`,
       params
     );
 
@@ -93,14 +95,14 @@ export async function GET(req) {
         r.slot,
         r.email,
         r.phoneNumber,
-        r.completed,
+        f.completed,
         sl.name as leadName,
         fm.name as facultyName,
-        cs.studentDetails
+        f.finalReport
       FROM registrations r
+      JOIN final f ON r.username = f.username
       LEFT JOIN studentLeads sl ON r.studentLeadId = sl.username
       LEFT JOIN facultyMentors fm ON r.facultyMentorId = fm.username
-      LEFT JOIN completedStudents cs ON r.username = cs.username
       ${whereClause}
       ORDER BY r.name ASC
       LIMIT ? OFFSET ?

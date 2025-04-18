@@ -20,6 +20,8 @@ CREATE TABLE studentLeads (
     username VARCHAR(10) NOT NULL UNIQUE,
     name VARCHAR(100) NOT NULL,
     facultyMentorId VARCHAR(10),
+    phoneNumber VARCHAR(10) NOT NULL UNIQUE,
+    email VARCHAR(100) UNIQUE NOT NULL,
     slot INT NOT NULL,
     student1Username VARCHAR(10),
     student2Username VARCHAR(10),
@@ -53,7 +55,7 @@ CREATE TABLE studentLeads (
     student30Username VARCHAR(10),
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (leadId) REFERENCES users(username)
+    FOREIGN KEY (username) REFERENCES users(username)
 );
 
 -- Create facultyMentors table after studentLeads is created
@@ -61,44 +63,45 @@ CREATE TABLE facultyMentors (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(10) NOT NULL UNIQUE,
     name VARCHAR(100) NOT NULL,
-    domain VARCHAR(255) NOT NULL,
+    phoneNumber VARCHAR(10) NOT NULL UNIQUE,
+    email VARCHAR(100) UNIQUE NOT NULL,
     lead1Id VARCHAR(10),
     lead2Id VARCHAR(10),
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (username) REFERENCES users(username),
-    FOREIGN KEY (lead1Id) REFERENCES studentLeads(leadId),
-    FOREIGN KEY (lead2Id) REFERENCES studentLeads(leadId)
+    FOREIGN KEY (lead1Id) REFERENCES studentLeads(username),
+    FOREIGN KEY (lead2Id) REFERENCES studentLeads(username)
 );
 
 -- Create registrations table after user and studentLeads
-    CREATE TABLE registrations (
-        id BIGINT AUTO_INCREMENT PRIMARY KEY,
-        username VARCHAR(10) NOT NULL UNIQUE,
-        selectedDomain VARCHAR(255) NOT NULL,
-        mode ENUM('Remote', 'Incampus') NOT NULL,
-        slot INT NOT NULL,
-        studentLeadId VARCHAR(10),
-        facultyMentorId VARCHAR(10),
-        completed BOOLEAN NOT NULL DEFAULT FALSE,
-        name VARCHAR(100) NOT NULL,
-        email VARCHAR(100) UNIQUE NOT NULL,
-        branch VARCHAR(50) NOT NULL,
-        gender ENUM('Male', 'Female', 'Other') NOT NULL,
-        year ENUM('1st', '2nd', '3rd', '4th') NOT NULL,
-        phoneNumber VARCHAR(15) UNIQUE NOT NULL,
-        residenceType ENUM('Hostel', 'Day Scholar') NOT NULL,
-        hostelName VARCHAR(100) DEFAULT 'N/A',
-        busRoute VARCHAR(100) DEFAULT NULL,
-        country VARCHAR(50) DEFAULT 'IN',
-        state VARCHAR(50) NOT NULL,
-        district VARCHAR(50) NOT NULL,
-        pincode VARCHAR(10) NOT NULL,   
-        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (studentLeadId) REFERENCES studentLeads(leadId),
-        FOREIGN KEY (facultyMentorId) REFERENCES facultyMentors(username)
-    );
+CREATE TABLE registrations (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(10) NOT NULL UNIQUE,
+    selectedDomain VARCHAR(255) NOT NULL,
+    mode ENUM('Remote', 'Incampus') NOT NULL,
+    slot INT NOT NULL,
+    studentLeadId VARCHAR(10),
+    facultyMentorId VARCHAR(10),
+    verified BOOLEAN NOT NULL DEFAULT FALSE,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    branch VARCHAR(50) NOT NULL,
+    gender ENUM('Male', 'Female', 'Other') NOT NULL,
+    year ENUM('1st', '2nd', '3rd', '4th') NOT NULL,
+    phoneNumber VARCHAR(15) UNIQUE NOT NULL,
+    residenceType ENUM('Hostel', 'Day Scholar') NOT NULL,
+    hostelName VARCHAR(100) DEFAULT 'N/A',
+    busRoute VARCHAR(100) DEFAULT NULL,
+    country VARCHAR(50) DEFAULT 'IN',
+    state VARCHAR(50) NOT NULL,
+    district VARCHAR(50) NOT NULL,
+    pincode VARCHAR(10) NOT NULL,   
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (studentLeadId) REFERENCES studentLeads(username),
+    FOREIGN KEY (facultyMentorId) REFERENCES facultyMentors(username)
+);
 
 -- Create uploads table
 CREATE TABLE uploads (
@@ -131,7 +134,6 @@ CREATE TABLE verify (
     FOREIGN KEY (username) REFERENCES registrations(username)
 );
 
-
 -- Create attendance table
 CREATE TABLE attendance (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -148,38 +150,46 @@ CREATE TABLE attendance (
     FOREIGN KEY (username) REFERENCES registrations(username)
 );
 
--- Create completedStudents table
-CREATE TABLE completedStudents (
+-- Create Final Report table
+CREATE TABLE final (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    studentLeadId VARCHAR(10) NOT NULL UNIQUE,
-    facultyMentorId VARCHAR(10),
-    studentDetails JSON NOT NULL,
-    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (studentLeadId) REFERENCES studentLeads(leadId),
-    FOREIGN KEY (mentorId) REFERENCES facultyMentors(username)
+    username VARCHAR(10) NOT NULL UNIQUE,
+    facultyMentorId VARCHAR(10) NOT NULL,
+    finalReport VARCHAR(200) DEFAULT NULL,
+    completed BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (facultyMentorId) REFERENCES facultyMentors(username),
+    FOREIGN KEY (username) REFERENCES registrations(username)
 );
 
 -- Create stats table
 CREATE TABLE stats (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    totalStudents INT NOT NULL,
-    totalCompleted INT NOT NULL,
-    totalActive INT NOT NULL,
-    slot1 INT NOT NULL,
-    slot2 INT NOT NULL,
-    slot3 INT NOT NULL,
-    slot4 INT NOT NULL,
-    remote INT NOT NULL,
-    incampus INT NOT NULL,
-    slot1Remote INT NOT NULL,
-    slot1Incamp INT NOT NULL,
-    slot2Remote INT NOT NULL,
-    slot2Incamp INT NOT NULL,
-    slot3Remote INT NOT NULL,
-    slot3Incamp INT NOT NULL,
-    slot4Remote INT NOT NULL,
-    slot4Incamp INT NOT NULL,
+    totalStudents INT NOT NULL DEFAULT 0,
+    totalCompleted INT NOT NULL DEFAULT 0,
+    totalActive INT NOT NULL DEFAULT 0,
+    slot1 INT NOT NULL DEFAULT 0,
+    slot2 INT NOT NULL DEFAULT 0,
+    slot3 INT NOT NULL DEFAULT 0,
+    slot4 INT NOT NULL DEFAULT 0,
+    remote INT NOT NULL DEFAULT 0,
+    incampus INT NOT NULL DEFAULT 0,
+    slot1Remote INT NOT NULL DEFAULT 0,
+    slot1Incamp INT NOT NULL DEFAULT 0,
+    slot2Remote INT NOT NULL DEFAULT 0,
+    slot2Incamp INT NOT NULL DEFAULT 0,
+    slot3Remote INT NOT NULL DEFAULT 0,
+    slot3Incamp INT NOT NULL DEFAULT 0,
+    slot4Remote INT NOT NULL DEFAULT 0,
+    slot4Incamp INT NOT NULL DEFAULT 0,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
+-- Insert users (admin)
+INSERT INTO users (name, username, password, role)
+VALUES 
+('Karthik', '2300032048', '$2a$10$LOYUMO84WPbDnjFn20XEHeVPSMmvBtq2NsmnSbcbj493Y/GsMX./S', 'admin'),
+('Sai Vijay', '5387', '$2a$10$LOYUMO84WPbDnjFn20XEHeVPSMmvBtq2NsmnSbcbj493Y/GsMX./S', 'admin');
+
+-- Insert stats record
+INSERT INTO stats() VALUES ();

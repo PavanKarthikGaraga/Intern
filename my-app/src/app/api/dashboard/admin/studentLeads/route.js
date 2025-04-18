@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { verifyAccessToken } from '@/lib/jwt';
 import { cookies } from 'next/headers';
+import bcrypt from 'bcryptjs';
 
 export async function GET(req) {
     try {
@@ -43,7 +44,7 @@ export async function GET(req) {
             }, { status: 403 });
         }
 
-        // Get all student leads with their details
+        // Get all student leads with their faculty mentor names
         const [leads] = await pool.query(`
             SELECT 
                 sl.username,
@@ -60,13 +61,147 @@ export async function GET(req) {
             ORDER BY sl.name ASC
         `);
 
-        return NextResponse.json({
-            success: true,
-            leads
-        });
-
+        return NextResponse.json({ success: true, leads });
     } catch (error) {
-        console.error('Error in admin student leads API:', error);
+        console.error('Error in student leads API:', error);
+        return NextResponse.json(
+            { success: false, error: 'Internal server error' },
+            { status: 500 }
+        );
+    }
+}
+
+export async function POST(req) {
+    try {
+        const cookieStore = await cookies();
+        const accessToken = await cookieStore.get('accessToken');
+
+        if (!accessToken?.value) {
+            return NextResponse.json({ 
+                success: false, 
+                error: 'Authentication required. Please login again.' 
+            }, { status: 401 });
+        }
+
+        const decoded = await verifyAccessToken(accessToken.value);
+        if (!decoded || decoded.role !== 'admin') {
+            return NextResponse.json({ 
+                success: false, 
+                error: 'Access denied. Only admin members can add student leads.' 
+            }, { status: 403 });
+        }
+
+        const { username, name, phoneNumber, email, slot } = await req.json();
+
+        // Validate required fields
+        if (!username || !name || !phoneNumber || !email || !slot) {
+            return NextResponse.json({ 
+                success: false, 
+                error: 'All fields are required' 
+            }, { status: 400 });
+        }
+
+        // Start transaction
+        const connection = await pool.getConnection();
+        await connection.beginTransaction();
+
+        try {
+            // Generate a default password (first 6 digits of phone number)
+            const defaultPassword = username + phoneNumber.slice(-4);
+            const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+
+            // Insert into users table
+            await connection.query(
+                'INSERT INTO users (username, name, password, role) VALUES (?, ?, ?, ?)',
+                [username, name, hashedPassword, 'studentLead']
+            );
+
+            // Insert into studentLeads table
+            await connection.query(
+                'INSERT INTO studentLeads (username, name, phoneNumber, email, slot) VALUES (?, ?, ?, ?, ?)',
+                [username, name, phoneNumber, email, slot]
+            );
+
+            await connection.commit();
+            return NextResponse.json({ 
+                success: true, 
+                message: 'Student lead added successfully' 
+            });
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        } finally {
+            connection.release();
+        }
+    } catch (error) {
+        console.error('Error adding student lead:', error);
+        if (error.code === 'ER_DUP_ENTRY') {
+            return NextResponse.json({ 
+                success: false, 
+                error: 'Username or phone number already exists' 
+            }, { status: 400 });
+        }
+        return NextResponse.json(
+            { success: false, error: 'Internal server error' },
+            { status: 500 }
+        );
+    }
+}
+
+export async function DELETE(req) {
+    try {
+        const cookieStore = await cookies();
+        const accessToken = await cookieStore.get('accessToken');
+
+        if (!accessToken?.value) {
+            return NextResponse.json({ 
+                success: false, 
+                error: 'Authentication required. Please login again.' 
+            }, { status: 401 });
+        }
+
+        const decoded = await verifyAccessToken(accessToken.value);
+        if (!decoded || decoded.role !== 'admin') {
+            return NextResponse.json({ 
+                success: false, 
+                error: 'Access denied. Only admin members can delete student leads.' 
+            }, { status: 403 });
+        }
+
+        const { searchParams } = new URL(req.url);
+        const username = searchParams.get('username');
+
+        if (!username) {
+            return NextResponse.json({ 
+                success: false, 
+                error: 'Username is required' 
+            }, { status: 400 });
+        }
+
+        // Start transaction
+        const connection = await pool.getConnection();
+        await connection.beginTransaction();
+
+        try {
+            // Delete from studentLeads table
+            await connection.query('DELETE FROM studentLeads WHERE username = ?', [username]);
+            
+            // Delete from users table
+            await connection.query('DELETE FROM users WHERE username = ?', [username]);
+
+            await connection.commit();
+            return NextResponse.json({ 
+                success: true, 
+                message: 'Student lead deleted successfully' 
+            });
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        } finally {
+            connection.release();
+        }
+    } catch (error) {
+        console.error('Error deleting student lead:', error);
         return NextResponse.json(
             { success: false, error: 'Internal server error' },
             { status: 500 }
