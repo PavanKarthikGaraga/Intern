@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 // import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
-// import './page.css';
+// import "./page.css";
 import { TeamOutlined, CalendarOutlined, UserOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { FaCheckCircle, FaCalendarAlt, FaClock } from 'react-icons/fa';
 
@@ -10,29 +10,29 @@ export default function Overview({ user }) {
     const [overviewData, setOverviewData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [statistics, setStatistics] = useState({
-        totalVerifiedReports: 0,
-        totalAttendancePosted: 0,
-        pendingAttendance: 0
-    });
 
     useEffect(() => {
         const fetchOverviewData = async () => {
             try {
                 setError(null);
                 const response = await fetch('/api/dashboard/facultyMentor/overview', {
-                    credentials: 'include'
+                    headers: { 
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
                 });
 
                 if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'Failed to fetch overview data');
+                    throw new Error('Failed to fetch overview data');
                 }
 
                 const data = await response.json();
-                setOverviewData(data);
+                if (data.success) {
+                    setOverviewData(data.data);
+                } else {
+                    throw new Error(data.error || 'Failed to fetch overview data');
+                }
             } catch (err) {
-                console.error('Error fetching data:', err);
+                console.error('Error fetching overview data:', err);
                 setError(err.message);
                 toast.error(err.message);
             } finally {
@@ -40,42 +40,8 @@ export default function Overview({ user }) {
             }
         };
 
-        const fetchStats = async () => {
-            try {
-                const response = await fetch('/api/dashboard/facultyMentor/stats', {
-                    credentials: 'include'
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to fetch statistics');
-                }
-
-                const data = await response.json();
-                return {
-                    totalVerifiedReports: data.totalVerifiedReports || 0,
-                    totalAttendancePosted: data.totalAttendancePosted || 0,
-                    pendingAttendance: data.pendingAttendance || 0
-                };
-            } catch (error) {
-                console.error('Error fetching stats:', error);
-                return {
-                    totalVerifiedReports: 0,
-                    totalAttendancePosted: 0,
-                    pendingAttendance: 0
-                };
-            }
-        };
-
-        const loadStats = async () => {
-            const stats = await fetchStats();
-            setStatistics(stats);
-        };
-
         if (user?.username) {
             fetchOverviewData();
-            loadStats();
-        } else {
-            setLoading(false);
         }
     }, [user]);
 
@@ -88,19 +54,22 @@ export default function Overview({ user }) {
     }
 
     if (!overviewData) {
-        return <div className="no-data">No overview data available</div>;
+        return <div className="error">No data available</div>;
     }
 
     const { 
         facultyInfo, 
         leadsCount, 
         studentsCount, 
-        completedCount, 
+        completedCount,
+        totalVerifiedReports,
+        totalAttendancePosted,
+        pendingAttendance
     } = overviewData;
 
     return (
         <div className="overview-section">
-            <h1>Welcome {facultyInfo.facultyName}</h1>
+            <h1>Welcome {facultyInfo?.name || 'Faculty Mentor'}</h1>
             <p className="role-text">Faculty Mentor</p>
             
             <div className="stats-grid">
@@ -108,7 +77,7 @@ export default function Overview({ user }) {
                     <div className="stat-content">
                         <div>
                             <h3>Assigned Leads</h3>
-                            <p>{leadsCount}</p>
+                            <p>{leadsCount || 0}</p>
                         </div>
                         <UserOutlined className="stat-icon" />
                     </div>
@@ -118,7 +87,7 @@ export default function Overview({ user }) {
                     <div className="stat-content">
                         <div>
                             <h3>Total Students</h3>
-                            <p>{studentsCount}</p>
+                            <p>{studentsCount || 0}</p>
                         </div>
                         <TeamOutlined className="stat-icon" />
                     </div>
@@ -128,7 +97,7 @@ export default function Overview({ user }) {
                     <div className="stat-content">
                         <div>
                             <h3>Completed Students</h3>
-                            <p>{completedCount}</p>
+                            <p>{completedCount || 0}</p>
                         </div>
                         <CheckCircleOutlined className="stat-icon" />
                     </div>
@@ -142,7 +111,7 @@ export default function Overview({ user }) {
                         <div className="stat-content">
                             <div>
                                 <h3>Total Verified Reports</h3>
-                                <p>{statistics.totalVerifiedReports}</p>
+                                <p>{totalVerifiedReports || 0}</p>
                             </div>
                             <div className="stat-icon">
                                 <FaCheckCircle />
@@ -159,7 +128,7 @@ export default function Overview({ user }) {
                         <div className="stat-content">
                             <div>
                                 <h3>Total Attendance Posted</h3>
-                                <p>{statistics.totalAttendancePosted}</p>
+                                <p>{totalAttendancePosted || 0}</p>
                             </div>
                             <div className="stat-icon">
                                 <FaCalendarAlt />
@@ -170,7 +139,7 @@ export default function Overview({ user }) {
                         <div className="stat-content">
                             <div>
                                 <h3>Pending Attendance</h3>
-                                <p>{statistics.pendingAttendance}</p>
+                                <p>{pendingAttendance || 0}</p>
                             </div>
                             <div className="stat-icon">
                                 <FaClock />

@@ -234,12 +234,22 @@
   font-style: italic;
 }
 
+.status-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .status-badge {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   padding: 0.25rem 0.75rem;
   border-radius: 12px;
   font-size: 0.8rem;
   font-weight: 500;
+  white-space: nowrap;
+  height: 24px;
 }
 
 .status-badge.verified {
@@ -255,6 +265,11 @@
 .status-badge.not_uploaded {
   background-color: #f5f5f5;
   color: #666;
+}
+
+.status-badge.rejected {
+  background-color: #ffebee;
+  color: #c62828;
 }
 
 .accept-btn,
@@ -311,6 +326,54 @@
   background-color: #f5f5f5;
   border-radius: 4px;
   display: inline-block;
+  white-space: nowrap;
+}
+
+.verification-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.verify-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.2s ease;
+  flex: 1;
+  white-space: nowrap;
+}
+
+.verify-btn.success {
+  background-color: #2e7d32;
+  color: white;
+}
+
+.verify-btn.success:hover {
+  background-color: #1b5e20;
+}
+
+.verify-btn.danger {
+  background-color: #c62828;
+  color: white;
+}
+
+.verify-btn.danger:hover {
+  background-color: #b71c1c;
+}
+
+.attendance-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.action-buttons-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 @media (max-width: 768px) {

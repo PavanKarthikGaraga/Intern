@@ -83,14 +83,45 @@ export default function VerifyModal({ student, onClose }) {
     }
   }, [student]);
 
-  const handleAttendanceChange = async (day, status) => {
+  const handleVerification = async (day, verified) => {
     try {
-      // Check if the day is verified before allowing attendance marking
-      if (!verificationStatus[`day${day}`]) {
-        toast.error('Cannot mark attendance for unverified reports');
-        return;
+      const response = await fetch('/api/dashboard/facultyMentor/verify', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: student.username,
+          day,
+          verified
+        })
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to verify report');
       }
 
+      // Update local state
+      setVerificationStatus(prev => ({
+        ...prev,
+        [`day${day}`]: verified
+      }));
+
+      // If rejecting, automatically mark as absent
+      if (!verified) {
+        await handleAttendanceChange(day, 'A');
+      }
+
+      await fetchReports();
+      toast.success(`Report ${verified ? 'verified' : 'rejected'} successfully`);
+    } catch (err) {
+      console.error('Error verifying report:', err);
+      toast.error(err.message);
+    }
+  };
+
+  const handleAttendanceChange = async (day, status) => {
+    try {
       const response = await fetch('/api/dashboard/facultyMentor/attendance', {
         method: 'POST',
         credentials: 'include',
@@ -167,7 +198,7 @@ export default function VerifyModal({ student, onClose }) {
                 <th>Day</th>
                 <th>Report</th>
                 <th>Uploaded On</th>
-                <th>Attendance</th>
+                <th>Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -200,45 +231,83 @@ export default function VerifyModal({ student, onClose }) {
                       {hasUpload ? new Date(report.createdAt).toLocaleDateString() : '-'}
                     </td>
                     <td>
-                      <span className={`status-badge ${currentAttendance === 'P' ? 'verified' : 
-                        currentAttendance === 'A' ? 'not_uploaded' : 'pending'}`}>
-                        {currentAttendance === 'P' ? 'Present' : 
-                         currentAttendance === 'A' ? 'Absent' : 
-                         'Not Marked'}
-                      </span>
+                      <div className="status-container">
+                        {hasUpload ? (
+                          <>
+                            <span className={`status-badge ${isVerified ? 'verified' : 'pending'}`}>
+                              {isVerified ? 'Verified' : 'Pending'}
+                            </span>
+                            {(isVerified || currentAttendance) && (
+                              <span className={`status-badge ${
+                                currentAttendance === 'P' ? 'verified' : 
+                                currentAttendance === 'A' ? 'rejected' : 'pending'
+                              }`}>
+                                {currentAttendance === 'P' ? 'Present' : 
+                                 currentAttendance === 'A' ? 'Absent' : 
+                                 'Not Marked'}
+                              </span>
+                            )}
+                          </>
+                        ) : (
+                          <span className="status-badge not_uploaded">Not Uploaded</span>
+                        )}
+                      </div>
                     </td>
                     <td>
-                      {hasUpload && isVerified && canMark && currentAttendance !== 'P' && (
-                        <div className="action-buttons">
-                          <button 
-                            className="accept-btn"
-                            onClick={() => handleAttendanceChange(day, 'P')}
-                          >
-                            Present
-                          </button>
-                          <button 
-                            className="reject-btn"
-                            onClick={() => handleAttendanceChange(day, 'A')}
-                          >
-                            Absent
-                          </button>
-                        </div>
-                      )}
-                      {!canMark && day > 1 && hasUpload && !isVerified && (
-                        <span className="verify-message">
-                          Report needs to be verified first
-                        </span>
-                      )}
-                      {!canMark && day > 1 && hasUpload && isVerified && (
-                        <span className="verify-message">
-                          Mark Day {day - 1} as Present first
-                        </span>
-                      )}
-                      {!hasUpload && (
-                        <span className="verify-message">
-                          No report uploaded
-                        </span>
-                      )}
+                      <div className="action-buttons-stack">
+                        {/* Verification Actions */}
+                        {hasUpload && !isVerified && (
+                          <div className="verification-actions">
+                            <button 
+                              className="verify-btn success"
+                              onClick={() => handleVerification(day, true)}
+                            >
+                              Verify Report
+                            </button>
+                            <button 
+                              className="verify-btn danger"
+                              onClick={() => handleVerification(day, false)}
+                            >
+                              Reject Report
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Attendance Actions */}
+                        {hasUpload && isVerified && canMark && currentAttendance !== 'P' && (
+                          <div className="attendance-actions">
+                            <button 
+                              className="accept-btn"
+                              onClick={() => handleAttendanceChange(day, 'P')}
+                            >
+                              Mark Present
+                            </button>
+                            <button 
+                              className="reject-btn"
+                              onClick={() => handleAttendanceChange(day, 'A')}
+                            >
+                              Mark Absent
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Messages */}
+                        {!canMark && day > 1 && hasUpload && !isVerified && (
+                          <span className="verify-message">
+                            Verify or reject this report first
+                          </span>
+                        )}
+                        {!canMark && day > 1 && hasUpload && isVerified && (
+                          <span className="verify-message">
+                            Mark Day {day - 1} as Present first
+                          </span>
+                        )}
+                        {!hasUpload && (
+                          <span className="verify-message">
+                            No report uploaded
+                          </span>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );
