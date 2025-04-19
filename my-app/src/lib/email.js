@@ -2,12 +2,17 @@ import nodemailer from 'nodemailer';
 import { DOMAINS } from '../app/Data/domains';
 import path from 'path';
 
-// Create a transporter using Gmail
+// Create a transporter using Outlook/Office 365
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.office365.com',
+  port: 587,
+  secure: false, // true for 465, false for other ports
   auth: {
     user: process.env.USER_EMAIL,
     pass: process.env.USER_PASSWORD
+  },
+  tls: {
+    ciphers: 'SSLv3'
   }
 });
 
@@ -47,6 +52,7 @@ const emailTemplates = {
       : null;
 
     return {
+      from: 'sac@kluniversity.in',
       subject: 'Welcome to Smart Village Revolution - Registration Confirmation',
       html: `
         <!DOCTYPE html>
