@@ -158,15 +158,15 @@ export async function POST(request) {
           `, [currentStats.id]);
           //   totalActive = totalActive + 1
 
-    //   const emailData = {
-    //     name: formData.studentInfo.name,
-    //     username: formData.studentInfo.username,
-    //     selectedDomain: formData.selectedDomain,
-    //     branch: formData.studentInfo.branch,
-    //     year: formData.studentInfo.year
-    //   };
+      const emailData = {
+        name: formData.studentInfo.name,
+        username: formData.studentInfo.username,
+        selectedDomain: formData.selectedDomain,
+        branch: formData.studentInfo.branch,
+        year: formData.studentInfo.year
+      };
 
-    //   await sendEmail(formData.studentInfo.email, 'registration', emailData);
+      await sendEmail(formData.studentInfo.email, 'registration', emailData);
     
       await db.commit();
 

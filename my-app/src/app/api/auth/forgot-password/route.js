@@ -11,9 +11,17 @@ export async function POST(request) {
 
         // Find user by email
         const [users] = await db.query(
-            'SELECT * FROM registrations WHERE email = ?',
+            `SELECT email FROM (
+                SELECT email FROM registrations
+                UNION
+                SELECT email FROM facultyMentors
+                UNION
+                SELECT email FROM studentLeads
+            ) AS allEmails
+            WHERE email = ?`,
             [email]
-        );
+          );
+          
 
         if (!users || users.length === 0) {
             // Return success even if email doesn't exist for security
@@ -32,7 +40,7 @@ export async function POST(request) {
         });
 
         // Create reset link
-        const resetLink = `http://localhost:3000/auth/reset-password?token=${accessToken}`;
+        const resetLink = `${process.env.APP_URL}/auth/reset-password?token=${accessToken}`;
 
         // Send reset email
         await sendEmail(email, 'forgotPassword', resetLink);

@@ -82,7 +82,7 @@ const Login = () => {
             {/* <Toaster position="top-center" /> */}
             <div className="login-component-in">
                 <div className="login-header">
-                    <h1>Social Internship <span>dashboard</span></h1>
+                    <h1>Social Internship <span>Dashboard</span></h1>
                     <h2>Please sign in to continue</h2>
                 </div>
                 <form onSubmit={handleSubmit}>
