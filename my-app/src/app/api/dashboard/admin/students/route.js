@@ -132,8 +132,8 @@ export async function GET(req) {
 
 export async function DELETE(request) {
   try {
-    const cookieStore =await cookies();
-    const accessToken =await cookieStore.get('accessToken');
+    const cookieStore = await cookies();
+    const accessToken = await cookieStore.get('accessToken');
 
     if (!accessToken?.value) {
       return NextResponse.json({ 
@@ -165,6 +165,18 @@ export async function DELETE(request) {
     await connection.beginTransaction();
 
     try {
+      // First, get the student's slot and mode before deleting
+      const [studentData] = await connection.query(
+        'SELECT slot, mode FROM registrations WHERE username = ?',
+        [username]
+      );
+
+      if (!studentData || studentData.length === 0) {
+        throw new Error('Student not found');
+      }
+
+      const { slot, mode } = studentData[0];
+
       // Delete from tables in correct order to handle foreign key constraints
       await connection.query('DELETE FROM uploads WHERE username = ?', [username]);
       await connection.query('DELETE FROM final WHERE username = ?', [username]);
@@ -172,6 +184,19 @@ export async function DELETE(request) {
       await connection.query('DELETE FROM attendance WHERE username = ?', [username]);
       await connection.query('DELETE FROM registrations WHERE username = ?', [username]);
       await connection.query('DELETE FROM users WHERE username = ?', [username]);
+
+      // Update stats table
+      const updateStatsQuery = `
+        UPDATE stats 
+        SET 
+          totalStudents = totalStudents - 1,
+          slot${slot} = slot${slot} - 1,
+          ${mode.toLowerCase()} = ${mode.toLowerCase()} - 1,
+          slot${slot}${mode === 'Remote' ? 'Remote' : 'Incamp'} = slot${slot}${mode === 'Remote' ? 'Remote' : 'Incamp'} - 1
+        WHERE id = (SELECT id FROM (SELECT id FROM stats ORDER BY id DESC LIMIT 1) as temp)
+      `;
+
+      await connection.query(updateStatsQuery);
 
       await connection.commit();
       

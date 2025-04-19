@@ -1,141 +1,222 @@
 export const DOMAINS = [
   {
     id: 1,
-    name: 'Village Health & Hygiene Awareness',
-    description: 'Interact with communities to promote basic health, sanitation, and hygiene awareness.',
+    name: 'Health and Hygiene',
+    description: 'Promote awareness of personal and community hygiene, sanitation, and wellness.',
     details: [
-      'Interact with villagers about basic health practices, menstrual hygiene, sanitation',
-      'Promote clean surroundings and preventive healthcare',
-      'Conduct Swachhata and yoga sessions in the community'
-    ]
+      'Promote awareness about personal and community hygiene',
+      'Understand grassroots challenges in public health and sanitation',
+      'Educate communities on preventive healthcare and wellness practices'
+    ],
+    path: '/Domains/Health and Hygiene.pdf'
   },
   {
     id: 2,
-    name: 'Government School Support (Digital & Subject Learning)',
-    description: 'Support school education with creative learning and digital literacy.',
+    name: 'Village Infrastructure',
+    description: 'Assess and improve basic infrastructure like roads, housing, and utilities in rural areas.',
     details: [
-      'Teach basic math, science, or computer literacy',
-      'Introduce storytelling, drawing, or quizzes for learning',
-      'Organize yoga and breathing sessions for children'
-    ]
+      'Assess quality and availability of village infrastructure',
+      'Identify gaps in roads, housing, drainage, and electricity',
+      'Collaborate with local bodies to suggest improvements'
+    ],
+    path: '/Domains/Village Infrastructure.pdf'
   },
   {
     id: 3,
-    name: 'Water Conservation & Access Audit',
-    description: 'Raise awareness on water conservation and audit village water access.',
+    name: 'Water Conservation',
+    description: 'Create awareness about water conservation and promote low-cost harvesting methods.',
     details: [
-      'Map drinking water sources in the village',
-      'Create awareness on rainwater harvesting and water-saving practices',
-      'Identify water contamination or shortage issues'
-    ]
+      'Raise awareness on importance of conserving water',
+      'Understand traditional and modern water harvesting methods',
+      'Encourage low-cost water-saving solutions'
+    ],
+    path: '/Domains/Water Conservation.pdf'
   },
   {
     id: 4,
-    name: 'Waste Management & Plastic-Free Campaign',
-    description: 'Promote proper waste segregation and reduce plastic usage in communities.',
+    name: 'Energy Utilization & Efficiency',
+    description: 'Promote energy conservation and sustainable energy practices in rural communities.',
     details: [
-      'Work with locals to implement dry/wet waste segregation',
-      'Conduct clean-up drives and promote alternatives to single-use plastics',
-      'Document current waste disposal practices'
-    ]
+      'Promote awareness on energy conservation and efficiency',
+      'Assess usage of conventional and renewable energy sources',
+      'Encourage sustainable energy practices at household and community levels'
+    ],
+    path: '/Domains/Energy Utilization & Efficiency.pdf'
   },
   {
     id: 5,
-    name: 'Energy Usage & Sustainability in Rural Homes',
-    description: 'Survey energy usage and promote sustainable energy practices in homes.',
+    name: 'Community Actions',
+    description: 'Foster volunteerism and active community engagement for local development.',
     details: [
-      'Survey households on electricity consumption, fuel usage',
-      'Educate about solar energy and energy-saving techniques',
-      'Identify scope for renewable energy use'
-    ]
+      'Foster active community participation in development',
+      'Strengthen collective problem-solving and civic engagement',
+      'Empower grassroots leadership through real-time involvement'
+    ],
+    path: '/Domains/Community Actions.pdf'
   },
   {
     id: 6,
-    name: 'Women Empowerment & Skill Identification',
-    description: 'Engage women in digital literacy and empowerment sessions.',
+    name: 'Agriculture',
+    description: 'Understand agricultural practices and promote sustainable and resilient farming.',
     details: [
-      'Engage in awareness sessions about women\'s rights, health, and entrepreneurship',
-      'Conduct basic computer or digital literacy sessions for women',
-      'Create a report on local women’s livelihood challenges'
-    ]
+      'Understand local agricultural practices and challenges',
+      'Promote sustainable and climate-resilient farming',
+      'Connect farmers to schemes and innovations'
+    ],
+    path: '/Domains/Agriculture.pdf'
   },
   {
     id: 7,
-    name: 'Village Infrastructure Mapping & Needs Assessment',
-    description: 'Assess and document village infrastructure to suggest improvements.',
+    name: 'Water and Sanitation',
+    description: 'Promote safe water access and sanitation practices to improve village hygiene.',
     details: [
-      'Identify issues in roads, drainage, street lighting, school buildings, etc.',
-      'Document and prepare a village infrastructure improvement case study'
-    ]
+      'Understand status of water access, quality, and sanitation',
+      'Promote water conservation and safe sanitation practices',
+      'Support behavior change through awareness and clean village initiatives'
+    ],
+    path: '/Domains/Water and Sanitation.pdf'
   },
   {
     id: 8,
-    name: 'Nutrition & Wellness Awareness',
-    description: 'Promote healthy diets and wellness practices in the community.',
+    name: 'Waste Management',
+    description: 'Encourage segregation, recycling, and zero-waste practices in rural communities.',
     details: [
-      'Educate about balanced diet, malnutrition risks',
-      'Promote kitchen gardens',
-      'Conduct yoga/meditation with the community'
-    ]
+      'Understand waste generation patterns',
+      'Promote segregation, recycling, and safe disposal of waste',
+      'Encourage zero-waste and cleanliness drives'
+    ],
+    path: '/Domains/Waste Management.pdf'
   },
   {
     id: 9,
-    name: 'Green Innovations & Tree Plantation Drives',
-    description: 'Lead eco-initiatives and environmental awareness activities.',
+    name: 'Digital Literacy & ICT',
+    description: 'Bridge the digital divide and empower villagers with essential digital skills.',
     details: [
-      'Promote eco-friendly practices like composting or organic farming',
-      'Organize a plantation drive with school children',
-      'Create a green audit of the community'
-    ]
+      'Enhance digital awareness and access in rural areas',
+      'Equip villagers, especially youth and women, with digital skills',
+      'Promote use of digital tools for essential services'
+    ],
+    path: '/Domains/Digital Literacy & ICT.pdf'
   },
   {
     id: 10,
-    name: 'Smart Village Digital Literacy Campaign',
-    description: 'Spread digital awareness and help villagers access online services.',
+    name: 'Women Empowerment & Gender Equality',
+    description: 'Promote women’s participation, safety, and digital inclusion in rural life.',
     details: [
-      'Introduce elders and kids to digital tools (smartphones, online forms, etc.)',
-      'Raise awareness on cybersecurity, online scams',
-      'Help with online government schemes or services'
-    ]
+      'Understand women’s socio-economic conditions and roles',
+      'Promote women’s participation in education and leadership',
+      'Raise awareness on rights, safety, and digital inclusion'
+    ],
+    path: '/Domains/Women Empowerment & Gender Equality.pdf'
   },
   {
     id: 11,
-    name: 'Livelihood & Entrepreneurship Identification',
-    description: 'Identify livelihood gaps and suggest entrepreneurship solutions.',
+    name: 'Renewable Energy & Sustainability',
+    description: 'Promote awareness and adoption of renewable energy and eco-friendly alternatives.',
     details: [
-      'Document existing occupations (farming, crafts, shops, etc.)',
-      'Identify gaps in income generation',
-      'Suggest solutions using tech or market linkages'
-    ]
+      'Promote renewable energy awareness',
+      'Encourage sustainable energy usage at all levels',
+      'Identify opportunities for solar, biogas, or efficient alternatives'
+    ],
+    path: '/Domains/Renewable Energy & Sustainability.pdf'
   },
   {
     id: 12,
-    name: 'Cultural Documentation & Heritage Preservation',
-    description: 'Preserve and promote local cultural heritage and traditions.',
+    name: 'Nutrition & Food Security',
+    description: 'Improve nutritional awareness and food security through sustainable practices.',
     details: [
-      'Document local folk traditions, festivals, languages, or art forms',
-      'Conduct sessions in schools about cultural values',
-      'Promote Indian traditions through interactive activities'
-    ]
+      'Assess nutritional status and food availability',
+      'Raise awareness on balanced diets and maternal/child nutrition',
+      'Promote kitchen gardening and affordable food practices'
+    ],
+    path: '/Domains/Nutrition & Food Security.pdf'
   },
   {
     id: 13,
-    name: 'Agriculture & Sustainable Farming',
-    description: 'Explore and promote traditional and modern sustainable farming techniques.',
+    name: 'Disaster Preparedness & Resilience',
+    description: 'Build community resilience and awareness for disaster risk reduction.',
     details: [
-      'Understand traditional and modern farming practices',
-      'Identify agricultural problems',
-      'Promote sustainable & organic farming'
-    ]
+      'Understand vulnerability to natural and man-made disasters',
+      'Promote awareness on disaster preparedness',
+      'Build resilience with community-based training and plans'
+    ],
+    path: '/Domains/Disaster Preparedness & Resilience.pdf'
   },
   {
     id: 14,
-    name: 'Community Actions & Problem-Solving',
-    description: 'Mobilize local youth and lead community-based solutions.',
+    name: 'Cultural Heritage & Narratives',
+    description: 'Preserve rural cultural heritage through storytelling and documentation.',
     details: [
-      'Mobilize youth for local change',
-      'Initiate community-based actions',
-      'Build empathy and collective ownership'
-    ]
+      'Document cultural traditions, folk art, and architecture',
+      'Promote intergenerational knowledge sharing',
+      'Safeguard intangible cultural heritage'
+    ],
+    path: '/Domains/Cultural Heritage & Narratives.pdf'
+  },
+  {
+    id: 15,
+    name: 'Green Innovations & Tree Plantation',
+    description: 'Promote environmental practices and eco-innovations like composting and solar lights.',
+    details: [
+      'Promote environmental awareness and tree plantation',
+      'Introduce sustainable village-level innovations',
+      'Encourage adoption of green technologies'
+    ],
+    path: '/Domains/Green Innovations & Tree Plantation.pdf'
+  },
+  {
+    id: 16,
+    name: 'Livelihood & Entrepreneurship',
+    description: 'Support income-generation and entrepreneurial initiatives in rural areas.',
+    details: [
+      'Understand local economic activities and income opportunities',
+      'Promote entrepreneurial thinking among youth and women',
+      'Support micro-enterprises and SHGs'
+    ],
+    path: '/Domains/Livelihood & Entrepreneurship.pdf'
+  },
+  {
+    id: 17,
+    name: 'Rural/Urban Education',
+    description: 'Support access to quality education in rural and fringe areas.',
+    details: [
+      'Understand state of education access and quality',
+      'Identify challenges in schools and learning environments',
+      'Support schools in teaching, activities, and infrastructure'
+    ],
+    path: '/Domains/Rural/Urban Education.pdf'
+  },
+  {
+    id: 18,
+    name: 'Sports & Wellness Engagement',
+    description: 'Use sports to build health, leadership, and community bonding.',
+    details: [
+      'Promote physical health, teamwork, and leadership',
+      'Engage youth through sports and recreational events',
+      'Encourage physical activity for well-being'
+    ],
+    path: '/Domains/Sports & Wellness Engagement.pdf'
+  },
+  {
+    id: 19,
+    name: 'Skill Identification & Development',
+    description: 'Recognize rural skills and link them to training and employment.',
+    details: [
+      'Identify local skills, talents, and traditional know-how',
+      'Promote vocational training and skill-based employment',
+      'Link rural youth to career and learning platforms'
+    ],
+    path: '/Domains/Skill Identification & Development.pdf'
+  },
+  {
+    id: 20,
+    name: 'Mental Health & Well-Being',
+    description: 'Promote mental health awareness and build resilience in communities.',
+    details: [
+      'Raise awareness and destigmatize mental health issues',
+      'Identify stressors and promote coping strategies',
+      'Equip villagers with basic psychosocial support and peer tools'
+    ],
+    path: '/Domains/Mental Health & Well-Being.pdf'
   }
 ];

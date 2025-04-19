@@ -160,10 +160,11 @@ export async function POST(request) {
 
       const emailData = {
         name: formData.studentInfo.name,
-        username: formData.studentInfo.username,
+        idNumber: formData.studentInfo.idNumber,
         selectedDomain: formData.selectedDomain,
         branch: formData.studentInfo.branch,
-        year: formData.studentInfo.year
+        year: formData.studentInfo.year,
+        phoneNumber: formData.studentInfo.phoneNumber
       };
 
       await sendEmail(formData.studentInfo.email, 'registration', emailData);
