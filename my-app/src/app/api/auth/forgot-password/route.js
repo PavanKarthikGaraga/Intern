@@ -11,12 +11,12 @@ export async function POST(request) {
 
         // Use a single query with UNION to check all tables at once
         const [users] = await db.query(
-            `SELECT email FROM (
-                SELECT email FROM registrations
+            `SELECT email, username FROM (
+                SELECT email, username FROM registrations
                 UNION
-                SELECT email FROM facultyMentors
+                SELECT email, username FROM facultyMentors
                 UNION
-                SELECT email FROM studentLeads
+                SELECT email, username FROM studentLeads
             ) AS allEmails
             WHERE email = ?`,
             [email]

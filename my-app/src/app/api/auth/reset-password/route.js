@@ -15,8 +15,17 @@ export async function POST(request) {
         }
 
         // Verify the reset token
-        const decoded = await verifyAccessToken(token);
-        if (!decoded || decoded.type !== 'password_reset') {
+        let decoded;
+        try {
+            decoded = await verifyAccessToken(token);
+        } catch (error) {
+            return Response.json({ 
+                success: false,
+                message: "Invalid or expired reset token" 
+            }, { status: 400 });
+        }
+
+        if (!decoded || !decoded.username || decoded.type !== 'password_reset') {
             return Response.json({ 
                 success: false,
                 message: "Invalid or expired reset token" 

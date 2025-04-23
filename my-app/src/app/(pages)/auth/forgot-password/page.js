@@ -8,9 +8,11 @@ import toast from "react-hot-toast";
 const ForgotPassword = () => {
     const [email, setEmail] = useState('');
     const [submitted, setSubmitted] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setLoading(true);
         
         try {
             const response = await axios.post('/api/auth/forgot-password', { email });
@@ -24,6 +26,8 @@ const ForgotPassword = () => {
         } catch (error) {
             console.error('Password reset error:', error);
             toast.error(error.response?.data?.error || 'Failed to process request');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -41,7 +45,7 @@ const ForgotPassword = () => {
                     )}
                 </div>
                 {!submitted && (
-                    <form >
+                    <form onSubmit={handleSubmit}>
                         <div className="form-group">
                             <label htmlFor="email">Email Address</label>
                             <input 
@@ -54,7 +58,9 @@ const ForgotPassword = () => {
                             />
                         </div>
                         <div className="form-group-button">
-                            <button type="submit">Send Reset Link</button>
+                            <button type="submit" disabled={loading}>
+                                {loading ? 'Sending...' : 'Send Reset Link'}
+                            </button>
                             <Link href="/auth/login">
                                 <p>Back to Login</p>
                             </Link>
