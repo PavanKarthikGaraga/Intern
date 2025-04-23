@@ -85,7 +85,7 @@ export default function Register() {
   const SLOT_DATES = {
     1: "11th May - 17th May",
     2: "18th May - 24th May",
-    3: "25th May - 31th June",
+    3: "25th May - 31st May",
     4: "1st June - 7th June"
   };
 
@@ -681,10 +681,11 @@ export default function Register() {
 
               <div className="input-row two-columns">
                 <input
-                  type="text"
+                  type="number"
                   placeholder="ID Number"
                   value={formData.studentInfo.idNumber}
                   onChange={(e) => handleInputChange('studentInfo', 'idNumber', e.target.value)}
+                  maxLength={10}
                 />
                 <input
                   type="email"

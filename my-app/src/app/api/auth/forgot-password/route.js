@@ -9,7 +9,7 @@ export async function POST(request) {
         
         db = await pool.getConnection();
 
-        // Find user by email
+        // Use a single query with UNION to check all tables at once
         const [users] = await db.query(
             `SELECT email FROM (
                 SELECT email FROM registrations
@@ -20,8 +20,7 @@ export async function POST(request) {
             ) AS allEmails
             WHERE email = ?`,
             [email]
-          );
-          
+        );
 
         if (!users || users.length === 0) {
             // Return success even if email doesn't exist for security
@@ -42,8 +41,9 @@ export async function POST(request) {
         // Create reset link
         const resetLink = `${process.env.APP_URL}/auth/reset-password?token=${accessToken}`;
 
-        // Send reset email
-        await sendEmail(email, 'forgotPassword', resetLink);
+        // Send reset email asynchronously without waiting
+        sendEmail(email, 'forgotPassword', resetLink)
+            .catch(error => console.error('Email sending failed:', error));
 
         return Response.json({
             success: true,

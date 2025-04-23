@@ -2,8 +2,20 @@ import pool from "../../../lib/db.js";
 import bcrypt from 'bcryptjs';
 import { sendEmail } from '../../../lib/email.js';
 
-// Helper function to retry database operations
-async function retryOperation(operation, maxRetries = 3, delay = 1000) {
+const yearMap = {
+  '1': '1st',
+  '2': '2nd',
+  '3': '3rd',
+  '4': '4th'
+};
+
+const residenceTypeMap = {
+  'dayscholar': 'Day Scholar',
+  'hostel': 'Hostel'
+};
+
+// Helper function to retry database operations with exponential backoff
+async function retryOperation(operation, maxRetries = 3, initialDelay = 1000) {
   let lastError;
   for (let i = 0; i < maxRetries; i++) {
     try {
@@ -11,6 +23,7 @@ async function retryOperation(operation, maxRetries = 3, delay = 1000) {
     } catch (error) {
       lastError = error;
       if (error.code === 'ER_LOCK_WAIT_TIMEOUT' && i < maxRetries - 1) {
+        const delay = initialDelay * Math.pow(2, i); // Exponential backoff
         await new Promise(resolve => setTimeout(resolve, delay));
         continue;
       }
@@ -27,31 +40,22 @@ export async function POST(request) {
     const formData = await request.json();
     console.log(formData);
 
-    // Start transaction
+    // Set transaction isolation level before starting the transaction
+    await db.query('SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED');
     await db.beginTransaction();
 
     try {
-      // Check if username already exists
-      const [existingUsername] = await db.query(
-        'SELECT username FROM registrations WHERE username = ?',
-        [formData.studentInfo.idNumber]
+      // Use a single query to check both username and phone number
+      const [existingUser] = await db.query(
+        'SELECT username, phoneNumber FROM registrations WHERE username = ? OR phoneNumber = ?',
+        [formData.studentInfo.idNumber, formData.studentInfo.phoneNumber]
       );
 
-      if (existingUsername && existingUsername.length > 0) {
-        return new Response(JSON.stringify({ success: false, message: 'Username already registered' }), {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        });
-      }
-
-      // Check if phone number already exists
-      const [phoneNumber] = await db.query(
-        'SELECT phoneNumber FROM registrations WHERE phoneNumber = ?',
-        [formData.studentInfo.phoneNumber]
-      );
-
-      if (phoneNumber && phoneNumber.length > 0) {
-        return new Response(JSON.stringify({ success: false, message: 'Phone number already registered' }), {
+      if (existingUser && existingUser.length > 0) {
+        const error = existingUser[0].username === formData.studentInfo.idNumber
+          ? 'Username already registered'
+          : 'Phone number already registered';
+        return new Response(JSON.stringify({ success: false, message: error }), {
           status: 400,
           headers: { "Content-Type": "application/json" },
         });
@@ -96,98 +100,77 @@ export async function POST(request) {
       // Generate username from ID number
       const username = formData.studentInfo.idNumber;
 
-      // Prepare all queries
-      const registrationQuery = `
-        INSERT INTO registrations 
-        (selectedDomain, mode, slot, username, name, email, branch, gender, year, phoneNumber, 
-        residenceType, hostelName, busRoute, country, state, district, pincode)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `;
-
-      const usersQuery = `INSERT INTO users
-        (name, username, password, role)
-        VALUES(?, ?, ?, ?)`;
-
-      const verifyQuery = `INSERT INTO verify
-        (username, day1, day2, day3, day4, day5, day6, day7)
-        VALUES(?, false, false, false, false, false, false, false)`;
-
-      const attendanceQuery = `INSERT INTO attendance
-        (username, day1, day2, day3, day4, day5, day6, day7)
-        VALUES(?, null, null, null, null, null, null, null)`;
-
-      const uploadsQuery = `INSERT INTO uploads
-        (username, day1, day2, day3, day4, day5, day6, day7)
-        VALUES(?, null, null, null, null, null, null, null)`;
-
-      // Convert year to required format
-      const yearMap = {
-        '1': '1st',
-        '2': '2nd',
-        '3': '3rd',
-        '4': '4th'
-      };
-
-      // Convert residence type to required format
-      const residenceTypeMap = {
-        'hostel': 'Hostel',
-        'dayscholar': 'Day Scholar'
-      };
-
-      const registrationValues = [
-        formData.selectedDomain,
-        formData.mode,
-        formData.slot,
-        username,
-        formData.studentInfo.name,
-        formData.studentInfo.email,
-        formData.studentInfo.branch,
-        formData.studentInfo.gender,
-        yearMap[formData.studentInfo.year],
-        formData.studentInfo.phoneNumber,
-        residenceTypeMap[formData.residence.type],
-        formData.residence.hostelName || 'N/A',
-        formData.residence.busRoute || null,
-        formData.residence.country,
-        formData.residence.state,
-        formData.residence.district,
-        formData.residence.pincode,
+      // Prepare all queries in a single batch
+      const queries = [
+        {
+          query: `INSERT INTO registrations 
+            (selectedDomain, mode, slot, username, name, email, branch, gender, year, phoneNumber, 
+            residenceType, hostelName, busRoute, country, state, district, pincode)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          values: [
+            formData.selectedDomain,
+            formData.mode,
+            formData.slot,
+            username,
+            formData.studentInfo.name,
+            formData.studentInfo.email,
+            formData.studentInfo.branch,
+            formData.studentInfo.gender,
+            yearMap[formData.studentInfo.year],
+            formData.studentInfo.phoneNumber,
+            residenceTypeMap[formData.residence.type],
+            formData.residence.hostelName || 'N/A',
+            formData.residence.busRoute || null,
+            formData.residence.country,
+            formData.residence.state,
+            formData.residence.district,
+            formData.residence.pincode,
+          ]
+        },
+        {
+          query: `INSERT INTO users (name, username, password, role) VALUES(?, ?, ?, ?)`,
+          values: [
+            formData.studentInfo.name,
+            username,
+            await bcrypt.hash(`${username}${formData.studentInfo.phoneNumber.slice(-4)}`, 10),
+            "student"
+          ]
+        },
+        {
+          query: `INSERT INTO verify (username, day1, day2, day3, day4, day5, day6, day7)
+            VALUES(?, false, false, false, false, false, false, false)`,
+          values: [username]
+        },
+        {
+          query: `INSERT INTO attendance (username, day1, day2, day3, day4, day5, day6, day7)
+            VALUES(?, null, null, null, null, null, null, null)`,
+          values: [username]
+        },
+        {
+          query: `INSERT INTO uploads (username, day1, day2, day3, day4, day5, day6, day7)
+            VALUES(?, null, null, null, null, null, null, null)`,
+          values: [username]
+        }
       ];
 
-      const hashedPassword = await bcrypt.hash(
-        `${username}${formData.studentInfo.phoneNumber.slice(-4)}`,
-        10
-      );
+      // Execute all queries in parallel
+      await Promise.all(queries.map(q => db.query(q.query, q.values)));
 
-      const userValues = [
-        formData.studentInfo.name,
-        username,
-        hashedPassword,
-        "student"
-      ];
+      // Update stats
+      await db.query(`
+        UPDATE stats 
+        SET 
+          ${slotField} = ${slotField} + 1,
+          ${modeField} = ${modeField} + 1,
+          ${slotModeField} = ${slotModeField} + 1,
+          totalStudents = totalStudents + 1
+        WHERE id = ?
+      `, [currentStats.id]);
 
-      // Execute all queries with retry
-      await retryOperation(async () => {
-        await db.query(registrationQuery, registrationValues);
-        await db.query(usersQuery, userValues);
-        await db.query(verifyQuery, [username]);
-        await db.query(attendanceQuery, [username]);
-        await db.query(uploadsQuery, [username]);
-      });
+      // Commit transaction
+      await db.commit();
 
-      // Update stats with retry
-      await retryOperation(async () => {
-        await db.query(`
-          UPDATE stats 
-          SET 
-            ${slotField} = ${slotField} + 1,
-            ${modeField} = ${modeField} + 1,
-            ${slotModeField} = ${slotModeField} + 1,
-            totalStudents = totalStudents + 1
-          WHERE id = ?
-        `, [currentStats.id]);
-      });
-
+      // Send email asynchronously without waiting
       const emailData = {
         name: formData.studentInfo.name,
         idNumber: formData.studentInfo.idNumber,
@@ -197,9 +180,8 @@ export async function POST(request) {
         phoneNumber: formData.studentInfo.phoneNumber
       };
 
-      // await sendEmail(formData.studentInfo.email, 'registration', emailData);
-    
-      await db.commit();
+      sendEmail(formData.studentInfo.email, 'registration', emailData)
+        .catch(error => console.error('Email sending failed:', error));
 
       return new Response(JSON.stringify({ success: true }), {
         status: 201,
@@ -218,7 +200,7 @@ export async function POST(request) {
   } finally {
     if (db) {
       try {
-        db.release(); 
+        db.release();
       } catch (error) {
         console.error('Error releasing database connection:', error);
       }

@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>Attendance Update</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.7;
+      color: #2d3748;
+      background-color: #f7f9fc;
+      margin: 0;
+      padding: 30px 20px;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 40px 50px;
+      border-radius: 12px;
+      box-shadow: rgba(17, 12, 46, 0.15) 0px 48px 100px 0px;
+      border: none;
+    }
+
+    .logo {
+      display: block;
+      margin: 0 auto 40px;
+      max-width: 120px;
+      height: auto;
+      filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.08));
+    }
+
+    h1 {
+      color: #1a202c;
+      font-size: clamp(1.5rem, 5vw, 1.75rem);
+      margin-bottom: 40px;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      font-weight: 700;
+      position: relative;
+      padding-bottom: 20px;
+    }
+
+    h1::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 2px;
+      background: linear-gradient(to right, rgb(151, 0, 3), rgba(151, 0, 3, 0.7));
+      border-radius: 2px;
+    }
+
+    p {
+      margin-bottom: 20px;
+      color: #222222;
+      font-size: clamp(0.9rem, 2.5vw, 1rem);
+      line-height: 1.8;
+    }
+
+    p strong {
+      color: rgb(151, 0, 3);
+      font-weight: 600;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-left: 5px;
+    }
+
+    .status-present {
+      background-color: rgba(72, 187, 120, 0.1);
+      color: #2f855a;
+      border: 1px solid rgba(72, 187, 120, 0.2);
+    }
+
+    .status-absent {
+      background-color: rgba(245, 101, 101, 0.1);
+      color: #c53030;
+      border: 1px solid rgba(245, 101, 101, 0.2);
+    }
+
+    .details-box {
+      background-color: #f8fafc;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+      border-left: 4px solid rgb(151, 0, 3);
+    }
+
+    .details-box p {
+      margin-bottom: 10px;
+    }
+
+    .details-box p:last-child {
+      margin-bottom: 0;
+    }
+
+    .document-section {
+      margin-top: 30px;
+      padding: 20px;
+      background-color: #f8fafc;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .document-section h3 {
+      color: rgb(151, 0, 3);
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .document-link {
+      display: inline-block;
+      background-color: rgb(151, 0, 3);
+      color: white;
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      margin-top: 10px;
+      transition: background-color 0.2s ease;
+    }
+
+    .document-link:hover {
+      background-color: rgb(120, 0, 2);
+    }
+
+    .warm-regards {
+      margin-top: 50px;
+      padding-top: 35px;
+      border-top: 1px solid #e2e8f0;
+      color: #4a5568;
+    }
+
+    .warm-regards p {
+      margin-bottom: 8px;
+      line-height: 1.6;
+    }
+
+    a {
+      color: rgb(151, 0, 3);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(151, 0, 3, 0.2);
+      transition: all 0.2s ease;
+    }
+
+    a:hover {
+      color: rgba(151, 0, 3, 0.8);
+      border-bottom-color: rgba(151, 0, 3, 0.8);
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 15px;
+      }
+
+      .container {
+        max-width: 90%;
+        padding: 20px;
+        margin: 0 auto;
+      }
+
+      h1 {
+        font-size: clamp(1.2rem, 5vw, 1.5rem);
+        margin-bottom: 25px;
+      }
+
+      .logo {
+        max-width: 100px;
+      }
+
+      p {
+        font-size: clamp(0.9rem, 3vw, 1rem);
+      }
+
+      .warm-regards p {
+        font-size: clamp(0.85rem, 2.5vw, 1rem);
+      }
+    }
+
+    @media (prefers-color-scheme: dark) {
+      body {
+        background-color: #f7f9fc;
+      }
+
+      .container {
+        background: #ffffff;
+        box-shadow: rgba(17, 12, 46, 0.15) 0px 48px 100px 0px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img src="https://firebasestorage.googleapis.com/v0/b/sacwebsite-8d0b5.appspot.com/o/HeroVideo%2FOfficialSacLogo.png?alt=media&token=8a73bd93-832c-4d5d-819d-0e371d12b01c" alt="SVR Logo" class="logo">
+    <h1>Attendance Update</h1>
+    <p>Dear <strong>{{name}}</strong>,</p>
+    <p>Your attendance for <strong>Day {{day}}</strong> has been marked as <span class="status-badge {{#if (eq status 'Present')}}status-present{{else}}status-absent{{/if}}">{{status}}</span>.</p>
+    
+    <div class="details-box">
+      <p><strong>ID Number:</strong> {{idNumber}}</p>
+      <p><strong>Date:</strong> {{date}}</p>
+      <p><strong>Status:</strong> {{status}}</p>
+    </div>
+    
+    {{#if documentUrl}}
+    <div class="document-section">
+      <h3>Submitted Document</h3>
+      <p>You have submitted a document for this attendance record.</p>
+      <a href="{{documentUrl}}" class="document-link" target="_blank">View Document</a>
+    </div>
+    {{/if}}
+    
+    <p>If you believe this is incorrect, please contact your mentor or the Smart Village Revolution office.</p>
+    <p>Thank you for your participation in the Smart Village Revolution program!</p>
+
+    <div class="warm-regards">
+      <p>Warm regards,<br>
+      <strong>Smart Village Revolution Team</strong><br>
+      KL University<br>
+      Email: <a href="mailto:svr@kluniversity.in">svr@kluniversity.in</a><br>
+      Website: <a href="https://svr.kluniversity.in" target="_blank">https://svr.kluniversity.in</a></p>
+    </div>
+  </div>
+</body>
+</html> 

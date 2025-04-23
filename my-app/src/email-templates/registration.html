@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>Welcome to Smart Village Revolution</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.7;
+      color: #2d3748;
+      background-color: #f7f9fc;
+      margin: 0;
+      padding: 30px 20px;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 40px 50px;
+      border-radius: 12px;
+      box-shadow: rgba(17, 12, 46, 0.15) 0px 48px 100px 0px;
+      border: none;
+    }
+
+    .logo {
+      display: block;
+      margin: 0 auto 40px;
+      max-width: 120px;
+      height: auto;
+      filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.08));
+    }
+
+    h1 {
+      color: #1a202c;
+      font-size: clamp(1.5rem, 5vw, 1.75rem);
+      margin-bottom: 40px;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      font-weight: 700;
+      position: relative;
+      padding-bottom: 20px;
+    }
+
+    h1::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 2px;
+      background: linear-gradient(to right, rgb(151, 0, 3), rgba(151, 0, 3, 0.7));
+      border-radius: 2px;
+    }
+
+    p {
+      margin-bottom: 20px;
+      color: #222222;
+      font-size: clamp(0.9rem, 2.5vw, 1rem);
+      line-height: 1.8;
+    }
+
+    p strong {
+      color: rgb(151, 0, 3);
+      font-weight: 600;
+    }
+
+    .highlight {
+      color: rgb(151, 0, 3);
+      font-weight: 600;
+      background: rgba(151, 0, 3, 0.05);
+      padding: 3px 10px;
+      border-radius: 3px;
+      display: inline-block;
+      border: 1px solid rgba(151, 0, 3, 0.1);
+    }
+
+    ol, ul {
+      margin: 0 0 24px 24px;
+      color: #222222;
+      padding-left: 16px;
+    }
+
+    li {
+      margin-bottom: 12px;
+      padding-left: 8px;
+      line-height: 1.7;
+    }
+
+    li strong {
+      color: rgb(151, 0, 3);
+    }
+
+    .warm-regards {
+      margin-top: 50px;
+      padding-top: 35px;
+      border-top: 1px solid #e2e8f0;
+      color: #4a5568;
+    }
+
+    .warm-regards p {
+      margin-bottom: 8px;
+      line-height: 1.6;
+    }
+
+    a {
+      color: rgb(151, 0, 3);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(151, 0, 3, 0.2);
+      transition: all 0.2s ease;
+    }
+
+    a:hover {
+      color: rgba(151, 0, 3, 0.8);
+      border-bottom-color: rgba(151, 0, 3, 0.8);
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 15px;
+      }
+
+      .container {
+        max-width: 90%;
+        padding: 20px;
+        margin: 0 auto;
+      }
+
+      h1 {
+        font-size: clamp(1.2rem, 5vw, 1.5rem);
+        margin-bottom: 25px;
+      }
+
+      .logo {
+        max-width: 100px;
+      }
+
+      p {
+        font-size: clamp(0.9rem, 3vw, 1rem);
+      }
+
+      ol, ul {
+        padding-left: 20px;
+      }
+
+      li {
+        font-size: clamp(0.9rem, 3vw, 1rem);
+      }
+
+      .warm-regards p {
+        font-size: clamp(0.85rem, 2.5vw, 1rem);
+      }
+    }
+
+    @media (prefers-color-scheme: dark) {
+      body {
+        background-color: #f7f9fc;
+      }
+
+      .container {
+        background: #ffffff;
+        box-shadow: rgba(17, 12, 46, 0.15) 0px 48px 100px 0px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img src="/sac.png" alt="SAC Logo" class="logo">
+    <h1>Welcome to <br> Smart Village Revolution!</h1>
+    <p>Dear <strong>{{name}}</strong>,</p>
+    <p><strong>Congratulations on successfully registering with the Smart Village Revolution program!</strong></p>
+    <p>We are delighted to have you as part of this dynamic and vibrant ecosystem of <span class="highlight">{{selectedDomain}}</span> domain where your passions and aspirations take center stage.</p>
+    
+    <div class="login-credentials">
+      <h3>Your Login Credentials</h3>
+      <p><strong>Username:</strong> {{idNumber}}</p>
+      <p><strong>Password:</strong> {{idNumber}}{{phoneNumber}}</p>
+      <p class="note">Please keep these credentials safe and do not share them with anyone.</p>
+    </div>
+
+    <p><strong>Your Registration Details:</strong></p>
+    <ul>
+      <li><strong>ID Number:</strong> {{idNumber}}</li>
+      <li><strong>Selected Domain:</strong> {{selectedDomain}}</li>
+      <li><strong>Branch:</strong> {{branch}}</li>
+      <li><strong>Year:</strong> {{year}}</li>
+    </ul>
+
+    <!-- {{#if pdfPath}} -->
+    <div class="domain-document">
+      <h3>Domain Document</h3>
+      <p>Please find attached the document related to Social Internship 2025</p>
+      <p>Make sure to go through this document carefully to understand your domain's requirements and guidelines.</p>
+      <a href="https://kluniversityin-my.sharepoint.com/:b:/g/personal/brambabu_kluniversity_in/ESwRkowQQoJLiqpjFOEDD5cBwI5EbI8BSqyv34zXO_qEcA">Policy Book</a>
+      <a href="https://kluniversityin-my.sharepoint.com/:b:/g/personal/brambabu_kluniversity_in/EajiD1p-sU9NmuatzUdVSU0BT8usNyJUutWCf3hpjX2dDQ">Handbook</a>
+      <a href="https://kluniversityin-my.sharepoint.com/:b:/g/personal/brambabu_kluniversity_in/EdKufWvvLFFEo9Cvne6JfEYBhuVWLu-IzQADcugBn7-t2Q">Domains and Activities</a>
+    </div>
+    <!-- {{/if}} -->
+
+    <p><strong>What to Expect Next?</strong></p>
+    <ol>
+      <li><strong>Active Participation:</strong> You will soon receive updates about your domain's activities, events, and initiatives. Make sure to actively engage in all programs to make the most of this journey.</li>
+      <li><strong>Rules and Guidelines:</strong> Please ensure you adhere to the rules and regulations outlined during the registration process, which aim to create a productive and respectful environment for all.</li>
+      <li><strong>Collaboration and Growth:</strong> Work collaboratively with peers and mentors to achieve not just your goals but also contribute to the collective success of your domain.</li>
+    </ol>
+
+    <p><strong>Your Role in the SVR Journey</strong></p>
+    <p>The Smart Village Revolution is more than just a program; it is a platform to:</p>
+    <ul>
+      <li>Transform your ideas into impactful projects.</li>
+      <li>Build leadership, teamwork, and innovative skills.</li>
+      <li>Network with peers, mentors, and industry experts.</li>
+      <li>Contribute meaningfully to the university's vision of excellence and societal development.</li>
+    </ul>
+
+    <p>We encourage you to make the most of this opportunity by participating actively, respecting the program's values, and striving for personal and professional growth.</p>
+    <p>If you have any questions or need assistance, feel free to contact the Smart Village Revolution Office or your domain coordinator. We are here to support and guide you throughout this exciting journey.</p>
+    <p>Once again, welcome to the Smart Village Revolution - where your dreams take flight!</p>
+
+    <div class="warm-regards">
+      <p>Warm regards,<br>
+      <strong>Smart Village Revolution Team</strong><br>
+      KL University<br>
+      Email: <a href="mailto:svr@kluniversity.in">svr@kluniversity.in</a><br>
+      Website: <a href="https://svr.kluniversity.in" target="_blank">https://svr.kluniversity.in</a></p>
+    </div>
+  </div>
+</body>
+</html> 

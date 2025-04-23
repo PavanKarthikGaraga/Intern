@@ -151,11 +151,11 @@ const Login = () => {
                                 </>
                             ) : 'Sign In'}
                         </button>
-                        <Link href="/auth/forgot-password" prefetch={true}>
-                            <p>Forgot Password?</p>
-                        </Link>
                         <Link href="/register" prefetch={true}>
                             <p>Don't have an account? Register here</p>
+                        </Link>
+                        <Link href="/auth/forgot-password" prefetch={true}>
+                            <p>Forgot Password?</p>
                         </Link>
                     </div>
                 </form>
