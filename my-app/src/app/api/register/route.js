@@ -69,7 +69,9 @@ export async function POST(request) {
       const currentStats = stats[0];
       const slotField = `slot${formData.slot}`;
       const modeField = formData.mode.toLowerCase();
-      const slotModeField = `slot${formData.slot}${formData.mode}`;
+      const slotModeField = formData.mode === 'Remote' ? `slot${formData.slot}Remote` : 
+                          formData.mode === 'Incampus' ? `slot${formData.slot}Incamp` : 
+                          `slot${formData.slot}Invillage`;
 
       // Check if slot is full (max 1200)
       if (currentStats[slotField] >= 1200) {
