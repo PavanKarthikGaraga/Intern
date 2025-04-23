@@ -16,21 +16,27 @@ export async function POST(request) {
       // Check if username already exists
       const [existingUsername] = await db.query(
         'SELECT username FROM registrations WHERE username = ?',
-        [formData.studentInfo.username]
+        [formData.studentInfo.idNumber]
       );
 
       if (existingUsername && existingUsername.length > 0) {
-        throw new Error('Username already registered');
+        return new Response(JSON.stringify({ success: false, message: 'Username already registered' }), {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        });
       }
 
       // Check if phone number already exists
-      const [existingPhone] = await db.query(
+      const [phoneNumber] = await db.query(
         'SELECT phoneNumber FROM registrations WHERE phoneNumber = ?',
         [formData.studentInfo.phoneNumber]
       );
 
-      if (existingPhone && existingPhone.length > 0) {
-        throw new Error('Phone number already registered');
+      if (phoneNumber && phoneNumber.length > 0) {
+        return new Response(JSON.stringify({ success: false, message: 'Phone number already registered' }), {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        });
       }
 
       // Check slot availability
@@ -41,8 +47,8 @@ export async function POST(request) {
 
       const currentStats = stats[0];
       const slotField = `slot${formData.slot}`;
-      const modeField = formData.mode === 'Remote' ? 'remote' : 'incampus';
-      const slotModeField = `slot${formData.slot}${formData.mode === 'Remote' ? 'Remote' : 'Incamp'}`;
+      const modeField = formData.mode.toLowerCase();
+      const slotModeField = `slot${formData.slot}${formData.mode}`;
 
       // Check if slot is full (max 1200)
       if (currentStats[slotField] >= 1200) {
@@ -51,14 +57,19 @@ export async function POST(request) {
 
       // Check if mode in slot is full
       if (formData.mode === 'Remote') {
-        // Remote mode max is 900
-        if (currentStats[slotModeField] >= 900) {
-          throw new Error(`Remote mode in Slot ${formData.slot} is full (maximum 900 students)`);
+        // Remote mode max is 1000
+        if (currentStats[slotModeField] >= 1000) {
+          throw new Error(`Remote mode in Slot ${formData.slot} is full (maximum 1000 students)`);
         }
-      } else {
-        // In-Campus mode max is 300
-        if (currentStats[slotModeField] >= 300) {
-          throw new Error(`In-Campus mode in Slot ${formData.slot} is full (maximum 300 students)`);
+      } else if (formData.mode === 'Incampus') {
+        // In-Campus mode max is 150
+        if (currentStats[slotModeField] >= 150) {
+          throw new Error(`In-Campus mode in Slot ${formData.slot} is full (maximum 150 students)`);
+        }
+      } else if (formData.mode === 'InVillage') {
+        // In-Village mode max is 50
+        if (currentStats[slotModeField] >= 50) {
+          throw new Error(`In-Village mode in Slot ${formData.slot} is full (maximum 50 students)`);
         }
       }
 

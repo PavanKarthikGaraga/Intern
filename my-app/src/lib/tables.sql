@@ -79,7 +79,7 @@ CREATE TABLE registrations (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(10) NOT NULL UNIQUE,
     selectedDomain VARCHAR(255) NOT NULL,
-    mode ENUM('Remote', 'Incampus') NOT NULL,
+    mode ENUM('Remote', 'Incampus', 'InVillage') NOT NULL,
     slot INT NOT NULL,
     studentLeadId VARCHAR(10),
     facultyMentorId VARCHAR(10),
@@ -173,14 +173,19 @@ CREATE TABLE stats (
     slot4 INT NOT NULL DEFAULT 0,
     remote INT NOT NULL DEFAULT 0,
     incampus INT NOT NULL DEFAULT 0,
+    invillage INT NOT NULL DEFAULT 0,
     slot1Remote INT NOT NULL DEFAULT 0,
     slot1Incamp INT NOT NULL DEFAULT 0,
+    slot1Invillage INT NOT NULL DEFAULT 0,
     slot2Remote INT NOT NULL DEFAULT 0,
     slot2Incamp INT NOT NULL DEFAULT 0,
+    slot2Invillage INT NOT NULL DEFAULT 0,
     slot3Remote INT NOT NULL DEFAULT 0,
     slot3Incamp INT NOT NULL DEFAULT 0,
+    slot3Invillage INT NOT NULL DEFAULT 0,
     slot4Remote INT NOT NULL DEFAULT 0,
     slot4Incamp INT NOT NULL DEFAULT 0,
+    slot4Invillage INT NOT NULL DEFAULT 0,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -193,3 +198,4 @@ VALUES
 
 -- Insert stats record
 INSERT INTO stats() VALUES ();
+

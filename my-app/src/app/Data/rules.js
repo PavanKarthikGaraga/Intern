@@ -1,6 +1,6 @@
 export const RULES = [
   'You are required to submit daily progress reports to your assigned mentor for review.',
-  'You must maintain confidentiality regarding any organizational or project-related data throughout the internship.',
+  'Once registration is completed, no changes in slot, mode, or domain will be permitted.',
   'Adhere to the internship schedule and promptly submit daily reports as required by your mentor.',
   'Ensure accurate attendance records are marked daily and verified by your mentor.',
   'Store all internship-related documents and materials securely, and do not share them without prior consent from your mentor or admin.',
@@ -10,8 +10,9 @@ export const RULES = [
   'Always communicate respectfully and professionally with peers, mentors, and faculty members.',
   'It is mandatory to complete all 7 days of the internship. Failure to do so will result in disqualification.',
   'Do not talk to or engage with anyone who is not related to the internship, for your own safety.',
-  'All rules and guidelines issued by the administration must be strictly followed throughout the internship.'
+  'All rules and guidelines issued by the administration must be strictly followed throughout the internship.',
 ];
+
 
 
   

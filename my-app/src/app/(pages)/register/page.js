@@ -377,7 +377,11 @@ export default function Register() {
           }
 
           // Check mode-specific capacity
-          const maxCapacity = formData.mode === 'Remote' ? 900 : 300;
+          const maxCapacity = {
+            Remote: 1000,
+            Incampus: 150,
+            InVillage: 50
+          }[formData.mode] || 0;
           if (currentStats[slotModeField] >= maxCapacity) {
             setAvailabilityMessage('Not Available');
             setIsAvailable(false);
@@ -414,7 +418,12 @@ export default function Register() {
     }
 
     // Check mode-specific capacity
-    const maxCapacity = mode === 'Remote' ? 900 : 300;
+    const maxCapacity = {
+      Remote: 1000,
+      Incampus: 150,
+      InVillage: 50
+    }[mode] || 0;
+
     if (stats[slotModeField] >= maxCapacity) {
       return 'Not Available';
     }
@@ -466,6 +475,7 @@ export default function Register() {
                         <th>Status</th>
                         <th>Remote</th>
                         <th>In-Campus</th>
+                        <th>In-Village</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -481,10 +491,13 @@ export default function Register() {
                             {checkSlotAvailability(slot, 'Remote')}
                           </td>
                           <td data-status={checkSlotAvailability(slot, 'Remote').toLowerCase().replace(' ', '-')}>
-                            {stats ? stats[`slot${slot}Remote`] || 0 : 'Loading...'} / 900
+                            {stats ? stats[`slot${slot}Remote`] || 0 : 'Loading...'} / 1000
                           </td>
                           <td data-status={checkSlotAvailability(slot, 'Incampus').toLowerCase().replace(' ', '-')}>
-                            {stats ? stats[`slot${slot}Incampus`] || 0 : 'Loading...'} / 300
+                            {stats ? stats[`slot${slot}Incamp`] || 0 : 'Loading...'} / 150
+                          </td>
+                          <td data-status={checkSlotAvailability(slot, 'InVillage').toLowerCase().replace(' ', '-')}>
+                            {stats ? stats[`slot${slot}Invillage`] || 0 : 'Loading...'} / 50
                           </td>
                         </tr>
                       ))}
@@ -578,6 +591,7 @@ export default function Register() {
                   <option value="">Select Mode</option>
                   <option value="Remote">Remote</option>
                   <option value="Incampus">In Campus</option>
+                  <option value="InVillage">In Village</option>
                 </select>
               </div>   
 
