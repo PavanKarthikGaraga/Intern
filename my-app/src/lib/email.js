@@ -17,43 +17,43 @@ const transporter = nodemailer.createTransport({
 });
 
 // Map of domain names to exact filenames
-const domainFileMap = {
-  "Agriculture": "Agriculture.pdf",
-  "Green Innovations & Tree Plantation": "Green Innovations & Tree Plantation.pdf",
-  "Rural/Urban Education": "Rural & Urban Education.pdf",
-  "Water Conservation": "Water Conservation.pdf",
-  "Community Actions": "Community Actions.pdf",
-  "Health and Hygiene": "Health and Hygiene.pdf",
-  "Cultural Heritage and Community Narratives": "Cultural Heritage & Narratives.pdf",
-  "Livelihood and Entrepreneurship": "Livelihood & Entrepreneurship.pdf",
-  "Skill Identification and Development": "Skill Identification & Development.pdf",
-  "Women Empowerment & Gender Equality": "Women Empowerment & Gender Equality.pdf",
-  "Digital Literacy & ICT for Rural Development": "Digital Literacy & ICT.pdf",
-  "Mental Health & Well-Being": "Mental Health & Well-Being.pdf",
-  "Sports and Wellness Engagement": "Sports & Wellness Engagement.pdf",
-  "Disaster Preparedness & Community Resilience": "Disaster Preparedness & Resilience.pdf",
-  "Nutrition & Food Security": "Nutrition & Food Security.pdf",
-  "Village Infrastructure": "Village Infrastructure.pdf",
-  "Energy Utilization and Efficiency": "Energy Utilization & Efficiency.pdf",
-  "Renewable Energy & Sustainability": "Renewable Energy & Sustainability.pdf",
-  "Waste Management": "Waste Management.pdf",
-  "Water and Sanitation": "Water and Sanitation.pdf"
-};
+// const domainFileMap = {
+//   "Agriculture": "Agriculture.pdf",
+//   "Green Innovations & Tree Plantation": "Green Innovations & Tree Plantation.pdf",
+//   "Rural/Urban Education": "Rural & Urban Education.pdf",
+//   "Water Conservation": "Water Conservation.pdf",
+//   "Community Actions": "Community Actions.pdf",
+//   "Health and Hygiene": "Health and Hygiene.pdf",
+//   "Cultural Heritage and Community Narratives": "Cultural Heritage & Narratives.pdf",
+//   "Livelihood and Entrepreneurship": "Livelihood & Entrepreneurship.pdf",
+//   "Skill Identification and Development": "Skill Identification & Development.pdf",
+//   "Women Empowerment & Gender Equality": "Women Empowerment & Gender Equality.pdf",
+//   "Digital Literacy & ICT for Rural Development": "Digital Literacy & ICT.pdf",
+//   "Mental Health & Well-Being": "Mental Health & Well-Being.pdf",
+//   "Sports and Wellness Engagement": "Sports & Wellness Engagement.pdf",
+//   "Disaster Preparedness & Community Resilience": "Disaster Preparedness & Resilience.pdf",
+//   "Nutrition & Food Security": "Nutrition & Food Security.pdf",
+//   "Village Infrastructure": "Village Infrastructure.pdf",
+//   "Energy Utilization and Efficiency": "Energy Utilization & Efficiency.pdf",
+//   "Renewable Energy & Sustainability": "Renewable Energy & Sustainability.pdf",
+//   "Waste Management": "Waste Management.pdf",
+//   "Water and Sanitation": "Water and Sanitation.pdf"
+// };
 
 // Email templates
 const emailTemplates = {
   registration: (userData) => {
     // Get the correct file name from the map
-    const selectedDomain = userData.selectedDomain;
-    const fileName = domainFileMap[selectedDomain];
-    const pdfPath = fileName ? `/Domains/${fileName}` : null;
-    const absolutePath = fileName
-      ? path.join(process.cwd(), 'public', 'Domains', fileName)
-      : null;
+    // const selectedDomain = userData.selectedDomain;
+    // // const fileName = domainFileMap[selectedDomain];
+    // const pdfPath = fileName ? `/Domains/${fileName}` : null;
+    // const absolutePath = fileName
+    //   ? path.join(process.cwd(), 'public', 'Domains', fileName)
+    //   : null;
 
     return {
       from: 'sac@kluniversity.in',
-      subject: 'Welcome to Smart Village Revolution - Registration Confirmation',
+      subject: 'Welcome to Social Internship - Registration Confirmation',
       html: `
         <!DOCTYPE html>
         <html lang="en">
@@ -61,7 +61,7 @@ const emailTemplates = {
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-          <title>Welcome to Smart Village Revolution</title>
+          <title>Welcome to Social Internship</title>
           <style>
             body {
               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
@@ -194,7 +194,7 @@ const emailTemplates = {
               }
 
               .logo {
-                max-width: 100px;
+                max-width: 150px;
               }
 
               p {
@@ -228,10 +228,10 @@ const emailTemplates = {
         </head>
         <body>
           <div class="container">
-            <img src="/sac.png" alt="SAC Logo" class="logo">
-            <h1>Welcome to <br> Smart Village Revolution!</h1>
+            <img src="https://socialinternship.kluniversity.in/sac.webp" alt="SAC Logo" class="logo">
+            <h1>Welcome to <br> Social Internship !</h1>
             <p>Dear <strong>${userData.name}</strong>,</p>
-            <p><strong>Congratulations on successfully registering with the Smart Village Revolution program!</strong></p>
+            <p><strong>Congratulations on successfully registering with the Social Internship program!</strong></p>
             <p>We are delighted to have you as part of this dynamic and vibrant ecosystem of <span class="highlight">${userData.selectedDomain}</span> domain where your passions and aspirations take center stage.</p>
             
             <div class="login-credentials">
@@ -249,13 +249,7 @@ const emailTemplates = {
               <li><strong>Year:</strong> ${userData.year}</li>
             </ul>
 
-            ${pdfPath ? `
-            <div class="domain-document">
-              <h3>Domain Document</h3>
-              <p>Please find attached the document related to your selected domain. This document contains important information about your domain's objectives, activities, and expectations.</p>
-              <p>Make sure to go through this document carefully to understand your domain's requirements and guidelines.</p>
-            </div>
-            ` : ''}
+           
 
             <p><strong>What to Expect Next?</strong></p>
             <ol>
@@ -264,8 +258,8 @@ const emailTemplates = {
               <li><strong>Collaboration and Growth:</strong> Work collaboratively with peers and mentors to achieve not just your goals but also contribute to the collective success of your domain.</li>
             </ol>
 
-            <p><strong>Your Role in the SVR Journey</strong></p>
-            <p>The Smart Village Revolution is more than just a program; it is a platform to:</p>
+            <p><strong>Your Role in the Social Internship Journey</strong></p>
+            <p>The Social Internship is more than just a program; it is a platform to:</p>
             <ul>
               <li>Transform your ideas into impactful projects.</li>
               <li>Build leadership, teamwork, and innovative skills.</li>
@@ -274,29 +268,29 @@ const emailTemplates = {
             </ul>
 
             <p>We encourage you to make the most of this opportunity by participating actively, respecting the program's values, and striving for personal and professional growth.</p>
-            <p>If you have any questions or need assistance, feel free to contact the Smart Village Revolution Office or your domain coordinator. We are here to support and guide you throughout this exciting journey.</p>
-            <p>Once again, welcome to the Smart Village Revolution - where your dreams take flight!</p>
+            <p>If you have any questions or need assistance, feel free to contact the Social Internship Office or your domain coordinator. We are here to support and guide you throughout this exciting journey.</p>
+            <p>Once again, welcome to the Social Internship - where your dreams take flight!</p>
 
             <div class="warm-regards">
               <p>Warm regards,<br>
-              <strong>Smart Village Revolution Team</strong><br>
+              <strong>Social Internship Team</strong><br>
               KL University<br>
-              Email: <a href="mailto:svr@kluniversity.in">svr@kluniversity.in</a><br>
-              Website: <a href="https://svr.kluniversity.in" target="_blank">https://svr.kluniversity.in</a></p>
+              Email: <a href="mailto:sac@kluniversity.in">sac@kluniversity.in</a><br>
+              Website: <a href="https://socialinternship.kluniversity.in" target="_blank">https://socialinternship.kluniversity.in</a></p>
             </div>
           </div>
         </body>
         </html>
       `,
-      attachments: absolutePath ? [{
-        filename: fileName,
-        path: absolutePath
-      }] : []
+      // attachments: absolutePath ? [{
+      //   filename: fileName,
+      //   path: absolutePath
+      // }] : []
     };
   },
   
   forgotPassword: (resetLink) => ({
-    subject: 'Password Reset Request - Smart Village Revolution',
+    subject: 'Password Reset Request - Social Internship',
     html: `
       <!DOCTYPE html>
       <html lang="en">
@@ -454,19 +448,19 @@ const emailTemplates = {
       </head>
       <body>
         <div class="container">
-          <img src="https://firebasestorage.googleapis.com/v0/b/sacwebsite-8d0b5.appspot.com/o/HeroVideo%2FOfficialSacLogo.png?alt=media&token=8a73bd93-832c-4d5d-819d-0e371d12b01c" alt="SVR Logo" class="logo">
+          <img src="https://socialinternship.kluniversity.in/sac.webp" alt="SVR Logo" class="logo">
           <h1>Password Reset Request</h1>
-          <p>You have requested to reset your password for your Smart Village Revolution account.</p>
+          <p>You have requested to reset your password for your Social Internship account.</p>
           <p>Click the button below to proceed with resetting your password:</p>
           <a href="${resetLink}" class="button">Reset Password</a>
           <p><strong>Important:</strong> This link will expire in 15 minutes for security reasons.</p>
           <p>If you did not request this password reset, please ignore this email or contact us if you have concerns.</p>
           <div class="warm-regards">
             <p>Warm regards,<br>
-            <strong>Smart Village Revolution Team</strong><br>
+            <strong>Social Internship SAC Team</strong><br>
             KL University<br>
-            Email: <a href="mailto:svr@kluniversity.in">svr@kluniversity.in</a><br>
-            Website: <a href="https://svr.kluniversity.in" target="_blank">https://svr.kluniversity.in</a></p>
+            Email: <a href="mailto:sac@kluniversity.in">sac@kluniversity.in</a><br>
+            Website: <a href="https://socialinternship.kluniversity.in" target="_blank">https://socialinternship.kluniversity.in</a></p>
           </div>
         </div>
       </body>
@@ -475,7 +469,7 @@ const emailTemplates = {
   }),
   
   attendanceMarked: (studentData) => ({
-    subject: `Attendance Marked - Day ${studentData.day || 'N/A'} - Smart Village Revolution`,
+    subject: `Attendance Marked - Day ${studentData.day || 'N/A'} - Social Internship SAC Team`,
     html: `
       <!DOCTYPE html>
       <html lang="en">
@@ -685,7 +679,7 @@ const emailTemplates = {
       </head>
       <body>
         <div class="container">
-          <img src="https://firebasestorage.googleapis.com/v0/b/sacwebsite-8d0b5.appspot.com/o/HeroVideo%2FOfficialSacLogo.png?alt=media&token=8a73bd93-832c-4d5d-819d-0e371d12b01c" alt="SVR Logo" class="logo">
+          <img src="https://socialinternship.kluniversity.in/sac.webp" alt="Social Logo" class="logo">
           <h1>Attendance Update</h1>
           <p>Dear <strong>${studentData.name || 'Student'}</strong>,</p>
           <p>Your attendance for <strong>Day ${studentData.day || 'N/A'}</strong> has been marked as <span class="status-badge ${studentData.status === 'Present' ? 'status-present' : 'status-absent'}">${studentData.status || 'Not Specified'}</span>.</p>
@@ -704,15 +698,15 @@ const emailTemplates = {
           </div>
           ` : ''}
           
-          <p>If you believe this is incorrect, please contact your mentor or the Smart Village Revolution office.</p>
-          <p>Thank you for your participation in the Smart Village Revolution program!</p>
+          <p>If you believe this is incorrect, please contact your mentor or the Social Internship KLU office.</p>
+          <p>Thank you for your participation in the Social Internship KLU program!</p>
 
           <div class="warm-regards">
             <p>Warm regards,<br>
-            <strong>Smart Village Revolution Team</strong><br>
+            <strong>Social Internship KLU Team</strong><br>
             KL University<br>
-            Email: <a href="mailto:svr@kluniversity.in">svr@kluniversity.in</a><br>
-            Website: <a href="https://svr.kluniversity.in" target="_blank">https://svr.kluniversity.in</a></p>
+            Email: <a href="mailto:sac@kluniversity.in">sac@kluniversity.in</a><br>
+            Website: <a href="https://socialinternship.kluniversity.in" target="_blank">https://socialinternship.kluniversity.in</a></p>
           </div>
         </div>
       </body>

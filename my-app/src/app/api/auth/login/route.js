@@ -7,7 +7,7 @@ export async function POST(request) {
     let db;
     try {
         const { username, password } = await request.json();
-        console.log("user",username,password);
+        // console.log("user",username,password);
 
         db = await pool.getConnection();
 
@@ -18,7 +18,7 @@ export async function POST(request) {
         );
 
         // Log existingUser to check what's returned from the DB
-        console.log(existingUser); 
+        // console.log(existingUser); 
 
         if (!existingUser || existingUser.length === 0) {
             return Response.json({

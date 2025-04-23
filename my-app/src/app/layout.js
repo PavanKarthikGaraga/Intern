@@ -11,7 +11,7 @@ const poppins = Poppins({
 });
 
 export const metadata = {
-  title: "Social Internship",
+  title: "Social Internship KLU",
   description: "A platform for managing social internships and community engagement",
 };
 

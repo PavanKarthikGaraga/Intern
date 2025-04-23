@@ -1,0 +1,16 @@
+User-agent: *
+Disallow: /api/
+Disallow: /src/api/
+Disallow: /src/app/(pages)/dashboard/
+Disallow: /src/app/(pages)/auth/
+Disallow: /src/app/(pages)/reportGenerator/
+Disallow: /src/app/Data/
+Disallow: /src/app/api/
+Disallow: /src/app/components/
+Disallow: /src/context/
+Disallow: /src/lib/
+Disallow: /src/scripts/
+
+Allow: /
+
+Sitemap: https://https://socialinternship.kluniversity.in//sitemap.xml
