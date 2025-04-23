@@ -41,7 +41,7 @@ const ForgotPassword = () => {
                     )}
                 </div>
                 {!submitted && (
-                    <form onSubmit={handleSubmit}>
+                    <form >
                         <div className="form-group">
                             <label htmlFor="email">Email Address</label>
                             <input 
