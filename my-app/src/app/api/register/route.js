@@ -2,10 +2,28 @@ import pool from "../../../lib/db.js";
 import bcrypt from 'bcryptjs';
 import { sendEmail } from '../../../lib/email.js';
 
+// Helper function to retry database operations
+async function retryOperation(operation, maxRetries = 3, delay = 1000) {
+  let lastError;
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      if (error.code === 'ER_LOCK_WAIT_TIMEOUT' && i < maxRetries - 1) {
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw lastError;
+}
+
 export async function POST(request) {
   let db;
   try {
-    db = await pool.getConnection(); // Get a new connection
+    db = await pool.getConnection();
     const formData = await request.json();
     console.log(formData);
 
@@ -39,8 +57,11 @@ export async function POST(request) {
         });
       }
 
-      // Check slot availability
-      const [stats] = await db.query('SELECT * FROM stats ORDER BY id DESC LIMIT 1');
+      // Check slot availability with retry
+      const [stats] = await retryOperation(async () => {
+        return await db.query('SELECT * FROM stats ORDER BY id DESC LIMIT 1 FOR UPDATE');
+      });
+
       if (!stats || stats.length === 0) {
         throw new Error('Stats not found');
       }
@@ -57,17 +78,14 @@ export async function POST(request) {
 
       // Check if mode in slot is full
       if (formData.mode === 'Remote') {
-        // Remote mode max is 1000
         if (currentStats[slotModeField] >= 1000) {
           throw new Error(`Remote mode in Slot ${formData.slot} is full (maximum 1000 students)`);
         }
       } else if (formData.mode === 'Incampus') {
-        // In-Campus mode max is 150
         if (currentStats[slotModeField] >= 150) {
           throw new Error(`In-Campus mode in Slot ${formData.slot} is full (maximum 150 students)`);
         }
       } else if (formData.mode === 'InVillage') {
-        // In-Village mode max is 50
         if (currentStats[slotModeField] >= 50) {
           throw new Error(`In-Village mode in Slot ${formData.slot} is full (maximum 50 students)`);
         }
@@ -76,7 +94,7 @@ export async function POST(request) {
       // Generate username from ID number
       const username = formData.studentInfo.idNumber;
 
-      // 1. Insert into registrations
+      // Prepare all queries
       const registrationQuery = `
         INSERT INTO registrations 
         (selectedDomain, mode, slot, username, name, email, branch, gender, year, phoneNumber, 
@@ -84,22 +102,18 @@ export async function POST(request) {
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
-      // 2. Insert into users
       const usersQuery = `INSERT INTO users
         (name, username, password, role)
         VALUES(?, ?, ?, ?)`;
 
-      // 3. Insert into verify (initialize with all days as false)
       const verifyQuery = `INSERT INTO verify
         (username, day1, day2, day3, day4, day5, day6, day7)
         VALUES(?, false, false, false, false, false, false, false)`;
 
-      // 4. Insert into attendance (initialize with null values)
       const attendanceQuery = `INSERT INTO attendance
         (username, day1, day2, day3, day4, day5, day6, day7)
         VALUES(?, null, null, null, null, null, null, null)`;
 
-      // 5. Insert into uploads (initialize with null values)
       const uploadsQuery = `INSERT INTO uploads
         (username, day1, day2, day3, day4, day5, day6, day7)
         VALUES(?, null, null, null, null, null, null, null)`;
@@ -150,24 +164,27 @@ export async function POST(request) {
         "student"
       ];
 
-      // Execute all queries
-      await db.query(registrationQuery, registrationValues);
-      await db.query(usersQuery, userValues);
-      await db.query(verifyQuery, [username]);
-      await db.query(attendanceQuery, [username]);
-      await db.query(uploadsQuery, [username]);
+      // Execute all queries with retry
+      await retryOperation(async () => {
+        await db.query(registrationQuery, registrationValues);
+        await db.query(usersQuery, userValues);
+        await db.query(verifyQuery, [username]);
+        await db.query(attendanceQuery, [username]);
+        await db.query(uploadsQuery, [username]);
+      });
 
-      // Update stats
-      await db.query(`
-        UPDATE stats 
-        SET 
-          ${slotField} = ${slotField} + 1,
-          ${modeField} = ${modeField} + 1,
-          ${slotModeField} = ${slotModeField} + 1,
-          totalStudents = totalStudents + 1
+      // Update stats with retry
+      await retryOperation(async () => {
+        await db.query(`
+          UPDATE stats 
+          SET 
+            ${slotField} = ${slotField} + 1,
+            ${modeField} = ${modeField} + 1,
+            ${slotModeField} = ${slotModeField} + 1,
+            totalStudents = totalStudents + 1
           WHERE id = ?
-          `, [currentStats.id]);
-          //   totalActive = totalActive + 1
+        `, [currentStats.id]);
+      });
 
       const emailData = {
         name: formData.studentInfo.name,
@@ -178,7 +195,7 @@ export async function POST(request) {
         phoneNumber: formData.studentInfo.phoneNumber
       };
 
-      await sendEmail(formData.studentInfo.email, 'registration', emailData);
+      // await sendEmail(formData.studentInfo.email, 'registration', emailData);
     
       await db.commit();
 
