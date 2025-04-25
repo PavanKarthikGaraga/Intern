@@ -3,20 +3,18 @@ name: Deploy to Ubuntu Server
 on:
   push:
     branches:
-      - main  # Change if you're using a different default branch
+      - main  # Triggers when code is pushed to main
 
 jobs:
   deploy:
     runs-on: self-hosted
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Use Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20'
+      - name: Pull latest code from main
+        run: |
+          cd /home/sac/Intern
+          git reset --hard
+          git pull origin main
 
       - name: Install dependencies
         run: |
