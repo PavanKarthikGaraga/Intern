@@ -1,0 +1,33 @@
+name: Deploy to Ubuntu Server
+
+on:
+  push:
+    branches:
+      - main  # Change if you're using a different default branch
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: |
+          cd /home/sac/Intern/my-app
+          npm install
+
+      - name: Build app
+        run: |
+          cd /home/sac/Intern/my-app
+          npm run build
+
+      - name: Restart PM2
+        run: |
+          pm2 restart intern
