@@ -325,7 +325,7 @@ export default function Students() {
             <tr>
               <th>ID</th>
               <th>Name</th>
-              <th>Domain()</th>
+              <th>Domain</th>
               <th>Mode</th>
               <th>Slot</th>
               <th>Status</th>
