@@ -20,37 +20,37 @@ export default function AdminDashboard() {
         limit: 20
     });
 
-    const fetchStudents = async () => {
-        try {
-            const queryParams = new URLSearchParams({
-                page: pagination.currentPage,
-                limit: pagination.limit,
-                ...(filters.domain && { domain: filters.domain }),
-                ...(filters.slot && { slot: filters.slot }),
-                ...(filters.mode && { mode: filters.mode })
-            });
+    // const fetchStudents = async () => {
+    //     try {
+    //         const queryParams = new URLSearchParams({
+    //             page: pagination.currentPage,
+    //             limit: pagination.limit,
+    //             ...(filters.domain && { domain: filters.domain }),
+    //             ...(filters.slot && { slot: filters.slot }),
+    //             ...(filters.mode && { mode: filters.mode })
+    //         });
 
-            const response = await axios.get(`/api/dashboard/admin/students?${queryParams}`);
-            if (response.data.success) {
-                setStudents(response.data.data.students || []);
-                setPagination(response.data.data.pagination || {
-                    currentPage: 1,
-                    totalPages: 1,
-                    totalStudents: 0,
-                    limit: 20
-                });
-            }
-        } catch (error) {
-            console.error('Error fetching students:', error);
-            setStudents([]);
-            setPagination({
-                currentPage: 1,
-                totalPages: 1,
-                totalStudents: 0,
-                limit: 20
-            });
-        }
-    };
+    //         const response = await axios.get(`/api/dashboard/admin/students?${queryParams}`);
+    //         if (response.data.success) {
+    //             setStudents(response.data.data.students || []);
+    //             setPagination(response.data.data.pagination || {
+    //                 currentPage: 1,
+    //                 totalPages: 1,
+    //                 totalStudents: 0,
+    //                 limit: 20
+    //             });
+    //         }
+    //     } catch (error) {
+    //         console.error('Error fetching students:', error);
+    //         setStudents([]);
+    //         setPagination({
+    //             currentPage: 1,
+    //             totalPages: 1,
+    //             totalStudents: 0,
+    //             limit: 20
+    //         });
+    //     }
+    // };
 
     const fetchStats = async () => {
         try {
@@ -67,7 +67,7 @@ export default function AdminDashboard() {
     useEffect(() => {
         const loadData = async () => {
             setLoading(true);
-            await Promise.all([fetchStudents(), fetchStats()]);
+            await Promise.all([fetchStats()]);
             setLoading(false);
         };
         loadData();
@@ -131,6 +131,10 @@ export default function AdminDashboard() {
                                     <span>In Campus:</span>
                                     <span>{stats?.slots[`slot${slotNum}`]?.incampus || 0}</span>
                                 </div>
+                                <div className="slot-stat">
+                                    <span>In Village:</span>
+                                    <span>{stats?.slots[`slot${slotNum}`]?.invillage || 0}</span>
+                                </div>
                             </div>
                         </div>
                     ))}
@@ -164,7 +168,7 @@ export default function AdminDashboard() {
             </section>
 
             {/* Filters Section */}
-            <section className="filters-section">
+            {/* <section className="filters-section">
                 <div className="filter-container">
                     <select 
                         value={filters.domain}
@@ -199,12 +203,13 @@ export default function AdminDashboard() {
                         <option value="">All Modes</option>
                         <option value="Remote">Remote</option>
                         <option value="Incampus">In Campus</option>
+                        <option value="InVillage">In Village</option>
                     </select>
                 </div>
             </section>
 
             {/* Students Table */}
-            <section className="students-section">
+            {/* <section className="students-section">
                 <div className="table-container">
                     <table>
                         <thead>
@@ -214,8 +219,8 @@ export default function AdminDashboard() {
                                 <th>Domain</th>
                                 <th>Mode</th>
                                 <th>Slot</th>
-                                {/* <th>Email</th> */}
-                                {/* <th>Phone</th> */}
+                                <th>Email</th>
+                                <th>Phone</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
@@ -227,8 +232,8 @@ export default function AdminDashboard() {
                                     <td>{student.selectedDomain}</td>
                                     <td>{student.mode}</td>
                                     <td>{student.slot}</td>
-                                    {/* <td>{student.email}</td> */}
-                                    {/* <td>{student.phoneNumber}</td> */}
+                                    <td>{student.email}</td>
+                                    <td>{student.phoneNumber}</td>
                                     <td>
                                         <span className={`status ${student.completed ? 'completed' : 'active'}`}>
                                             {student.completed ? 'Completed' : 'Active'}
@@ -240,7 +245,7 @@ export default function AdminDashboard() {
                     </table>
                 </div>
 
-                {/* Pagination */}
+                //  Pagination
                 <div className="pagination">
                     <button 
                         onClick={() => handlePageChange(pagination.currentPage - 1)}
@@ -260,7 +265,7 @@ export default function AdminDashboard() {
                         Next
                     </button>
                 </div>
-            </section>
+            </section> */}
         </div>
     );
 }

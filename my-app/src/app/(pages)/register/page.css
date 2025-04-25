@@ -629,7 +629,7 @@
   
   /* Rules styles */
   .rules-content {
-    height: 90vh;
+    height: 70vh;
     overflow-y: auto;
     padding: 1.5rem;
   }
@@ -643,7 +643,7 @@
   }
   
   .rules-list li {
-    padding: 1.2rem;
+    padding: 0.99rem;
     background-color: #f8f8f8;
     border-radius: 8px;
     border-left: 4px solid #006400;
@@ -747,8 +747,8 @@
   
   /* Residence section styles */
   .residence-content {
-    height: 80vh; 
-    /*overflow: hidden; */
+    height: 70vh; 
+    overflow: auto;
     display: flex;
     flex-direction: column;
     padding: 1rem;
@@ -1012,7 +1012,7 @@
   .confirmation-content {
     padding: 1rem;
     overflow-y: auto;
-    /* height: 80vh; */
+    height: 70vh;
   }
   
   .confirm-section {

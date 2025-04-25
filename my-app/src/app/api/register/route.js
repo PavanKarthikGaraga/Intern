@@ -40,12 +40,20 @@ export async function POST(request) {
     const formData = await request.json();
     console.log(formData);
 
+    
     // Set transaction isolation level before starting the transaction
     await db.query('SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED');
     await db.beginTransaction();
-
+    
     try {
       // Use a single query to check both username and phone number
+      if (formData.mode === 'InVillage' && formData.studentInfo.gender === 'Female') {
+        return new Response(JSON.stringify({ success: false, message: 'In-Village mode is not available for female students' }), {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+      
       const [existingUser] = await db.query(
         'SELECT username, phoneNumber FROM registrations WHERE username = ? OR phoneNumber = ?',
         [formData.studentInfo.idNumber, formData.studentInfo.phoneNumber]

@@ -20,6 +20,7 @@ export default function Students() {
     mode: '',
     search: '',
     pendingSearch: '',
+    gender: ''
   });
   const [pagination, setPagination] = useState({
     currentPage: 1,
@@ -60,6 +61,7 @@ export default function Students() {
         ...(filters.slot && { slot: filters.slot }),
         ...(filters.mode && { mode: filters.mode }),
         ...(filters.search && { search: filters.search }),
+        ...(filters.gender && { gender: filters.gender })
       });
 
       const response = await fetch(`/api/dashboard/admin/students?${queryParams}`, {
@@ -88,7 +90,7 @@ export default function Students() {
 
   useEffect(() => {
     fetchStudents();
-  }, [filters.search, filters.domain, filters.slot, filters.mode, pagination.currentPage, pagination.limit]);
+  }, [filters.search, filters.domain, filters.slot, filters.mode, filters.gender, pagination.currentPage, pagination.limit]);
 
   const handleFilterChange = (field, value) => {
     if (field === 'search') {
@@ -298,6 +300,20 @@ export default function Students() {
               <option value="">All Modes</option>
               <option value="Remote">Remote</option>
               <option value="Incampus">In Campus</option>
+              <option value="InVillage">In Village</option>
+            </select>
+            
+          </div>
+          <div className="filter-group">
+            <label htmlFor="gender">Gender</label>
+            <select
+              id="gender"
+              value={filters.gender}
+              onChange={(e) => handleFilterChange('gender', e.target.value)}
+            >
+              <option value="">All Genders</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
             </select>
           </div>
         </div>

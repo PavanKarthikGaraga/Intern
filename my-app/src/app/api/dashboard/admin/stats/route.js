@@ -46,7 +46,8 @@ export async function GET() {
                     },
                     modes: {
                         remote: 0,
-                        incampus: 0
+                        incampus: 0,
+                        invillage: 0
                     },
                     domainStats: [],
                     modeStats: []
@@ -93,27 +94,32 @@ export async function GET() {
                     slot1: {
                         total: stats.slot1,
                         remote: stats.slot1Remote,
-                        incampus: stats.slot1Incamp
+                        incampus: stats.slot1Incamp,
+                        invillage: stats.slot1Invillage
                     },
                     slot2: {
                         total: stats.slot2,
                         remote: stats.slot2Remote,
-                        incampus: stats.slot2Incamp
+                        incampus: stats.slot2Incamp,
+                        invillage: stats.slot2Invillage
                     },
                     slot3: {
                         total: stats.slot3,
                         remote: stats.slot3Remote,
-                        incampus: stats.slot3Incamp
+                        incampus: stats.slot3Incamp,
+                        invillage: stats.slot3Invillage
                     },
                     slot4: {
                         total: stats.slot4,
                         remote: stats.slot4Remote,
-                        incampus: stats.slot4Incamp
+                        incampus: stats.slot4Incamp,
+                        invillage: stats.slot4Invillage
                     }
                 },
                 modes: {
                     remote: stats.remote,
-                    incampus: stats.incampus
+                    incampus: stats.incampus,
+                    invillage: stats.invillage
                 },
                 domainStats: domainStats || [],
                 modeStats: modeStats || []
@@ -132,14 +138,15 @@ export async function GET() {
                     completionRate: "0.00"
                 },
                 slots: {
-                    slot1: { total: 0, remote: 0, incampus: 0 },
-                    slot2: { total: 0, remote: 0, incampus: 0 },
-                    slot3: { total: 0, remote: 0, incampus: 0 },
-                    slot4: { total: 0, remote: 0, incampus: 0 }
+                    slot1: { total: 0, remote: 0, incampus: 0, invillage: 0 },
+                    slot2: { total: 0, remote: 0, incampus: 0, invillage: 0 },
+                    slot3: { total: 0, remote: 0, incampus: 0, invillage: 0 },
+                    slot4: { total: 0, remote: 0, incampus: 0, invillage: 0 }
                 },
                 modes: {
                     remote: 0,
-                    incampus: 0
+                    incampus: 0,
+                    invillage: 0
                 },
                 domainStats: [],
                 modeStats: []

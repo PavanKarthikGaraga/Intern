@@ -49,7 +49,7 @@ export async function GET(req) {
     const slot = searchParams.get('slot');
     const mode = searchParams.get('mode');
     const search = searchParams.get('search');
-
+    const gender = searchParams.get('gender');
     const itemsPerPage = 10;
     const offset = (page - 1) * itemsPerPage;
 
@@ -71,6 +71,10 @@ export async function GET(req) {
     if (search) {
       conditions.push('(r.name LIKE ? OR r.email LIKE ?)');
       params.push(`%${search}%`, `%${search}%`);
+    }
+    if (gender) {
+      conditions.push('r.gender = ?');
+      params.push(gender);
     }
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';

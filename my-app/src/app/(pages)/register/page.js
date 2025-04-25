@@ -303,6 +303,7 @@ export default function Register() {
   };
 
   const handleSubmit = async () => {
+    let loadingToast;
     try {
       // Basic validation
       if (!formData.studentInfo.idNumber || !formData.studentInfo.name || !formData.selectedDomain) {
@@ -324,7 +325,7 @@ export default function Register() {
       }
 
       // Show loading toast
-      const loadingToast = toast.loading('Submitting registration...');
+      loadingToast = toast.loading('Submitting registration...');
 
       const response = await axios.post("/api/register",formData,{
         headers:{"Content-Type":"application/json"}
@@ -345,7 +346,10 @@ export default function Register() {
         toast.error(data.message || 'Registration failed. Please try again.');
       }
     } catch (error) {
-      // toast.dismiss(loadingToast);
+      // Ensure loading toast is dismissed
+      if (loadingToast) {
+        toast.dismiss(loadingToast);
+      }
 
       if (error.response) {
         console.log("Registration error:", error.response.data);
@@ -475,7 +479,7 @@ export default function Register() {
                         <th>Status</th>
                         <th>Remote</th>
                         <th>In-Campus</th>
-                        <th>In-Village</th>
+                        <th>In-Village(Only for Boys)</th>
                       </tr>
                     </thead>
                     <tbody>
