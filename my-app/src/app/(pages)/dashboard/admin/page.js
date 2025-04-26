@@ -14,6 +14,7 @@ import Stats from './components/stats/page';
 import StudentLeads from './components/studentLeads/page';
 import FacultyMentors from './components/facultyMentors/page';
 import Admins from './components/admins/page';
+import DataDownload from './components/dataDownload/page';
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -105,6 +106,14 @@ export default function AdminDashboard() {
           >
             <span className="item-label">Completed Students</span>
           </button>
+          {user.username === '2300032048' && (
+            <button
+              className={`sidebar-item ${activeSection === 'data-download' ? 'active' : ''}`}
+              onClick={() => handleSectionClick('data-download')}
+            >
+              <span className="item-label">Data Download</span>
+            </button>
+          )}
           <button
             className={`sidebar-item ${activeSection === 'change-password' ? 'active' : ''}`}
             onClick={() => handleSectionClick('change-password')}
@@ -122,6 +131,7 @@ export default function AdminDashboard() {
            activeSection === 'student-leads' ? <StudentLeads /> :
            activeSection === 'faculty-mentors' ? <FacultyMentors /> :
            activeSection === 'admins' ? <Admins /> :
+           activeSection === 'data-download' ? <DataDownload /> :
            <ChangePassword />}
         </main>
       </div>
