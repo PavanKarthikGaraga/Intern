@@ -479,7 +479,7 @@ export default function Register() {
                         <th>Status</th>
                         <th>Remote</th>
                         <th>In-Campus</th>
-                        <th>In-Village(Only for Boys)</th>
+                        <th>In-Village(Only KLU Adopted Villages)</th>
                       </tr>
                     </thead>
                     <tbody>

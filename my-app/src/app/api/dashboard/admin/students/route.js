@@ -190,13 +190,21 @@ export async function DELETE(request) {
       await connection.query('DELETE FROM users WHERE username = ?', [username]);
 
       // Update stats table
+      let slotModeField;
+      if (mode === 'Remote') {
+        slotModeField = `slot${slot}Remote`;
+      } else if (mode === 'Incampus') {
+        slotModeField = `slot${slot}Incamp`;
+      } else if (mode === 'InVillage') {
+        slotModeField = `slot${slot}Invillage`;
+      }
       const updateStatsQuery = `
         UPDATE stats 
         SET 
           totalStudents = totalStudents - 1,
           slot${slot} = slot${slot} - 1,
           ${mode.toLowerCase()} = ${mode.toLowerCase()} - 1,
-          slot${slot}${mode === 'Remote' ? 'Remote' : 'Incamp'} = slot${slot}${mode === 'Remote' ? 'Remote' : 'Incamp'} - 1
+          ${slotModeField} = ${slotModeField} - 1
         WHERE id = (SELECT id FROM (SELECT id FROM stats ORDER BY id DESC LIMIT 1) as temp)
       `;
 

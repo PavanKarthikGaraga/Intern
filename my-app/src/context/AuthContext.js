@@ -63,29 +63,6 @@ export function AuthProvider({children}) {
         }
     };
 
-    const changePassword = async (currentPassword, newPassword) => {
-        try {
-            const response = await fetch("/api/auth/change-password", {
-                method: "POST",
-                credentials: 'include',
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ currentPassword, newPassword }),
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Failed to change password');
-            }
-
-            toast.success('Password changed successfully');
-            return true;
-        } catch (error) {
-            toast.error(error.message || 'Failed to change password');
-            return false;
-        }
-    };
-
     const logout = async () => {
         try {
             const response = await fetch("/api/auth/logout", {
@@ -150,7 +127,7 @@ export function AuthProvider({children}) {
 
         if (isAuthenticated) {
             // Increase the interval to 8 minutes (access token is 5 minutes)
-            intervalId = setInterval(refreshToken, 480000);
+            intervalId = setInterval(refreshToken, 540000);
         }
 
         return () => {
@@ -167,8 +144,7 @@ export function AuthProvider({children}) {
             setUser,
             setIsAuthenticated,
             checkAuth,
-            logout,
-            changePassword
+            logout
         }}>
             {children}
         </AuthContext.Provider>
