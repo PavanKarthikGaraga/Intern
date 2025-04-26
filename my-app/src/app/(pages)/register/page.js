@@ -477,8 +477,8 @@ export default function Register() {
                         <th>Slot</th>
                         <th>Duration</th>
                         <th>Status</th>
-                        <th>Remote</th>
-                        <th>In-Campus</th>
+                        <th>Remote(Home town)</th>
+                        <th>In-Campus(Campus to adopted Villages)</th>
                         <th>In-Village(Only KLU Adopted Villages)</th>
                       </tr>
                     </thead>
