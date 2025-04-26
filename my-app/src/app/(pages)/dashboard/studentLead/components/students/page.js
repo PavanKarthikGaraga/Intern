@@ -12,39 +12,70 @@ export default function Students({ user }) {
   const [error, setError] = useState(null);
   const [totalStudents, setTotalStudents] = useState(0);
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [fetching, setFetching] = useState(false);
 
   useEffect(() => {
-    const fetchStudents = async () => {
-      try {
-        setError(null);
-        const response = await fetch('/api/dashboard/studentLead/students', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: user?.username })
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch students');
-        }
-
-        const data = await response.json();
-        if (data.success) {
-          setStudents(data.students);
-          setTotalStudents(data.total);
-        }
-      } catch (err) {
-        console.error('Error fetching students:', err);
-        setError(err.message);
-        toast.error(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (user?.username) {
-      fetchStudents();
-    }
+    fetchStudents();
   }, [user]);
+
+  const fetchStudents = async () => {
+    try {
+      setError(null);
+      const response = await fetch('/api/dashboard/studentLead/students', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: user?.username })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch students');
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        setStudents(data.students);
+        setTotalStudents(data.total);
+      }
+    } catch (err) {
+      console.error('Error fetching students:', err);
+      setError(err.message);
+      toast.error(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFetchNewStudents = async () => {
+    setFetching(true);
+    try {
+      const response = await fetch('/api/dashboard/studentLead/fetchStudents', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      const data = await response.json();
+      
+      if (!data.success) {
+        if (data.error === 'limit is over') {
+          toast.error('You have reached the maximum limit of students (slot 4)');
+        } else {
+          toast.error(data.error || 'Failed to fetch new students');
+        }
+        return;
+      }
+
+      toast.success(`Successfully fetched ${data.students.length} new students`);
+      setStudents(prevStudents => [...prevStudents, ...data.students]);
+      setTotalStudents(prevTotal => prevTotal + data.students.length);
+    } catch (err) {
+      console.error('Error fetching new students:', err);
+      toast.error(err.message);
+    } finally {
+      setFetching(false);
+      setShowConfirmDialog(false);
+    }
+  };
 
   const getUploadCount = (uploads) => {
     if (!uploads) return 0;
@@ -87,8 +118,24 @@ export default function Students({ user }) {
     <div className="students-section">
       <div className="section-header">
         <h1>Your Students</h1>
-        <div className="total-students">
-          Total Students: {totalStudents}
+        <div className="header-actions">
+          <div className="total-students">
+            Total Students: {totalStudents}
+            <button 
+              className="refresh-btn"
+              onClick={fetchStudents}
+              disabled={loading}
+            >
+              <span className="refresh-icon">↻</span>
+            </button>
+          </div>
+          <button 
+            className="fetch-btn"
+            onClick={() => setShowConfirmDialog(true)}
+            disabled={fetching}
+          >
+            {fetching ? 'Fetching...' : 'Fetch New Students'}
+          </button>
         </div>
       </div>
       
@@ -161,6 +208,43 @@ export default function Students({ user }) {
           onClose={() => setSelectedStudent(null)}
           onVerify={handleVerify}
         />
+      )}
+
+      {showConfirmDialog && (
+        <div className="modal-overlay">
+          <div className="confirm-dialog">
+            <h2>Fetch New Students</h2>
+            
+              {students.length === 0 
+                ? (<p>You currently have no students. This will fetch students for slot 1.</p>
+            ):(<>`You currently have students in slot {students[0].slot}. This will move you to slot {students[0].slot + 1} and fetch new students.`
+              <p className="warning-text">
+              ⚠️ Important: This action cannot be undone. Once you move to the next slot, you won't be able to:
+            </p>
+            <ul className="warning-list">
+              <li>Return to the previous slot</li>
+              <li>Fetch students from the previous slot again</li>
+              <li>Verify students from the previous slot</li>
+            </ul>
+            </>)}
+            <div className="dialog-actions">
+              <button 
+                className="cancel-btn"
+                onClick={() => setShowConfirmDialog(false)}
+                disabled={fetching}
+              >
+                Cancel
+              </button>
+              <button 
+                className="confirm-btn"
+                onClick={handleFetchNewStudents}
+                disabled={fetching}
+              >
+                {fetching ? 'Fetching...' : 'Confirm'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

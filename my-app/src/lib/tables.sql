@@ -191,11 +191,11 @@ CREATE TABLE stats (
 );
 
 -- Insert users (admin)
-INSERT INTO users (name, username, password, role)
-VALUES 
-('Karthik', '2300032048', '$2a$10$LOYUMO84WPbDnjFn20XEHeVPSMmvBtq2NsmnSbcbj493Y/GsMX./S', 'admin'),
-('Sai Vijay', '5387', '$2a$10$LOYUMO84WPbDnjFn20XEHeVPSMmvBtq2NsmnSbcbj493Y/GsMX./S', 'admin');
+-- INSERT INTO users (name, username, password, role)
+-- VALUES 
+-- ('Karthik', '2300032048', '$2a$10$LOYUMO84WPbDnjFn20XEHeVPSMmvBtq2NsmnSbcbj493Y/GsMX./S', 'admin'),
+-- ('Sai Vijay', '5387', '$2a$10$LOYUMO84WPbDnjFn20XEHeVPSMmvBtq2NsmnSbcbj493Y/GsMX./S', 'admin');
 
 -- Insert stats record
-INSERT INTO stats() VALUES ();
+-- INSERT INTO stats() VALUES ();
 

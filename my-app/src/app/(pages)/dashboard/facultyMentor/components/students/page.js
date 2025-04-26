@@ -5,45 +5,56 @@ import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
 import './page.css';
 import VerifyModal from './VerifyModal';
+import { FaSync } from 'react-icons/fa';
 
 export default function Students({ user }) {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchStudents = async () => {
+    try {
+      setError(null);
+      const response = await fetch('/api/dashboard/facultyMentor/students', {
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch students');
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        setStudents(data.students || []);
+      } else {
+        throw new Error(data.error || 'Failed to fetch students');
+      }
+    } catch (err) {
+      console.error('Error fetching students:', err);
+      setError(err.message);
+      toast.error(err.message);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchStudents = async () => {
-      try {
-        setError(null);
-        const response = await fetch('/api/dashboard/facultyMentor/students', {
-          credentials: 'include'
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch students');
-        }
-
-        const data = await response.json();
-        console.log(data);
-        setStudents(data);
-      } catch (err) {
-        console.error('Error fetching students:', err);
-        setError(err.message);
-        toast.error(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchStudents();
   }, []); // Empty dependency array to run only once on mount
 
-  const getUploadCount = (submissions) => {
-    if (!submissions) return 0;
+  const handleRefresh = () => {
+    setRefreshing(true);
+    fetchStudents();
+  };
+
+  const getUploadCount = (uploads) => {
+    if (!uploads) return 0;
     let count = 0;
     for (let i = 1; i <= 7; i++) {
-      if (submissions[`day${i}`]) {
+      if (uploads[`day${i}`]) {
         count++;
       }
     }
@@ -67,14 +78,13 @@ export default function Students({ user }) {
         throw new Error('Failed to update verification status');
       }
 
-
       setStudents(prevStudents => 
         prevStudents.map(student => {
           if (student.username === selectedStudent.username) {
             return {
               ...student,
-              verified: {
-                ...student.verified,
+              verify: {
+                ...student.verify,
                 [day]: status
               }
             };
@@ -103,8 +113,18 @@ export default function Students({ user }) {
     <div className="students-section">
       <div className="section-header">
         <h1>Your Students</h1>
-        <div className="total-students">
-          Total Students: {students.length}
+        <div className="header-actions">
+          <div className="total-students">
+            Total Students: {students.length}
+          </div>
+          <button 
+            className="refresh-btn"
+            onClick={handleRefresh}
+            disabled={refreshing}
+          >
+            <FaSync className={refreshing ? 'spinning' : ''} />
+            {refreshing ? 'Refreshing...' : 'Refresh'}
+          </button>
         </div>
       </div>
       
@@ -124,15 +144,15 @@ export default function Students({ user }) {
           </thead>
           <tbody>
             {students.map((student) => {
-              const uploadCount = getUploadCount(student.submissions);
+              const uploadCount = getUploadCount(student.uploads);
               return (
                 <tr key={student.username}>
                   <td>{student.name}</td>
                   <td>{student.username}</td>
-                  <td>{student.domain}</td>
+                  <td>{student.selectedDomain}</td>
                   <td>{student.mode}</td>
                   <td>{student.slot}</td>
-                  <td>{student.leadName}</td>
+                  <td>{student.studentLeadId}</td>
                   <td>
                     <div className="upload-status">
                       <span className={`upload-count ${uploadCount === 7 ? 'completed' : 'pending'}`}>

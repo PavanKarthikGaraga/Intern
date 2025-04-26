@@ -10,6 +10,7 @@ import Overview from './components/overview/page';
 import Profile from './components/profile/page';
 import ChangePassword from './components/changePassword/page';
 import Students from './components/students/page';
+import Leads from './components/leads/page';
 import CompletedStudents from './components/completedStudents/page';
 import { FaCheckCircle, FaCalendarAlt, FaClock } from 'react-icons/fa';
 
@@ -57,6 +58,11 @@ export default function FacultyMentorDashboard() {
           >
             <span className="item-label">Profile</span>
           </button>
+          <button  className={`sidebar-item ${activeSection === 'leads' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('leads')}
+          >
+            <span className="item-label">Leads</span>
+          </button>
           <button
             className={`sidebar-item ${activeSection === 'students' ? 'active' : ''}`}
             onClick={() => handleSectionClick('students')}
@@ -81,6 +87,7 @@ export default function FacultyMentorDashboard() {
           {activeSection === 'overview' ? <Overview user={user} /> : 
            activeSection === 'profile' ? <Profile user={user} /> :
            activeSection === 'students' ? <Students user={user} /> :
+           activeSection === 'leads' ? <Leads user={user} /> :
            activeSection === 'completed-students' ? <CompletedStudents user={user} /> :
            <ChangePassword user={user} />}
         </main>
