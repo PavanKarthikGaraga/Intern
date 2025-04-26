@@ -469,7 +469,6 @@ export default function Register() {
                   <h4>Program Overview</h4>
                   <p>The Social Internship Program is a transformative initiative aimed at providing students with real-world exposure to community service. The program is structured across four internship slots, accommodating a total of 1200 students per slot — comprising 900 remote and 300 in-campus students.</p>
                 </div>
-
                 <div className="slots-table">
                   <table>
                     <thead>
