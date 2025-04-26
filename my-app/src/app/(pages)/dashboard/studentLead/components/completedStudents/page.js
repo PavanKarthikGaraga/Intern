@@ -1,22 +1,21 @@
-'use client';
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import toast from 'react-hot-toast';
-import { useAuth } from '@/context/AuthContext';
-import './page.css';
+"use client";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import "./page.css";
 
-export default function CompletedStudents() {
+const CompletedStudentsPage = () => {
+  const router = useRouter();
+  const { user } = useAuth();
   const [completedStudents, setCompletedStudents] = useState([]);
   const [failedStudents, setFailedStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedSlot, setSelectedSlot] = useState('all');
+  const [selectedSlot, setSelectedSlot] = useState("all");
   const [pagination, setPagination] = useState({
     verified: { currentPage: 1, totalPages: 1 },
     failed: { currentPage: 1, totalPages: 1 }
   });
-  const router = useRouter();
-  const { user } = useAuth();
 
   const fetchStudents = async (page = 1, slot = selectedSlot) => {
     try {
@@ -59,7 +58,6 @@ export default function CompletedStudents() {
     } catch (err) {
       console.error('Error fetching students:', err);
       setError(err.message);
-      toast.error('Failed to load students');
     } finally {
       setLoading(false);
     }
@@ -83,46 +81,57 @@ export default function CompletedStudents() {
 
   if (loading) {
     return (
-      <div className="loadingState">
-        Loading students...
+      <div className="completed-section">
+        <div className="loading">Loading...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="errorState">
-        Error: {error}
+      <div className="completed-section">
+        <div className="error">{error}</div>
       </div>
     );
   }
 
   return (
-    <div className="studentsContainer">
-      <div className="filterBar">
-        <select 
-          className="slotDropdown"
-          value={selectedSlot}
-          onChange={handleSlotChange}
-        >
-          <option value="all">All Slots</option>
-          <option value="1">Slot 1</option>
-          <option value="2">Slot 2</option>
-          <option value="3">Slot 3</option>
-          <option value="4">Slot 4</option>
-        </select>
+    <div className="completed-section">
+      <div className="section-header">
+        <h1>Completed Students</h1>
       </div>
 
-      <div className="studentSection">
-        <h2>Completed Students</h2>
-        {completedStudents.length > 0 ? (
-          <>
-            <table className="studentTable">
+      <div className="filters">
+        <div className="filter-group">
+          <label htmlFor="slot-filter">Filter by Slot</label>
+          <select
+            id="slot-filter"
+            value={selectedSlot}
+            onChange={handleSlotChange}
+          >
+            <option value="all">All Slots</option>
+            <option value="1">Slot 1</option>
+            <option value="2">Slot 2</option>
+            <option value="3">Slot 3</option>
+            <option value="4">Slot 4</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="status-sections">
+        <div className="status-section">
+          <h2>
+            Successfully Completed ({completedStudents.length})
+          </h2>
+          <p className="section-description">
+            Students who have successfully completed their internship
+          </p>
+          <div className="table-container">
+            <table className="completed-table">
               <thead>
                 <tr>
                   <th>Name</th>
                   <th>Username</th>
-                  {/* <th>Email</th> */}
                   <th>Branch</th>
                   <th>Domain</th>
                   <th>Mode</th>
@@ -131,59 +140,72 @@ export default function CompletedStudents() {
                 </tr>
               </thead>
               <tbody>
-                {completedStudents.map((student) => (
-                  <tr key={student.username}>
-                    <td>{student.studentName}</td>
-                    <td>{student.username}</td>
-                    {/* <td>{student.email}</td> */}
-                    <td>{student.branch}</td>
-                    <td>{student.selectedDomain}</td>
-                    <td>{student.mode}</td>
-                    <td>{student.slot}</td>
-                    <td>
-                      <span className="statusBadge completedStatus">
-                        Completed
-                      </span>
+                {completedStudents.length > 0 ? (
+                  completedStudents.map((student) => (
+                    <tr key={student.username}>
+                      <td>{student.studentName}</td>
+                      <td>{student.username}</td>
+                      <td>{student.branch}</td>
+                      <td>{student.selectedDomain}</td>
+                      <td>
+                        <span className={`mode-badge ${student.mode.toLowerCase()}`}>
+                          {student.mode}
+                        </span>
+                      </td>
+                      <td>
+                        <span className="slot-badge">{student.slot}</span>
+                      </td>
+                      <td>
+                        <span className="status-badge completed">Completed</span>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="7">
+                      <div className="no-students">
+                        <p className="no-students-message">
+                          No completed students found
+                        </p>
+                      </div>
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
-            <div className="paginationControls">
-              <button
-                onClick={() => handlePageChange('verified', pagination.verified.currentPage - 1)}
-                disabled={pagination.verified.currentPage === 1}
-              >
-                Previous
-              </button>
-              <span>
-                Page {pagination.verified.currentPage} of {pagination.verified.totalPages}
-              </span>
-              <button
-                onClick={() => handlePageChange('verified', pagination.verified.currentPage + 1)}
-                disabled={pagination.verified.currentPage === pagination.verified.totalPages}
-              >
-                Next
-              </button>
-            </div>
-          </>
-        ) : (
-          <div className="noDataMessage">
-            No completed students found
           </div>
-        )}
-      </div>
+          <div className="pagination-controls">
+            <button
+              onClick={() => handlePageChange('verified', pagination.verified.currentPage - 1)}
+              disabled={pagination.verified.currentPage === 1}
+            >
+              Previous
+            </button>
+            <span>
+              Page {pagination.verified.currentPage} of {pagination.verified.totalPages}
+            </span>
+            <button
+              onClick={() => handlePageChange('verified', pagination.verified.currentPage + 1)}
+              disabled={pagination.verified.currentPage === pagination.verified.totalPages}
+            >
+              Next
+            </button>
+          </div>
+        </div>
 
-      <div className="studentSection">
-        <h2>Failed Students</h2>
-        {failedStudents.length > 0 ? (
-          <>
-            <table className="studentTable">
+        <div className="status-section">
+          <h2>
+            Failed Students ({failedStudents.length})
+          </h2>
+          <p className="section-description">
+            Students who did not complete their internship successfully
+          </p>
+          <div className="table-container">
+            <table className="completed-table">
               <thead>
                 <tr>
                   <th>Name</th>
                   <th>Username</th>
-                  {/* <th>Email</th> */}
                   <th>Branch</th>
                   <th>Domain</th>
                   <th>Mode</th>
@@ -192,48 +214,61 @@ export default function CompletedStudents() {
                 </tr>
               </thead>
               <tbody>
-                {failedStudents.map((student) => (
-                  <tr key={student.username}>
-                    <td>{student.studentName}</td>
-                    <td>{student.username}</td>
-                    {/* <td>{student.email}</td> */}
-                    <td>{student.branch}</td>
-                    <td>{student.selectedDomain}</td>
-                    <td>{student.mode}</td>
-                    <td>{student.slot}</td>
-                    <td>
-                      <span className="statusBadge failedStatus">
-                        Failed
-                      </span>
+                {failedStudents.length > 0 ? (
+                  failedStudents.map((student) => (
+                    <tr key={student.username}>
+                      <td>{student.studentName}</td>
+                      <td>{student.username}</td>
+                      <td>{student.branch}</td>
+                      <td>{student.selectedDomain}</td>
+                      <td>
+                        <span className={`mode-badge ${student.mode.toLowerCase()}`}>
+                          {student.mode}
+                        </span>
+                      </td>
+                      <td>
+                        <span className="slot-badge">{student.slot}</span>
+                      </td>
+                      <td>
+                        <span className="status-badge failed">Failed</span>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="7">
+                      <div className="no-students">
+                        <p className="no-students-message">
+                          No failed students found
+                        </p>
+                      </div>
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
-            <div className="paginationControls">
-              <button
-                onClick={() => handlePageChange('failed', pagination.failed.currentPage - 1)}
-                disabled={pagination.failed.currentPage === 1}
-              >
-                Previous
-              </button>
-              <span>
-                Page {pagination.failed.currentPage} of {pagination.failed.totalPages}
-              </span>
-              <button
-                onClick={() => handlePageChange('failed', pagination.failed.currentPage + 1)}
-                disabled={pagination.failed.currentPage === pagination.failed.totalPages}
-              >
-                Next
-              </button>
-            </div>
-          </>
-        ) : (
-          <div className="noDataMessage">
-            No failed students found
           </div>
-        )}
+          <div className="pagination-controls">
+            <button
+              onClick={() => handlePageChange('failed', pagination.failed.currentPage - 1)}
+              disabled={pagination.failed.currentPage === 1}
+            >
+              Previous
+            </button>
+            <span>
+              Page {pagination.failed.currentPage} of {pagination.failed.totalPages}
+            </span>
+            <button
+              onClick={() => handlePageChange('failed', pagination.failed.currentPage + 1)}
+              disabled={pagination.failed.currentPage === pagination.failed.totalPages}
+            >
+              Next
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
-}
+};
+
+export default CompletedStudentsPage;

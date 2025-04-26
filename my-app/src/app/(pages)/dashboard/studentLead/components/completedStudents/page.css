@@ -1,153 +1,262 @@
-.studentsContainer {
-  padding: 10px 0 0 0;
+.completed-section {
+  padding: 2rem;
   max-width: 1200px;
   margin: 0 auto;
 }
 
-.filterBar {
-  margin-bottom: 10px;
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
+.section-header {
+  margin-bottom: 2rem;
 }
 
-.slotDropdown {
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background-color: white;
-  font-size: 14px;
+.section-header h1 {
+  font-size: 2rem;
   color: #333;
-  cursor: pointer;
-  min-width: 120px;
+  margin: 0;
 }
 
-.slotDropdown:focus {
-  outline: none;
-  border-color: rgb(151, 0, 3);
+.status-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
 
-.studentSection {
-  margin-bottom: 16px;
+.status-section {
   background: white;
   border-radius: 8px;
-  padding: 10px 10px 0 10px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
 }
 
-.studentSection h2 {
+.status-section h2 {
+  font-size: 1.5rem;
   color: #333;
-  font-size: 1.2rem;
-  margin-bottom: 10px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid #eee;
+  margin: 0 0 0.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.studentTable {
+.status-section h2 .count-badge {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.section-description {
+  color: #666;
+  margin: 0 0 1rem 0;
+  font-size: 0.9rem;
+}
+
+.table-container {
+  overflow-x: auto;
+  margin-top: 1rem;
+}
+
+.completed-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 10px;
+  margin-top: 1rem;
 }
 
-.studentTable th,
-.studentTable td {
-  padding: 8px 10px;
+.completed-table th,
+.completed-table td {
+  padding: 0.75rem;
   text-align: left;
   border-bottom: 1px solid #eee;
 }
 
-.studentTable th {
-  background-color: #f8f9fa;
+.completed-table th {
+  background-color: #f5f5f5;
   font-weight: 600;
   color: #333;
-  font-size: 0.95rem;
 }
 
-.studentTable td {
-  font-size: 0.95rem;
-  color: #666;
+.completed-table tr:hover {
+  background-color: #f9f9f9;
 }
 
-.studentTable tr:hover {
-  background-color: #f8f9fa;
-}
-
-.statusBadge {
+.mode-badge {
   display: inline-block;
-  padding: 4px 8px;
+  padding: 0.25rem 0.5rem;
   border-radius: 4px;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   font-weight: 500;
 }
 
-.completedStatus {
+.mode-badge.remote {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.mode-badge.incampus {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.mode-badge.invillage {
+  background-color: #fff3e0;
+  color: #f57c00;
+}
+
+.slot-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  background-color: #f5f5f5;
+  color: #666;
+  font-size: 0.8rem;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.status-badge.completed {
   background-color: #d4edda;
   color: #155724;
 }
 
-.failedStatus {
+.status-badge.failed {
   background-color: #f8d7da;
   color: #721c24;
 }
 
-.paginationControls {
+.filters {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  margin-top: 10px;
-  padding: 5px 0 10px 0;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
 }
 
-.paginationControls button {
-  padding: 6px 14px;
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-group label {
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.filter-group select {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: white;
+  font-size: 0.9rem;
+  min-width: 200px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-group select:hover {
+  border-color: #999;
+}
+
+.filter-group select:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.1);
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+}
+
+.pagination-controls button {
+  padding: 0.5rem 1rem;
   border: 1px solid #ddd;
   border-radius: 4px;
   background-color: white;
   color: #333;
+  font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 0.95rem;
 }
 
-.paginationControls button:hover:not(:disabled) {
-  background-color: #f8f9fa;
-  border-color: rgb(151, 0, 3);
-  color: rgb(151, 0, 3);
+.pagination-controls button:hover:not(:disabled) {
+  background-color: #f5f5f5;
+  border-color: #999;
 }
 
-.paginationControls button:disabled {
+.pagination-controls button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.paginationControls span {
+.pagination-controls span {
   color: #666;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
 }
 
-.loadingState {
+.no-students {
+  padding: 2rem;
   text-align: center;
-  padding: 20px 0;
-  color: #666;
-  font-size: 1rem;
-}
-
-.errorState {
-  text-align: center;
-  padding: 20px 0;
-  color: #dc3545;
-  background-color: #f8d7da;
+  background-color: #f9f9f9;
   border-radius: 8px;
-  margin: 10px 0;
+  margin-top: 1rem;
 }
 
-.noDataMessage {
-  text-align: center;
-  padding: 10px 0;
+.no-students-message {
   color: #666;
-  background-color: #f8f9fa;
+}
+
+.loading {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+}
+
+.error {
+  color: #d32f2f;
+  padding: 1rem;
+  background-color: #ffebee;
   border-radius: 4px;
-  margin-top: 10px;
-  font-size: 0.95rem;
+  margin-top: 1rem;
+}
+
+@media (max-width: 768px) {
+  .completed-section {
+    padding: 1rem;
+  }
+
+  .status-section {
+    padding: 1rem;
+  }
+
+  .completed-table th,
+  .completed-table td {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  .filters {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .filter-group select {
+    width: 100%;
+  }
+
+  .pagination-controls {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
 }

@@ -1,73 +1,76 @@
 .completed-section {
   padding: 2rem;
-  background-color: #f8f9fa;
-  min-height: 100vh;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   margin-bottom: 2rem;
 }
 
 .section-header h1 {
-  color: rgb(151, 0, 3);
-  font-size: 1.8rem;
-  font-weight: 600;
+  font-size: 2rem;
+  color: #333;
   margin: 0;
 }
 
-.total-students {
-  background-color: rgb(151, 0, 3);
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  font-weight: 500;
+.status-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.status-section {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+}
+
+.status-section h2 {
+  font-size: 1.5rem;
+  color: #333;
+  margin: 0 0 0.5rem 0;
+}
+
+.section-description {
+  color: #666;
+  margin: 0 0 1rem 0;
+  font-size: 0.9rem;
 }
 
 .table-container {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow-x: auto;
+  margin-top: 1rem;
 }
 
 .completed-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 800px;
+  margin-top: 1rem;
 }
 
 .completed-table th,
 .completed-table td {
-  padding: 1rem;
+  padding: 0.75rem;
   text-align: left;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid #eee;
 }
 
 .completed-table th {
-  background-color: #f8f9fa;
-  color: #333;
+  background-color: #f5f5f5;
   font-weight: 600;
-  text-transform: uppercase;
-  font-size: 0.8rem;
-  letter-spacing: 0.5px;
+  color: #333;
 }
 
 .completed-table tr:hover {
-  background-color: #f8f9fa;
-}
-
-.completed-table td {
-  color: #333;
-  font-size: 0.9rem;
+  background-color: #f9f9f9;
 }
 
 .mode-badge {
   display: inline-block;
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
   font-size: 0.8rem;
   font-weight: 500;
 }
@@ -82,20 +85,23 @@
   color: #2e7d32;
 }
 
+.mode-badge.invillage {
+  background-color: #fff3e0;
+  color: #f57c00;
+}
+
 .slot-badge {
   display: inline-block;
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.8rem;
-  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
   background-color: #f5f5f5;
-  color: #333;
+  color: #666;
+  font-size: 0.8rem;
 }
 
 .lead-info {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
 }
 
 .lead-info small {
@@ -110,9 +116,9 @@
 }
 
 .contact-link {
-  color: rgb(151, 0, 3);
+  color: #1976d2;
   text-decoration: none;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
 }
 
 .contact-link:hover {
@@ -120,7 +126,7 @@
 }
 
 .report-link {
-  color: rgb(151, 0, 3);
+  color: #2e7d32;
   text-decoration: none;
   font-weight: 500;
 }
@@ -132,52 +138,71 @@
 .no-report {
   color: #666;
   font-style: italic;
-  font-size: 0.8rem;
-}
-
-.loading {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 200px;
-  color: #666;
-  font-size: 1.1rem;
-}
-
-.error {
-  color: #c62828;
-  padding: 1rem;
-  background-color: #ffebee;
-  border-radius: 4px;
-  margin: 1rem 0;
 }
 
 .no-students {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 3rem 2rem;
+  padding: 2rem;
   text-align: center;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  margin-top: 1rem;
 }
 
 .no-students-message {
-  max-width: 400px;
-  margin: 0 auto;
-}
-
-.no-students-message span {
-  display: block;
-  font-size: 1.2rem;
-  font-weight: 500;
-  color: #333;
-  margin-bottom: 1rem;
-}
-
-.no-students-message p {
   color: #666;
+}
+
+.loading {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+}
+
+.error {
+  color: #d32f2f;
+  padding: 1rem;
+  background-color: #ffebee;
+  border-radius: 4px;
+  margin-top: 1rem;
+}
+
+.filters {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-group label {
   font-size: 0.9rem;
-  line-height: 1.5;
-  margin: 0;
+  color: #666;
+  font-weight: 500;
+}
+
+.filter-group select {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: white;
+  font-size: 0.9rem;
+  min-width: 200px;
+  cursor: pointer;
+}
+
+.filter-group select:hover {
+  border-color: #999;
+}
+
+.filter-group select:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.1);
 }
 
 @media (max-width: 768px) {
@@ -185,18 +210,22 @@
     padding: 1rem;
   }
 
-  .section-header {
+  .status-section {
+    padding: 1rem;
+  }
+
+  .completed-table th,
+  .completed-table td {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  .filters {
     flex-direction: column;
-    align-items: flex-start;
     gap: 1rem;
   }
 
-  .table-container {
-    margin: 0 -1rem;
-    border-radius: 0;
-  }
-
-  .contact-info {
-    font-size: 0.8rem;
+  .filter-group select {
+    width: 100%;
   }
 } 
