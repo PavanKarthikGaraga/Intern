@@ -161,6 +161,25 @@ CREATE TABLE final (
     FOREIGN KEY (username) REFERENCES registrations(username)
 );
 
+-- Create marks table for final report evaluation
+CREATE TABLE marks (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(10) NOT NULL UNIQUE,
+    facultyMentorId VARCHAR(10) NOT NULL,
+    attendanceMarks INT NOT NULL DEFAULT 0,
+    taskCompletionMarks INT NOT NULL DEFAULT 0,
+    problemIdentificationMarks INT NOT NULL DEFAULT 0,
+    creativeWorkMarks INT NOT NULL DEFAULT 0,
+    finalReportMarks INT NOT NULL DEFAULT 0,
+    totalMarks INT NOT NULL DEFAULT 0,
+    grade VARCHAR(50) NOT NULL DEFAULT 'Not Qualified',
+    feedback TEXT,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (username) REFERENCES registrations(username),
+    FOREIGN KEY (facultyMentorId) REFERENCES facultyMentors(username)
+);
+
 -- Create stats table
 CREATE TABLE stats (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,

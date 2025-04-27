@@ -55,6 +55,21 @@ export default function CompletedStudents() {
     setFilters(prev => ({ ...prev, [field]: value }));
   };
 
+  const getGradeClass = (grade) => {
+    switch (grade) {
+      case 'A':
+        return 'grade-a';
+      case 'B':
+        return 'grade-b';
+      case 'C':
+        return 'grade-c';
+      case 'F':
+        return 'grade-f';
+      default:
+        return '';
+    }
+  };
+
   const renderStudentTable = (students, type) => {
     if (students.length === 0) {
       return (
@@ -73,13 +88,12 @@ export default function CompletedStudents() {
             <tr>
               <th>Name</th>
               <th>Username</th>
-              <th>Branch</th>
-              <th>Year</th>
               <th>Mode</th>
               <th>Slot</th>
               <th>Student Lead</th>
               {/* <th>Contact</th> */}
               {type === 'completed' && <th>Report</th>}
+              {type === 'completed' && <th>Grade</th>}
             </tr>
           </thead>
           <tbody>
@@ -87,8 +101,6 @@ export default function CompletedStudents() {
               <tr key={student.username}>
                 <td>{student.name}</td>
                 <td>{student.username}</td>
-                <td>{student.branch}</td>
-                <td>{student.year}</td>
                 <td>
                   <span className={`mode-badge ${student.mode.toLowerCase()}`}>
                     {student.mode}
@@ -129,6 +141,13 @@ export default function CompletedStudents() {
                     ) : (
                       <span className="no-report">No Report</span>
                     )}
+                  </td>
+                )}
+                {type === 'completed' && (
+                  <td>
+                    <span className={`grade-badge ${getGradeClass(student.grade)}`}>
+                      {student.grade}
+                    </span>
                   </td>
                 )}
               </tr>

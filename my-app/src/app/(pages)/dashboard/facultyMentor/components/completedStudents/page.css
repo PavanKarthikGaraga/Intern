@@ -205,6 +205,36 @@
   box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.1);
 }
 
+.grade-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-align: center;
+  min-width: 32px;
+}
+
+.grade-a {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.grade-b {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.grade-c {
+  background-color: #fff3e0;
+  color: #f57c00;
+}
+
+.grade-f {
+  background-color: #ffebee;
+  color: #d32f2f;
+}
+
 @media (max-width: 768px) {
   .completed-section {
     padding: 1rem;

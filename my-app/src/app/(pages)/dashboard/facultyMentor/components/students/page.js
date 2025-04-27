@@ -118,7 +118,7 @@ export default function Students({ user }) {
             Total Students: {students.length}
           </div>
           <button 
-            className="refresh-btn"
+            className="total-students"
             onClick={handleRefresh}
             disabled={refreshing}
           >

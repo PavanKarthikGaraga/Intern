@@ -61,12 +61,15 @@ export async function GET(request) {
         r.slot,
         sl.name as studentLeadName,
         sl.username as studentLeadUsername,
-        f.finalReport
+        f.finalReport,
+        m.grade,
+        m.updatedAt as lastEvaluated
       FROM registrations r
       INNER JOIN final f ON r.username = f.username
       LEFT JOIN studentLeads sl ON r.studentLeadId = sl.username
+      LEFT JOIN marks m ON r.username = m.username
       WHERE ${conditions} AND r.verified = true AND f.completed = true
-      ORDER BY r.name ASC`,
+      ORDER BY m.updatedAt DESC, r.name ASC`,
       queryParams
     );
 
@@ -83,12 +86,13 @@ export async function GET(request) {
         r.slot,
         sl.name as studentLeadName,
         sl.username as studentLeadUsername,
-        f.finalReport
+        f.finalReport,
+        r.updatedAt as lastUpdated
       FROM registrations r
       INNER JOIN final f ON r.username = f.username
       LEFT JOIN studentLeads sl ON r.studentLeadId = sl.username
       WHERE ${conditions} AND r.verified = true AND f.completed = false
-      ORDER BY r.name ASC`,
+      ORDER BY r.updatedAt DESC, r.name ASC`,
       queryParams
     );
 
@@ -104,12 +108,13 @@ export async function GET(request) {
         r.mode,
         r.slot,
         sl.name as studentLeadName,
-        sl.username as studentLeadUsername
+        sl.username as studentLeadUsername,
+        r.updatedAt as lastUpdated
       FROM registrations r
       LEFT JOIN final f ON r.username = f.username
       LEFT JOIN studentLeads sl ON r.studentLeadId = sl.username
       WHERE ${conditions} AND (r.verified = false OR f.username IS NULL)
-      ORDER BY r.name ASC`,
+      ORDER BY r.updatedAt DESC, r.name ASC`,
       queryParams
     );
 

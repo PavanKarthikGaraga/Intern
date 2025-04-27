@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
+import EvaluationModal from './EvaluationModal';
 import './page.css';
 
 export default function FinalReports() {
@@ -14,10 +15,13 @@ export default function FinalReports() {
     submittedReports: [],
     pendingReports: []
   });
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [viewedReports, setViewedReports] = useState(new Set());
 
   useEffect(() => {
     if (!user) {
-      router.push('/login');
+      router.push('/auth/login');
       return;
     }
 
@@ -51,26 +55,40 @@ export default function FinalReports() {
     }
   };
 
-  const handleVerify = async (username, completed) => {
+  const handleDocumentClick = (student) => {
+    setSelectedStudent(student);
+    setViewedReports(prev => new Set([...prev, student.username]));
+  };
+
+  const handleEvaluationClick = (student) => {
+    setSelectedStudent(student);
+    setIsModalOpen(true);
+  };
+
+  const handleEvaluationSubmit = async (evaluationData) => {
     try {
-      const response = await fetch('/api/dashboard/facultyMentor/finalReports', {
+      const response = await fetch('/api/dashboard/facultyMentor/evaluate', {
         method: 'POST',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ username, completed })
+        body: JSON.stringify({
+          username: selectedStudent.username,
+          ...evaluationData
+        })
       });
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || 'Failed to update report status');
+        throw new Error(data.error || 'Failed to submit evaluation');
       }
 
       await fetchReports();
-      toast.success(`Report marked as completed`);
+      setIsModalOpen(false);
+      toast.success('Evaluation submitted successfully');
     } catch (err) {
-      console.error('Error verifying report:', err);
+      console.error('Error submitting evaluation:', err);
       toast.error(err.message);
     }
   };
@@ -107,8 +125,6 @@ export default function FinalReports() {
                 <tr>
                   <th>Name</th>
                   <th>ID</th>
-                  <th>Branch</th>
-                  <th>Year</th>
                   <th>Mode</th>
                   <th>Slot</th>
                   <th>Student Lead</th>
@@ -122,8 +138,6 @@ export default function FinalReports() {
                   <tr key={student.username}>
                     <td>{student.name}</td>
                     <td>{student.username}</td>
-                    <td>{student.branch}</td>
-                    <td>{student.year}</td>
                     <td>
                       <span className={`mode-badge ${student.mode.toLowerCase()}`}>
                         {student.mode}
@@ -146,6 +160,11 @@ export default function FinalReports() {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="report-link"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleDocumentClick(student);
+                          window.open(student.finalReport, '_blank');
+                        }}
                       >
                         View Report
                       </a>
@@ -156,13 +175,13 @@ export default function FinalReports() {
                       </span>
                     </td>
                     <td>
-                      {!student.completed && (
+                      {viewedReports.has(student.username) && (
                         <div className="action-buttons">
                           <button
                             className="verify-btn"
-                            onClick={() => handleVerify(student.username, true)}
+                            onClick={() => handleEvaluationClick(student)}
                           >
-                            Mark as Completed
+                            Evaluate Report
                           </button>
                         </div>
                       )}
@@ -187,8 +206,6 @@ export default function FinalReports() {
                 <tr>
                   <th>Name</th>
                   <th>ID</th>
-                  <th>Branch</th>
-                  <th>Year</th>
                   <th>Mode</th>
                   <th>Slot</th>
                   <th>Student Lead</th>
@@ -200,8 +217,6 @@ export default function FinalReports() {
                   <tr key={student.username}>
                     <td>{student.name}</td>
                     <td>{student.username}</td>
-                    <td>{student.branch}</td>
-                    <td>{student.year}</td>
                     <td>
                       <span className={`mode-badge ${student.mode.toLowerCase()}`}>
                         {student.mode}
@@ -209,7 +224,7 @@ export default function FinalReports() {
                     </td>
                     <td>
                       <span className="slot-badge">
-                        Slot {student.slot}
+                        {student.slot}
                       </span>
                     </td>
                     <td>
@@ -228,6 +243,15 @@ export default function FinalReports() {
           )}
         </div>
       </div>
+
+      {isModalOpen && (
+        <EvaluationModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSubmit={handleEvaluationSubmit}
+          student={selectedStudent}
+        />
+      )}
     </div>
   );
 } 
