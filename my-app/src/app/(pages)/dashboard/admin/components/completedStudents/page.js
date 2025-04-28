@@ -151,7 +151,7 @@ export default function CompletedStudents() {
                     <div className="student-details">
                       {student.finalReport ? (
                         <a href={student.finalReport} target="_blank" rel="noopener noreferrer">
-                          View Final Report
+                          View
                         </a>
                       ) : (
                         <span className="no-details">No final report</span>

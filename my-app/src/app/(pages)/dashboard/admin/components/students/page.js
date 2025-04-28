@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
 import './page.css';
 import VerifyModal from './VerifyModal';
-import { FaSearch, FaTrash, FaDownload } from 'react-icons/fa';
+import { FaSearch, FaTrash, FaDownload, FaSync } from 'react-icons/fa';
 
 ;
 
@@ -240,9 +240,14 @@ export default function Students() {
             Total Students: {pagination.totalItems || 0}
           </div>
         </div>
-        <button className="download-btn" onClick={handleDownloadExcel}>
-          <FaDownload /> Download Excel
-        </button>
+        <div className="header-buttons">
+          <button className="download-btn" onClick={fetchStudents}>
+            <FaSync /> Refresh
+          </button>
+          <button className="download-btn" onClick={handleDownloadExcel}>
+            <FaDownload /> Download Excel
+          </button>
+        </div>
       </div>
 
       <div className="filters-container">
