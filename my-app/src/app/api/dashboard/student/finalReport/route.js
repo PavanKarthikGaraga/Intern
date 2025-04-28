@@ -52,7 +52,13 @@ export async function GET(request) {
         data: {
           verified: registration[0].verified === 1, // Convert to boolean since MySQL uses 1/0
           finalReport: final[0]?.finalReport || null,
-          completed: final[0]?.completed === 1 || false // Convert to boolean
+          completed: final[0]?.completed === 1 || false, // Convert to boolean
+          slotEndTimes: {
+            1: '2024-05-20',
+            2: '2024-05-27',
+            3: '2024-06-03',
+            4: '2024-06-10'
+          }
         }
       });
     } finally {
@@ -104,7 +110,7 @@ export async function POST(request) {
     try {
       // First check if student exists in registrations and is verified
       const [registration] = await db.query(
-        `SELECT verified, facultyMentorId FROM registrations WHERE username = ?`,
+        `SELECT verified, facultyMentorId, slot FROM registrations WHERE username = ?`,
         [decoded.username]
       );
 
@@ -119,6 +125,24 @@ export async function POST(request) {
         return NextResponse.json({ 
           success: false, 
           error: 'Student not verified.' 
+        }, { status: 403 });
+      }
+
+      // Check if submission is past deadline
+      const slotEndTimes = {
+        1: '2024-05-20',
+        2: '2024-05-27',
+        3: '2024-06-03',
+        4: '2024-06-10'
+      };
+      
+      const currentDate = new Date().toISOString().split('T')[0];
+      const deadline = slotEndTimes[registration[0].slot];
+      
+      if (currentDate > deadline) {
+        return NextResponse.json({ 
+          success: false, 
+          error: `Final report submission deadline for your slot (${deadline}) has passed.` 
         }, { status: 403 });
       }
 

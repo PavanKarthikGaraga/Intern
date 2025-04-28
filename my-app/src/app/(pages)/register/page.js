@@ -371,11 +371,13 @@ export default function Register() {
           setStats(data.stats);
           const currentStats = data.stats;
           const slotField = `slot${formData.slot}`;
-          const slotModeField = `slot${formData.slot}${formData.mode}`;
+          const slotModeField = formData.mode === 'Remote' ? `slot${formData.slot}Remote` : 
+                              formData.mode === 'Incampus' ? `slot${formData.slot}Incamp` : 
+                              `slot${formData.slot}Invillage`;
           
           // Check total slot capacity (1200)
           if (currentStats[slotField] >= 1200) {
-            setAvailabilityMessage('Not Available');
+            setAvailabilityMessage('Not Available - Slot is full');
             setIsAvailable(false);
             return;
           }
@@ -386,8 +388,9 @@ export default function Register() {
             Incampus: 150,
             InVillage: 50
           }[formData.mode] || 0;
+
           if (currentStats[slotModeField] >= maxCapacity) {
-            setAvailabilityMessage('Not Available');
+            setAvailabilityMessage(`Not Available - ${formData.mode} mode is full`);
             setIsAvailable(false);
             return;
           }

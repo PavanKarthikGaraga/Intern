@@ -13,8 +13,11 @@ const FinalReportPage = () => {
   const [status, setStatus] = useState({
     verified: false,
     completed: false,
-    finalReport: null
+    finalReport: null,
+    slotEndTimes: {}
   });
+
+  const [isPastDeadline, setIsPastDeadline] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -43,11 +46,17 @@ const FinalReportPage = () => {
           setStatus({
             verified: data.data.verified,
             completed: data.data.completed,
-            finalReport: data.data.finalReport
+            finalReport: data.data.finalReport,
+            slotEndTimes: data.data.slotEndTimes
           });
           if (data.data.finalReport) {
             setFinalReport(data.data.finalReport);
           }
+          
+          // Check if current date is past deadline
+          const currentDate = new Date().toISOString().split('T')[0];
+          const deadline = data.data.slotEndTimes[user.slot];
+          setIsPastDeadline(currentDate > deadline);
         } else {
           throw new Error(data.error || 'Failed to fetch final report status');
         }
@@ -135,6 +144,15 @@ const FinalReportPage = () => {
         </div>
       </div>
 
+      <div className="deadline-info">
+        <p>Your slot's final report submission deadline: <strong>{status.slotEndTimes[user.slot]}</strong></p>
+        {isPastDeadline && (
+          <div className="deadline-warning">
+            <p>The submission deadline has passed. You can no longer submit your final report.</p>
+          </div>
+        )}
+      </div>
+
       {status.finalReport ? (
         <div className="report-form">
           <div className="submitted-report">
@@ -161,12 +179,13 @@ const FinalReportPage = () => {
                 onChange={(e) => setFinalReport(e.target.value)}
                 placeholder="Enter the link to your final report (e.g., Google Drive, OneDrive, etc.)"
                 required
+                disabled={isPastDeadline}
               />
               <p className="input-hint">Please provide a shareable link to your final report document</p>
             </div>
 
             <div className="form-actions">
-              <button type="submit" disabled={loading}>
+              <button type="submit" disabled={loading || isPastDeadline}>
                 {loading ? 'Submitting...' : 'Submit Report'}
               </button>
             </div>

@@ -49,6 +49,40 @@
   color: #b06000;
 }
 
+.deadline-info {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #2563eb;
+}
+
+.deadline-info p {
+  margin: 0;
+  color: #444;
+  font-size: 1.1rem;
+}
+
+.deadline-info strong {
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.deadline-warning {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: #fff3f3;
+  border-radius: 6px;
+  border-left: 4px solid #dc3545;
+}
+
+.deadline-warning p {
+  margin: 0;
+  color: #dc3545;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
 .report-form,
 .submission-status {
   background: none;
