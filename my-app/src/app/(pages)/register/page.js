@@ -310,32 +310,33 @@ export default function Register() {
         toast.error('Please fill in all required fields');
         return;
       }
-
+  
       // Email validation
       const emailRegex = /^[^\s@]+@kluniversity\.in$/;
       if (!emailRegex.test(formData.studentInfo.email)) {
         toast.error('Please enter a valid KL University email address');
         return;
       }
-
+  
       // Phone number validation
       if (formData.studentInfo.phoneNumber.length !== 10) {
         toast.error('Please enter a valid 10-digit phone number');
         return;
       }
-
+  
       // Show loading toast
       loadingToast = toast.loading('Submitting registration...');
-
-      const response = await axios.post("/api/register",formData,{
-        headers:{"Content-Type":"application/json"}
+  
+      // Send request to backend
+      const response = await axios.post("/api/register", formData, {
+        headers: { "Content-Type": "application/json" }
       });
-
+  
       const data = response.data;
-
+  
       // Dismiss loading toast
       toast.dismiss(loadingToast);
-
+  
       if (data.success) {
         toast.success('Registration successful! Please check your email for confirmation.');
         // Wait for toast to be visible before redirecting
@@ -343,23 +344,27 @@ export default function Register() {
           window.location.href = '/';
         }, 2000);
       } else {
-        toast.error(data.message || 'Registration failed. Please try again.');
+        console.log("Registration error:", data);
+        toast.error(data.error || 'Registration failed. Please try again.'); // Display specific error message from backend
       }
     } catch (error) {
       // Ensure loading toast is dismissed
       if (loadingToast) {
         toast.dismiss(loadingToast);
       }
-
+  
+      // Handling different error scenarios
       if (error.response) {
         console.log("Registration error:", error.response.data);
-        toast.error(error.response.data.message || "Registration failed. Please try again.");
+        // Display error from backend (if available)
+        toast.error(error.response.data.error || error.response.data.message || "Registration failed. Please try again.");
       } else {
         console.log("Registration error:", error);
         toast.error("A network error occurred. Please try again.");
       }
     }
   };
+  
 
   const checkAvailability = async () => {
     if (formData.mode && formData.slot) {

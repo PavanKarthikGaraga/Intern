@@ -40,7 +40,6 @@ export async function POST(request) {
     const formData = await request.json();
     console.log(formData);
 
-    
     // Set transaction isolation level before starting the transaction
     await db.query('SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED');
     await db.beginTransaction();
@@ -197,7 +196,11 @@ export async function POST(request) {
       });
     } catch (error) {
       await db.rollback();
-      throw error;
+      console.error('Error during registration:', error); // Log the error for debugging
+      return new Response(JSON.stringify({ success: false, error: error.message }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
     }
   } catch (error) {
     console.error('Registration error:', error);
