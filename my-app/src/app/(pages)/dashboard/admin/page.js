@@ -15,6 +15,7 @@ import StudentLeads from './components/studentLeads/page';
 import FacultyMentors from './components/facultyMentors/page';
 import Admins from './components/admins/page';
 import DataDownload from './components/dataDownload/page';
+import BulkEmail from './components/bulkEmail/page';
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -114,6 +115,15 @@ export default function AdminDashboard() {
               <span className="item-label">Data Download</span>
             </button>
           )}
+          {user.username === '2300032048' && (
+            <button
+              className={`sidebar-item ${activeSection === 'bulk-email' ? 'active' : ''}`}
+              onClick={() => handleSectionClick('bulk-email')}
+            >
+              <span className="item-label">Bulk Email</span>
+            </button>
+          )}
+          
           <button
             className={`sidebar-item ${activeSection === 'change-password' ? 'active' : ''}`}
             onClick={() => handleSectionClick('change-password')}
@@ -132,6 +142,7 @@ export default function AdminDashboard() {
            activeSection === 'faculty-mentors' ? <FacultyMentors /> :
            activeSection === 'admins' ? <Admins /> :
            activeSection === 'data-download' ? <DataDownload /> :
+           activeSection === 'bulk-email' ? <BulkEmail /> :
            <ChangePassword />}
         </main>
       </div>

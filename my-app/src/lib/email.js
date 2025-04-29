@@ -99,18 +99,62 @@ export const sendEmail = async (to, template, data) => {
   try {
     const { subject, html, attachments } = emailTemplates[template](data);
     
-    // Add job to the email queue
-    await emailQueue.add({
-      email: to,
+    // Handle both single and bulk email sending
+    const emails = Array.isArray(to) ? to : [to];
+    const emailJobs = emails.map(email => ({
+      email,
       subject,
       html,
       attachments,
-      attempts: 0 // Initialize attempts counter
-    });
+      attempts: 0
+    }));
 
-    return { success: true };
+    // Add all jobs to the email queue
+    await emailQueue.add(emailJobs);
+
+    return { success: true, count: emails.length };
   } catch (error) {
     console.error('Failed to queue email:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Bulk email sending helper
+export const sendBulkEmails = async (recipients, template, dataArray) => {
+  try {
+    // Split recipients into chunks of 100 for better processing
+    const chunkSize = 100;
+    const chunks = [];
+    for (let i = 0; i < recipients.length; i += chunkSize) {
+      chunks.push({
+        recipients: recipients.slice(i, i + chunkSize),
+        data: dataArray.slice(i, i + chunkSize)
+      });
+    }
+
+    // Process each chunk
+    const results = await Promise.all(
+      chunks.map(chunk => {
+        const emailJobs = chunk.recipients.map((email, index) => {
+          const { subject, html } = emailTemplates[template](chunk.data[index]);
+          return {
+            email,
+            subject,
+            html,
+            attempts: 0
+          };
+        });
+        return emailQueue.add(emailJobs);
+      })
+    );
+
+    return { 
+      success: true, 
+      totalSent: recipients.length,
+      chunksProcessed: chunks.length
+    };
+  } catch (error) {
+    console.error('Failed to queue bulk emails:', error);
     return { success: false, error: error.message };
   }
 }; 

@@ -4,42 +4,12 @@ class EmailQueue {
   constructor() {
     this.queue = [];
     this.isProcessing = false;
-  }
+    this.sentInCurrentMinute = 0;
+    this.lastResetTime = Date.now();
+    this.maxEmailsPerMinute = 25;
+    this.count = 0; 
 
-  async add(job) {
-    this.queue.push(job);
-    if (!this.isProcessing) {
-      await this.processQueue();
-    }
-  }
-
-  async processQueue() {
-    if (this.queue.length === 0) {
-      this.isProcessing = false;
-      return;
-    }
-
-    this.isProcessing = true;
-    const job = this.queue.shift();
-
-    try {
-      await this.sendEmail(job);
-      console.log(`Email sent to ${job.email}`);
-    } catch (error) {
-      console.error(`Error sending email to ${job.email}:`, error);
-      // Retry logic
-      if (job.attempts < 3) {
-        job.attempts = (job.attempts || 0) + 1;
-        this.queue.push(job);
-      }
-    }
-
-    // Process next job
-    setTimeout(() => this.processQueue(), 1000);
-  }
-
-  async sendEmail(job) {
-    const transporter = nodemailer.createTransport({
+    this.transporter = nodemailer.createTransport({
       host: 'smtp.office365.com',
       port: 587,
       secure: false,
@@ -48,24 +18,72 @@ class EmailQueue {
         pass: process.env.USER_PASSWORD,
       },
     });
+  }
 
+  async add(job) {
+    if (Array.isArray(job)) {
+      this.queue.push(...job);
+    } else {
+      this.queue.push(job);
+    }
+    if (!this.isProcessing) {
+      this.processQueue();
+    }
+  }
+
+  async processQueue() {
+    this.isProcessing = true;
+
+    while (this.queue.length > 0) {
+      const now = Date.now();
+
+      // Reset counter if a minute has passed
+      if (now - this.lastResetTime >= 60000) {
+        this.sentInCurrentMinute = 0;
+        this.lastResetTime = now;
+      }
+
+      // If limit hit, wait
+      if (this.sentInCurrentMinute >= this.maxEmailsPerMinute) {
+        const waitTime = 60000 - (now - this.lastResetTime);
+        console.log(`Rate limit hit. Waiting ${waitTime / 1000}s`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+        this.sentInCurrentMinute = 0;
+        this.lastResetTime = Date.now();
+      }
+
+      const job = this.queue.shift();
+
+      try {
+        await this.sendEmail(job);
+        this.sentInCurrentMinute += 1;
+        this.count += 1;
+        console.log(`Email sent to ${job.email} : ${this.count}`);
+      } catch (error) {
+        console.error(`Error sending email to ${job.email}:`, error);
+        if ((job.attempts || 0) < 3) {
+          job.attempts = (job.attempts || 0) + 1;
+          console.log(`Retrying ${job.email}, attempt ${job.attempts}`);
+          this.queue.push(job);
+        }
+      }
+    }
+
+    this.isProcessing = false;
+  }
+
+  async sendEmail(job) {
     const mailOptions = {
       from: process.env.USER_EMAIL,
       to: job.email,
       subject: job.subject,
       html: job.html,
-      attachments: job.attachments || []
+      attachments: job.attachments || [],
     };
 
-    console.log("sending mail to ", job.email);
-
-    await transporter.sendMail(mailOptions);
-
-    console.log("mail sent to ", job.email);
+    await this.transporter.sendMail(mailOptions);
   }
 }
 
-// Create a singleton instance
 const emailQueue = new EmailQueue();
-
-export { emailQueue }; 
+export { emailQueue };

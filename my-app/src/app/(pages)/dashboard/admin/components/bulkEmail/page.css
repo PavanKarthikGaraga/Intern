@@ -1,0 +1,160 @@
+.bulk-email-container {
+    padding: 2rem;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.bulk-email-container h1 {
+    color: #2c3e50;
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.instructions {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    border: 1px solid #e2e8f0;
+}
+
+.instructions h3 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+}
+
+.instructions ol {
+    margin-left: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.instructions li {
+    margin-bottom: 0.5rem;
+    color: #4a5568;
+}
+
+.example {
+    background: white;
+    padding: 1rem;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    font-family: monospace;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+.example p {
+    margin: 0;
+    padding: 0.25rem 0;
+}
+
+.example .or {
+    text-align: center;
+    color: #718096;
+    font-style: italic;
+    margin: 0.5rem 0;
+}
+
+.bulk-email-form {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #2c3e50;
+    font-weight: 500;
+}
+
+.form-group textarea {
+    width: 100%;
+    padding: 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 1rem;
+    resize: vertical;
+    transition: border-color 0.2s;
+    font-family: monospace;
+}
+
+.form-group textarea:focus {
+    outline: none;
+    border-color: #4299e1;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+}
+
+.form-group .count {
+    margin-top: 0.5rem;
+    color: #718096;
+    font-size: 0.9rem;
+    text-align: right;
+}
+
+.progress-container {
+    margin: 1.5rem 0;
+}
+
+.progress-bar {
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.progress-fill {
+    height: 100%;
+    background: #4299e1;
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    color: #666;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.submit-button {
+    width: 100%;
+    padding: 1rem;
+    background: #4299e1;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.submit-button:hover:not(:disabled) {
+    background: #3182ce;
+}
+
+.submit-button:disabled {
+    background: #cbd5e0;
+    cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+    .bulk-email-container {
+        padding: 1rem;
+    }
+
+    .bulk-email-form {
+        padding: 1.5rem;
+    }
+
+    .instructions {
+        padding: 1rem;
+    }
+} 
