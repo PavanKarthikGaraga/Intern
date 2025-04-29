@@ -238,6 +238,11 @@ export default function Register() {
           return;
         }
 
+        if (formData.studentInfo.idNumber.length !== 10) {
+          toast.error('Please enter a valid 10-digit ID number');
+          return;
+        }
+
         toast.success('Student information saved successfully!');
         setCurrentStep(prev => prev + 1);
         break;
@@ -692,11 +697,18 @@ export default function Register() {
 
               <div className="input-row two-columns">
                 <input
-                  type="number"
+                  type="text"
                   placeholder="ID Number"
                   value={formData.studentInfo.idNumber}
-                  onChange={(e) => handleInputChange('studentInfo', 'idNumber', e.target.value)}
-                  maxLength={10}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+                    if (value.length <= 10) { // Only allow up to 10 digits
+                      handleInputChange('studentInfo', 'idNumber', value);
+                    }
+                  }}
+                  pattern="[0-9]{10}"
+                  title="Please enter exactly 10 digits"
+                  required
                 />
                 <input
                   type="email"
