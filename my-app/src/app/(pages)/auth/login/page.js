@@ -57,10 +57,11 @@ const Login = () => {
             const data = await response.json();
             
             if (response.ok) {
-                await checkAuth();
+                // await checkAuth();
                 toast.success('Login successful');
                 router.push(`/dashboard/${data.user.role}`);
             } else {
+                console.log('Login error:', data);
                 toast.error(data.error || 'Login failed');
                 generateCaptcha();
             }

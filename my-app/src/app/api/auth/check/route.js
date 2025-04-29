@@ -13,7 +13,7 @@ export async function GET() {
         try {
             const decoded = await verifyAccessToken(accessToken.value);
             if (!decoded) {
-                // Only delete access token if invalid
+                // Delete invalid token
                 cookieStore.set("accessToken", "", { maxAge: 0 });
                 return Response.json({ error: "Invalid token" }, { status: 401 });
             }
@@ -30,9 +30,7 @@ export async function GET() {
             );
         } catch (tokenError) {
             if (tokenError.name === "TokenExpiredError") {
-                // Only delete access token on expiration
                 cookieStore.set("accessToken", "", { maxAge: 0 });
-
                 return Response.json(
                     {
                         error: "Token expired",
@@ -43,9 +41,7 @@ export async function GET() {
             }
 
             if (tokenError.name === "JsonWebTokenError") {
-                // Only delete access token if invalid
                 cookieStore.set("accessToken", "", { maxAge: 0 });
-
                 return Response.json(
                     {
                         error: "Invalid token",
@@ -55,10 +51,23 @@ export async function GET() {
                 );
             }
 
-            throw tokenError;
+            // For other errors during verification
+            return Response.json(
+                {
+                    error: "Invalid token",
+                    code: "INVALID_ACCESS_TOKEN",
+                },
+                { status: 401 }
+            );
         }
     } catch (error) {
         console.error("Auth check error:", error);
+
+        // Special case for our own custom error thrown manually
+        if (error.message === "Invalid access token") {
+            return Response.json({ error: "Invalid token" }, { status: 401 });
+        }
+
         return Response.json(
             {
                 error: "Internal Server Error",

@@ -1,169 +1,128 @@
-"use client";
-import { useContext, useState, useEffect, createContext } from "react";
-import { useRouter } from "next/navigation";
-import toast from "react-hot-toast";
+'use client';
+import React, { createContext, useState, useEffect, useRef, useContext } from 'react';
+import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 
 const AuthContext = createContext();
 
-export function AuthProvider({children}) {
-    const [user, setUser] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const router = useRouter();
+export const AuthProvider = ({ children }) => {
+  const router = useRouter();
+  const [user, setUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-    const checkAuth = async () => {
-        try {
-            // Check if we have a cached valid auth state
-            if (isAuthenticated && user) {
-                return true;
-            }
+  const mountedRef = useRef(false);
+  const authCheckedRef = useRef(false);
 
-            // First check if user is valid
-            const checkResponse = await fetch("/api/auth/check", {
-                method: "GET",
-                credentials: 'include',
-                headers: { "Content-Type": "application/json" },
-                cache: 'no-store' // Prevent caching of auth check
-            });
-            
-            const checkData = await checkResponse.json();
-            
-            if (!checkResponse.ok || checkData.error === "Token expired") {
-                // If token expired, try to refresh
-                const refreshResponse = await fetch("/api/auth/refresh", {
-                    method: "GET",
-                    credentials: 'include',
-                    headers: { "Content-Type": "application/json" },
-                    cache: 'no-store' // Prevent caching of refresh
-                });
-                
-                const refreshData = await refreshResponse.json();
-                
-                if (!refreshResponse.ok || !refreshData.success) {
-                    throw new Error(refreshData.error || 'Auth refresh failed');
-                }
+  const checkInitialAuth = async () => {
+    if (!mountedRef.current || authCheckedRef.current) return;
 
-                setUser(refreshData.user);
-                setIsAuthenticated(true);
-                return true;
-            }
+    console.log('[AuthContext] checkInitialAuth called');
 
-            if (!checkData.user) {
-                throw new Error('Auth check failed');
-            }
+    try {
+      const res = await fetch('/api/auth/check', {
+        method: 'GET',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store',
+      });
 
-            setUser(checkData.user);
-            setIsAuthenticated(true);
-            return true;
-        } catch (error) {
-            console.log('Auth check failed:', error);
-            setUser(null);
-            setIsAuthenticated(false);
-            return false;
-        }
-    };
+      const data = await res.json();
+      console.log('[AuthContext] checkData', data);
 
-    const logout = async () => {
-        try {
-            const response = await fetch("/api/auth/logout", {
-                method: "POST",
-                credentials: 'include',
-                headers: { "Content-Type": "application/json" },
-            });
+      if (res.status === 401 || !data.user) {
+        setUser(null);
+        setIsAuthenticated(false);
+      } else {
+        setUser(data.user);
+        setIsAuthenticated(true);
+      }
 
-            if (!response.ok) {
-                throw new Error('Logout failed');
-            }
-
-            router.replace('/auth/login');
-            setUser(null);
-            setIsAuthenticated(false);
-            toast.success('Logged out successfully');
-        } catch (error) {
-            toast.error('Failed to logout');
-            console.error('Logout error:', error);
-        }
-    };
-
-    // Initial auth check
-    useEffect(() => {
-        let mounted = true;
-        
-        const initializeAuth = async () => {
-            try {
-                await checkAuth();
-            } finally {
-                if (mounted) {
-                    setIsLoading(false);
-                }
-            }
-        };
-
-        initializeAuth();
-
-        return () => {
-            mounted = false;
-        };
-    }, []);
-
-    // Handle automatic token refresh
-    useEffect(() => {
-        let intervalId;
-        let mounted = true;
-
-        const refreshToken = async () => {
-            if (!mounted) return;
-            
-            try {
-                // Only refresh if we're actually authenticated
-                if (isAuthenticated && user) {
-                    const success = await checkAuth();
-                    if (!success) {
-                        clearInterval(intervalId);
-                        toast.error("Session expired. Please login again.");
-                        router.replace('/auth/login');
-                    }
-                }
-            } catch (error) {
-                console.error('Token refresh error:', error);
-                clearInterval(intervalId);
-                toast.error("Session error. Please login again.");
-                router.replace('/auth/login');
-            }
-        };
-
-        if (isAuthenticated) {
-            // Refresh every 4 minutes (access token is 10 minutes)
-            intervalId = setInterval(refreshToken, 240000);
-            // Also run immediately to ensure we have a valid token
-            refreshToken();
-        }
-
-        return () => {
-            mounted = false;
-            if (intervalId) clearInterval(intervalId);
-        };
-    }, [isAuthenticated, router, user]);
-
-    return (
-        <AuthContext.Provider value={{ 
-            user, 
-            isLoading, 
-            isAuthenticated,
-            setUser,
-            setIsAuthenticated,
-            checkAuth,
-            logout
-        }}>
-            {children}
-        </AuthContext.Provider>
-    );
-}
-
-export function useAuth() {
-    const context = useContext(AuthContext);
-    if (!context) {
-        throw new Error('useAuth must be used within an AuthProvider');
+      authCheckedRef.current = true;
+    } catch (error) {
+      console.error('[AuthContext] Auth check failed:', error);
+      setUser(null);
+      setIsAuthenticated(false);
+      authCheckedRef.current = true;
     }
-    return context;
-}
+  };
+
+  const refreshToken = async () => {
+    if (!mountedRef.current || !isAuthenticated) return;
+
+    console.log('[AuthContext] Refreshing token...');
+
+    try {
+      const res = await fetch('/api/auth/refresh', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!res.ok) {
+        throw new Error('Token refresh failed');
+      }
+
+      const data = await res.json();
+      console.log('[AuthContext] refreshToken data', data);
+
+      if (data.user) {
+        setUser(data.user); // Optional: update user if new data returned
+        console.log('[AuthContext] Token refreshed successfully');
+      } else {
+        throw new Error('No user returned');
+      }
+    } catch (error) {
+      console.error('[AuthContext] Token refresh error:', error);
+      toast.error('Session expired. Please login again.');
+      setIsAuthenticated(false);
+      setUser(null);
+      router.replace('/auth/login');
+    }
+  };
+
+  // Initial auth check on mount
+  useEffect(() => {
+    mountedRef.current = true;
+    checkInitialAuth();
+
+    return () => {
+      console.log('[AuthContext] Cleanup on unmount');
+      mountedRef.current = false;
+    };
+  }, []);
+
+  // Auto-refresh logic
+  useEffect(() => {
+    console.log('[AuthContext] useEffect for token refresh mounted');
+
+    let intervalId;
+    let refreshCount = 0;
+
+    const startTokenRefresh = async () => {
+      if (refreshCount >= 3) {
+        console.log('[AuthContext] Reached max refresh count. Clearing interval.');
+        clearInterval(intervalId);
+        return;
+      }
+
+      await refreshToken();
+      refreshCount++;
+      console.log(`[AuthContext] Token refreshed. Count: ${refreshCount}`);
+    };
+
+    if (isAuthenticated) {
+      console.log('[AuthContext] Setting interval for refresh every 9 minutes');
+      intervalId = setInterval(startTokenRefresh, 540000); // 9 minutes
+    }
+
+    return () => clearInterval(intervalId);
+  }, [isAuthenticated]);
+
+  return (
+    <AuthContext.Provider value={{ user, isAuthenticated, setUser, setIsAuthenticated }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => useContext(AuthContext);
