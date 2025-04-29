@@ -18,12 +18,40 @@
   margin: 0;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
 .total-students {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+}
+
+.fetch-btn {
+  padding: 0.75rem 1.5rem;
   background-color: rgb(151, 0, 3);
   color: white;
-  padding: 0.5rem 1rem;
+  border: none;
   border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
   font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.fetch-btn:hover:not(:disabled) {
+  background-color: rgb(120, 0, 2);
+}
+
+.fetch-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
 }
 
 .table-container {
@@ -89,41 +117,12 @@
   color: #f57c00;
 }
 
-.upload-days {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.upload-day {
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  font-size: 0.8rem;
-  font-weight: 500;
-  cursor: help;
-}
-
-.upload-day.uploaded {
-  background-color: #e8f5e9;
-  color: #2e7d32;
-}
-
-.upload-day.pending {
-  background-color: #fff3e0;
-  color: #f57c00;
-}
-
 .action-buttons {
   display: flex;
   gap: 0.5rem;
 }
 
-.verify-btn,
-.contact-btn {
+.verify-btn {
   padding: 0.25rem 0.75rem;
   border: none;
   border-radius: 4px;
@@ -131,24 +130,12 @@
   cursor: pointer;
   transition: background-color 0.2s ease;
   font-size: 0.8rem;
-}
-
-.verify-btn {
   background-color: rgb(151, 0, 3);
   color: white;
 }
 
 .verify-btn:hover {
   background-color: rgb(120, 0, 2);
-}
-
-.contact-btn {
-  background-color: #f0f0f0;
-  color: #333;
-}
-
-.contact-btn:hover {
-  background-color: #e0e0e0;
 }
 
 /* Modal Styles */
@@ -234,12 +221,22 @@
   font-style: italic;
 }
 
+.status-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .status-badge {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   padding: 0.25rem 0.75rem;
   border-radius: 12px;
   font-size: 0.8rem;
   font-weight: 500;
+  white-space: nowrap;
+  height: 24px;
 }
 
 .status-badge.verified {
@@ -255,6 +252,11 @@
 .status-badge.not_uploaded {
   background-color: #f5f5f5;
   color: #666;
+}
+
+.status-badge.rejected {
+  background-color: #ffebee;
+  color: #c62828;
 }
 
 .accept-btn,
@@ -311,6 +313,176 @@
   background-color: #f5f5f5;
   border-radius: 4px;
   display: inline-block;
+  white-space: nowrap;
+}
+
+.verification-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.verify-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.2s ease;
+  flex: 1;
+  white-space: nowrap;
+}
+
+.verify-btn.success {
+  background-color: #2e7d32;
+  color: white;
+}
+
+.verify-btn.success:hover {
+  background-color: #1b5e20;
+}
+
+.verify-btn.danger {
+  background-color: #c62828;
+  color: white;
+}
+
+.verify-btn.danger:hover {
+  background-color: #b71c1c;
+}
+
+.attendance-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.action-buttons-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Confirmation Dialog Styles */
+.confirm-dialog {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+  width: 90%;
+}
+
+.confirm-dialog h2 {
+  color: rgb(151, 0, 3);
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.confirm-dialog p {
+  color: #666;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.cancel-btn,
+.confirm-btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancel-btn {
+  background-color: white;
+  color: #666;
+  border: 1px solid #e0e0e0;
+}
+
+.cancel-btn:hover {
+  background-color: #f5f5f5;
+}
+
+.confirm-btn {
+  background-color: rgb(151, 0, 3);
+  color: white;
+  border: none;
+}
+
+.confirm-btn:hover {
+  background-color: rgb(120, 0, 2);
+}
+
+.cancel-btn:disabled,
+.confirm-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.warning-text {
+  color: #c62828;
+  font-weight: 500;
+  margin: 1rem 0 0.5rem 0;
+}
+
+.warning-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0 0 1.5rem 0;
+}
+
+.warning-list li {
+  color: #666;
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+  position: relative;
+}
+
+.warning-list li:before {
+  content: "•";
+  color: #c62828;
+  position: absolute;
+  left: 0.5rem;
+}
+
+.refresh-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.refresh-btn:hover {
+  background-color: #f0f0f0;
+}
+
+.refresh-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.refresh-icon {
+  font-size: 18px;
+  color: #666;
+}
+
+.refresh-btn:hover .refresh-icon {
+  color: #333;
+  transform: rotate(180deg);
+  transition: transform 0.3s ease;
 }
 
 @media (max-width: 768px) {
@@ -329,7 +501,8 @@
     border-radius: 0;
   }
 
-  .modal-content {
+  .modal-content,
+  .confirm-dialog {
     width: 95%;
     margin: 1rem;
   }

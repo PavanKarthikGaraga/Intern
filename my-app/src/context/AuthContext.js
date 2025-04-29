@@ -114,20 +114,29 @@ export function AuthProvider({children}) {
         const refreshToken = async () => {
             if (!mounted) return;
             
-            // Only refresh if we're actually authenticated
-            if (isAuthenticated && user) {
-                const success = await checkAuth();
-                if (!success) {
-                    clearInterval(intervalId);
-                    toast.error("Session expired. Please login again.");
-                    router.replace('/auth/login');
+            try {
+                // Only refresh if we're actually authenticated
+                if (isAuthenticated && user) {
+                    const success = await checkAuth();
+                    if (!success) {
+                        clearInterval(intervalId);
+                        toast.error("Session expired. Please login again.");
+                        router.replace('/auth/login');
+                    }
                 }
+            } catch (error) {
+                console.error('Token refresh error:', error);
+                clearInterval(intervalId);
+                toast.error("Session error. Please login again.");
+                router.replace('/auth/login');
             }
         };
 
         if (isAuthenticated) {
-            // Increase the interval to 8 minutes (access token is 5 minutes)
-            intervalId = setInterval(refreshToken, 540000);
+            // Refresh every 4 minutes (access token is 10 minutes)
+            intervalId = setInterval(refreshToken, 240000);
+            // Also run immediately to ensure we have a valid token
+            refreshToken();
         }
 
         return () => {

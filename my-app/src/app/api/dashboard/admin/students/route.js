@@ -100,13 +100,14 @@ export async function GET(req) {
         r.phoneNumber,
         f.completed,
         sl.name as leadName,
-        fm.name as facultyName
+        fm.name as facultyName,
+        r.updatedAt
       FROM registrations r
       LEFT JOIN final f ON r.username = f.username
       LEFT JOIN studentLeads sl ON r.studentLeadId = sl.username
       LEFT JOIN facultyMentors fm ON r.facultyMentorId = fm.username
       ${whereClause}
-      ORDER BY r.name ASC
+      ORDER BY r.updatedAt DESC
       LIMIT ? OFFSET ?
     `;
 

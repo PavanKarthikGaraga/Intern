@@ -10,7 +10,9 @@ import Overview from './components/overview/page';
 import Profile from './components/profile/page';
 import ChangePassword from './components/changePassword/page';
 import Students from './components/students/page';
+import Leads from './components/leads/page';
 import CompletedStudents from './components/completedStudents/page';
+import FinalReports from './components/finalReports/page';
 import { FaCheckCircle, FaCalendarAlt, FaClock } from 'react-icons/fa';
 
 export default function FacultyMentorDashboard() {
@@ -57,6 +59,11 @@ export default function FacultyMentorDashboard() {
           >
             <span className="item-label">Profile</span>
           </button>
+          <button  className={`sidebar-item ${activeSection === 'leads' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('leads')}
+          >
+            <span className="item-label">Leads</span>
+          </button>
           <button
             className={`sidebar-item ${activeSection === 'students' ? 'active' : ''}`}
             onClick={() => handleSectionClick('students')}
@@ -70,6 +77,12 @@ export default function FacultyMentorDashboard() {
             <span className="item-label">Completed Students</span>
           </button>
           <button
+            className={`sidebar-item ${activeSection === 'final-reports' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('final-reports')}
+          >
+            <span className="item-label">Final Reports</span>
+          </button>
+          <button
             className={`sidebar-item ${activeSection === 'change-password' ? 'active' : ''}`}
             onClick={() => handleSectionClick('change-password')}
           >
@@ -81,7 +94,9 @@ export default function FacultyMentorDashboard() {
           {activeSection === 'overview' ? <Overview user={user} /> : 
            activeSection === 'profile' ? <Profile user={user} /> :
            activeSection === 'students' ? <Students user={user} /> :
+           activeSection === 'leads' ? <Leads user={user} /> :
            activeSection === 'completed-students' ? <CompletedStudents user={user} /> :
+           activeSection === 'final-reports' ? <FinalReports user={user} /> :
            <ChangePassword user={user} />}
         </main>
       </div>

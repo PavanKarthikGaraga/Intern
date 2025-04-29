@@ -65,11 +65,12 @@ export async function GET(req) {
       SELECT 
         r.selectedDomain,
         COUNT(*) as count,
-        SUM(CASE WHEN f.completed = true THEN 1 ELSE 0 END) as completed
+        SUM(CASE WHEN f.completed = true THEN 1 ELSE 0 END) as completed,
+        MAX(r.updatedAt) as updatedAt
       FROM registrations r
       LEFT JOIN final f ON r.username = f.username
       GROUP BY r.selectedDomain
-      ORDER BY count DESC
+      ORDER BY updatedAt DESC
     `);
 
     // Get mode distribution
@@ -77,10 +78,12 @@ export async function GET(req) {
       SELECT 
         r.mode,
         COUNT(*) as count,
-        SUM(CASE WHEN f.completed = true THEN 1 ELSE 0 END) as completed
+        SUM(CASE WHEN f.completed = true THEN 1 ELSE 0 END) as completed,
+        MAX(r.updatedAt) as updatedAt
       FROM registrations r
       LEFT JOIN final f ON r.username = f.username
       GROUP BY r.mode
+      ORDER BY updatedAt DESC
     `);
 
     // Get slot distribution
@@ -88,29 +91,61 @@ export async function GET(req) {
       SELECT 
         r.slot,
         COUNT(*) as count,
-        SUM(CASE WHEN f.completed = true THEN 1 ELSE 0 END) as completed
+        SUM(CASE WHEN f.completed = true THEN 1 ELSE 0 END) as completed,
+        MAX(r.updatedAt) as updatedAt
       FROM registrations r
       LEFT JOIN final f ON r.username = f.username
       GROUP BY r.slot
-      ORDER BY r.slot
+      ORDER BY updatedAt DESC
+    `);
+
+    // Get state-wise distribution (now with slot and mode)
+    const [stateStats] = await pool.query(`
+      SELECT 
+        state,
+        slot,
+        mode,
+        COUNT(*) as count,
+        SUM(CASE WHEN gender = 'Male' THEN 1 ELSE 0 END) as male,
+        SUM(CASE WHEN gender = 'Female' THEN 1 ELSE 0 END) as female,
+        SUM(CASE WHEN gender = 'Other' THEN 1 ELSE 0 END) as other,
+        MAX(updatedAt) as updatedAt
+      FROM registrations
+      GROUP BY state, slot, mode
+      ORDER BY updatedAt DESC
+    `);
+
+    // Get district-wise distribution (now with slot and mode)
+    const [districtStats] = await pool.query(`
+      SELECT 
+        state,
+        district,
+        slot,
+        mode,
+        COUNT(*) as count,
+        SUM(CASE WHEN gender = 'Male' THEN 1 ELSE 0 END) as male,
+        SUM(CASE WHEN gender = 'Female' THEN 1 ELSE 0 END) as female,
+        SUM(CASE WHEN gender = 'Other' THEN 1 ELSE 0 END) as other,
+        MAX(updatedAt) as updatedAt
+      FROM registrations
+      GROUP BY state, district, slot, mode
+      ORDER BY updatedAt DESC
     `);
 
     return NextResponse.json({
       success: true,
-      data: {
-        counts: {
-          leads: leadsCount[0].count,
-          students: studentsCount[0].count,
-          completed: completedCount[0].count,
-          faculty: facultyCount[0].count
-        },
-        verification: verificationStats[0],
-        attendance: attendanceStats[0],
-        distributions: {
-          domains: domainStats,
-          modes: modeStats,
-          slots: slotStats
-        }
+      overviewData: {
+        leadsCount: leadsCount[0].count,
+        studentsCount: studentsCount[0].count,
+        completedCount: completedCount[0].count,
+        facultyCount: facultyCount[0].count,
+        verificationStats: verificationStats[0],
+        attendanceStats: attendanceStats[0],
+        domainStats,
+        modeStats,
+        slotStats,
+        stateStats,
+        districtStats
       }
     });
   } catch (error) {

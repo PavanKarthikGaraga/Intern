@@ -122,6 +122,12 @@ export default function VerifyModal({ student, onClose }) {
 
   const handleAttendanceChange = async (day, status) => {
     try {
+      // Check if the day is verified before allowing attendance marking
+      if (!verificationStatus[`day${day}`]) {
+        toast.error('Cannot mark attendance for unverified reports');
+        return;
+      }
+
       const response = await fetch('/api/dashboard/facultyMentor/attendance', {
         method: 'POST',
         credentials: 'include',

@@ -3,7 +3,7 @@ import pool from '@/lib/db';
 import { verifyAccessToken } from '@/lib/jwt';
 import { cookies } from 'next/headers';
 
-export async function POST(request) {
+export async function POST(req) {
     let db;
     try {
         const cookieStore = await cookies();
@@ -23,42 +23,58 @@ export async function POST(request) {
                 error: 'Access denied. Only student leads can access this data.' 
             }, { status: 403 });
         }
-
-        const { username } = await request.json();
-
-        if (!username) {
-            return NextResponse.json(
-                { success: false, error: "Missing username" },
-                { status: 400 }
-            );
-        }
+        let username = decoded.username;
 
         db = await pool.getConnection();
 
-        // Get all students assigned to this lead
-        const [students] = await db.query(
-            `SELECT r.*, u.name, u.role
-             FROM registrations r
-             JOIN users u ON r.username = u.username
-             WHERE r.studentLeadId = ?`,
+        // First get the current slot and student usernames from studentLeads
+        const [leadData] = await db.query(
+            'SELECT slot, student1Username, student2Username, student3Username, student4Username, student5Username, student6Username, student7Username, student8Username, student9Username, student10Username, student11Username, student12Username, student13Username, student14Username, student15Username, student16Username, student17Username, student18Username, student19Username, student20Username, student21Username, student22Username, student23Username, student24Username, student25Username, student26Username, student27Username, student28Username, student29Username, student30Username FROM studentLeads WHERE username = ?',
             [username]
         );
 
-        if (students.length === 0) {
+        if (!leadData.length) {
+            return NextResponse.json(
+                { success: false, error: 'Student lead not found' },
+                { status: 404 }
+            );
+        }
+
+        const currentSlot = leadData[0].slot;
+        
+        // Get all student usernames from the lead's record
+        const studentUsernames = [];
+        for (let i = 1; i <= 30; i++) {
+            const username = leadData[0][`student${i}Username`];
+            if (username) {
+                studentUsernames.push(username);
+            }
+        }
+
+        if (studentUsernames.length === 0) {
             return NextResponse.json({
                 success: true,
                 students: [],
-                total: 0
+                total: 0,
+                currentSlot
             });
         }
 
-        const studentUsernames = students.map(s => s.username);
+        // Get students from registrations table whose usernames are in studentLeads
+        const [students] = await db.query(
+            `SELECT r.*, usr.name, usr.role
+             FROM registrations r
+             JOIN users usr ON r.username = usr.username
+             WHERE r.username IN (?) AND r.slot = ?`,
+            [studentUsernames, currentSlot]
+        );
 
-        // Get upload records for each student
+        // Get upload records for each student ordered by updatedAt
         const [uploads] = await db.query(
-            `SELECT username, day1, day2, day3, day4, day5, day6, day7
+            `SELECT username, day1, day2, day3, day4, day5, day6, day7, updatedAt
              FROM uploads 
-             WHERE username IN (?)`,
+             WHERE username IN (?)
+             ORDER BY updatedAt DESC`,
             [studentUsernames]
         );
 
@@ -70,14 +86,22 @@ export async function POST(request) {
             [studentUsernames]
         );
 
-        // Combine the data
-        const studentsWithData = students.map(student => {
-            const studentUploads = uploads.find(u => u.username === student.username) || {};
-            const studentVerify = verify.find(v => v.username === student.username) || {};
+        // Combine the data and maintain the order from uploads
+        const studentsWithData = uploads.map(upload => {
+            const student = students.find(s => s.username === upload.username);
+            const studentVerify = verify.find(v => v.username === upload.username) || {};
             
             return {
                 ...student,
-                uploads: studentUploads,
+                uploads: {
+                    day1: upload.day1,
+                    day2: upload.day2,
+                    day3: upload.day3,
+                    day4: upload.day4,
+                    day5: upload.day5,
+                    day6: upload.day6,
+                    day7: upload.day7
+                },
                 verify: studentVerify
             };
         });
@@ -85,13 +109,13 @@ export async function POST(request) {
         return NextResponse.json({
             success: true,
             students: studentsWithData,
-            total: students.length
+            total: students.length,
+            currentSlot
         });
-
     } catch (error) {
-        console.error('Error fetching students:', error);
+        console.error('Error in get students API:', error);
         return NextResponse.json(
-            { success: false, error: error.message },
+            { success: false, error: 'Internal server error' },
             { status: 500 }
         );
     } finally {
