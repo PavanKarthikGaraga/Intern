@@ -96,6 +96,7 @@ export async function GET(req) {
       FROM registrations r
       LEFT JOIN final f ON r.username = f.username
       GROUP BY r.slot
+      ORDER BY r.slot
     `);
 
     // Get state-wise distribution (now with slot and mode)
