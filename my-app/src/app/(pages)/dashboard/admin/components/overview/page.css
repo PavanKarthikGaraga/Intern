@@ -71,6 +71,10 @@
     border-radius: 8px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    /* align-items: center; */
+    justify-content: center;
 }
 
 .chart-container h2 {
@@ -290,3 +294,9 @@
 }
 
 
+.total-count {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 1rem;
+}

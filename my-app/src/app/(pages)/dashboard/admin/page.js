@@ -17,30 +17,22 @@ import Admins from './components/admins/page';
 import DataDownload from './components/dataDownload/page';
 
 export default function AdminDashboard() {
-  const { user, isAuthenticated } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { user, isLoading, isAuthenticated } = useAuth();
   const [activeSection, setActiveSection] = useState('overview');
   const [showUsersDropdown, setShowUsersDropdown] = useState(false);
 
   useEffect(() => {
-    if (user && isAuthenticated) {
-      setLoading(false);
-    } else if (!user && !isAuthenticated) {
-      setLoading(false);
+    if (!isLoading && !isAuthenticated) {
+      window.location.href = '/auth/login';
     }
-  }, [user, isAuthenticated]);
+  }, [isLoading, isAuthenticated]);
 
-  if (!user || !isAuthenticated) {
-    return <div className="loading">Redirecting to login...</div>;
-  }
-
-  if (loading) {
+  if (isLoading) {
     return <div className="loading">Loading...</div>;
   }
 
-  if (error) {
-    return <div className="error">{error}</div>;
+  if (!isAuthenticated || !user) {
+    return null; // Will be redirected by useEffect
   }
 
   const handleSectionClick = (section) => {

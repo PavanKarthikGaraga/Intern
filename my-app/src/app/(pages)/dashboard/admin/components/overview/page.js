@@ -101,7 +101,7 @@ export default function Overview() {
         const filterBySlotMode = (arr) =>
             arr.filter(stat =>
                 (slotFilter === 'all' || String(stat.slot) === String(slotFilter)) &&
-                (modeFilter === 'all' || (stat.mode ? stat.mode === modeFilter : true))
+                (modeFilter === 'all' || stat.mode === modeFilter)
             );
 
         if (showDistrictWise && selectedState) {
@@ -110,32 +110,50 @@ export default function Overview() {
             const districtMap = {};
             filtered.forEach(stat => {
                 if (!districtMap[stat.district]) {
-                    districtMap[stat.district] = 0;
+                    districtMap[stat.district] = {
+                        value: 0,
+                        male: 0,
+                        female: 0,
+                        other: 0
+                    };
                 }
-                districtMap[stat.district] += Number(stat.count) || 0;
+                districtMap[stat.district].value += Number(stat.count) || 0;
+                districtMap[stat.district].male += Number(stat.male) || 0;
+                districtMap[stat.district].female += Number(stat.female) || 0;
+                districtMap[stat.district].other += Number(stat.other) || 0;
             });
-            return Object.entries(districtMap).map(([name, value]) => ({ name, value })).filter(item => item.value > 0);
+            return Object.entries(districtMap).map(([name, data]) => ({
+                name,
+                value: data.value,
+                male: data.male,
+                female: data.female,
+                other: data.other
+            })).filter(item => item.value > 0);
         } else if (selectedState && selectedDistrict) {
-            // Show district gender data
+            // Aggregate all slot/mode records for the selected district
             const arr = filterBySlotMode(districtStats.filter(
                 stat => stat.state === selectedState && stat.district === selectedDistrict
             ));
             if (!arr.length) return [];
-            const districtData = arr[0];
+            const totalMale = arr.reduce((sum, stat) => sum + (Number(stat.male) || 0), 0);
+            const totalFemale = arr.reduce((sum, stat) => sum + (Number(stat.female) || 0), 0);
+            const totalOther = arr.reduce((sum, stat) => sum + (Number(stat.other) || 0), 0);
             return [
-                { name: 'Male', value: Number(districtData.male) || 0 },
-                { name: 'Female', value: Number(districtData.female) || 0 },
-                { name: 'Other', value: Number(districtData.other) || 0 }
+                { name: 'Male', value: totalMale },
+                { name: 'Female', value: totalFemale },
+                { name: 'Other', value: totalOther }
             ];
         } else if (selectedState) {
-            // Show state gender data
+            // Aggregate all slot/mode records for the selected state
             const arr = filterBySlotMode(stateStats.filter(stat => stat.state === selectedState));
             if (!arr.length) return [];
-            const stateData = arr[0];
+            const totalMale = arr.reduce((sum, stat) => sum + (Number(stat.male) || 0), 0);
+            const totalFemale = arr.reduce((sum, stat) => sum + (Number(stat.female) || 0), 0);
+            const totalOther = arr.reduce((sum, stat) => sum + (Number(stat.other) || 0), 0);
             return [
-                { name: 'Male', value: Number(stateData.male) || 0 },
-                { name: 'Female', value: Number(stateData.female) || 0 },
-                { name: 'Other', value: Number(stateData.other) || 0 }
+                { name: 'Male', value: totalMale },
+                { name: 'Female', value: totalFemale },
+                { name: 'Other', value: totalOther }
             ];
         } else {
             // Show all states (aggregate by state name)
@@ -143,22 +161,29 @@ export default function Overview() {
             const stateMap = {};
             filtered.forEach(stat => {
                 if (!stateMap[stat.state]) {
-                    stateMap[stat.state] = 0;
+                    stateMap[stat.state] = {
+                        value: 0,
+                        male: 0,
+                        female: 0,
+                        other: 0
+                    };
                 }
-                stateMap[stat.state] += Number(stat.count) || 0;
+                stateMap[stat.state].value += Number(stat.count) || 0;
+                stateMap[stat.state].male += Number(stat.male) || 0;
+                stateMap[stat.state].female += Number(stat.female) || 0;
+                stateMap[stat.state].other += Number(stat.other) || 0;
             });
-            return Object.entries(stateMap).map(([name, value]) => ({ name, value }));
+            return Object.entries(stateMap).map(([name, data]) => ({
+                name,
+                value: data.value,
+                male: data.male,
+                female: data.female,
+                other: data.other
+            })).filter(item => item.value > 0);
         }
     };
 
     const stateDistributionData = getStateDistributionData();
-
-    // Debug logs
-    console.log('stateStats:', stateStats);
-    console.log('districtStats:', districtStats);
-    console.log('selectedState:', selectedState);
-    console.log('selectedDistrict:', selectedDistrict);
-    console.log('stateDistributionData:', stateDistributionData);
 
     // Filter data based on selected gender (only for gender view)
     const filteredStateDistributionData = (showDistrictWise && selectedState)
@@ -334,38 +359,29 @@ export default function Overview() {
                     <div className="total-count">Total: {totalFiltered}</div>
                     {filteredStateDistributionData.length > 0 ? (
                         <div style={{ width: '100%', height: 400 }}>
-                            <ResponsiveContainer width="100%" height={300}>
-                                <PieChart>
-                                    <Pie
-                                        data={filteredStateDistributionData}
-                                        cx="50%"
-                                        cy="50%"
-                                        label={showDistrictWise ? false : ({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                                        outerRadius={100}
-                                        fill="#8884d8"
-                                        dataKey="value"
-                                    >
+                            <ResponsiveContainer width="100%" height={350}>
+                                <BarChart
+                                    data={filteredStateDistributionData}
+                                    // margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                                >
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis 
+                                        dataKey="name" 
+                                        tick={{ fontSize: 10 }} 
+                                        angle={-15} 
+                                        textAnchor="end"
+                                        interval={0}
+                                    />
+                                    <YAxis />
+                                    <Tooltip />
+                                    <Legend />
+                                    <Bar dataKey="value" fill="#8884d8">
                                         {filteredStateDistributionData.map((entry, index) => (
                                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                         ))}
-                                    </Pie>
-                                    <Tooltip />
-                                </PieChart>
+                                    </Bar>
+                                </BarChart>
                             </ResponsiveContainer>
-                            <div style={{ maxHeight: 100, overflowY: 'auto', marginTop: 10 }}>
-                                <Legend
-                                    layout="horizontal"
-                                    verticalAlign="bottom"
-                                    align="center"
-                                    iconType="circle"
-                                    wrapperStyle={{ position: 'static' }}
-                                    payload={filteredStateDistributionData.map((entry, index) => ({
-                                        value: entry.name,
-                                        type: 'circle',
-                                        color: COLORS[index % COLORS.length]
-                                    }))}
-                                />
-                            </div>
                         </div>
                     ) : (
                         <div className="no-data-message">

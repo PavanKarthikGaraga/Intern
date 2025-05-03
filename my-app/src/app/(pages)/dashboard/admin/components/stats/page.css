@@ -10,7 +10,7 @@
 }
 
 .stats-section h2 {
-    color: #006400;
+    color: #000;
     font-size: 1.8rem;
     margin-bottom: 1.5rem;
 }
@@ -26,7 +26,7 @@
     padding: 1.5rem;
     border-radius: 12px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    border-left: 4px solid rgb(151, 0, 3);
+    border-left: 4px solid rgb(0, 0, 0);
     transition: transform 0.3s ease;
 }
 
@@ -35,13 +35,13 @@
 }
 
 .stat-card h3 {
-    color: #666;
+    color: #403b3b;
     font-size: 1rem;
     margin-bottom: 0.5rem;
 }
 
 .stat-card p {
-    color: rgb(151, 0, 3);
+    color: #000;
     font-size: 2rem;
     font-weight: 600;
 }
@@ -69,12 +69,12 @@
 }
 
 .slot-stat span:first-child {
-    color: #666;
+    color: #403b3b;
     font-size: 0.9rem;
 }
 
 .slot-stat span:last-child {
-    color: rgb(151, 0, 3);
+    color: #000;
     font-weight: 600;
     font-size: 1.1rem;
 }
@@ -92,11 +92,11 @@
     padding: 1.5rem;
     border-radius: 12px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    border-left: 4px solid #006400;
+    border-left: 4px solid #000;
 }
 
 .domain-stat-card h3 {
-    color: #006400;
+    color: #000;
     font-size: 1.2rem;
     margin-bottom: 1rem;
     border-bottom: 1px solid #eee;
@@ -124,133 +124,11 @@
 }
 
 .domain-stat span:last-child {
-    color: rgb(151, 0, 3);
+    color: #000;
     font-weight: 600;
     font-size: 1.1rem;
 }
 
-/* Filters Section */
-.filters-section {
-    background-color: white;
-    padding: 1.5rem;
-    border-radius: 12px;
-    margin-bottom: 2rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.filter-container {
-    display: flex;
-    gap: 1.5rem;
-}
-
-.filter-select {
-    padding: 0.8rem;
-    border: 2px solid #006400;
-    border-radius: 8px;
-    font-size: 1rem;
-    background-color: white;
-    min-width: 200px;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23006400' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 1rem center;
-    padding-right: 2.5rem;
-}
-
-.filter-select:focus {
-    outline: none;
-    border-color: rgb(151, 0, 3);
-    box-shadow: 0 0 0 2px rgba(151, 0, 3, 0.1);
-}
-
-/* Students Table */
-.students-section {
-    background-color: white;
-    padding: 1.5rem;
-    border-radius: 12px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.table-container {
-    overflow-x: auto;
-    margin-bottom: 1.5rem;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    white-space: nowrap;
-}
-
-th {
-    background-color: #f8f8f8;
-    color: #333;
-    font-weight: 600;
-    padding: 1rem;
-    text-align: left;
-    border-bottom: 2px solid rgb(151, 0, 3);
-}
-
-td {
-    padding: 1rem;
-    border-bottom: 1px solid #eee;
-    color: #444;
-}
-
-tr:hover {
-    background-color: #f8f8f8;
-}
-
-.status {
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-
-.status.completed {
-    background-color: #e6ffe6;
-    color: #006400;
-}
-
-.status.active {
-    background-color: #fff3e6;
-    color: #cc7700;
-}
-
-/* Pagination */
-.pagination {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 1rem;
-    margin-top: 1.5rem;
-}
-
-.page-button {
-    padding: 0.8rem 1.5rem;
-    border: none;
-    border-radius: 8px;
-    background-color: rgb(151, 0, 3);
-    color: white;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.page-button:hover {
-    background-color: rgb(120, 0, 2);
-}
-
-.page-button:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-}
-
-.page-info {
-    color: #666;
-    font-size: 1rem;
-}
 
 /* Loading State */
 .loading {
