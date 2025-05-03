@@ -14,51 +14,6 @@ export const AuthProvider = ({ children }) => {
   const mountedRef = useRef(false);
   const authCheckedRef = useRef(false);
 
-  const login = async (username, password) => {
-    try {
-      setIsLoading(true);
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-        credentials: 'include',
-      });
-
-      const data = await res.json();
-
-      if (res.ok && data.user) {
-        setUser(data.user);
-        setIsAuthenticated(true);
-        router.push('/dashboard/admin');
-        return { success: true };
-      } else {
-        throw new Error(data.error || 'Login failed');
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      return { success: false, error: error.message };
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const logout = async () => {
-    try {
-      setIsLoading(true);
-      await fetch('/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include',
-      });
-      setUser(null);
-      setIsAuthenticated(false);
-      router.push('/auth/login');
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const checkInitialAuth = async () => {
     if (!mountedRef.current || authCheckedRef.current) return;
 
@@ -174,8 +129,6 @@ export const AuthProvider = ({ children }) => {
       user, 
       isAuthenticated, 
       isLoading,
-      login,
-      logout,
       setUser, 
       setIsAuthenticated 
     }}>

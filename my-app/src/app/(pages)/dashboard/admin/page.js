@@ -8,7 +8,7 @@ import Footer from "@/components/Footer";
 import Overview from './components/overview/page';
 import Profile from './components/profile/page';
 import ChangePassword from './components/changePassword/page';
-import Students from './components/students/page';
+import Students from '../student/students/page';
 import CompletedStudents from './components/completedStudents/page';
 import Stats from './components/stats/page';
 import StudentLeads from './components/studentLeads/page';
