@@ -15,7 +15,7 @@ const Login = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const router = useRouter();
-    const { setIsAuthenticated, checkAuth } = useAuth();
+    const { setUser, setIsAuthenticated } = useAuth();
 
     const generateCaptcha = useCallback(() => {
         const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -57,7 +57,8 @@ const Login = () => {
             const data = await response.json();
             
             if (response.ok) {
-                // await checkAuth();
+                setUser(data.user);
+                setIsAuthenticated(true);
                 toast.success('Login successful');
                 router.push(`/dashboard/${data.user.role}`);
             } else {

@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
 import './page.css';
@@ -17,14 +17,22 @@ import Admins from './components/admins/page';
 import DataDownload from './components/dataDownload/page';
 
 export default function AdminDashboard() {
-  const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
+  const { user, isAuthenticated } = useAuth();
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeSection, setActiveSection] = useState('overview');
   const [showUsersDropdown, setShowUsersDropdown] = useState(false);
 
-  if (!user) {
-    return <div className="loading">Loading...</div>;
+  useEffect(() => {
+    if (user && isAuthenticated) {
+      setLoading(false);
+    } else if (!user && !isAuthenticated) {
+      setLoading(false);
+    }
+  }, [user, isAuthenticated]);
+
+  if (!user || !isAuthenticated) {
+    return <div className="loading">Redirecting to login...</div>;
   }
 
   if (loading) {
