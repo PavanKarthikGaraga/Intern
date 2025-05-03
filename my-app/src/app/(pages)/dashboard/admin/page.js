@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
 import './page.css';
@@ -17,22 +17,22 @@ import Admins from './components/admins/page';
 import DataDownload from './components/dataDownload/page';
 
 export default function AdminDashboard() {
-  const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const { user, isLoading, isAuthenticated } = useAuth();
   const [activeSection, setActiveSection] = useState('overview');
   const [showUsersDropdown, setShowUsersDropdown] = useState(false);
 
-  if (!user) {
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      window.location.href = '/auth/login';
+    }
+  }, [isLoading, isAuthenticated]);
+
+  if (isLoading) {
     return <div className="loading">Loading...</div>;
   }
 
-  if (loading) {
-    return <div className="loading">Loading...</div>;
-  }
-
-  if (error) {
-    return <div className="error">{error}</div>;
+  if (!isAuthenticated || !user) {
+    return null; // Will be redirected by useEffect
   }
 
   const handleSectionClick = (section) => {

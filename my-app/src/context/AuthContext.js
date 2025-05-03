@@ -9,14 +9,61 @@ export const AuthProvider = ({ children }) => {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const mountedRef = useRef(false);
   const authCheckedRef = useRef(false);
+
+  const login = async (username, password) => {
+    try {
+      setIsLoading(true);
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+        credentials: 'include',
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.user) {
+        setUser(data.user);
+        setIsAuthenticated(true);
+        router.push('/dashboard/admin');
+        return { success: true };
+      } else {
+        throw new Error(data.error || 'Login failed');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      return { success: false, error: error.message };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const logout = async () => {
+    try {
+      setIsLoading(true);
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      setUser(null);
+      setIsAuthenticated(false);
+      router.push('/auth/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const checkInitialAuth = async () => {
     if (!mountedRef.current || authCheckedRef.current) return;
 
     console.log('[AuthContext] checkInitialAuth called');
+    setIsLoading(true);
 
     try {
       const res = await fetch('/api/auth/check', {
@@ -32,6 +79,7 @@ export const AuthProvider = ({ children }) => {
       if (res.status === 401 || !data.user) {
         setUser(null);
         setIsAuthenticated(false);
+        router.push('/auth/login');
       } else {
         setUser(data.user);
         setIsAuthenticated(true);
@@ -42,7 +90,10 @@ export const AuthProvider = ({ children }) => {
       console.error('[AuthContext] Auth check failed:', error);
       setUser(null);
       setIsAuthenticated(false);
+      router.push('/auth/login');
       authCheckedRef.current = true;
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -119,7 +170,15 @@ export const AuthProvider = ({ children }) => {
   }, [isAuthenticated]);
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, setUser, setIsAuthenticated }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      isAuthenticated, 
+      isLoading,
+      login,
+      logout,
+      setUser, 
+      setIsAuthenticated 
+    }}>
       {children}
     </AuthContext.Provider>
   );
