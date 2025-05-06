@@ -1,7 +1,9 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { UserOutlined, EyeOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { UserOutlined, EyeOutlined, PlusOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import toast from 'react-hot-toast';
+import EditModal from '../EditModal/page';
+import LeadProfile from '../leadProfile/page';
 import './page.css';
 
 export default function StudentLeads() {
@@ -9,12 +11,16 @@ export default function StudentLeads() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedLead, setSelectedLead] = useState(null);
+  const [selectedProfile, setSelectedProfile] = useState(null);
   const [formData, setFormData] = useState({
     username: '',
     name: '',
     phoneNumber: '',
     email: '',
-    slot: ''
+    slot: '',
+    branch: ''
   });
 
   useEffect(() => {
@@ -77,7 +83,8 @@ export default function StudentLeads() {
           name: '',
           phoneNumber: '',
           email: '',
-          slot: ''
+          slot: '',
+          branch: ''
         });
         fetchLeads();
       } else {
@@ -114,7 +121,18 @@ export default function StudentLeads() {
   };
 
   const handleViewProfile = (username) => {
-    window.location.href = `/dashboard/studentLead/profile?username=${username}`;
+    setSelectedProfile(username);
+  };
+
+  const handleEditLead = (lead) => {
+    setSelectedLead(lead);
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = async (result) => {
+    if (result.success) {
+      await fetchLeads();
+    }
   };
 
   if (loading) {
@@ -159,6 +177,12 @@ export default function StudentLeads() {
                 <td>{lead.totalStudents}</td>
                 <td>
                   <div className="action-buttons">
+                    <button 
+                      className="edit-btn"
+                      onClick={() => handleEditLead(lead)}
+                    >
+                      <EditOutlined /> Edit
+                    </button>
                     <button 
                       className="view-profile-btn"
                       onClick={() => handleViewProfile(lead.username)}
@@ -233,6 +257,16 @@ export default function StudentLeads() {
                 />
               </div>
               <div className="form-group">
+                <label>Branch</label>
+                <input
+                  type="text"
+                  name="branch"
+                  value={formData.branch}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <div className="form-group">
                 <label>Slot</label>
                 <select
                   name="slot"
@@ -255,6 +289,24 @@ export default function StudentLeads() {
             </form>
           </div>
         </div>
+      )}
+
+      {showEditModal && (
+        <EditModal
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          data={selectedLead}
+          type="studentLeads"
+          onSave={handleSaveEdit}
+        />
+      )}
+
+      {selectedProfile && (
+        <LeadProfile
+          isOpen={!!selectedProfile}
+          onClose={() => setSelectedProfile(null)}
+          username={selectedProfile}
+        />
       )}
     </div>
   );

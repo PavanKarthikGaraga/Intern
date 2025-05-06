@@ -23,7 +23,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      window.location.href = '/auth/login';
+      window.location.replace('/auth/login');
     }
   }, [isLoading, isAuthenticated]);
 
@@ -32,7 +32,7 @@ export default function AdminDashboard() {
   }
 
   if (!isAuthenticated || !user) {
-    return null; // Will be redirected by useEffect
+    return null;
   }
 
   const handleSectionClick = (section) => {
@@ -79,7 +79,7 @@ export default function AdminDashboard() {
             </button>
             {showUsersDropdown && (
               <div className="dropdown-content">
-                  <button
+                <button
                   className={`dropdown-item ${activeSection === 'student-leads' ? 'active' : ''}`}
                   onClick={() => handleSectionClick('student-leads')}
                 >

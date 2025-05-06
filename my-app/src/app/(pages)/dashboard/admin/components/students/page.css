@@ -286,6 +286,28 @@
 .action-buttons {
   display: flex;
   gap: 0.5rem;
+  align-items: center;
+}
+
+.view-btn {
+  background: none;
+  border: none;
+  color: rgb(151, 0, 3);
+  cursor: pointer;
+  padding: 5px;
+  transition: color 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.view-btn:hover {
+  color: rgb(120, 0, 2);
+}
+
+.view-btn svg {
+  width: 16px;
+  height: 16px;
 }
 
 .verify-btn,

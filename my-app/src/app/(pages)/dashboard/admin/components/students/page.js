@@ -5,7 +5,8 @@ import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
 import './page.css';
 import VerifyModal from './VerifyModal';
-import { FaSearch, FaTrash, FaDownload, FaSync } from 'react-icons/fa';
+import StudentProfile from '../studentProfile/page';
+import { FaSearch, FaTrash, FaDownload, FaSync, FaEye } from 'react-icons/fa';
 
 ;
 
@@ -29,6 +30,7 @@ export default function Students() {
     limit: 20
   });
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [selectedProfile, setSelectedProfile] = useState(null);
 
   useEffect(() => {
     const fetchDomains = async () => {
@@ -351,13 +353,22 @@ export default function Students() {
                   </span>
                 </td>
                 <td>
-                  <button
-                    className="delete-btn"
-                    onClick={() => handleDeleteStudent(student.username)}
-                    aria-label="Delete student"
-                  >
-                    <FaTrash />
-                  </button>
+                  <div className="action-buttons">
+                    <button
+                      className="view-btn"
+                      onClick={() => setSelectedProfile(student.username)}
+                      aria-label="View student profile"
+                    >
+                      <FaEye />
+                    </button>
+                    <button
+                      className="delete-btn"
+                      onClick={() => handleDeleteStudent(student.username)}
+                      aria-label="Delete student"
+                    >
+                      <FaTrash />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -386,6 +397,14 @@ export default function Students() {
           student={selectedStudent}
           onClose={() => setSelectedStudent(null)}
           onVerify={handleVerify}
+        />
+      )}
+
+      {selectedProfile && (
+        <StudentProfile
+          isOpen={!!selectedProfile}
+          onClose={() => setSelectedProfile(null)}
+          username={selectedProfile}
         />
       )}
     </div>

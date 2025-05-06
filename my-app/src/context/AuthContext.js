@@ -9,14 +9,17 @@ export const AuthProvider = ({ children }) => {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const mountedRef = useRef(false);
   const authCheckedRef = useRef(false);
+  const intervalIdRef = useRef(null); // Track interval ID
 
   const checkInitialAuth = async () => {
     if (!mountedRef.current || authCheckedRef.current) return;
 
     console.log('[AuthContext] checkInitialAuth called');
+    setIsLoading(true);
 
     try {
       const res = await fetch('/api/auth/check', {
@@ -32,6 +35,7 @@ export const AuthProvider = ({ children }) => {
       if (res.status === 401 || !data.user) {
         setUser(null);
         setIsAuthenticated(false);
+        router.push('/auth/login');
       } else {
         setUser(data.user);
         setIsAuthenticated(true);
@@ -39,10 +43,13 @@ export const AuthProvider = ({ children }) => {
 
       authCheckedRef.current = true;
     } catch (error) {
-      console.error('[AuthContext] Auth check failed:', error);
+      console.log('[AuthContext] Auth check failed:', error);
       setUser(null);
       setIsAuthenticated(false);
+      router.push('/auth/login');
       authCheckedRef.current = true;
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -58,9 +65,7 @@ export const AuthProvider = ({ children }) => {
         headers: { 'Content-Type': 'application/json' },
       });
 
-      if (!res.ok) {
-        throw new Error('Token refresh failed');
-      }
+      if (!res.ok) throw new Error('Token refresh failed');
 
       const data = await res.json();
       console.log('[AuthContext] refreshToken data', data);
@@ -72,12 +77,31 @@ export const AuthProvider = ({ children }) => {
         throw new Error('No user returned');
       }
     } catch (error) {
-      console.error('[AuthContext] Token refresh error:', error);
+      console.log('[AuthContext] Token refresh error:', error);
       toast.error('Session expired. Please login again.');
       setIsAuthenticated(false);
       setUser(null);
       router.replace('/auth/login');
     }
+  };
+
+  const startTokenRefreshInterval = () => {
+    console.log('[AuthContext] Starting refresh interval');
+    if (intervalIdRef.current) clearInterval(intervalIdRef.current);
+
+    let refreshCount = 0;
+
+    intervalIdRef.current = setInterval(async () => {
+      if (refreshCount >= 3) {
+        console.log('[AuthContext] Max refresh count reached. Clearing interval.');
+        clearInterval(intervalIdRef.current);
+        return;
+      }
+
+      await refreshToken();
+      refreshCount++;
+      console.log(`[AuthContext] Token refreshed. Count: ${refreshCount}`);
+    }, 2 * 60 * 1000); // 9 minutes
   };
 
   // Initial auth check on mount
@@ -88,38 +112,26 @@ export const AuthProvider = ({ children }) => {
     return () => {
       console.log('[AuthContext] Cleanup on unmount');
       mountedRef.current = false;
+      if (intervalIdRef.current) clearInterval(intervalIdRef.current);
     };
   }, []);
 
-  // Auto-refresh logic
+  // Start refresh interval when authenticated
   useEffect(() => {
-    console.log('[AuthContext] useEffect for token refresh mounted');
-
-    let intervalId;
-    let refreshCount = 0;
-
-    const startTokenRefresh = async () => {
-      if (refreshCount >= 3) {
-        console.log('[AuthContext] Reached max refresh count. Clearing interval.');
-        clearInterval(intervalId);
-        return;
-      }
-
-      await refreshToken();
-      refreshCount++;
-      console.log(`[AuthContext] Token refreshed. Count: ${refreshCount}`);
-    };
-
     if (isAuthenticated) {
-      console.log('[AuthContext] Setting interval for refresh every 9 minutes');
-      intervalId = setInterval(startTokenRefresh, 540000); // 9 minutes
+      console.log('[AuthContext] Authenticated: setting interval');
+      startTokenRefreshInterval();
     }
-
-    return () => clearInterval(intervalId);
   }, [isAuthenticated]);
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, setUser, setIsAuthenticated }}>
+    <AuthContext.Provider value={{
+      user,
+      isAuthenticated,
+      isLoading,
+      setUser,
+      setIsAuthenticated
+    }}>
       {children}
     </AuthContext.Provider>
   );

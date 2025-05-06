@@ -47,9 +47,7 @@ export async function GET(req) {
         // Get all student leads with their faculty mentor names
         const [leads] = await pool.query(`
             SELECT 
-                sl.username,
-                sl.name,
-                sl.slot,
+                sl.*,
                 fm.name as facultyMentorName,
                 (
                     SELECT COUNT(*)
@@ -202,6 +200,52 @@ export async function DELETE(req) {
         }
     } catch (error) {
         console.error('Error deleting student lead:', error);
+        return NextResponse.json(
+            { success: false, error: 'Internal server error' },
+            { status: 500 }
+        );
+    }
+}
+
+export async function PUT(req) {
+    try {
+        const { username, name, email, phoneNumber, slot, branch } = await req.json();
+
+        if (!username || !name || !email || !phoneNumber || !slot) {
+            return NextResponse.json(
+                { success: false, error: 'All fields are required' },
+                { status: 400 }
+            );
+        }
+
+        const connection = await pool.getConnection();
+
+        try {
+            // Update student lead details
+            await connection.query(
+                `UPDATE studentLeads 
+                 SET name = ?, email = ?, phoneNumber = ?, slot = ?, branch = ?
+                 WHERE username = ?`,
+                [name, email, phoneNumber, slot, branch, username]
+            );
+
+            // Update user details
+            await connection.query(
+                `UPDATE users 
+                 SET name = ?
+                 WHERE username = ?`,
+                [name, username]
+            );
+
+            return NextResponse.json({
+                success: true,
+                message: 'Student lead updated successfully'
+            });
+        } finally {
+            connection.release();
+        }
+    } catch (error) {
+        console.error('Error in update student lead API:', error);
         return NextResponse.json(
             { success: false, error: 'Internal server error' },
             { status: 500 }

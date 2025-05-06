@@ -227,4 +227,50 @@ export async function DELETE(req) {
             { status: 500 }
         );
     }
+}
+
+export async function PUT(req) {
+    try {
+        const { username, name, email, phoneNumber, branch } = await req.json();
+
+        if (!username || !name || !email || !phoneNumber) {
+            return NextResponse.json(
+                { success: false, error: 'All fields are required' },
+                { status: 400 }
+            );
+        }
+
+        const connection = await pool.getConnection();
+
+        try {
+            // Update faculty mentor details
+            await connection.query(
+                `UPDATE facultyMentors 
+                 SET name = ?, email = ?, phoneNumber = ?, branch = ?
+                 WHERE username = ?`,
+                [name, email, phoneNumber, branch, username]
+            );
+
+            // Update user details
+            await connection.query(
+                `UPDATE users 
+                 SET name = ?
+                 WHERE username = ?`,
+                [name, username]
+            );
+
+            return NextResponse.json({
+                success: true,
+                message: 'Faculty mentor updated successfully'
+            });
+        } finally {
+            connection.release();
+        }
+    } catch (error) {
+        console.error('Error in update faculty mentor API:', error);
+        return NextResponse.json(
+            { success: false, error: 'Internal server error' },
+            { status: 500 }
+        );
+    }
 } 

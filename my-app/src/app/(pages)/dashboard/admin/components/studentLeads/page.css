@@ -68,6 +68,7 @@
 .action-buttons {
     display: flex;
     gap: 0.5rem;
+    align-items: center;
 }
 
 .view-profile-btn,
@@ -103,6 +104,24 @@
     background-color: #dc3545;
     color: white;
     border-color: #dc3545;
+}
+
+.edit-btn {
+    padding: 0.5rem 1rem;
+    background-color: rgb(151, 0, 3);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.edit-btn:hover {
+    background-color: rgb(120, 0, 2);
 }
 
 /* Modal Styles */
