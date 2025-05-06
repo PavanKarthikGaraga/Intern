@@ -9,7 +9,6 @@ export const AuthProvider = ({ children }) => {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
 
   const mountedRef = useRef(false);
   const authCheckedRef = useRef(false);
@@ -18,7 +17,6 @@ export const AuthProvider = ({ children }) => {
     if (!mountedRef.current || authCheckedRef.current) return;
 
     console.log('[AuthContext] checkInitialAuth called');
-    setIsLoading(true);
 
     try {
       const res = await fetch('/api/auth/check', {
@@ -34,7 +32,6 @@ export const AuthProvider = ({ children }) => {
       if (res.status === 401 || !data.user) {
         setUser(null);
         setIsAuthenticated(false);
-        router.push('/auth/login');
       } else {
         setUser(data.user);
         setIsAuthenticated(true);
@@ -45,10 +42,7 @@ export const AuthProvider = ({ children }) => {
       console.error('[AuthContext] Auth check failed:', error);
       setUser(null);
       setIsAuthenticated(false);
-      router.push('/auth/login');
       authCheckedRef.current = true;
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -125,13 +119,7 @@ export const AuthProvider = ({ children }) => {
   }, [isAuthenticated]);
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      isAuthenticated, 
-      isLoading,
-      setUser, 
-      setIsAuthenticated 
-    }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, setUser, setIsAuthenticated }}>
       {children}
     </AuthContext.Provider>
   );

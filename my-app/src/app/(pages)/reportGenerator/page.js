@@ -3,15 +3,27 @@
 import React, { useState, useRef } from "react";
 import toast, { Toaster } from 'react-hot-toast';
 import "./page.css";
+import { DOMAINS } from '../../Data/domains.js';
 
 const ReportGenerator = () => {
+  // Define activities with timing, name, and maxLen
+  const activityDefinitions = [
+    { timing: '5:30 am - 6:00 am', name: 'Physical Exercise', maxLen: 100 },
+    { timing: '6:00 am - 6:30 am', name: 'Yoga / Meditation', maxLen: 100 },
+    { timing: '6:30 am - 7:30 am', name: '7-Days Swachhata Challenge', maxLen: 100 },
+    { timing: '8:30 am - 10:00 am', name: 'Domain Specialized Field Study', maxLen: 600 },
+    { timing: '10:00 am - 11:30 am', name: 'Conduct a mini-survey and analyze 10 responses', maxLen: 100 },
+    { timing: '11:30 am - 12:00 pm', name: 'Indian Heritage Culture - LIPI Task', maxLen: 100 },
+    { timing: '1:30 pm - 3:00 pm', name: 'Domain Study assigned in your 7 Days Domain Schedule', maxLen: 600 },
+    { timing: '3:00 pm - 4:00 pm', name: 'Field Study / Field Visit', maxLen: 100 },
+    { timing: '4:00 pm - 5:00 pm', name: 'Interview a community elder about traditional knowledge', maxLen: 100 },
+  ];
+
   // Helper to parse time range and return array of 30-min slot labels
-  function getTimeSlots(activityDesc) {
-    // Extract time range (e.g., '5:30 am – 6:00 am')
-    const match = activityDesc.match(/(\d{1,2}:\d{2} ?[ap]m) ?[–-] ?(\d{1,2}:\d{2} ?[ap]m)/i);
-    if (!match) return [activityDesc];
+  function getTimeSlotsFromTiming(timing) {
+    const match = timing.match(/(\d{1,2}:\d{2} ?[ap]m) ?[–-] ?(\d{1,2}:\d{2} ?[ap]m)/i);
+    if (!match) return [timing];
     const [_, start, end] = match;
-    // Convert to Date objects (arbitrary date)
     const toDate = t => {
       const [h, m] = t.replace(/ ?[ap]m/i, '').split(':').map(Number);
       let hour = h;
@@ -32,24 +44,40 @@ const ReportGenerator = () => {
     return slots;
   }
 
+  // Helper to parse time range and activity name
+  function parseActivity(desc) {
+    // e.g., '5:30 am – 6:00 am Physical Exercise'
+    const match = desc.match(/^(\d{1,2}:\d{2} ?[ap]m ?[–-] ?\d{1,2}:\d{2} ?[ap]m) (.+)$/i);
+    if (match) {
+      return { timing: match[1], name: match[2] };
+    }
+    return { timing: '', name: desc };
+  }
+
   const activitySchedule = [
-    '5:30 am – 6:00 am Physical Exercise',
-    '6:00 am – 6:30 am Yoga / Meditation',
-    '6:30 am – 7:30 am 7-Days Swachhata Challenge',
-    '8:30 am – 10:00 am Domain Specialized Field Study',
-    '10:00 am – 11:30 am Conduct a mini-survey and analyze 10 responses',
-    '11:30 am – 12:00 pm Indian Heritage Culture - LIPI Task',
-    '1:30 pm – 3:00 pm Domain Study assigned in your 7 Days Domain Schedule',
-    '3:00 pm – 4:00 pm Field Study / Field Visit',
-    '4:00 pm – 5:00 pm Interview a community elder about traditional knowledge'
+    '5:30 am - 6:00 am Physical Exercise',
+    '6:00 am - 6:30 am Yoga / Meditation',
+    '6:30 am - 7:30 am 7-Days Swachhata Challenge',
+    '8:30 am - 10:00 am Domain Specialized Field Study',
+    '10:00 am - 11:30 am Conduct a mini-survey and analyze 10 responses',
+    '11:30 am - 12:00 pm Indian Heritage Culture - LIPI Task',
+    '1:30 pm - 3:00 pm Domain Study assigned in your 7 Days Domain Schedule',
+    '3:00 pm - 4:00 pm Field Study / Field Visit',
+    '4:00 pm - 5:00 pm Interview a community elder about traditional knowledge'
   ];
 
   // Build initial activities state with correct number of image slots
-  const initialActivities = activitySchedule.map(desc => ({
-    description: desc,
-    imageSlots: getTimeSlots(desc),
-    images: getTimeSlots(desc).map(() => null)
-  }));
+  const initialActivities = activityDefinitions.map(def => {
+    const imageSlots = getTimeSlotsFromTiming(def.timing);
+    return {
+      name: def.name,
+      timing: def.timing,
+      maxLen: def.maxLen,
+      imageSlots,
+      images: imageSlots.map(() => null),
+      description: ''
+    };
+  });
 
   const [formData, setFormData] = useState({
     username: "",
@@ -190,6 +218,30 @@ const ReportGenerator = () => {
     );
   };
 
+  // Helper to get duration in minutes from timing string
+  function getDurationMinutes(timing) {
+    const match = timing.match(/(\d{1,2}):(\d{2}) ?([ap]m)[ –-]+(\d{1,2}):(\d{2}) ?([ap]m)/i);
+    if (!match) return 30;
+    let [ , sh, sm, sap, eh, em, eap ] = match;
+    sh = parseInt(sh, 10); sm = parseInt(sm, 10); eh = parseInt(eh, 10); em = parseInt(em, 10);
+    if (sap.toLowerCase() === 'pm' && sh !== 12) sh += 12;
+    if (sap.toLowerCase() === 'am' && sh === 12) sh = 0;
+    if (eap.toLowerCase() === 'pm' && eh !== 12) eh += 12;
+    if (eap.toLowerCase() === 'am' && eh === 12) eh = 0;
+    const start = sh * 60 + sm;
+    const end = eh * 60 + em;
+    return end - start;
+  }
+
+  // Before rendering activities in the PDF, reorder so 'Domain Study assigned in your 7 Days Domain Schedule' comes before 'Domain Specialized Field Study'
+  const reorderedActivities = [...formData.activities];
+  const idxDomainStudy = reorderedActivities.findIndex(a => a.name === 'Domain Study assigned in your 7 Days Domain Schedule');
+  const idxDomainSpecialized = reorderedActivities.findIndex(a => a.name === 'Domain Specialized Field Study');
+  if (idxDomainStudy > -1 && idxDomainSpecialized > -1 && idxDomainStudy > idxDomainSpecialized) {
+    const [domainStudy] = reorderedActivities.splice(idxDomainStudy, 1);
+    reorderedActivities.splice(idxDomainSpecialized, 0, domainStudy);
+  }
+
   return (
     <div className="report-container">
       <Toaster position="top-right" />
@@ -210,13 +262,11 @@ const ReportGenerator = () => {
           </div>
           <div className="form-group">
             <label>Domain:</label>
-            <input
-              type="text"
-              name="domain"
-              value={formData.domain}
-              onChange={handleInputChange}
-              required
-            />
+            <select name="domain" value={formData.domain} onChange={handleInputChange}>
+              {DOMAINS.map(domain => (
+                <option key={domain.id} value={domain.name}>{domain.name}</option>
+              ))}
+            </select>
           </div>
         </div>
 
@@ -247,6 +297,7 @@ const ReportGenerator = () => {
               <select name="mode" value={formData.mode} onChange={handleInputChange}>
                 <option value="Remote">Remote</option>
                 <option value="In Campus">In Campus</option>
+                <option value="In Village">In Village</option>
               </select>
             </div>
             <div className="form-group">
@@ -293,39 +344,102 @@ const ReportGenerator = () => {
         </div>
 
         <div className="activities-section">
-          {formData.activities.map((activity, activityIdx) => (
-            <div className="activity-form-block" key={activityIdx}>
-              <h3>{activity.description}</h3>
-              <input
-                type="text"
-                name="description"
-                className="activity-description-input"
-                value={activity.description}
-                onChange={(e) => handleInputChange(e, activityIdx)}
-                required
-                maxLength={MAX_CHARS}
-                placeholder="Enter activity description"
-              />
-              <div className="char-count">{activity.description.length}/{MAX_CHARS} characters</div>
-              <div className="activity-images-upload">
-                {activity.imageSlots.map((slot, imgIdx) => (
-                  <div className="form-group" key={imgIdx}>
-                    <label>Image ({slot}):</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleImageUpload(e, activityIdx, imgIdx)}
+          {formData.activities.map((activity, activityIdx) => {
+            const maxLen = activity.maxLen;
+            const isThreeImages = activity.imageSlots.length === 3;
+            const duration = getDurationMinutes(activity.timing);
+            return (
+              <div className="activity-form-block" key={activityIdx}>
+                <h3>{activity.name}</h3>
+                <div className="activity-row-flex">
+                  <div className="activity-desc-col">
+                    <textarea
+                      name="description"
+                      className="activity-description-input"
+                      value={activity.description}
+                      onChange={(e) => handleInputChange(e, activityIdx)}
+                      required
+                      maxLength={maxLen}
+                      rows={maxLen > 100 ? 8 : 3}
+                      cols={100}
+                      placeholder="Enter activity description"
                     />
+                    <div className="char-count">{activity.description.length}/{maxLen} characters</div>
+                    {/* If 3 images, render 2 image uploads below textarea */}
+                    {isThreeImages && (
+                      <div className="activity-images-upload activity-images-upload-below">
+                        {[1, 2].map((imgIdx) => (
+                          <div className="form-group image-upload-group" key={imgIdx}>
+                            <div className="image-upload-row-top">
+                              <label>Image ({activity.imageSlots[imgIdx]}):</label>
+                              <img
+                                src={activity.images[imgIdx] ? activity.images[imgIdx] : 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='}
+                                alt={activity.images[imgIdx] ? `Preview ${activity.imageSlots[imgIdx]}` : 'No Preview'}
+                                className="activity-image-preview"
+                                style={{ visibility: activity.images[imgIdx] ? 'visible' : 'hidden' }}
+                              />
+                            </div>
+                            <div className="image-upload-row-bottom">
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleImageUpload(e, activityIdx, imgIdx)}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                ))}
+                  <div className="activity-images-upload">
+                    {/* If 3 images, render the first image upload beside textarea, else render all here */}
+                    {isThreeImages
+                      ? [0].map((imgIdx) => (
+                          <div className="form-group image-upload-group" key={imgIdx}>
+                            <div className="image-upload-row-top">
+                              <label>Image ({activity.imageSlots[imgIdx]}):</label>
+                              <img
+                                src={activity.images[imgIdx] ? activity.images[imgIdx] : 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='}
+                                alt={activity.images[imgIdx] ? `Preview ${activity.imageSlots[imgIdx]}` : 'No Preview'}
+                                className="activity-image-preview"
+                                style={{ visibility: activity.images[imgIdx] ? 'visible' : 'hidden' }}
+                              />
+                            </div>
+                            <div className="image-upload-row-bottom">
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleImageUpload(e, activityIdx, imgIdx)}
+                              />
+                            </div>
+                          </div>
+                        ))
+                      : activity.imageSlots.map((slot, imgIdx) => (
+                          <div className="form-group image-upload-group" key={imgIdx}>
+                            <div className="image-upload-row-top">
+                              <label>Image ({slot}):</label>
+                              <img
+                                src={activity.images[imgIdx] ? activity.images[imgIdx] : 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='}
+                                alt={activity.images[imgIdx] ? `Preview ${slot}` : 'No Preview'}
+                                className="activity-image-preview"
+                                style={{ visibility: activity.images[imgIdx] ? 'visible' : 'hidden' }}
+                              />
+                            </div>
+                            <div className="image-upload-row-bottom">
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleImageUpload(e, activityIdx, imgIdx)}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
-
-        {/* <button className="preview-btn" onClick={handlePreview}>
-          Show Preview
-        </button> */}
 
         <button 
           className="download-btn" 
@@ -336,98 +450,6 @@ const ReportGenerator = () => {
         </button>
       </div>
 
-      {/* {showPreview && (
-        <div className="report-preview">
-          <div ref={reportRef}>
-            <div className="header-wrapper">
-              <div className="custom-header">
-                <h1>Koneru Lakshmaiah Education Foundation</h1>
-                <h2>(Deemed to be University)</h2>
-              </div>
-            </div>
-
-            <div className="content-wrapper">
-              <div className="event-info">
-                <div className="student-info">
-                  <div className="student-info-item">
-                    <strong>Student ID:</strong>
-                    <span>{formData.username}</span>
-                  </div>
-                  <div className="student-info-item">
-                    <strong>Domain:</strong>
-                    <span>{formData.domain}</span>
-                  </div>
-                </div>
-                <div className="details-container">
-                  <div className="details-left">
-                    <div className="detail-item">
-                      <span className="detail-label">Date:</span>
-                      <span className="detail-value">{formatDate(formData.date)}</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="detail-label">Venue:</span>
-                      <span className="detail-value">{formData.location}</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="detail-label">Mode:</span>
-                      <span className="detail-value">{formData.mode}</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="detail-label">Duration:</span>
-                      <span className="detail-value">{formData.duration}</span>
-                    </div>
-                  </div>
-                  <div className="details-right">
-                    <div className="detail-item">
-                      <span className="detail-label">Slot:</span>
-                      <span className="detail-value">{formData.slot}</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="detail-label">Day:</span>
-                      <span className="detail-value">Day {formData.day}</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="detail-label">People:</span>
-                      <span className="detail-value">{formData.people}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="description-section">
-                <h3>Description</h3>
-                <p>{formData.description}</p>
-              </div>
-
-              <div className="images-section">
-                <h3>Geotagged Images</h3>
-                <div className="images-grid">
-                  {Object.entries(formData.geotaggedImages).map(([key, value]) => (
-                    value && (
-                      <div key={key} className="image-container">
-                        <img src={value} alt={`Geotagged ${key}`} />
-                        <div className="image-label">{key.charAt(0).toUpperCase() + key.slice(1)}</div>
-                      </div>
-                    )
-                  ))}
-                </div>
-
-                <h3>Additional Images</h3>
-                <div className="images-grid">
-                  {Object.entries(formData.normalImages).map(([key, value]) => (
-                    value && (
-                      <div key={key} className="image-container">
-                        <img src={value} alt={`Additional ${key}`} />
-                      </div>
-                    )
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )} */}
-
       {/* Hidden report template for PDF generation */}
       <div style={{ display: 'none' }}>
         <div ref={reportRef} className="pdf-template">
@@ -436,58 +458,123 @@ const ReportGenerator = () => {
             <div className="pdf-header-title">Koneru Lakshmaiah Education Foundation</div>
             <div className="pdf-header-subtitle">(Deemed to be University)</div>
           </div>
-
+          {/* SAC Logo and Social Internship 2025 below header */}
+          <div className="pdf-header-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '24px', margin: '12px 0' }}>
+            <img src="/sac.webp" alt="SAC Logo" style={{ height: '48px', width: 'auto' }} />
+            <div className="pdf-header-internship" style={{ fontWeight: 600, fontSize: '1.2rem', color: '#8b0000' }}>Social Internship 2025</div>
+          </div>
           {/* Student Info Row */}
           <div className="pdf-info-row">
-            <span><strong>Student ID:</strong> {formData.username || '2300032048'}</span>
-            <span><strong>Domain:</strong> {formData.domain || 'Education'}</span>
+            <span><strong>Student ID:</strong> {formData.username }</span>
+            <span><strong>Domain:</strong> {formData.domain }</span>
           </div>
-
           {/* Details Table */}
           <div className="pdf-details-table">
             <div>
-              <div><strong>Date:</strong> {formatDate(formData.date) || '01/05/2025'}</div>
-              <div><strong>Venue:</strong> {formData.location || 'KL University,vaddeswaram'}</div>
-              <div><strong>Mode:</strong> {formData.mode || 'Remote'}</div>
-              <div><strong>Duration:</strong> {formData.duration || '44'}</div>
+              <div className="pdf-details-table-item"><strong>Date:</strong> {formatDate(formData.date) }</div>
+              <div className="pdf-details-table-item"><strong>Venue:</strong> {formData.location }</div>
+              <div className="pdf-details-table-item"><strong>Mode:</strong> {formData.mode }</div>
+              <div className="pdf-details-table-item"><strong>Duration:</strong> {formData.duration }</div>
             </div>
             <div>
-              <div><strong>Slot:</strong> {formData.slot || '1'}</div>
-              <div><strong>Day:</strong> {formData.day ? `Day ${formData.day}` : 'Day 2'}</div>
-              <div><strong>People:</strong> {formData.people || '3'}</div>
+              <div className="pdf-details-table-item"><strong>Slot:</strong> {formData.slot }</div>
+              <div className="pdf-details-table-item"><strong>Day:</strong> {`Day ${formData.day}`}</div>
+              <div className="pdf-details-table-item"><strong>People:</strong> {formData.people }</div>
             </div>
           </div>
-
-          {/* Activity Sections */}
-          {formData.activities.map((activity, activityIdx) => (
-            <div className="pdf-activity-section" key={activityIdx}>
-              <div className="pdf-activity-title">{activity.description}</div>
-              <div className="pdf-activity-content">
-                <ul className="pdf-activity-desc-list">
-                  <li>{activity.description}</li>
-                </ul>
-                <div className="pdf-activity-images">
-                  {activity.images.map((img, i) => (
-                    img ? (
-                      <div key={i} style={{display:'flex',flexDirection:'column',alignItems:'center'}}>
-                        <img
-                          src={img}
-                          alt={`Activity ${activityIdx + 1} Image ${i + 1}`}
-                          className="pdf-activity-img"
-                        />
-                        <div className="pdf-activity-timeline">{activity.imageSlots[i]}</div>
-                      </div>
-                    ) : (
-                      <div key={i} className="pdf-activity-img" style={{background:'#eee',display:'flex',alignItems:'center',justifyContent:'center',color:'#aaa',fontSize:'0.9rem',flexDirection:'column'}}>
-                        No Image
-                        <div className="pdf-activity-timeline">{activity.imageSlots[i]}</div>
-                      </div>
-                    )
-                  ))}
-                </div>
-              </div>
-            </div>
-          ))}
+          
+          {/* Activity Sections (PDF) */}
+          {(() => {
+            // Group activities for PDF pages
+            const group1 = ['Physical Exercise', 'Yoga / Meditation', '7-Days Swachhata Challenge'];
+            const group2 = ['Domain Study assigned in your 7 Days Domain Schedule', 'Domain Specialized Field Study'];
+            const group3 = ['Conduct a mini-survey and analyze 10 responses', 'Indian Heritage Culture - LIPI Task', 'Field Study / Field Visit'];
+            const group4 = ['Interview a community elder about traditional knowledge'];
+            const groups = [group1, group2, group3, group4];
+            let rendered = [];
+            groups.forEach((group, groupIdx) => {
+              const acts = reorderedActivities.filter(a => group.includes(a.name));
+              acts.forEach((activity, activityIdx) => {
+                rendered.push(
+                  <div className="pdf-activity-section" key={activity.name}>
+                    <div className="pdf-activity-title">{activity.name}</div>
+                    <div className="pdf-activity-content">
+                      <ul className="pdf-activity-desc-list">
+                        <li>{activity.description}</li>
+                      </ul>
+                      {activity.images.length === 3 ? (
+                        <div className="pdf-activity-images" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                          <div style={{ display: 'flex', flexDirection: 'row', gap: '24px', width: '100%', justifyContent: 'center' }}>
+                            {[0, 1].map(i => (
+                              <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                {activity.images[i] ? (
+                                  <img
+                                    src={activity.images[i]}
+                                    alt={`Activity ${activityIdx + 1} Image ${i + 1}`}
+                                    className="pdf-activity-img"
+                                  />
+                                ) : (
+                                  <div className="pdf-activity-img" style={{ background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#aaa', fontSize: '0.9rem', flexDirection: 'column' }}>
+                                    No Image
+                                  </div>
+                                )}
+                                <div className="pdf-activity-timeline" style={{ marginTop: '6px' }}>{activity.imageSlots[i]}</div>
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', width: '100%', marginTop: '0' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                              {activity.images[2] ? (
+                                <img
+                                  src={activity.images[2]}
+                                  alt={`Activity ${activityIdx + 1} Image 3`}
+                                  className="pdf-activity-img"
+                                />
+                              ) : (
+                                <div className="pdf-activity-img" style={{ background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#aaa', fontSize: '0.9rem', flexDirection: 'column' }}>
+                                  No Image
+                                </div>
+                              )}
+                              <div className="pdf-activity-timeline" style={{ marginTop: '6px' }}>{activity.imageSlots[2]}</div>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="pdf-activity-images">
+                          {activity.images.map((img, i) => (
+                            img ? (
+                              <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                <img
+                                  src={img}
+                                  alt={`Activity ${activityIdx + 1} Image ${i + 1}`}
+                                  className="pdf-activity-img"
+                                />
+                                <div className="pdf-activity-timeline">{activity.imageSlots[i]}</div>
+                              </div>
+                            ) : (
+                              <div key={i} className="pdf-activity-img" style={{ background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#aaa', fontSize: '0.9rem', flexDirection: 'column' }}>
+                                No Image
+                                <div className="pdf-activity-timeline">{activity.imageSlots[i]}</div>
+                              </div>
+                            )
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              });
+              if (groupIdx < groups.length - 1) {
+                rendered.push(<div className="pdf-page-break" key={`break-${groupIdx}`} />);
+              }
+            });
+            return rendered;
+          })()}
+          {/* PDF Footer (only after last page) */}
+          <div className="pdf-footer">
+            <div>KLSAC</div>
+            <div>Social Internship 2025</div>
+          </div>
         </div>
       </div>
     </div>
