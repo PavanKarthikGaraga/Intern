@@ -12,7 +12,7 @@ const FinalReportPage = () => {
   const [error, setError] = useState(null);
   const [finalReport, setFinalReport] = useState("");
   const [status, setStatus] = useState({
-    verified: false,
+    // verified: false,
     completed: false,
     finalReport: null,
     submissionOpen: false
@@ -49,7 +49,7 @@ const FinalReportPage = () => {
 
         if (data.success) {
           setStatus({
-            verified: data.data.verified,
+            // verified: data.data.verified,
             completed: data.data.completed,
             finalReport: data.data.finalReport,
             submissionOpen: data.data.submissionOpen
@@ -129,16 +129,16 @@ const FinalReportPage = () => {
     );
   }
 
-  if (!status.verified) {
-    return (
-      <div className="final-report-section">
-        <div className="not-verified">
-          <h2>Final Report Submission</h2>
-          <p>You are not yet verified to submit your final report. Please wait for verification from your student lead.</p>
-        </div>
-      </div>
-    );
-  }
+  // if (!status.verified) {
+  //   return (
+  //     <div className="final-report-section">
+  //       <div className="not-verified">
+  //         <h2>Final Report Submission</h2>
+  //         <p>You are not yet verified to submit your final report. Please wait for verification from your student lead.</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
 
   return (

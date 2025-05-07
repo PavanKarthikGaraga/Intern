@@ -3,6 +3,8 @@ description:
 globs: 
 alwaysApply: true
 ---
+always apply the code don't ask should i apply.
+
 Always scan the codebase before creating any file or folder if it's already present don't create the new just edit that.
 don't ever use tailwind or any internal css or css frameworks , always only use .css files 
 

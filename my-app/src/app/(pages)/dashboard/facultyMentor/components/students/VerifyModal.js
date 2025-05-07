@@ -1,6 +1,8 @@
 'use client';
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
+import MarksModal from './MarksModal';
+import { commonActivities, dailyActivities } from '@/app/Data/activities';
 import './page.css';
 
 export default function VerifyModal({ student, onClose }) {
@@ -10,6 +12,9 @@ export default function VerifyModal({ student, onClose }) {
   const [attendanceStatus, setAttendanceStatus] = useState({});
   const [verificationStatus, setVerificationStatus] = useState({});
   const [marks, setMarks] = useState({});
+  const [checkedActivities, setCheckedActivities] = useState({});
+  const [showMarksModal, setShowMarksModal] = useState(false);
+  const [selectedDay, setSelectedDay] = useState(null);
 
   const fetchReports = async () => {
     try {
@@ -104,6 +109,20 @@ export default function VerifyModal({ student, onClose }) {
     }
   }, [student]);
 
+  // Listen for marks from popup
+  useEffect(() => {
+    const handler = (event) => {
+      if (event.data && event.data.type === 'MARKS_SAVED' && event.data.day && typeof event.data.totalMarks === 'number') {
+        handleSaveMarks(event.data.totalMarks, event.data.day);
+      }
+      if (event.data && event.data.type === 'MARKS_REJECTED' && event.data.day) {
+        handleAttendanceChange(event.data.day, 'A');
+      }
+    };
+    window.addEventListener('message', handler);
+    return () => window.removeEventListener('message', handler);
+  }, []);
+
   const handleVerification = async (day, verified) => {
     try {
       const response = await fetch('/api/dashboard/facultyMentor/verify', {
@@ -143,12 +162,44 @@ export default function VerifyModal({ student, onClose }) {
 
   const handleAttendanceChange = async (day, status) => {
     try {
-      // Check if the day is verified before allowing attendance marking
-      if (!verificationStatus[`day${day}`]) {
+      if (status === 'P' && !verificationStatus[`day${day}`]) {
         toast.error('Cannot mark attendance for unverified reports');
         return;
       }
+      if (status === 'A' || status === 'P') {
+        const response = await fetch('/api/dashboard/facultyMentor/attendance', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: student.username,
+            day,
+            status,
+            marks: status === 'A' ? 0 : marks[`day${day}`] || 0
+          })
+        });
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || 'Failed to update attendance');
+        }
+        await fetchReports();
+        toast.success('Attendance updated successfully');
+      }
+    } catch (err) {
+      console.error('Error updating attendance:', err);
+      toast.error(err.message);
+    }
+  };
 
+  // Open popup for marks modal
+  const handleOpenMarksModal = (day, initialMarks) => {
+    const url = `/dashboard/facultyMentor/marks-modal?day=${day}&initialMarks=${initialMarks}`;
+    window.open(url, 'marksModal', 'width=500,height=500');
+  };
+
+  // Save marks and mark present
+  const handleSaveMarks = async (totalMarks, day) => {
+    try {
       const response = await fetch('/api/dashboard/facultyMentor/attendance', {
         method: 'POST',
         credentials: 'include',
@@ -156,20 +207,22 @@ export default function VerifyModal({ student, onClose }) {
         body: JSON.stringify({
           username: student.username,
           day,
-          status,
-          marks: parseFloat(marks[`day${day}`]) || 0
+          status: 'P',
+          marks: totalMarks
         })
       });
-
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || 'Failed to update attendance');
+        throw new Error(data.error || 'Failed to update attendance and marks');
       }
-
+      setMarks(prev => ({
+        ...prev,
+        [`day${day}`]: totalMarks
+      }));
       await fetchReports();
       toast.success('Attendance and marks updated successfully');
     } catch (err) {
-      console.error('Error updating attendance:', err);
+      console.error('Error updating attendance and marks:', err);
       toast.error(err.message);
     }
   };
@@ -234,6 +287,41 @@ export default function VerifyModal({ student, onClose }) {
     }
   };
 
+  const calculateTotalMarks = (day) => {
+    let total = 0;
+    
+    // Add marks from common activities
+    commonActivities.forEach(activity => {
+      if (checkedActivities[`day${day}_${activity.id}`]) {
+        total += activity.marks;
+      }
+    });
+
+    // Add marks from daily activities
+    const dayActivities = dailyActivities.find(d => d.day === day)?.activities || [];
+    dayActivities.forEach(activity => {
+      if (checkedActivities[`day${day}_${activity.id}`]) {
+        total += activity.marks || 0;
+      }
+    });
+
+    return total;
+  };
+
+  const handleActivityCheck = (day, activityId, checked) => {
+    setCheckedActivities(prev => ({
+      ...prev,
+      [`day${day}_${activityId}`]: checked
+    }));
+
+    // Calculate and update total marks
+    const totalMarks = calculateTotalMarks(day);
+    setMarks(prev => ({
+      ...prev,
+      [`day${day}`]: totalMarks
+    }));
+  };
+
   if (loading) {
     return (
       <div className="modal-overlay">
@@ -282,7 +370,7 @@ export default function VerifyModal({ student, onClose }) {
                 <th>Report</th>
                 <th>Uploaded On</th>
                 <th>Status</th>
-                <th>Marks</th>
+                <th>Total Marks</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -304,6 +392,22 @@ export default function VerifyModal({ student, onClose }) {
                           target="_blank" 
                           rel="noopener noreferrer"
                           className="report-link"
+                          onClick={e => {
+                            if (isVerified && canMark && currentAttendance !== 'P') {
+                              // Open both windows synchronously
+                              window.open(hasUpload, '_blank');
+                              window.open(
+                                `/dashboard/facultyMentor/marks-modal?day=${day}&initialMarks=${marks[`day${day}`] || 0}`,
+                                'marksModal',
+                                'width=500,height=500'
+                              );
+                              e.preventDefault();
+                            } else if (!isVerified) {
+                              toast.error('Please verify the report first.');
+                            } else if (!canMark) {
+                              toast.error('Please mark previous days as present first.');
+                            }
+                          }}
                         >
                           View Report
                         </a>
@@ -339,18 +443,9 @@ export default function VerifyModal({ student, onClose }) {
                     </td>
                     <td>
                       {isVerified && (
-                        <input
-                          type="number"
-                          min="0"
-                          max="10"
-                          step="0.5"
-                          value={marks[`day${day}`] || ''}
-                          onChange={(e) => setMarks(prev => ({
-                            ...prev,
-                            [`day${day}`]: e.target.value
-                          }))}
-                          className="marks-input"
-                        />
+                        <span className="total-marks">
+                          {marks[`day${day}`] || 0} / 8.5
+                        </span>
                       )}
                     </td>
                     <td>
@@ -378,7 +473,7 @@ export default function VerifyModal({ student, onClose }) {
                           <div className="attendance-actions">
                             <button 
                               className="accept-btn"
-                              onClick={() => handleAttendanceChange(day, 'P')}
+                              onClick={() => handleOpenMarksModal(day, marks[`day${day}`] || 0)}
                             >
                               Mark Present
                             </button>

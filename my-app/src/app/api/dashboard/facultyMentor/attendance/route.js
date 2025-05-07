@@ -86,6 +86,19 @@ export async function POST(req) {
             }
         }
 
+        // If it's day 7, check if all 7 days' reports are submitted, and add 1 mark if so
+        let finalMarks = marks;
+        if (parseInt(day) === 7) {
+            const [uploads] = await pool.query(
+                `SELECT day1, day2, day3, day4, day5, day6, day7 FROM uploads WHERE username = ?`,
+                [username]
+            );
+            const allSubmitted = uploads.length > 0 && [1,2,3,4,5,6,7].every(d => uploads[0][`day${d}`]);
+            if (allSubmitted) {
+                finalMarks = (parseFloat(marks) || 0) + 1;
+            }
+        }
+
         const connection = await pool.getConnection();
         try {
             await connection.beginTransaction();
@@ -120,7 +133,7 @@ export async function POST(req) {
                 // First update the specific day's marks
                 await connection.query(
                     `UPDATE dailyMarks SET day${day} = ? WHERE username = ?`,
-                    [marks, username]
+                    [finalMarks, username]
                 );
 
                 // Then calculate and update the total internal marks
@@ -138,13 +151,36 @@ export async function POST(req) {
                         'UPDATE dailyMarks SET internalMarks = ? WHERE username = ?',
                         [totalMarks, username]
                     );
+
+                    // Update marks table with internal marks
+                    const [existingMarksRecord] = await connection.query(
+                        'SELECT * FROM marks WHERE username = ?',
+                        [username]
+                    );
+
+                    if (existingMarksRecord.length > 0) {
+                        await connection.query(
+                            `UPDATE marks 
+                             SET internalMarks = ?,
+                                 totalMarks = internalMarks + caseStudyReportMarks + conductParticipationMarks
+                             WHERE username = ?`,
+                            [totalMarks, username]
+                        );
+                    } else {
+                        // Insert new record in marks table
+                        await connection.query(
+                            `INSERT INTO marks (username, facultyMentorId, internalMarks, totalMarks)
+                             VALUES (?, ?, ?, ?)`,
+                            [username, decoded.username, totalMarks, totalMarks]
+                        );
+                    }
                 }
             } else {
                 // Insert new marks
                 await connection.query(
                     `INSERT INTO dailyMarks (username, day${day}, internalMarks)
                      VALUES (?, ?, ?)`,
-                    [username, marks, marks]
+                    [username, finalMarks, finalMarks]
                 );
             }
 

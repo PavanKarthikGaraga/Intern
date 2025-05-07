@@ -46,7 +46,7 @@ export async function GET(request) {
         try {
             // First check if student exists in registrations
             const [registration] = await db.query(
-                `SELECT verified,slot FROM registrations WHERE username = ?`,
+                `SELECT slot FROM registrations WHERE username = ?`,
                 [decoded.username]
             );
 
@@ -69,7 +69,7 @@ export async function GET(request) {
             return NextResponse.json({ 
                 success: true,
                 data: {
-                    verified: registration[0].verified === 1,
+                    // verified: registration[0].verified === 1,
                     finalReport: final[0]?.finalReport || null,
                     completed: final[0]?.completed === 1 || false,
                     submissionOpen: isAllowed
@@ -124,7 +124,7 @@ export async function POST(request) {
         try {
             // First check if student exists in registrations and is verified
             const [registration] = await db.query(
-                `SELECT verified, facultyMentorId, slot FROM registrations WHERE username = ?`,
+                `SELECT facultyMentorId, slot FROM registrations WHERE username = ?`,
                 [decoded.username]
             );
 
@@ -135,12 +135,12 @@ export async function POST(request) {
                 }, { status: 404 });
             }
 
-            if (registration[0].verified !== 1) {
-                return NextResponse.json({ 
-                    success: false, 
-                    error: 'Student not verified.' 
-                }, { status: 403 });
-            }
+            // if (registration[0].verified !== 1) {
+            //     return NextResponse.json({ 
+            //         success: false, 
+            //         error: 'Student not verified.' 
+            //     }, { status: 403 });
+            // }
 
             // Check if report submission is allowed for this slot
             const isAllowed = await isReportSubmissionAllowed(registration[0].slot);
@@ -171,7 +171,7 @@ export async function POST(request) {
                     `UPDATE final SET finalReport = ? WHERE username = ?`,
                     [finalReport, decoded.username]
                 );
-            }
+            }   
 
             return NextResponse.json({ 
                 success: true,
