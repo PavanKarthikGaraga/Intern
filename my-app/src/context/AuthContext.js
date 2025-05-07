@@ -101,7 +101,7 @@ export const AuthProvider = ({ children }) => {
       await refreshToken();
       refreshCount++;
       console.log(`[AuthContext] Token refreshed. Count: ${refreshCount}`);
-    }, 2 * 60 * 1000); // 9 minutes
+    }, 9 * 60 * 1000); // 9 minutes
   };
 
   // Initial auth check on mount

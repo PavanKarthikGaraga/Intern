@@ -211,6 +211,20 @@ CREATE TABLE stats (
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+-- Create reportOpen table for controlling final report submission periods
+CREATE TABLE reportOpen (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    slot1 BOOLEAN DEFAULT FALSE,
+    slot2 BOOLEAN DEFAULT FALSE,
+    slot3 BOOLEAN DEFAULT FALSE,
+    slot4 BOOLEAN DEFAULT FALSE,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Insert initial record for reportOpen
+INSERT INTO reportOpen (slot1, slot2, slot3, slot4) VALUES (FALSE, FALSE, FALSE, FALSE);
+
 -- Insert users (admin)
 -- INSERT INTO users (name, username, password, role)
 -- VALUES 

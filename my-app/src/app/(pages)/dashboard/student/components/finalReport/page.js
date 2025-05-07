@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import "./page.css";
+import { toast } from "react-hot-toast";
 
 const FinalReportPage = () => {
   const router = useRouter();
@@ -14,10 +15,8 @@ const FinalReportPage = () => {
     verified: false,
     completed: false,
     finalReport: null,
-    slotEndTimes: {}
+    submissionOpen: false
   });
-
-  const [isPastDeadline, setIsPastDeadline] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -39,7 +38,13 @@ const FinalReportPage = () => {
         const data = await response.json();
         
         if (!response.ok) {
-          throw new Error(data.error || 'Failed to fetch final report status');
+          if (data.error === 'Final report submission is not currently open for your slot.') {
+            setStatus(prev => ({ ...prev, submissionOpen: false }));
+            setError(null);
+          } else {
+            setError(data.error || 'Failed to fetch final report status');
+          }
+          return;
         }
 
         if (data.success) {
@@ -47,18 +52,11 @@ const FinalReportPage = () => {
             verified: data.data.verified,
             completed: data.data.completed,
             finalReport: data.data.finalReport,
-            slotEndTimes: data.data.slotEndTimes
+            submissionOpen: data.data.submissionOpen
           });
           if (data.data.finalReport) {
             setFinalReport(data.data.finalReport);
           }
-          
-          // Check if current date is past deadline
-          const currentDate = new Date().toISOString().split('T')[0];
-          const deadline = data.data.slotEndTimes[user.slot];
-          setIsPastDeadline(currentDate > deadline);
-        } else {
-          throw new Error(data.error || 'Failed to fetch final report status');
         }
       } catch (err) {
         console.error('Error fetching status:', err);
@@ -92,13 +90,13 @@ const FinalReportPage = () => {
 
       if (data.success) {
         setStatus(prev => ({ ...prev, finalReport }));
-        alert('Final report submitted successfully!');
+        toast.success('Final report submitted successfully!');
       } else {
         throw new Error(data.error || 'Failed to submit final report');
       }
     } catch (err) {
       console.error('Error submitting report:', err);
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setLoading(false);
     }
@@ -119,8 +117,17 @@ const FinalReportPage = () => {
       </div>
     );
   }
-
-  console.log('Current Status:', status); // Debug log
+  
+  if (!status.submissionOpen) {
+    return (
+      <div className="final-report-section">
+        <div className="not-verified">
+          <h2>Final Report Submission</h2>
+          <p>Final report submission is not currently open for your slot. Please wait for the submission period to begin.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!status.verified) {
     return (
@@ -133,6 +140,7 @@ const FinalReportPage = () => {
     );
   }
 
+
   return (
     <div className="final-report-section">
       <div className="section-header">
@@ -142,15 +150,6 @@ const FinalReportPage = () => {
             {status.completed ? 'Completed' : 'Pending Review'}
           </span>
         </div>
-      </div>
-
-      <div className="deadline-info">
-        <p>Your slot's final report submission deadline: <strong>{status.slotEndTimes[user.slot]}</strong></p>
-        {isPastDeadline && (
-          <div className="deadline-warning">
-            <p>The submission deadline has passed. You can no longer submit your final report.</p>
-          </div>
-        )}
       </div>
 
       {status.finalReport ? (
@@ -179,13 +178,12 @@ const FinalReportPage = () => {
                 onChange={(e) => setFinalReport(e.target.value)}
                 placeholder="Enter the link to your final report (e.g., Google Drive, OneDrive, etc.)"
                 required
-                disabled={isPastDeadline}
               />
               <p className="input-hint">Please provide a shareable link to your final report document</p>
             </div>
 
             <div className="form-actions">
-              <button type="submit" disabled={loading || isPastDeadline}>
+              <button type="submit" disabled={loading}>
                 {loading ? 'Submitting...' : 'Submit Report'}
               </button>
             </div>

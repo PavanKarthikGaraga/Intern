@@ -1,0 +1,31 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+Always scan the codebase before creating any file or folder if it's already present don't create the new just edit that.
+don't ever use tailwind or any internal css or css frameworks , always only use .css files 
+
+check tables.sql jwt.js db.js before creating a new file 
+
+use this auth pattern in routes or anywhere 
+ const cookieStore = await cookies();
+        const accessToken = await cookieStore.get('accessToken');
+
+        if (!accessToken?.value) {
+            return NextResponse.json({ 
+                success: false, 
+                error: 'Authentication required. Please login again.' 
+            }, { status: 401 });
+        }
+
+        const decoded = await verifyAccessToken(accessToken.value);
+        if (!decoded || decoded.role !== 'student') {
+            return NextResponse.json({ 
+                success: false, 
+                error: 'Access denied. Only students can submit reports.' 
+            }, { status: 403 });
+        }
+
+
+don't ever ever modify AuthContext.js
