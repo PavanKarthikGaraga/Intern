@@ -62,6 +62,7 @@ export async function POST(req) {
                 [leadIds]
             );
 
+            // console.log('Leads:', leads);
             return NextResponse.json({
                 success: true,
                 leads

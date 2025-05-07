@@ -210,28 +210,20 @@ export default function StudentProfile({ isOpen, onClose, username }) {
                             <h3>Evaluation</h3>
                             <div className="marks-grid">
                                 <div className="mark-item">
-                                    <label>Attendance Marks:</label>
-                                    <span>{studentData.marks.attendanceMarks}</span>
+                                    <label>Internal Marks (Daily Submissions):</label>
+                                    <span>{studentData.marks.internalMarks}/60</span>
                                 </div>
                                 <div className="mark-item">
-                                    <label>Task Completion:</label>
-                                    <span>{studentData.marks.taskCompletionMarks}</span>
+                                    <label>Case Study Report:</label>
+                                    <span>{studentData.marks.caseStudyReportMarks}/30</span>
                                 </div>
                                 <div className="mark-item">
-                                    <label>Problem Identification:</label>
-                                    <span>{studentData.marks.problemIdentificationMarks}</span>
-                                </div>
-                                <div className="mark-item">
-                                    <label>Creative Work:</label>
-                                    <span>{studentData.marks.creativeWorkMarks}</span>
-                                </div>
-                                <div className="mark-item">
-                                    <label>Final Report:</label>
-                                    <span>{studentData.marks.finalReportMarks}</span>
+                                    <label>Conduct & Participation:</label>
+                                    <span>{studentData.marks.conductParticipationMarks}/10</span>
                                 </div>
                                 <div className="mark-item total">
                                     <label>Total Marks:</label>
-                                    <span>{studentData.marks.totalMarks}</span>
+                                    <span>{studentData.marks.totalMarks}/100</span>
                                 </div>
                                 <div className="mark-item grade">
                                     <label>Grade:</label>

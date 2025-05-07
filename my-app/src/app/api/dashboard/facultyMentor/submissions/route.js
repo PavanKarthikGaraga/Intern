@@ -17,8 +17,6 @@ export async function GET(req) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { username } = decoded.username;
-
         // Get all verified uploads for students under this faculty mentor
         const [submissions] = await pool.query(
             `SELECT 
@@ -48,19 +46,18 @@ export async function GET(req) {
                 a.day6 as attendance6,
                 a.day7 as attendance7
              FROM registrations r
-             JOIN studentLeads s ON r.studentLeadId = s.username
-             JOIN uploads u ON r.username = u.username
-             JOIN verify v ON r.username = v.username
+             LEFT JOIN uploads u ON r.username = u.username
+             LEFT JOIN verify v ON r.username = v.username
              LEFT JOIN attendance a ON r.username = a.username
-             WHERE s.facultyMentorId = ? 
+             WHERE r.facultyMentorId = ? 
              AND (
-                 (u.day1 IS NOT NULL AND v.day1 = TRUE) OR
-                 (u.day2 IS NOT NULL AND v.day2 = TRUE) OR
-                 (u.day3 IS NOT NULL AND v.day3 = TRUE) OR
-                 (u.day4 IS NOT NULL AND v.day4 = TRUE) OR
-                 (u.day5 IS NOT NULL AND v.day5 = TRUE) OR
-                 (u.day6 IS NOT NULL AND v.day6 = TRUE) OR
-                 (u.day7 IS NOT NULL AND v.day7 = TRUE)
+                 u.day1 IS NOT NULL OR
+                 u.day2 IS NOT NULL OR
+                 u.day3 IS NOT NULL OR
+                 u.day4 IS NOT NULL OR
+                 u.day5 IS NOT NULL OR
+                 u.day6 IS NOT NULL OR
+                 u.day7 IS NOT NULL
              )`,
             [decoded.username]
         );
@@ -86,7 +83,7 @@ export async function POST(req) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { username, day, attendance } = await req.json();
+        const { username, day, attendance, marks } = await req.json();
 
         // Check if the day is uploaded and verified
         const [verifiedUploads] = await pool.query(
@@ -120,27 +117,66 @@ export async function POST(req) {
             }
         }
 
-        // First check if a record exists
-        const [existingRecord] = await pool.query(
-            'SELECT id FROM attendance WHERE username = ?',
-            [username]
-        );
+        const connection = await pool.getConnection();
+        try {
+            await connection.beginTransaction();
 
-        if (existingRecord.length > 0) {
-            // Update existing record
-            await pool.query(
-                `UPDATE attendance SET day${day} = ? WHERE username = ?`,
-                [attendance, username]
+            // First check if a record exists
+            const [existingRecord] = await connection.query(
+                'SELECT id FROM attendance WHERE username = ?',
+                [username]
             );
-        } else {
-            // Insert new record
-            await pool.query(
-                `INSERT INTO attendance (username, day${day}) VALUES (?, ?)`,
-                [username, attendance]
+
+            if (existingRecord.length > 0) {
+                // Update existing record
+                await connection.query(
+                    `UPDATE attendance SET day${day} = ? WHERE username = ?`,
+                    [attendance, username]
+                );
+            } else {
+                // Insert new record
+                await connection.query(
+                    `INSERT INTO attendance (username, day${day}) VALUES (?, ?)`,
+                    [username, attendance]
+                );
+            }
+
+            // Update daily marks
+            const [existingMarks] = await connection.query(
+                'SELECT * FROM dailyMarks WHERE username = ?',
+                [username]
             );
+
+            if (existingMarks.length > 0) {
+                // Update existing marks
+                await connection.query(
+                    `UPDATE dailyMarks 
+                     SET day${day} = ?,
+                         internalMarks = (
+                           SELECT COALESCE(SUM(day1 + day2 + day3 + day4 + day5 + day6 + day7), 0)
+                           FROM dailyMarks
+                           WHERE username = ?
+                         )
+                     WHERE username = ?`,
+                    [marks, username, username]
+                );
+            } else {
+                // Insert new marks
+                await connection.query(
+                    `INSERT INTO dailyMarks (username, day${day}, internalMarks)
+                     VALUES (?, ?, ?)`,
+                    [username, marks, marks]
+                );
+            }
+
+            await connection.commit();
+            return NextResponse.json({ message: 'Attendance and marks updated successfully' });
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        } finally {
+            connection.release();
         }
-
-        return NextResponse.json({ message: 'Attendance updated successfully' });
     } catch (error) {
         console.error('Error in submissions POST:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

@@ -42,7 +42,7 @@ export async function POST(req) {
     try {
         const cookieStore = await cookies();
         const accessToken = await cookieStore.get('accessToken')?.value;
-
+        
         if (!accessToken) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
@@ -52,90 +52,112 @@ export async function POST(req) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { username, day, status } = await req.json();
+        const { username, day, status, marks } = await req.json();
 
-        // Validate day
-        if (!(day >= 1 && day <= 7)) {
-            return NextResponse.json({ error: 'Invalid day value' }, { status: 400 });
+        // Check if the day is uploaded and verified
+        const [verifiedUploads] = await pool.query(
+            `SELECT 1 FROM uploads u 
+             JOIN verify v ON u.username = v.username 
+             WHERE u.username = ? 
+             AND u.day${day} IS NOT NULL 
+             AND v.day${day} = TRUE`,
+            [username]
+        );
+
+        if (verifiedUploads.length === 0) {
+            return NextResponse.json(
+                { error: 'Cannot mark attendance for unverified or not uploaded day' }, 
+                { status: 400 }
+            );
+        }
+
+        // For days after day 1, check if previous day is marked as Present
+        if (day > 1) {
+            const [previousDay] = await pool.query(
+                `SELECT day${day - 1} FROM attendance WHERE username = ?`,
+                [username]
+            );
+
+            if (!previousDay.length || previousDay[0][`day${day - 1}`] !== 'P') {
+                return NextResponse.json(
+                    { error: `Cannot mark attendance for Day ${day} until Day ${day - 1} is marked as Present` },
+                    { status: 400 }
+                );
+            }
         }
 
         const connection = await pool.getConnection();
         try {
             await connection.beginTransaction();
 
-            // Check if attendance record exists
-            const [existing] = await connection.query(
-                `SELECT 1 FROM attendance WHERE username = ? LIMIT 1`,
+            // First check if a record exists
+            const [existingRecord] = await connection.query(
+                'SELECT id FROM attendance WHERE username = ?',
                 [username]
             );
 
-            if (existing.length === 0) {
-                // Insert new attendance record
+            if (existingRecord.length > 0) {
+                // Update existing record
                 await connection.query(
-                    `INSERT INTO attendance (username) VALUES (?)`,
-                    [username]
+                    `UPDATE attendance SET day${day} = ? WHERE username = ?`,
+                    [status, username]
+                );
+            } else {
+                // Insert new record
+                await connection.query(
+                    `INSERT INTO attendance (username, day${day}) VALUES (?, ?)`,
+                    [username, status]
                 );
             }
 
-            // Update attendance for the given day
-            await connection.query(
-                `UPDATE attendance SET day${day} = ? WHERE username = ?`,
-                [status, username]
+            // Update daily marks
+            const [existingMarks] = await connection.query(
+                'SELECT * FROM dailyMarks WHERE username = ?',
+                [username]
             );
 
-            // If day 7, check if all days are 'P' and then complete verification
-            if (day === 7) {
-                const [attendance] = await connection.query(
-                    `SELECT day1, day2, day3, day4, day5, day6, day7
-                     FROM attendance WHERE username = ?`,
+            if (existingMarks.length > 0) {
+                // First update the specific day's marks
+                await connection.query(
+                    `UPDATE dailyMarks SET day${day} = ? WHERE username = ?`,
+                    [marks, username]
+                );
+
+                // Then calculate and update the total internal marks
+                const [currentMarks] = await connection.query(
+                    `SELECT day1, day2, day3, day4, day5, day6, day7 FROM dailyMarks WHERE username = ?`,
                     [username]
                 );
 
-                if (attendance.length > 0) {
-                    const record = attendance[0];
-                    const allDaysPresent = ['day1', 'day2', 'day3', 'day4', 'day5', 'day6', 'day7']
-                        .every(d => record[d] === 'P');
+                if (currentMarks.length > 0) {
+                    const totalMarks = Object.values(currentMarks[0])
+                        .filter(val => typeof val === 'number')
+                        .reduce((sum, val) => sum + (val || 0), 0);
 
-                    if (allDaysPresent) {
-                        const [student] = await connection.query(
-                            `SELECT facultyMentorId FROM registrations WHERE username = ?`,
-                            [username]
-                        );
-
-                        if (student.length > 0 && student[0].facultyMentorId) {
-                            await connection.query(
-                                `UPDATE registrations SET verified = true WHERE username = ?`,
-                                [username]
-                            );
-
-                            const [finalRecord] = await connection.query(
-                                `SELECT 1 FROM final WHERE username = ? LIMIT 1`,
-                                [username]
-                            );
-
-                            if (finalRecord.length === 0) {
-                                await connection.query(
-                                    `INSERT INTO final (username, facultyMentorId)
-                                     VALUES (?, ?)`,
-                                    [username, student[0].facultyMentorId]
-                                );
-                            }
-                        }
-                    }
+                    await connection.query(
+                        'UPDATE dailyMarks SET internalMarks = ? WHERE username = ?',
+                        [totalMarks, username]
+                    );
                 }
+            } else {
+                // Insert new marks
+                await connection.query(
+                    `INSERT INTO dailyMarks (username, day${day}, internalMarks)
+                     VALUES (?, ?, ?)`,
+                    [username, marks, marks]
+                );
             }
 
             await connection.commit();
-            return NextResponse.json({ message: 'Attendance updated successfully' });
+            return NextResponse.json({ message: 'Attendance and marks updated successfully' });
         } catch (error) {
             await connection.rollback();
-            console.error('Error in attendance POST:', error);
-            return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+            throw error;
         } finally {
             connection.release();
         }
     } catch (error) {
-        console.error('Error in attendance POST (outer):', error);
+        console.error('Error in attendance POST:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

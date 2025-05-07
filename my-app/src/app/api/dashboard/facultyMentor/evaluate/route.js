@@ -18,34 +18,42 @@ export async function POST(request) {
 
     const {
       username,
-      attendanceMarks,
-      taskCompletionMarks,
-      problemIdentificationMarks,
-      creativeWorkMarks,
-      finalReportMarks,
+      caseStudyReportMarks,
+      conductParticipationMarks,
       feedback
     } = await request.json();
 
-    // Calculate total marks
-    const totalMarks = attendanceMarks + taskCompletionMarks + problemIdentificationMarks + 
-                      creativeWorkMarks + finalReportMarks;
-
-    // Determine grade based on total marks
-    let grade;
-    if (totalMarks >= 90) {
-      grade = 'A';
-    } else if (totalMarks >= 75) {
-      grade = 'B';
-    } else if (totalMarks >= 60) {
-      grade = 'C';
-    } else {
-      grade = 'F';
-    }
-
-    // Update or insert marks in the database
+    // Get internal marks from dailyMarks table
     const connection = await pool.getConnection();
     try {
       await connection.beginTransaction();
+
+      // Get internal marks
+      const [dailyMarks] = await connection.execute(
+        'SELECT internalMarks FROM dailyMarks WHERE username = ?',
+        [username]
+      );
+
+      if (dailyMarks.length === 0) {
+        throw new Error('Daily marks not found for the student');
+      }
+
+      const internalMarks = dailyMarks[0].internalMarks;
+
+      // Calculate total marks (internal + external)
+      const totalMarks = internalMarks + caseStudyReportMarks + conductParticipationMarks;
+
+      // Determine grade based on total marks
+      let grade;
+      if (totalMarks >= 90) {
+        grade = 'Certificate of Excellence';
+      } else if (totalMarks >= 75) {
+        grade = 'Certificate of Appreciation';
+      } else if (totalMarks >= 60) {
+        grade = 'Certificate of Participation';
+      } else {
+        grade = 'Not Qualified';
+      }
 
       // Check if marks already exist for this student
       const [existingMarks] = await connection.execute(
@@ -57,22 +65,18 @@ export async function POST(request) {
         // Update existing marks
         await connection.execute(
           `UPDATE marks 
-           SET attendanceMarks = ?, 
-               taskCompletionMarks = ?, 
-               problemIdentificationMarks = ?, 
-               creativeWorkMarks = ?, 
-               finalReportMarks = ?, 
+           SET internalMarks = ?, 
+               caseStudyReportMarks = ?, 
+               conductParticipationMarks = ?, 
                totalMarks = ?, 
                grade = ?, 
                feedback = ?,
                updatedAt = CURRENT_TIMESTAMP
            WHERE username = ?`,
           [
-            attendanceMarks,
-            taskCompletionMarks,
-            problemIdentificationMarks,
-            creativeWorkMarks,
-            finalReportMarks,
+            internalMarks,
+            caseStudyReportMarks,
+            conductParticipationMarks,
             totalMarks,
             grade,
             feedback,
@@ -83,18 +87,15 @@ export async function POST(request) {
         // Insert new marks
         await connection.execute(
           `INSERT INTO marks 
-           (username, facultyMentorId, attendanceMarks, taskCompletionMarks, 
-            problemIdentificationMarks, creativeWorkMarks, finalReportMarks, 
-            totalMarks, grade, feedback)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+           (username, facultyMentorId, internalMarks, caseStudyReportMarks, 
+            conductParticipationMarks, totalMarks, grade, feedback)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             username,
             payload.username,
-            attendanceMarks,
-            taskCompletionMarks,
-            problemIdentificationMarks,
-            creativeWorkMarks,
-            finalReportMarks,
+            internalMarks,
+            caseStudyReportMarks,
+            conductParticipationMarks,
             totalMarks,
             grade,
             feedback
@@ -105,8 +106,7 @@ export async function POST(request) {
       // Update the final table to mark as completed
       await connection.execute(
         `UPDATE final 
-         SET completed = TRUE,
-             updatedAt = CURRENT_TIMESTAMP
+         SET completed = TRUE
          WHERE username = ?`,
         [username]
       );

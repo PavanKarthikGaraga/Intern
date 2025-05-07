@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import EditModal from '../EditModal/page';
 import LeadProfile from '../leadProfile/page';
 import './page.css';
+import {branchNames} from '../../../../../Data/branches';
 
 export default function StudentLeads() {
   const [leads, setLeads] = useState([]);
@@ -258,13 +259,19 @@ export default function StudentLeads() {
               </div>
               <div className="form-group">
                 <label>Branch</label>
-                <input
-                  type="text"
+                <select
                   name="branch"
                   value={formData.branch}
                   onChange={handleInputChange}
                   required
-                />
+                >
+                  <option value="">Select Branch</option>
+                  {branchNames.map((branch) => (
+                    <option key={branch.id} value={branch.name}>
+                      {branch.name}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="form-group">
                 <label>Slot</label>

@@ -51,13 +51,16 @@ export async function POST(req) {
                 );
             }
 
+            // Calculate number of available slots
+            const availableSlots = (!mentor.lead1Id ? 1 : 0) + (!mentor.lead2Id ? 1 : 0);
+
             // Fetch available student leads (those not assigned to any faculty mentor)
             const [availableLeads] = await connection.query(
                 `SELECT * FROM studentLeads 
                  WHERE facultyMentorId IS NULL 
                  ORDER BY createdAt ASC 
-                 LIMIT 2`,
-                []
+                 LIMIT ?`,
+                [availableSlots]
             );
 
             if (availableLeads.length === 0) {
@@ -102,7 +105,8 @@ export async function POST(req) {
 
             return NextResponse.json({
                 success: true,
-                leads: availableLeads
+                leads: availableLeads,
+                message: `Successfully assigned ${availableLeads.length} student lead(s)`
             });
         } finally {
             connection.release();

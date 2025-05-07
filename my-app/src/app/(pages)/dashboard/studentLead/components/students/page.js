@@ -32,11 +32,14 @@ export default function Students({ user }) {
         throw new Error('Failed to fetch students');
       }
 
+      
+      
       const data = await response.json();
       if (data.success) {
         setStudents(data.students);
         setTotalStudents(data.total);
       }
+      console.log(data.students);
     } catch (err) {
       console.error('Error fetching students:', err);
       setError(err.message);

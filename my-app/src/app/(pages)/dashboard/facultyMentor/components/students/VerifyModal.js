@@ -9,33 +9,41 @@ export default function VerifyModal({ student, onClose }) {
   const [error, setError] = useState(null);
   const [attendanceStatus, setAttendanceStatus] = useState({});
   const [verificationStatus, setVerificationStatus] = useState({});
+  const [marks, setMarks] = useState({});
 
   const fetchReports = async () => {
     try {
       setLoading(true);
-      const [submissionsResponse, attendanceResponse] = await Promise.all([
+      const [submissionsResponse, attendanceResponse, marksResponse] = await Promise.all([
         fetch(`/api/dashboard/facultyMentor/submissions`, {
           credentials: 'include'
         }),
         fetch(`/api/dashboard/facultyMentor/attendance`, {
           credentials: 'include'
+        }),
+        fetch(`/api/dashboard/facultyMentor/dailyMarks?username=${student.username}`, {
+          credentials: 'include'
         })
       ]);
       
-      if (!submissionsResponse.ok || !attendanceResponse.ok) {
+      if (!submissionsResponse.ok || !attendanceResponse.ok || !marksResponse.ok) {
         throw new Error('Failed to fetch data');
       }
       
-      const [submissionsData, attendanceData] = await Promise.all([
+      const [submissionsData, attendanceData, marksData] = await Promise.all([
         submissionsResponse.json(),
-        attendanceResponse.json()
+        attendanceResponse.json(),
+        marksResponse.json()
       ]);
+      
+      console.log("submissions",submissionsData.submissions);
 
       if (submissionsData.submissions) {
         const studentReports = submissionsData.submissions.filter(
           sub => sub.username === student.username
         );
         setReports(studentReports);
+        console.log("submis", studentReports);
 
         // Initialize verification status from submissions data
         if (studentReports.length > 0) {
@@ -65,6 +73,19 @@ export default function VerifyModal({ student, onClose }) {
             day5: studentAttendance.day5 || null,
             day6: studentAttendance.day6 || null,
             day7: studentAttendance.day7 || null
+          });
+        }
+
+        // Set marks from marks data
+        if (marksData.marks) {
+          setMarks({
+            day1: marksData.marks.day1 || 0,
+            day2: marksData.marks.day2 || 0,
+            day3: marksData.marks.day3 || 0,
+            day4: marksData.marks.day4 || 0,
+            day5: marksData.marks.day5 || 0,
+            day6: marksData.marks.day6 || 0,
+            day7: marksData.marks.day7 || 0
           });
         }
       }
@@ -135,7 +156,8 @@ export default function VerifyModal({ student, onClose }) {
         body: JSON.stringify({
           username: student.username,
           day,
-          status
+          status,
+          marks: parseFloat(marks[`day${day}`]) || 0
         })
       });
 
@@ -145,7 +167,7 @@ export default function VerifyModal({ student, onClose }) {
       }
 
       await fetchReports();
-      toast.success('Attendance updated successfully');
+      toast.success('Attendance and marks updated successfully');
     } catch (err) {
       console.error('Error updating attendance:', err);
       toast.error(err.message);
@@ -155,6 +177,61 @@ export default function VerifyModal({ student, onClose }) {
   const canMarkAttendance = (day) => {
     if (day === 1) return verificationStatus[`day${day}`];
     return verificationStatus[`day${day}`] && attendanceStatus[`day${day - 1}`] === 'P';
+  };
+
+  const handleVerify = async (day) => {
+    try {
+      const response = await fetch('/api/dashboard/facultyMentor/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: student.username,
+          day,
+        }),
+      });
+
+      if (response.ok) {
+        setVerificationStatus(prev => ({
+          ...prev,
+          [`day${day}`]: true
+        }));
+      }
+    } catch (error) {
+      console.error('Error verifying report:', error);
+    }
+  };
+
+  const handleMarksChange = async (day, value) => {
+    try {
+      const response = await fetch('/api/dashboard/facultyMentor/dailyMarks', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: student.username,
+          day,
+          marks: parseFloat(value) || 0
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to update marks');
+      }
+
+      setMarks(prev => ({
+        ...prev,
+        [`day${day}`]: parseFloat(value) || 0
+      }));
+      toast.success('Marks updated successfully');
+    } catch (error) {
+      console.error('Error updating marks:', error);
+      toast.error(error.message);
+    }
   };
 
   if (loading) {
@@ -205,6 +282,7 @@ export default function VerifyModal({ student, onClose }) {
                 <th>Report</th>
                 <th>Uploaded On</th>
                 <th>Status</th>
+                <th>Marks</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -258,6 +336,22 @@ export default function VerifyModal({ student, onClose }) {
                           <span className="status-badge not_uploaded">Not Uploaded</span>
                         )}
                       </div>
+                    </td>
+                    <td>
+                      {isVerified && (
+                        <input
+                          type="number"
+                          min="0"
+                          max="10"
+                          step="0.5"
+                          value={marks[`day${day}`] || ''}
+                          onChange={(e) => setMarks(prev => ({
+                            ...prev,
+                            [`day${day}`]: e.target.value
+                          }))}
+                          className="marks-input"
+                        />
+                      )}
                     </td>
                     <td>
                       <div className="action-buttons-stack">

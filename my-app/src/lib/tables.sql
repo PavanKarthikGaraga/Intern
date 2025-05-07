@@ -140,12 +140,12 @@ CREATE TABLE verify (
 CREATE TABLE attendance (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(10) NOT NULL UNIQUE,
-    day1 ENUM('P', 'A') DEFAULT NULL,
-    day2 ENUM('P', 'A') DEFAULT NULL,
-    day3 ENUM('P', 'A') DEFAULT NULL,
-    day4 ENUM('P', 'A') DEFAULT NULL,
-    day5 ENUM('P', 'A') DEFAULT NULL,
-    day6 ENUM('P', 'A') DEFAULT NULL,
+    day1 ENUM('P','S','A') DEFAULT NULL,
+    day2 ENUM('P','S','A') DEFAULT NULL,
+    day3 ENUM('P','S','A') DEFAULT NULL,
+    day4 ENUM('P','S','A') DEFAULT NULL,
+    day5 ENUM('P','S','A') DEFAULT NULL,
+    day6 ENUM('P','S','A') DEFAULT NULL,
     day7 ENUM('P', 'A') DEFAULT NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -163,16 +163,31 @@ CREATE TABLE final (
     FOREIGN KEY (username) REFERENCES registrations(username)
 );
 
--- Create marks table for final report evaluation
+-- Create daily marks table
+CREATE TABLE dailyMarks (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(10) NOT NULL UNIQUE,
+    day1 DECIMAL(4,2) DEFAULT 0,
+    day2 DECIMAL(4,2) DEFAULT 0,
+    day3 DECIMAL(4,2) DEFAULT 0,
+    day4 DECIMAL(4,2) DEFAULT 0,
+    day5 DECIMAL(4,2) DEFAULT 0,
+    day6 DECIMAL(4,2) DEFAULT 0,
+    day7 DECIMAL(4,2) DEFAULT 0,
+    internalMarks INT DEFAULT 0,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (username) REFERENCES registrations(username)
+);
+
+-- Modify marks table for final report evaluation
 CREATE TABLE marks (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(10) NOT NULL UNIQUE,
     facultyMentorId VARCHAR(10) NOT NULL,
-    attendanceMarks INT NOT NULL DEFAULT 0,
-    taskCompletionMarks INT NOT NULL DEFAULT 0,
-    problemIdentificationMarks INT NOT NULL DEFAULT 0,
-    creativeWorkMarks INT NOT NULL DEFAULT 0,
-    finalReportMarks INT NOT NULL DEFAULT 0,
+    internalMarks INT NOT NULL DEFAULT 0, -- 60 marks from daily submissions
+    caseStudyReportMarks INT NOT NULL DEFAULT 0,    -- 30 marks
+    conductParticipationMarks INT NOT NULL DEFAULT 0, -- 10 marks
     totalMarks INT NOT NULL DEFAULT 0,
     grade VARCHAR(50) NOT NULL DEFAULT 'Not Qualified',
     feedback TEXT,

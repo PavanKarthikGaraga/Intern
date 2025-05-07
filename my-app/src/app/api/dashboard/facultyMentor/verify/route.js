@@ -6,8 +6,8 @@ import { cookies } from 'next/headers';
 export async function POST(request) {
   const connection = await pool.getConnection();
   try {
-    const cookieStore = cookies();
-    const accessToken = cookieStore.get('accessToken');
+    const cookieStore =await cookies();
+    const accessToken =await cookieStore.get('accessToken');
 
     if (!accessToken?.value) {
       return NextResponse.json({ 

@@ -1,0 +1,13 @@
+.marks-input {
+  width: 80px;
+  padding: 4px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.marks-input:focus {
+  outline: none;
+  border-color: rgb(151, 0, 3);
+  box-shadow: 0 0 0 2px rgba(151, 0, 3, 0.1);
+} 

@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-// import Loader from '@/components/loader/loader';
+import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import './page.css';
 import VerifyModal from './VerifyModal';
@@ -13,28 +13,45 @@ export default function Students({ user }) {
   const [error, setError] = useState(null);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const { isAuthenticated } = useAuth();
+  const router = useRouter();
 
   const fetchStudents = async () => {
     try {
       setError(null);
       const response = await fetch('/api/dashboard/facultyMentor/students', {
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error('Failed to fetch students');
+        if (response.status === 401) {
+          router.push('/auth/login');
+          return;
+        } else if (response.status === 403) {
+          setError('Access denied. Only faculty mentors can access this data.');
+          toast.error('Access denied. Only faculty mentors can access this data.');
+        } else {
+          setError(data.error || 'Failed to fetch students');
+          toast.error(data.error || 'Failed to fetch students');
+        }
+        return;
       }
 
-      const data = await response.json();
       if (data.success) {
         setStudents(data.students || []);
       } else {
-        throw new Error(data.error || 'Failed to fetch students');
+        setError(data.error || 'Failed to fetch students');
+        toast.error(data.error || 'Failed to fetch students');
       }
     } catch (err) {
       console.error('Error fetching students:', err);
-      setError(err.message);
-      toast.error(err.message);
+      setError('Failed to fetch students. Please try again.');
+      toast.error('Failed to fetch students. Please try again.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -42,8 +59,12 @@ export default function Students({ user }) {
   };
 
   useEffect(() => {
-    fetchStudents();
-  }, []); // Empty dependency array to run only once on mount
+    if (isAuthenticated) {
+      fetchStudents();
+    } else {
+      router.push('/auth/login');
+    }
+  }, [isAuthenticated, router]);
 
   const handleRefresh = () => {
     setRefreshing(true);
@@ -101,7 +122,6 @@ export default function Students({ user }) {
   };
 
   if (loading) {
-    // return <Loader />;
     return <div className="loading">Loading...</div>;
   }
 

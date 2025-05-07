@@ -80,8 +80,8 @@ export async function GET(request) {
     );
 
     // Calculate total possible attendance (students * 7 days)
-    const totalPossibleAttendance = studentsCount[0].count * 7;
-    const pendingAttendance = totalPossibleAttendance - totalAttendance[0].count;
+    const totalVerifiedReports = totalVerified[0].count;
+    const pendingVerifiedReports = totalVerifiedReports - totalAttendance[0].count;
 
     return NextResponse.json({
       success: true,
@@ -92,7 +92,7 @@ export async function GET(request) {
         completedCount: completedCount[0].count,
         totalVerifiedReports: totalVerified[0].count,
         totalAttendancePosted: totalAttendance[0].count,
-        pendingAttendance: pendingAttendance
+        pendingAttendance: pendingVerifiedReports
       }
     });
 

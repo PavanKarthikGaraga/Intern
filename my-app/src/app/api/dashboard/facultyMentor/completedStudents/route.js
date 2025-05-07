@@ -4,6 +4,7 @@ import { verifyAccessToken } from "@/lib/jwt";
 import { cookies } from "next/headers";
 
 export async function GET(request) {
+  let connection;
   try {
     // Get and verify access token
     const cookieStore = await cookies();
@@ -30,6 +31,9 @@ export async function GET(request) {
     const slot = searchParams.get('slot');
     const studentLead = searchParams.get('studentLead');
 
+    // Get database connection
+    connection = await pool.getConnection();
+
     // Base query conditions
     const baseConditions = ['r.facultyMentorId = ?'];
     const queryParams = [decoded.username];
@@ -49,7 +53,7 @@ export async function GET(request) {
     const conditions = baseConditions.join(' AND ');
 
     // Get completed students (verified=true, final.completed=true)
-    const [completedStudents] = await pool.query(
+    const [completedStudents] = await connection.query(
       `SELECT 
         r.username,
         r.name,
@@ -74,7 +78,7 @@ export async function GET(request) {
     );
 
     // Get verified students (verified=true, final.completed=false)
-    const [verifiedStudents] = await pool.query(
+    const [verifiedStudents] = await connection.query(
       `SELECT 
         r.username,
         r.name,
@@ -97,7 +101,7 @@ export async function GET(request) {
     );
 
     // Get failed students (verified=false or not in final table)
-    const [failedStudents] = await pool.query(
+    const [failedStudents] = await connection.query(
       `SELECT 
         r.username,
         r.name,
@@ -119,12 +123,12 @@ export async function GET(request) {
     );
 
     // Get available slots and student leads for filters
-    const [slots] = await pool.query(
+    const [slots] = await connection.query(
       `SELECT DISTINCT slot FROM registrations WHERE facultyMentorId = ? ORDER BY slot`,
       [decoded.username]
     );
 
-    const [studentLeads] = await pool.query(
+    const [studentLeads] = await connection.query(
       `SELECT DISTINCT sl.username, sl.name 
        FROM studentLeads sl
        JOIN registrations r ON sl.username = r.studentLeadId
@@ -134,6 +138,7 @@ export async function GET(request) {
     );
 
     return NextResponse.json({ 
+      success: true,
       completedStudents,
       verifiedStudents,
       failedStudents,
@@ -145,8 +150,12 @@ export async function GET(request) {
   } catch (error) {
     console.error("Error in completedStudents GET:", error);
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      { success: false, error: "Internal Server Error", details: error.message },
       { status: 500 }
     );
+  } finally {
+    if (connection) {
+      await connection.release();
+    }
   }
 } 
