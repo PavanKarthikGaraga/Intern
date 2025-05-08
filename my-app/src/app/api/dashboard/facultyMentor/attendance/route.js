@@ -55,20 +55,22 @@ export async function POST(req) {
         const { username, day, status, marks } = await req.json();
 
         // Check if the day is uploaded and verified
-        const [verifiedUploads] = await pool.query(
-            `SELECT 1 FROM uploads u 
-             JOIN verify v ON u.username = v.username 
-             WHERE u.username = ? 
-             AND u.day${day} IS NOT NULL 
-             AND v.day${day} = TRUE`,
-            [username]
-        );
-
-        if (verifiedUploads.length === 0) {
-            return NextResponse.json(
-                { error: 'Cannot mark attendance for unverified or not uploaded day' }, 
-                { status: 400 }
+        if (status === 'P') {
+            const [verifiedUploads] = await pool.query(
+                `SELECT 1 FROM uploads u 
+                 JOIN verify v ON u.username = v.username 
+                 WHERE u.username = ? 
+                 AND u.day${day} IS NOT NULL 
+                 AND v.day${day} = TRUE`,
+                [username]
             );
+
+            if (verifiedUploads.length === 0) {
+                return NextResponse.json(
+                    { error: 'Cannot mark attendance for unverified or not uploaded day' }, 
+                    { status: 400 }
+                );
+            }
         }
 
         // For days after day 1, check if previous day is marked as Present
@@ -78,9 +80,9 @@ export async function POST(req) {
                 [username]
             );
 
-            if (!previousDay.length || previousDay[0][`day${day - 1}`] !== 'P') {
+            if (!previousDay.length || !previousDay[0][`day${day - 1}`]) {
                 return NextResponse.json(
-                    { error: `Cannot mark attendance for Day ${day} until Day ${day - 1} is marked as Present` },
+                    { error: `Cannot mark attendance for Day ${day} until Day ${day - 1} is marked` },
                     { status: 400 }
                 );
             }

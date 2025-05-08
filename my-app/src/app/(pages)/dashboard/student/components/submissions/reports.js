@@ -83,7 +83,9 @@ export default function Reports({ user }) {
 
   const canSubmitDay = (dayIndex) => {
     if (dayIndex === 0) return true;
-    return submissions[dayIndex - 1];
+    const prevDayKey = `day${dayIndex}`;
+    const prevAttendance = studentData?.attendance?.details[prevDayKey];
+    return submissions[dayIndex - 1] || prevAttendance === 'P' || prevAttendance === 'A';
   };
 
   const toggleAccordion = (index) => {
@@ -173,6 +175,9 @@ export default function Reports({ user }) {
     const isSubmitted = submissions[dayNumber - 1];
 
     if (!isSubmitted) {
+      if (attendanceStatus === 'A') {
+        return { text: 'Absent', className: 'rejected' };
+      }
       return { text: 'Not Submitted', className: 'not-submitted' };
     }
 

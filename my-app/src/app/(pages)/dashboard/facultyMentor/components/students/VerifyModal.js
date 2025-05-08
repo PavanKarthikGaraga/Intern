@@ -228,8 +228,8 @@ export default function VerifyModal({ student, onClose }) {
   };
 
   const canMarkAttendance = (day) => {
-    if (day === 1) return verificationStatus[`day${day}`];
-    return verificationStatus[`day${day}`] && attendanceStatus[`day${day - 1}`] === 'P';
+    if (day === 1) return true;
+    return attendanceStatus[`day${day - 1}`];
   };
 
   const handleVerify = async (day) => {
@@ -469,20 +469,31 @@ export default function VerifyModal({ student, onClose }) {
                         )}
 
                         {/* Attendance Actions */}
-                        {hasUpload && isVerified && canMark && currentAttendance !== 'P' && (
+                        {canMarkAttendance(day) && currentAttendance !== 'P' && (
                           <div className="attendance-actions">
-                            <button 
-                              className="accept-btn"
-                              onClick={() => handleOpenMarksModal(day, marks[`day${day}`] || 0)}
-                            >
-                              Mark Present
-                            </button>
-                            <button 
-                              className="reject-btn"
-                              onClick={() => handleAttendanceChange(day, 'A')}
-                            >
-                              Mark Absent
-                            </button>
+                            {hasUpload ? (
+                              <>
+                                <button 
+                                  className="accept-btn"
+                                  onClick={() => handleOpenMarksModal(day, marks[`day${day}`] || 0)}
+                                >
+                                  Mark Present
+                                </button>
+                                <button 
+                                  className="reject-btn"
+                                  onClick={() => handleAttendanceChange(day, 'A')}
+                                >
+                                  Mark Absent
+                                </button>
+                              </>
+                            ) : (
+                              <button 
+                                className="reject-btn"
+                                onClick={() => handleAttendanceChange(day, 'A')}
+                              >
+                                Mark Absent
+                              </button>
+                            )}
                           </div>
                         )}
 
@@ -492,9 +503,9 @@ export default function VerifyModal({ student, onClose }) {
                             Verify or reject this report first
                           </span>
                         )}
-                        {!canMark && day > 1 && hasUpload && isVerified && (
+                        {!canMark && day > 1 && hasUpload && isVerified && attendanceStatus[`day${day - 1}`] == null && (
                           <span className="verify-message">
-                            Mark Day {day - 1} as Present first
+                            Mark Day {day - 1} as Present or Absent first
                           </span>
                         )}
                         {!hasUpload && (
