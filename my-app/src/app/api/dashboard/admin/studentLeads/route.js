@@ -182,6 +182,8 @@ export async function DELETE(req) {
 
         try {
             // Delete from studentLeads table
+            await connection.query('UPDATE facultyMentors SET lead1Id = NULL, lead2Id = NULL WHERE lead1Id = ? OR lead2Id = ?', [username, username]);
+            await connection.query('UPDATE registrations SET studentLeadId = NULL WHERE studentLeadId = ?', [username]);
             await connection.query('DELETE FROM studentLeads WHERE username = ?', [username]);
             
             // Delete from users table

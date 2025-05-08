@@ -52,7 +52,7 @@ export async function GET(request) {
 
     const conditions = baseConditions.join(' AND ');
 
-    // Get completed students (verified=true, final.completed=true)
+    // Get completed students (final.completed=true)
     const [completedStudents] = await connection.query(
       `SELECT 
         r.username,
@@ -67,17 +67,18 @@ export async function GET(request) {
         sl.username as studentLeadUsername,
         f.finalReport,
         m.grade,
-        m.updatedAt as lastEvaluated
+        m.updatedAt as lastEvaluated,
+        'completed' as status
       FROM registrations r
       INNER JOIN final f ON r.username = f.username
       LEFT JOIN studentLeads sl ON r.studentLeadId = sl.username
       LEFT JOIN marks m ON r.username = m.username
-      WHERE ${conditions} AND r.verified = true AND f.completed = true
+      WHERE ${conditions} AND f.completed = true
       ORDER BY m.updatedAt DESC, r.name ASC`,
       queryParams
     );
 
-    // Get verified students (verified=true, final.completed=false)
+    // Get verified students (final.completed=false, but finalReport is submitted)
     const [verifiedStudents] = await connection.query(
       `SELECT 
         r.username,
@@ -91,17 +92,18 @@ export async function GET(request) {
         sl.name as studentLeadName,
         sl.username as studentLeadUsername,
         f.finalReport,
-        r.updatedAt as lastUpdated
+        r.updatedAt as lastUpdated,
+        CASE WHEN f.finalReport IS NOT NULL THEN 'verified' ELSE 'pending' END as status
       FROM registrations r
       INNER JOIN final f ON r.username = f.username
       LEFT JOIN studentLeads sl ON r.studentLeadId = sl.username
-      WHERE ${conditions} AND r.verified = true AND f.completed = false
+      WHERE ${conditions} AND f.completed = false
       ORDER BY r.updatedAt DESC, r.name ASC`,
       queryParams
     );
 
-    // Get failed students (verified=false or not in final table)
-    const [failedStudents] = await connection.query(
+    // Get students who have not submitted any final report (no row in final table)
+    const [pendingNoFinal] = await connection.query(
       `SELECT 
         r.username,
         r.name,
@@ -113,11 +115,14 @@ export async function GET(request) {
         r.slot,
         sl.name as studentLeadName,
         sl.username as studentLeadUsername,
-        r.updatedAt as lastUpdated
+        NULL as finalReport,
+        NULL as grade,
+        r.updatedAt as lastUpdated,
+        'pending' as status
       FROM registrations r
       LEFT JOIN final f ON r.username = f.username
       LEFT JOIN studentLeads sl ON r.studentLeadId = sl.username
-      WHERE ${conditions} AND (r.verified = false OR f.username IS NULL)
+      WHERE ${conditions} AND f.username IS NULL
       ORDER BY r.updatedAt DESC, r.name ASC`,
       queryParams
     );
@@ -141,7 +146,7 @@ export async function GET(request) {
       success: true,
       completedStudents,
       verifiedStudents,
-      failedStudents,
+      pendingNoFinal,
       filters: {
         slots: slots.map(s => s.slot),
         studentLeads: studentLeads

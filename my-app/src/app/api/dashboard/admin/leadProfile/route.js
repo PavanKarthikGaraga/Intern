@@ -32,13 +32,12 @@ export async function GET(request) {
                 u.name as fullName, 
                 f.completed, 
                 f.finalReport,
-                m.attendanceMarks, 
-                m.taskCompletionMarks, 
-                m.problemIdentificationMarks,
-                m.creativeWorkMarks, 
-                m.finalReportMarks, 
+                m.internalMarks,
+                m.caseStudyReportMarks, 
+                m.conductParticipationMarks, 
                 m.totalMarks, 
                 m.grade,
+                m.feedback,
                 a.day1, a.day2, a.day3, a.day4, a.day5, a.day6, a.day7
             FROM registrations r
             JOIN users u ON r.username = u.username
@@ -89,13 +88,12 @@ export async function GET(request) {
                         day7: student.day7 || false
                     },
                     marks: student.totalMarks > 0 ? {
-                        attendance: student.attendanceMarks,
-                        taskCompletion: student.taskCompletionMarks,
-                        problemIdentification: student.problemIdentificationMarks,
-                        creativeWork: student.creativeWorkMarks,
-                        finalReport: student.finalReportMarks,
-                        total: student.totalMarks,
-                        grade: student.grade
+                        internalMarks: student.internalMarks,
+                        caseStudyReportMarks: student.caseStudyReportMarks,
+                        conductParticipationMarks: student.conductParticipationMarks,
+                        totalMarks: student.totalMarks,
+                        grade: student.grade,
+                        feedback: student.feedback
                     } : null
                 }))
             }

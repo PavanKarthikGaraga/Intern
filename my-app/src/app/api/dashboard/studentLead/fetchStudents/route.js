@@ -51,22 +51,23 @@ export async function POST(req) {
 
             const hasStudents = currentStudents[0].count > 0;
 
-            // If in slot 4 and has students, return limit is over
-            if (currentSlot === 4 && hasStudents) {
-                return NextResponse.json({
-                    success: false,
-                    error: 'limit is over'
-                });
-            }
+            // Get reportOpen status
+            const [reportOpenRows] = await connection.query('SELECT slot1, slot2, slot3, slot4 FROM reportOpen WHERE id = 1');
+            const reportOpen = reportOpenRows[0];
 
-            // Determine target slot based on current slot and student presence
             let targetSlot;
-            if (hasStudents) {
-                // If current slot has students, move to next slot (1->2->3->4)
+            if (!hasStudents) {
+                // If no students in current slot, check if reportOpen for current slot
+                if (!reportOpen[`slot${currentSlot}`]) {
+                    return NextResponse.json({
+                        success: false,
+                        error: `Fetching for slot ${currentSlot} is not open yet.`
+                    });
+                }
+                targetSlot = currentSlot;
+            } else {
+                // If has students, check if reportOpen for next slot
                 targetSlot = currentSlot < 4 ? currentSlot + 1 : 4;
-                // Check reportOpen for the next slot
-                const [reportOpenRows] = await connection.query('SELECT slot1, slot2, slot3, slot4 FROM reportOpen WHERE id = 1');
-                const reportOpen = reportOpenRows[0];
                 if (!reportOpen[`slot${targetSlot}`]) {
                     return NextResponse.json({
                         success: false,
@@ -81,22 +82,17 @@ export async function POST(req) {
                         if (i < 30) clearQuery += ', ';
                     }
                     clearQuery += ', slot = ?, updatedAt = CURRENT_TIMESTAMP WHERE username = ?';
+                    console.log('Clear Query:', clearQuery);
+                    console.log('Target Slot:', targetSlot);
+                    console.log('Username:', username);
                     await connection.query(clearQuery, [targetSlot, username]);
                 }
-            } else {
-                // If no students in current slot, stay in current slot
-                targetSlot = currentSlot;
             }
 
             // Fetch 30 students from registrations table for the target slot
             const [students] = await connection.query(
-                `SELECT r.*, u.day1, u.day2, u.day3, u.day4, u.day5, u.day6, u.day7,
-                        v.day1 as verify_day1, v.day2 as verify_day2, v.day3 as verify_day3,
-                        v.day4 as verify_day4, v.day5 as verify_day5, v.day6 as verify_day6,
-                        v.day7 as verify_day7
+                `SELECT r.*
                  FROM registrations r
-                 LEFT JOIN uploads u ON r.username = u.username
-                 LEFT JOIN verify v ON r.username = v.username
                  WHERE r.slot = ? AND r.studentLeadId IS NULL
                  ORDER BY r.createdAt ASC
                  LIMIT 30`,
@@ -110,6 +106,7 @@ export async function POST(req) {
                     'UPDATE registrations SET studentLeadId = ?, facultyMentorId = ?, updatedAt = CURRENT_TIMESTAMP WHERE username IN (?)',
                     [username, facultyMentorId, usernames]
                 );
+                console.log('usernames', username, facultyMentorId, usernames);
 
                 // Update studentLeads table with new students
                 let updateFields = {};
@@ -135,6 +132,9 @@ export async function POST(req) {
                     });
                     updateQuery += ' WHERE username = ?';
                     updateValues.push(username);
+
+                    console.log('Update Query:', updateQuery);
+                    console.log('Update Values:', updateValues);
 
                     await connection.query(updateQuery, updateValues);
                 }

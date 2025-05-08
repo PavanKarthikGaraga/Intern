@@ -11,12 +11,9 @@ export default function Leads({ user }) {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [fetching, setFetching] = useState(false);
 
-  useEffect(() => {
-    fetchLeads();
-  }, [user]);
-
   const fetchLeads = async () => {
     try {
+      setLoading(true);
       setError(null);
       const response = await fetch('/api/dashboard/facultyMentor/leads', {
         method: 'POST',
@@ -30,6 +27,7 @@ export default function Leads({ user }) {
 
       const data = await response.json();
       if (data.success) {
+        console.log(data.leads);
         setLeads(data.leads);
       }
     } catch (err) {
@@ -40,6 +38,13 @@ export default function Leads({ user }) {
       setLoading(false);
     }
   };
+
+  // Fetch leads when component mounts and when user changes
+  useEffect(() => {
+    if (user?.username) {
+      fetchLeads();
+    }
+  }, [user?.username]);
 
   const handleFetchNewLeads = async () => {
     setFetching(true);
@@ -56,7 +61,8 @@ export default function Leads({ user }) {
       const data = await response.json();
       if (data.success) {
         toast.success(`Successfully fetched ${data.leads.length} new leads`);
-        setLeads(prevLeads => [...prevLeads, ...data.leads]);
+        // Refresh the leads list after fetching new ones
+        await fetchLeads();
       }
     } catch (err) {
       console.error('Error fetching new leads:', err);

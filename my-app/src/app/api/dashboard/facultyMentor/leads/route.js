@@ -4,6 +4,7 @@ import { verifyAccessToken } from '@/lib/jwt';
 import { cookies } from 'next/headers';
 
 export async function POST(req) {
+    const connection = await pool.getConnection();
     try {
         const cookieStore = await cookies();
         const accessToken = await cookieStore.get('accessToken');
@@ -26,7 +27,8 @@ export async function POST(req) {
             );
         }
 
-        const connection = await pool.getConnection();
+        await connection.beginTransaction();
+
         try {
             // Get faculty mentor's leads
             const [mentorData] = await connection.query(
@@ -35,6 +37,7 @@ export async function POST(req) {
             );
 
             if (!mentorData.length) {
+                await connection.rollback();
                 return NextResponse.json(
                     { success: false, error: 'Faculty mentor not found' },
                     { status: 404 }
@@ -45,6 +48,7 @@ export async function POST(req) {
             const leadIds = [mentor.lead1Id, mentor.lead2Id].filter(Boolean);
 
             if (leadIds.length === 0) {
+                await connection.rollback();
                 return NextResponse.json({
                     success: true,
                     leads: []
@@ -58,17 +62,19 @@ export async function POST(req) {
                     (SELECT COUNT(*) FROM registrations r WHERE r.studentLeadId = sl.username) as totalStudents,
                     (SELECT COUNT(*) FROM registrations r WHERE r.studentLeadId = sl.username AND r.verified = TRUE) as verifiedStudents
                  FROM studentLeads sl
-                 WHERE sl.username IN (?)`,
-                [leadIds]
+                 WHERE sl.username IN (${leadIds.map(() => '?').join(',')})`,
+                leadIds
             );
 
-            // console.log('Leads:', leads);
+            await connection.commit();
+
             return NextResponse.json({
                 success: true,
                 leads
             });
-        } finally {
-            connection.release();
+        } catch (error) {
+            await connection.rollback();
+            throw error;
         }
     } catch (error) {
         console.error('Error in fetch leads API:', error);
@@ -76,5 +82,7 @@ export async function POST(req) {
             { success: false, error: 'Internal server error' },
             { status: 500 }
         );
+    } finally {
+        connection.release();
     }
 } 

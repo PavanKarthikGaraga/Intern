@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import EditModal from '../EditModal/page';
 import FacultyProfile from '../facultyProfile/page';
 import './page.css';
+import {branchNames} from '../../../../../Data/branches';
 
 export default function FacultyMentors() {
     const [mentors, setMentors] = useState([]);
@@ -261,13 +262,19 @@ export default function FacultyMentors() {
                             </div>
                             <div className="form-group">
                                 <label>Branch</label>
-                                <input
-                                    type="text"
+                                <select
                                     name="branch"
                                     value={formData.branch}
                                     onChange={handleInputChange}
                                     required
-                                />
+                                >
+                                    <option value="">Select Branch</option>
+                                    {branchNames.map((branch) => (
+                                        <option key={branch.id} value={branch.name}>
+                                            {branch.name}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
                             <div className="form-actions">
                                 <button type="submit" className="submit-btn">

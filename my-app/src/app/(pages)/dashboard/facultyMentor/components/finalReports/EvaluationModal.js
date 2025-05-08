@@ -11,23 +11,26 @@ const EvaluationModal = ({ isOpen, onClose, onSubmit, student }) => {
   const [totalMarks, setTotalMarks] = useState(0);
   const [grade, setGrade] = useState('Not Qualified');
 
+  // Internal marks from dailyMarks
+  const internalMarks = typeof student.internalMarks === 'number' ? student.internalMarks : 0;
+
   useEffect(() => {
     const total = Object.entries(marks)
       .filter(([key]) => key !== 'feedback')
       .reduce((sum, [_, value]) => sum + (value || 0), 0);
     
-    setTotalMarks(total);
+    setTotalMarks(internalMarks + total);
     
-    if (total >= 90) {
+    if (internalMarks + total >= 90) {
       setGrade('Certificate of Excellence');
-    } else if (total >= 75) {
+    } else if (internalMarks + total >= 75) {
       setGrade('Certificate of Appreciation');
-    } else if (total >= 60) {
+    } else if (internalMarks + total >= 60) {
       setGrade('Certificate of Participation');
     } else {
       setGrade('Not Qualified');
     }
-  }, [marks]);
+  }, [marks, internalMarks]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -40,7 +43,8 @@ const EvaluationModal = ({ isOpen, onClose, onSubmit, student }) => {
     onSubmit({
       ...marks,
       totalMarks,
-      grade
+      grade,
+      internalMarks
     });
   };
 
@@ -55,6 +59,15 @@ const EvaluationModal = ({ isOpen, onClose, onSubmit, student }) => {
         </div>
         <form onSubmit={handleSubmit}>
           <div className="evaluation-form">
+            <div className="form-group">
+              <label>Internal Marks (Daily Submissions, out of 60)</label>
+              <input
+                type="number"
+                value={internalMarks}
+                readOnly
+                style={{ background: '#f5f5f5', color: '#333', fontWeight: 600 }}
+              />
+            </div>
             <div className="form-group">
               <label>Case Study Report (30 Marks)</label>
               <input
@@ -90,7 +103,7 @@ const EvaluationModal = ({ isOpen, onClose, onSubmit, student }) => {
               />
             </div>
             <div className="total-section">
-              <h3>External Marks: {totalMarks}/40</h3>
+              <h3>Total Marks: {totalMarks}/100</h3>
               <h3>Grade: {grade}</h3>
             </div>
             <div className="modal-actions">

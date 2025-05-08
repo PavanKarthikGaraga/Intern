@@ -51,6 +51,7 @@ export async function GET(request) {
                 m.conductParticipationMarks, 
                 m.totalMarks, 
                 m.grade,
+                m.feedback,
                 a.day1, a.day2, a.day3, a.day4, a.day5, a.day6, a.day7,
                 sl.name as leadName,
                 sl.username as leadUsername
@@ -115,11 +116,12 @@ export async function GET(request) {
                         day7: student.day7 || false
                     },
                     marks: student.totalMarks > 0 ? {
-                        internal: student.internalMarks,
-                        caseStudyReport: student.caseStudyReportMarks,
-                        conductParticipation: student.conductParticipationMarks,
-                        total: student.totalMarks,
-                        grade: student.grade
+                        internalMarks: student.internalMarks,
+                        caseStudyReportMarks: student.caseStudyReportMarks,
+                        conductParticipationMarks: student.conductParticipationMarks,
+                        totalMarks: student.totalMarks,
+                        grade: student.grade,
+                        feedback: student.feedback
                     } : null
                 }))
             }

@@ -129,6 +129,7 @@ export default function FinalReports() {
                   <th>Slot</th>
                   <th>Student Lead</th>
                   <th>Report</th>
+                  <th>Internal Marks</th>
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>
@@ -168,6 +169,9 @@ export default function FinalReports() {
                       >
                         View Report
                       </a>
+                    </td>
+                    <td>
+                      <span className="internal-marks">{typeof student.internalMarks === 'number' ? `${student.internalMarks} / 60` : '-'}</span>
                     </td>
                     <td>
                       <span className={`status-badge ${student.completed ? 'completed' : 'pending'}`}>

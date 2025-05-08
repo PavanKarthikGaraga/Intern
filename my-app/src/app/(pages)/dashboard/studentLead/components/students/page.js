@@ -138,8 +138,16 @@ export default function Students({ user }) {
           </div>
           {(() => {
             const currentSlot = students[0]?.slot || 1;
-            const nextSlot = currentSlot + 1;
-            const canFetch = reportOpen[`slot${nextSlot}`];
+            const hasStudents = students.length > 0;
+            let canFetch, errorMsg;
+            if (!hasStudents) {
+              canFetch = reportOpen[`slot${currentSlot}`];
+              if (!canFetch) errorMsg = `Fetching for slot ${currentSlot} is not open yet.`;
+            } else {
+              const nextSlot = currentSlot + 1;
+              canFetch = reportOpen[`slot${nextSlot}`];
+              if (!canFetch) errorMsg = `Fetching for slot ${nextSlot} is not open yet.`;
+            }
             return (
               <>
                 <button 
@@ -149,9 +157,9 @@ export default function Students({ user }) {
                 >
                   {fetching ? 'Fetching...' : 'Fetch New Students'}
                 </button>
-                {!canFetch && (
+                {errorMsg && (
                   <div className="error" style={{marginTop: '0.5rem'}}>
-                    Fetching for slot {nextSlot} is not open yet.
+                    {errorMsg}
                   </div>
                 )}
                 {fetchError && (

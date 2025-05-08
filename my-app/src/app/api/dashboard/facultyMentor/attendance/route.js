@@ -67,7 +67,7 @@ export async function POST(req) {
 
             if (verifiedUploads.length === 0) {
                 return NextResponse.json(
-                    { error: 'Cannot mark attendance for unverified or not uploaded day' }, 
+                    { error: 'Cannot mark  for unverified or not uploaded day' }, 
                     { status: 400 }
                 );
             }

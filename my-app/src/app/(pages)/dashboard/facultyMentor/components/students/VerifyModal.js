@@ -420,7 +420,9 @@ export default function VerifyModal({ student, onClose }) {
                     </td>
                     <td>
                       <div className="status-container">
-                        {hasUpload ? (
+                        {currentAttendance === 'A' ? (
+                          <span className="status-badge rejected">Absent</span>
+                        ) : hasUpload ? (
                           <>
                             <span className={`status-badge ${isVerified ? 'verified' : 'pending'}`}>
                               {isVerified ? 'Verified' : 'Pending'}

@@ -6,7 +6,7 @@ import './page.css';
 export default function CompletedStudents() {
   const [completedStudents, setCompletedStudents] = useState([]);
   const [verifiedStudents, setVerifiedStudents] = useState([]);
-  const [failedStudents, setFailedStudents] = useState([]);
+  const [pendingNoFinal, setPendingNoFinal] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({
@@ -17,6 +17,13 @@ export default function CompletedStudents() {
     slots: [],
     studentLeads: []
   });
+
+  // Split verifiedStudents into pending and verified only
+  const pendingStudents = [
+    ...verifiedStudents.filter(s => s.status === 'pending'),
+    ...pendingNoFinal
+  ];
+  const verifiedStudentsOnly = verifiedStudents.filter(s => s.status === 'verified');
 
   useEffect(() => {
     fetchCompletedStudents();
@@ -40,7 +47,7 @@ export default function CompletedStudents() {
       const data = await response.json();
       setCompletedStudents(data.completedStudents || []);
       setVerifiedStudents(data.verifiedStudents || []);
-      setFailedStudents(data.failedStudents || []);
+      setPendingNoFinal(data.pendingNoFinal || []);
       setAvailableFilters(data.filters || { slots: [], studentLeads: [] });
     } catch (err) {
       console.error('Error fetching students:', err);
@@ -75,7 +82,7 @@ export default function CompletedStudents() {
       return (
         <div className="no-students">
           <div className="no-students-message">
-            <span>No {type} students found</span>
+            <span>No students found</span>
           </div>
         </div>
       );
@@ -91,8 +98,8 @@ export default function CompletedStudents() {
               <th>Mode</th>
               <th>Slot</th>
               <th>Student Lead</th>
-              {/* <th>Contact</th> */}
-              {type === 'completed' && <th>Report</th>}
+              <th>Report</th>
+              <th>Status</th>
               {type === 'completed' && <th>Grade</th>}
             </tr>
           </thead>
@@ -108,7 +115,7 @@ export default function CompletedStudents() {
                 </td>
                 <td>
                   <span className="slot-badge">
-                    Slot {student.slot}
+                    {student.slot}
                   </span>
                 </td>
                 <td>
@@ -117,32 +124,27 @@ export default function CompletedStudents() {
                     <small>{student.studentLeadUsername}</small>
                   </div>
                 </td>
-                {/* <td>
-                  <div className="contact-info">
-                    <a href={`mailto:${student.email}`} className="contact-link">
-                      {student.email}
+                <td>
+                  {student.finalReport ? (
+                    <a
+                      href={student.finalReport}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="report-link"
+                    >
+                      View Report
                     </a>
-                    <a href={`tel:${student.phoneNumber}`} className="contact-link">
-                      {student.phoneNumber}
-                    </a>
-                  </div>
-                </td> */}
-                {type === 'completed' && (
-                  <td>
-                    {student.finalReport ? (
-                      <a
-                        href={student.finalReport}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="report-link"
-                      >
-                        View Report
-                      </a>
-                    ) : (
-                      <span className="no-report">No Report</span>
-                    )}
-                  </td>
-                )}
+                  ) : (
+                    <span className="no-report">No Report</span>
+                  )}
+                </td>
+                <td>
+                  <span className={`status-badge status-${student.status}`}>
+                    {student.status === 'completed' && 'Completed'}
+                    {student.status === 'verified' && 'Verify'}
+                    {student.status === 'pending' && 'Pending'}
+                  </span>
+                </td>
                 {type === 'completed' && (
                   <td>
                     <span className={`grade-badge ${getGradeClass(student.grade)}`}>
@@ -224,15 +226,15 @@ export default function CompletedStudents() {
         </div>
 
         <div className="status-section">
-          <h2>Verified Students ({verifiedStudents.length})</h2>
-          <p className="section-description">Students who have been verified but haven't completed their final report</p>
-          {renderStudentTable(verifiedStudents, 'verified')}
+          <h2>Verified Students ({verifiedStudentsOnly.length})</h2>
+          <p className="section-description">Students who have submitted their final report but haven't completed their internship</p>
+          {renderStudentTable(verifiedStudentsOnly, 'verified')}
         </div>
 
         <div className="status-section">
-          <h2>Failed Students ({failedStudents.length})</h2>
-          <p className="section-description">Students who haven't submitted reports or haven't been verified</p>
-          {renderStudentTable(failedStudents, 'failed')}
+          <h2>Pending Students ({pendingStudents.length})</h2>
+          <p className="section-description">Students who haven't submitted their final report</p>
+          {renderStudentTable(pendingStudents, 'pending')}
         </div>
       </div>
     </div>
