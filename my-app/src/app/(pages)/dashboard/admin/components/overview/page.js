@@ -190,7 +190,10 @@ export default function Overview() {
         ? stateDistributionData
         : (selectedGender === 'all' 
             ? stateDistributionData 
-            : stateDistributionData.filter(item => item.name.toLowerCase() === selectedGender));
+            : stateDistributionData.map(item => ({
+                name: item.name,
+                value: item[selectedGender.toLowerCase()] || 0
+              })));
 
     // Calculate total for current filter
     const totalFiltered = filteredStateDistributionData.reduce((sum, item) => sum + item.value, 0);

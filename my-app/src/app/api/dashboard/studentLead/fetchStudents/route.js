@@ -64,6 +64,15 @@ export async function POST(req) {
             if (hasStudents) {
                 // If current slot has students, move to next slot (1->2->3->4)
                 targetSlot = currentSlot < 4 ? currentSlot + 1 : 4;
+                // Check reportOpen for the next slot
+                const [reportOpenRows] = await connection.query('SELECT slot1, slot2, slot3, slot4 FROM reportOpen WHERE id = 1');
+                const reportOpen = reportOpenRows[0];
+                if (!reportOpen[`slot${targetSlot}`]) {
+                    return NextResponse.json({
+                        success: false,
+                        error: `Fetching for slot ${targetSlot} is not open yet.`
+                    });
+                }
                 if (targetSlot !== currentSlot) {
                     // Clear all student fields in studentLeads table
                     let clearQuery = 'UPDATE studentLeads SET ';
@@ -72,7 +81,6 @@ export async function POST(req) {
                         if (i < 30) clearQuery += ', ';
                     }
                     clearQuery += ', slot = ?, updatedAt = CURRENT_TIMESTAMP WHERE username = ?';
-                    
                     await connection.query(clearQuery, [targetSlot, username]);
                 }
             } else {

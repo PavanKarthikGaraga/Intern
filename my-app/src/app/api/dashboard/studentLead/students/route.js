@@ -36,11 +36,17 @@ export async function POST(req) {
             [username]
         );
 
+        // Get report open status
+        const [reportOpen] = await db.query(
+            "SELECT slot1, slot2, slot3, slot4 FROM reportOpen WHERE id = 1"
+        );
+
         if (!students || students.length === 0) {
             return NextResponse.json({
                 success: true,
                 students: [],
                 total: 0,
+                reportOpen: reportOpen[0] || { slot1: false, slot2: false, slot3: false, slot4: false },
                 message: 'No students assigned yet'
             });
         }
@@ -84,7 +90,8 @@ export async function POST(req) {
         return NextResponse.json({
             success: true,
             students: studentsWithData,
-            total: students.length
+            total: students.length,
+            reportOpen: reportOpen[0] || { slot1: false, slot2: false, slot3: false, slot4: false }
         });
     } catch (error) {
         console.error('Error in get students API:', error);

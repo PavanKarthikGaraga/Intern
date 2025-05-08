@@ -14,6 +14,8 @@ export default function Students({ user }) {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [fetching, setFetching] = useState(false);
+  const [reportOpen, setReportOpen] = useState({});
+  const [fetchError, setFetchError] = useState(null);
 
   useEffect(() => {
     fetchStudents();
@@ -32,12 +34,11 @@ export default function Students({ user }) {
         throw new Error('Failed to fetch students');
       }
 
-      
-      
       const data = await response.json();
       if (data.success) {
         setStudents(data.students);
         setTotalStudents(data.total);
+        setReportOpen(data.reportOpen);
       }
       console.log(data.students);
     } catch (err) {
@@ -51,6 +52,7 @@ export default function Students({ user }) {
 
   const handleFetchNewStudents = async () => {
     setFetching(true);
+    setFetchError(null);
     try {
       const response = await fetch('/api/dashboard/studentLead/fetchStudents', {
         method: 'POST',
@@ -64,6 +66,7 @@ export default function Students({ user }) {
           toast.error('You have reached the maximum limit of students (slot 4)');
         } else {
           toast.error(data.error || 'Failed to fetch new students');
+          setFetchError(data.error);
         }
         return;
       }
@@ -74,6 +77,7 @@ export default function Students({ user }) {
     } catch (err) {
       console.error('Error fetching new students:', err);
       toast.error(err.message);
+      setFetchError(err.message);
     } finally {
       setFetching(false);
       setShowConfirmDialog(false);
@@ -132,13 +136,32 @@ export default function Students({ user }) {
               <span className="refresh-icon">↻</span>
             </button>
           </div>
-          <button 
-            className="fetch-btn"
-            onClick={() => setShowConfirmDialog(true)}
-            disabled={fetching}
-          >
-            {fetching ? 'Fetching...' : 'Fetch New Students'}
-          </button>
+          {(() => {
+            const currentSlot = students[0]?.slot || 1;
+            const nextSlot = currentSlot + 1;
+            const canFetch = reportOpen[`slot${nextSlot}`];
+            return (
+              <>
+                <button 
+                  className="fetch-btn"
+                  onClick={() => setShowConfirmDialog(true)}
+                  disabled={fetching || !canFetch}
+                >
+                  {fetching ? 'Fetching...' : 'Fetch New Students'}
+                </button>
+                {!canFetch && (
+                  <div className="error" style={{marginTop: '0.5rem'}}>
+                    Fetching for slot {nextSlot} is not open yet.
+                  </div>
+                )}
+                {fetchError && (
+                  <div className="error" style={{marginTop: '0.5rem'}}>
+                    {fetchError}
+                  </div>
+                )}
+              </>
+            );
+          })()}
         </div>
       </div>
       
