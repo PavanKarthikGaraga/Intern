@@ -145,9 +145,8 @@ export async function POST(req) {
                 );
 
                 if (currentMarks.length > 0) {
-                    const totalMarks = Object.values(currentMarks[0])
-                        .filter(val => typeof val === 'number')
-                        .reduce((sum, val) => sum + (val || 0), 0);
+                    const totalMarks = ['day1', 'day2', 'day3', 'day4', 'day5', 'day6', 'day7']
+                        .reduce((sum, day) => sum + (parseFloat(currentMarks[0][day]) || 0), 0);
 
                     await connection.query(
                         'UPDATE dailyMarks SET internalMarks = ? WHERE username = ?',
@@ -159,19 +158,25 @@ export async function POST(req) {
                         'SELECT * FROM marks WHERE username = ?',
                         [username]
                     );
+                    console.log(existingMarksRecord);
 
                     if (existingMarksRecord.length > 0) {
+                        const totalMarks = totalMarks + 
+                            (existingMarksRecord[0].caseStudyReportMarks || 0) + 
+                            (existingMarksRecord[0].conductParticipationMarks || 0);
+
                         await connection.query(
                             `UPDATE marks 
                              SET internalMarks = ?,
-                                 totalMarks = internalMarks + caseStudyReportMarks + conductParticipationMarks
+                                 totalMarks = ?
                              WHERE username = ?`,
-                            [totalMarks, username]
+                            [totalMarks, totalMarks, username]
                         );
                     } else {
-                        // Insert new record in marks table
+                        // Insert new record in marks table if it doesn't exist
                         await connection.query(
-                            `INSERT INTO marks (username, facultyMentorId, internalMarks, totalMarks)
+                            `INSERT INTO marks 
+                             (username, facultyMentorId, internalMarks, totalMarks) 
                              VALUES (?, ?, ?, ?)`,
                             [username, decoded.username, totalMarks, totalMarks]
                         );
