@@ -9,68 +9,205 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.header h1 {
+    margin: 0;
+    color: #333;
 }
 
 .controls {
     display: flex;
-    gap: 15px;
+    gap: 20px;
     align-items: center;
+    flex-wrap: wrap;
 }
 
-.controls label {
+.inputGroup {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
 }
 
-.controls input {
+.inputGroup label {
+    font-weight: 500;
+    color: #555;
+}
+
+.inputGroup input[type="number"] {
     width: 80px;
-    padding: 5px;
-    border: 1px solid #ccc;
+    padding: 8px;
+    border: 1px solid #ddd;
     border-radius: 4px;
+    font-size: 14px;
 }
 
-.controls button {
+/* Switch styles */
+.switch {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    gap: 10px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+    background-color: #ccc;
+    border-radius: 24px;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    border-radius: 50%;
+    transition: .4s;
+}
+
+input:checked + .slider {
+    background-color: #2196F3;
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+.refreshButton {
     padding: 8px 16px;
-    background-color: #0070f3;
+    background-color: #2196F3;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
 }
 
-.controls button:hover {
-    background-color: #0051a2;
-}
-
-.logsContainer {
-    background-color: #1e1e1e;
-    border-radius: 8px;
-    padding: 20px;
-    overflow: auto;
-    max-height: 70vh;
-}
-
-.logs {
-    color: #d4d4d4;
-    font-family: 'Consolas', 'Monaco', monospace;
-    font-size: 14px;
-    line-height: 1.5;
-    margin: 0;
-    white-space: pre-wrap;
-    word-wrap: break-word;
+.refreshButton:hover {
+    background-color: #1976D2;
 }
 
 .error {
     background-color: #ffebee;
     color: #c62828;
-    padding: 10px;
+    padding: 12px;
     border-radius: 4px;
     margin-bottom: 20px;
+    border: 1px solid #ffcdd2;
 }
 
-.loading {
-    color: #666;
-    text-align: center;
+.content {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 20px;
+    height: calc(100vh - 200px);
+}
+
+.processList {
+    background: white;
+    border-radius: 8px;
     padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    overflow-y: auto;
+}
+
+.processList h2 {
+    margin: 0 0 15px 0;
+    color: #333;
+    font-size: 1.2em;
+}
+
+.processList ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.processItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.processItem:last-child {
+    border-bottom: none;
+}
+
+.processName {
+    font-weight: 500;
+    color: #333;
+}
+
+.processStatus {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    font-weight: 500;
+}
+
+.processStatus[data-status="online"] {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.processStatus[data-status="errored"] {
+    background-color: #ffebee;
+    color: #c62828;
+}
+
+.processStatus[data-status="stopped"] {
+    background-color: #f5f5f5;
+    color: #616161;
+}
+
+.logContainer {
+    background: #1e1e1e;
+    border-radius: 8px;
+    padding: 20px;
+    overflow-y: auto;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.logs {
+    margin: 0;
+    color: #d4d4d4;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+@media (max-width: 768px) {
+    .content {
+        grid-template-columns: 1fr;
+    }
+
+    .processList {
+        height: 200px;
+    }
+
+    .logContainer {
+        height: calc(100vh - 400px);
+    }
 } 
