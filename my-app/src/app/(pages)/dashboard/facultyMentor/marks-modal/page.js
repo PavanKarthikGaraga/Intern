@@ -1,11 +1,11 @@
 'use client'
 import { useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import React from 'react';
+import React, { Suspense } from 'react';
 
 const MarksModal = dynamic(() => import('../components/students/MarksModal'), { ssr: false });
 
-export default function MarksModalPage() {
+function MarksModalContent() {
   const searchParams = useSearchParams();
   const day = parseInt(searchParams.get('day'), 10);
   const initialMarks = parseFloat(searchParams.get('initialMarks')) || 0;
@@ -17,8 +17,6 @@ export default function MarksModalPage() {
     window.close();
   };
 
-//   const url = `/dashboard/marks-modal?day=${day}&initialMarks=${initialMarks}`;
-
   return (
     <MarksModal
       day={day}
@@ -26,5 +24,13 @@ export default function MarksModalPage() {
       onSave={handleSave}
       initialMarks={initialMarks}
     />
+  );
+}
+
+export default function MarksModalPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <MarksModalContent />
+    </Suspense>
   );
 } 
