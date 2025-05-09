@@ -64,9 +64,8 @@ export async function GET(request) {
 
         // Get the number of lines to fetch from query params
         const { searchParams } = new URL(request.url);
-        const requestedLines = parseInt(searchParams.get('lines') || '100');
-        const isLive = searchParams.get('live') === 'true';
-        console.log('PM2 Logs API: Requested lines:', requestedLines, 'Live:', isLive);
+        const requestedLines = parseInt(searchParams.get('lines') || '500');
+        console.log('PM2 Logs API: Requested lines:', requestedLines);
 
         // First check if PM2 is installed and running
         console.log('PM2 Logs API: Checking PM2 availability...');
@@ -93,96 +92,16 @@ export async function GET(request) {
             processes = [];
         }
 
-        if (isLive) {
-            // Set up SSE response
-            const encoder = new TextEncoder();
-            const stream = new ReadableStream({
-                async start(controller) {
-                    // Send initial data
-                    const initialLogs = await readLogFiles(requestedLines);
-                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({
-                        success: true,
-                        logs: initialLogs,
-                        processes: processes
-                    })}\n\n`));
-
-                    // Set up file watchers for each log file
-                    const logDir = path.join(process.env.HOME || process.env.USERPROFILE, '.pm2', 'logs');
-                    const files = await fs.readdir(logDir);
-                    const logFiles = files.filter(file => file.endsWith('.log'));
-
-                    // Keep track of file sizes
-                    const fileSizes = new Map();
-                    for (const file of logFiles) {
-                        const filePath = path.join(logDir, file);
-                        const stats = await fs.stat(filePath);
-                        fileSizes.set(file, stats.size);
-                    }
-
-                    // Check for updates every 500ms instead of 1000ms
-                    const interval = setInterval(async () => {
-                        try {
-                            let hasUpdates = false;
-                            let updatedLogs = '';
-
-                            for (const file of logFiles) {
-                                const filePath = path.join(logDir, file);
-                                const stats = await fs.stat(filePath);
-                                const currentSize = stats.size;
-                                const previousSize = fileSizes.get(file) || 0;
-
-                                if (currentSize > previousSize) {
-                                    hasUpdates = true;
-                                    // Only read the new content instead of the entire file
-                                    const fileHandle = await fs.open(filePath, 'r');
-                                    const buffer = Buffer.alloc(currentSize - previousSize);
-                                    await fileHandle.read(buffer, 0, currentSize - previousSize, previousSize);
-                                    await fileHandle.close();
-                                    const newContent = buffer.toString('utf8');
-                                    updatedLogs += `\n=== ${file} ===\n${newContent}\n`;
-                                    fileSizes.set(file, currentSize);
-                                }
-                            }
-
-                            if (hasUpdates) {
-                                controller.enqueue(encoder.encode(`data: ${JSON.stringify({
-                                    success: true,
-                                    logs: updatedLogs,
-                                    processes: processes
-                                })}\n\n`));
-                            }
-                        } catch (error) {
-                            console.error('PM2 Logs API: Error in live update:', error);
-                        }
-                    }, 500); // Reduced to 500ms for more frequent updates
-
-                    // Clean up on close
-                    request.signal.addEventListener('abort', () => {
-                        clearInterval(interval);
-                        controller.close();
-                    });
-                }
-            });
-
-            return new Response(stream, {
-                headers: {
-                    'Content-Type': 'text/event-stream',
-                    'Cache-Control': 'no-cache',
-                    'Connection': 'keep-alive'
-                }
-            });
-        } else {
-            // Regular response for non-live requests
-            console.log('PM2 Logs API: Reading log files...');
-            const allLogs = await readLogFiles(requestedLines);
-            console.log('PM2 Logs API: Successfully fetched logs');
-            
-            return NextResponse.json({
-                success: true,
-                logs: allLogs || 'No logs available',
-                processes: processes
-            });
-        }
+        // Read log files
+        console.log('PM2 Logs API: Reading log files...');
+        const allLogs = await readLogFiles(requestedLines);
+        console.log('PM2 Logs API: Successfully fetched logs');
+        
+        return NextResponse.json({
+            success: true,
+            logs: allLogs || 'No logs available',
+            processes: processes
+        });
 
     } catch (error) {
         console.error('PM2 Logs API: Error:', error);

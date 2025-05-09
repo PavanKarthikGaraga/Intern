@@ -6,18 +6,14 @@ import styles from './pm2-logs.module.css';
 export default function PM2Logs() {
     const [logs, setLogs] = useState('');
     const [processes, setProcesses] = useState([]);
-    const [lines, setLines] = useState(100);
-    const [isLive, setIsLive] = useState(true);
+    const [lines, setLines] = useState(500);
+    const [isLive, setIsLive] = useState(false);
     const [error, setError] = useState(null);
     const eventSourceRef = useRef(null);
 
     useEffect(() => {
         console.log('PM2 Logs: Component mounted');
-        if (isLive) {
-            setupEventSource();
-        } else {
-            fetchLogs();
-        }
+        fetchLogs();
 
         return () => {
             if (eventSourceRef.current) {
@@ -25,67 +21,7 @@ export default function PM2Logs() {
                 eventSourceRef.current.close();
             }
         };
-    }, [isLive, lines]);
-
-    const setupEventSource = () => {
-        console.log('PM2 Logs: Setting up EventSource');
-        if (eventSourceRef.current) {
-            eventSourceRef.current.close();
-        }
-
-        const eventSource = new EventSource(`/api/dashboard/admin/pm2-logs?lines=${lines}&live=true`);
-        eventSourceRef.current = eventSource;
-
-        let reconnectAttempts = 0;
-        const maxReconnectAttempts = 5;
-        const reconnectDelay = 1000; // Start with 1 second
-
-        eventSource.onmessage = (event) => {
-            console.log('PM2 Logs: Received SSE update');
-            try {
-                const data = JSON.parse(event.data);
-                if (data.success) {
-                    setLogs(prevLogs => {
-                        // Append new logs to existing logs
-                        const newLogs = data.logs;
-                        return prevLogs + newLogs;
-                    });
-                    setProcesses(data.processes);
-                    setError(null);
-                    // Reset reconnect attempts on successful message
-                    reconnectAttempts = 0;
-                } else {
-                    setError(data.error || 'Failed to fetch logs');
-                }
-            } catch (error) {
-                console.error('PM2 Logs: Error parsing SSE data:', error);
-                setError('Error parsing server response');
-            }
-        };
-
-        eventSource.onerror = (error) => {
-            console.error('PM2 Logs: EventSource error:', error);
-            eventSource.close();
-            
-            if (reconnectAttempts < maxReconnectAttempts) {
-                const delay = reconnectDelay * Math.pow(2, reconnectAttempts); // Exponential backoff
-                setError(`Connection lost. Reconnecting in ${delay/1000} seconds...`);
-                setTimeout(() => {
-                    reconnectAttempts++;
-                    setupEventSource();
-                }, delay);
-            } else {
-                setError('Connection lost. Please refresh the page to reconnect.');
-            }
-        };
-
-        // Add connection opened handler
-        eventSource.onopen = () => {
-            console.log('PM2 Logs: EventSource connection opened');
-            setError(null);
-            reconnectAttempts = 0;
-        };
-    };
+    }, []);
 
     const fetchLogs = async () => {
         console.log('PM2 Logs: Fetching logs, lines:', lines);
@@ -120,11 +56,6 @@ export default function PM2Logs() {
         }
     };
 
-    const handleLiveToggle = () => {
-        console.log('PM2 Logs: Live mode toggled:', !isLive);
-        setIsLive(!isLive);
-    };
-
     return (
         <div className={styles.container}>
             <div className={styles.header}>
@@ -141,25 +72,12 @@ export default function PM2Logs() {
                             max="1000"
                         />
                     </div>
-                    <div className={styles.inputGroup}>
-                        <label className={styles.switch}>
-                            <input
-                                type="checkbox"
-                                checked={isLive}
-                                onChange={handleLiveToggle}
-                            />
-                            <span className={styles.slider}></span>
-                            Live Updates
-                        </label>
-                    </div>
-                    {!isLive && (
-                        <button 
-                            onClick={fetchLogs}
-                            className={styles.refreshButton}
-                        >
-                            Refresh
-                        </button>
-                    )}
+                    <button 
+                        onClick={fetchLogs}
+                        className={styles.refreshButton}
+                    >
+                        Refresh
+                    </button>
                 </div>
             </div>
 
