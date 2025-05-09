@@ -22,3 +22,191 @@
 .home-component p {
   font-weight: 400;
 }
+
+/* Report Generator Styles */
+.report-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.report-form {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.form-student-info {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.form-details-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.activities-section {
+  margin-top: 20px;
+}
+
+.activity-form-block {
+  background: #f9f9f9;
+  padding: 15px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.activity-row-flex {
+  display: flex;
+  gap: 20px;
+}
+
+.activity-desc-col {
+  flex: 1;
+}
+
+.activity-images-upload {
+  width: 300px;
+}
+
+.image-upload-group {
+  margin-bottom: 15px;
+}
+
+.image-upload-row-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 5px;
+}
+
+.activity-image-preview {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.download-btn {
+  background: #007bff;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.download-btn:hover {
+  background: #0056b3;
+}
+
+.download-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* PDF Template Styles */
+.pdf-template {
+  padding: 20px;
+  background: white;
+}
+
+.pdf-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.pdf-header-title {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.pdf-header-subtitle {
+  font-size: 18px;
+  color: #666;
+}
+
+.pdf-info-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.pdf-details-table {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.pdf-activity-section {
+  margin-bottom: 30px;
+}
+
+.pdf-activity-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.pdf-activity-content {
+  margin-left: 20px;
+}
+
+.pdf-activity-images {
+  display: flex;
+  gap: 20px;
+  margin-top: 15px;
+}
+
+.pdf-activity-img {
+  width: 200px;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.pdf-activity-timeline {
+  text-align: center;
+  margin-top: 5px;
+  font-size: 14px;
+  color: #666;
+}
+
+.pdf-footer {
+  text-align: center;
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid #ddd;
+}
+
+.pdf-page-break {
+  page-break-after: always;
+  margin: 40px 0;
+}

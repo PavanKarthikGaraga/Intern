@@ -2,8 +2,19 @@ import { NextResponse } from "next/server";
 import { verifyAccessToken } from "./lib/jwt";
 
 export async function middleware(req) {
-  const token = req.cookies.get("accessToken")?.value;
   const pathname = req.nextUrl.pathname;
+
+  // Explicitly allow access to reportGenerator
+  if (pathname.startsWith('/reportGenerator')) {
+    return NextResponse.next();
+  }
+
+  const token = req.cookies.get("accessToken")?.value;
+
+  // Skip middleware for assets
+  if (pathname.includes('_next') || pathname.includes('favicon.ico')) {
+    return NextResponse.next();
+  }
 
   // If the user is already logged in, prevent access to login/forgot-password
   if (token && (pathname === "/auth/login" || pathname === "/auth/forgot-password")) {
@@ -42,5 +53,10 @@ export async function middleware(req) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/auth/login", "/auth/forgot-password"],
+  matcher: [
+    "/dashboard/:path*",
+    "/auth/login",
+    "/auth/forgot-password",
+    "/reportGenerator/:path*"
+  ]
 };

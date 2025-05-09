@@ -1,0 +1,661 @@
+/* Body wrapper */
+.pdfWrapper {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  width: 90%;
+  margin: 0 auto;
+}
+
+/* Button section */
+.pdfButton {
+  text-align: right;
+  margin-bottom: 20px;
+}
+
+.pdfButton button {
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.pdfButton button:hover {
+  background-color: #0056b3;
+}
+
+/* PDF content box */
+.pdfContainer {
+  padding: 30px;
+  background-color: #fff;
+  color: #000;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Heading */
+.pdfHeading {
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+/* Subheading - KL University */
+.pdfSubheading {
+  text-align: center;
+  font-weight: bold;
+  margin-top: 10px;
+  margin-bottom: 30px;
+  width: 90%;
+  padding: 10px;
+  border: 1px solid #000;
+  border-radius: 6px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Description */
+.pdfDescription {
+  font-size: 16px;
+  line-height: 1.6;
+  text-align: justify;
+}
+
+/* Images */
+.pdfImages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-top: 30px;
+}
+
+.pdfImages img {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: 6px;
+  object-fit: contain;
+  aspect-ratio: 16/9;
+}
+
+.reportContainer {
+  width: 95%;
+  margin: 0.5rem auto;
+  background: white;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.reportForm {
+  width: 100%;
+  background: white;
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  height: auto;
+  min-height: 85vh;
+  text-align: center;
+}
+
+.formStudentInfo {
+  margin-bottom: 0.75rem;
+  border-bottom: 2px solid #8b0000;
+  padding-bottom: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.formStudentInfo .formGroup {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.formStudentInfo label {
+  font-weight: 600;
+  color: #333;
+  min-width: 80px;
+  font-size: 0.9rem;
+}
+
+.formStudentInfo input {
+  width: 180px;
+  padding: 0.4rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.formStudentInfo input[name="domain"] {
+  width: 500px;
+}
+
+.formDetailsContainer {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  margin-top: 0.75rem;
+}
+
+.formDetailsLeft,
+.formDetailsRight {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.formGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.4rem;
+}
+
+.formGroup label {
+  font-weight: 600;
+  min-width: 100px;
+  color: #333;
+  flex-shrink: 0;
+  font-size: 0.9rem;
+}
+
+.formGroup input,
+.formGroup select {
+  flex: 1;
+  min-width: 120px;
+  padding: 0.4rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.formGroup input[name="date"] {
+  width: 2rem;
+}
+
+.descriptionSection {
+  margin-top: 1rem;
+}
+
+.descriptionSection h3 {
+  color: #000;
+  font-size: 1.1rem;
+  margin-bottom: 0.4rem;
+  font-weight: 600;
+}
+
+.descriptionSection textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 0.4rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  resize: vertical;
+  font-size: 0.9rem;
+}
+
+.imagesSection {
+  margin-top: 1rem;
+}
+
+.imagesSection h3 {
+  color: #000;
+  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+}
+
+.imagesGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.previewBtn {
+  background: #8b0000;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 1.1rem;
+  margin-top: 1.5rem;
+  align-self: flex-end;
+}
+
+.previewBtn:hover {
+  background: #a00000;
+}
+
+.reportPreview {
+  width: 100%;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: white;
+}
+
+.headerWrapper {
+  background: #8b0000;
+  padding: 0.75rem;
+  margin: -1px;
+}
+
+.customHeader {
+  text-align: center;
+  color: white;
+}
+
+.customHeader h1 {
+  font-size: 24px;
+  margin: 0;
+  font-weight: 600;
+}
+
+.customHeader h2 {
+  font-size: 18px;
+  margin: 6px 0 0;
+  font-weight: 500;
+}
+
+.contentWrapper {
+  padding: 1rem;
+}
+
+.eventInfo {
+  margin-bottom: 2rem;
+}
+
+.studentInfo {
+  margin-bottom: 1rem;
+  border-bottom: 2px solid #8b0000;
+  padding-bottom: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.studentInfoItem {
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
+}
+
+.studentInfo strong {
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.studentInfo span {
+  font-weight: 500;
+  color: #000;
+}
+
+.detailsContainer {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+  margin-top: 1rem;
+}
+
+.detailItem {
+  display: flex;
+  align-items: baseline;
+  margin-bottom: 0.5rem;
+}
+
+.detailLabel {
+  font-weight: 600;
+  min-width: 120px;
+  color: #333;
+  flex-shrink: 0;
+}
+
+.detailValue {
+  flex: 1;
+  font-weight: 500;
+  color: #000;
+  min-width: 150px;
+}
+
+.charCount {
+  font-size: 0.8rem;
+  color: #666;
+  text-align: right;
+  margin-top: 0.25rem;
+}
+
+.charCount.limitReached {
+  color: #dc3545;
+}
+
+.imageContainer {
+  position: relative;
+  width: 100%;
+  height: 160px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #f5f5f5;
+}
+
+.imageContainer img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  padding: 0;
+}
+
+.imageLabel {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 4px;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.downloadBtn {
+  background: #8b0000;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 1.2rem;
+  margin: 1.5rem;
+  float: right;
+  transition: background-color 0.2s;
+}
+
+.downloadBtn:hover {
+  background: #a00000;
+}
+
+.inlineGroup {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.inlineGroup select {
+  flex: 1;
+}
+
+.inlineGroup label {
+  min-width: 60px;
+}
+
+/* PDF Header */
+.pdfHeader {
+  background: #8b0000;
+  color: #fff;
+  text-align: center;
+  padding: 18px 0 8px 0;
+}
+
+.pdfHeaderTitle {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+
+.pdfHeaderSubtitle {
+  font-size: 1.1rem;
+  font-style: italic;
+  margin-bottom: 0;
+}
+
+/* Info Row */
+.pdfInfoRow {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 2px solid #8b0000;
+  padding: 8px 0 4px 0;
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+/* Details Table */
+.pdfDetailsTable {
+  display: flex;
+  justify-content: flex-start;
+  gap: 6rem;
+  margin: 10px 0 18px 0;
+  font-size: 0.98rem;
+}
+
+.pdfDetailsTable > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pdfDetailsTableItem {
+  margin-bottom: 2px;
+  font-size: 1rem;
+}
+
+/* Activity Section */
+.pdfActivitySection {
+  margin: 22px 0 0 0;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 18px;
+}
+
+.pdfActivityTitle {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.pdfActivityContent {
+  display: flex;
+  gap: 32px;
+  align-items: flex-start;
+}
+
+.pdfActivityDescList {
+  list-style: none;
+  padding: 0;
+  margin: 0 24px 0 0;
+  flex: 1 1 50%;
+}
+
+.pdfActivityDescList li {
+  font-size: 0.97rem;
+  margin-bottom: 2px;
+  color: #444;
+}
+
+.pdfActivityImages {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  flex: 1 1 50%;
+}
+
+.pdfActivityImg {
+  width: 180px;
+  height: 120px;
+  object-fit: cover;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+  background: #f5f5f5;
+}
+
+.pdfActivityTimeline {
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 2px;
+}
+
+.activitiesSection {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.activityFormBlock {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 1rem;
+  background: #fafbfc;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+
+.activityFormBlock h3 {
+  margin-top: 0;
+  color: #8b0000;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.activityImagesUpload {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.2rem;
+  width: 30%;
+}
+
+.activityImagesUploadBelow {
+  display: flex;
+  flex-direction: row;
+  gap: 1.2rem;
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.activityDescriptionInput {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  resize: none;
+}
+
+.activityRowFlex {
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.activityDescCol {
+  flex: none;
+  width: 65%;
+}
+
+.activityImagePreview {
+  width: 180px;
+  height: 120px;
+  object-fit: cover;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+  background: #f5f5f5;
+  margin-left: 0.5rem;
+}
+
+.imageUploadGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+}
+
+.imageUploadRowTop {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 2rem;
+  width: 100%;
+}
+
+.imageUploadRowBottom {
+  display: block;
+  width: 100%;
+  margin-top: -3rem;
+}
+
+.pdfPageBreak {
+  page-break-after: always;
+}
+
+.pdfTemplate {
+  position: relative;
+  min-height: 100vh;
+}
+
+.pdfFooter {
+  width: 100%;
+  background: #8b0000;
+  color: #fff;
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 2px;
+  margin: 1rem 0 0 0;
+}
+
+.pdfHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  margin: 12px 0;
+}
+
+.pdfHeaderInternship {
+  font-weight: 600;
+  font-size: 1.2rem;
+  color: #8b0000;
+}
+
+/* Media Queries */
+@media (max-width: 900px) {
+  .pdfActivityContent {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .pdfActivityImages {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+  .activityRowFlex {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .activityImagesUpload {
+    flex-direction: row;
+    gap: 0.75rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .detailsContainer {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .imagesGrid {
+    grid-template-columns: 1fr;
+  }
+  .detailItem {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .detailLabel {
+    min-width: auto;
+  }
+} 

@@ -256,3 +256,118 @@
         width: 30%;
     }
 }
+
+.floating-blob {
+    position: fixed;
+    top: 50%;
+    right: 20%;
+    transform: translate(-20%, -50%);
+    width: 4rem;
+    height: 4rem;
+    padding: 0 1.5rem;
+    background: linear-gradient(135deg, rgb(151, 0, 3), #ff4d4d);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(151, 0, 3, 0.3);
+    transition: width 0.5s cubic-bezier(0.4,0,0.2,1), border-radius 0.5s cubic-bezier(0.4,0,0.2,1), background 0.5s, padding 0.5s;
+    animation: float 3s ease-in-out infinite;
+    z-index: 1000;
+    overflow: hidden;
+    white-space: nowrap;
+    flex-direction: row;
+    gap: 0;
+    cursor: pointer;
+}
+
+.floating-blob::after {
+    content: '';
+    position: absolute;
+    top: -12px;
+    left: -12px;
+    right: -12px;
+    bottom: -12px;
+    border-radius: 2rem;
+    z-index: 0;
+}
+
+.floating-blob .icon {
+    transition: transform 0.5s, opacity 0.5s;
+    opacity: 1;
+    transform: scale(1);
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+}
+
+.floating-blob .text {
+    opacity: 0;
+    width: 0;
+    margin-left: 0;
+    transition: opacity 0.5s, width 0.5s, margin-left 0.5s;
+    font-size: 1rem;
+    display: inline-block;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.floating-blob:hover {
+    width: 16rem;
+    padding: 0 2.5rem;
+    border-radius: 2rem;
+    background: linear-gradient(135deg, rgb(151, 0, 3), #ff4d4d);
+}
+
+.floating-blob:hover .icon {
+    opacity: 1;
+    transform: scale(0.9);
+}
+
+.floating-blob:hover .text {
+    opacity: 1;
+    width: auto;
+    margin-left: 0.5rem;
+}
+
+@keyframes float {
+    0% {
+        transform: translate(-20%, -50%) translateX(0);
+    }
+    50% {
+        transform: translate(-20%, -50%) translateX(-5px);
+    }
+    100% {
+        transform: translate(-20%, -50%) translateX(0);
+    }
+}
+
+@media screen and (max-width: 48rem) {
+    .floating-blob {
+        width: 3.5rem;
+        height: 3.5rem;
+        right: 1.5rem;
+    }
+    
+    .floating-blob:hover {
+        width: 10rem;
+    }
+    
+    .floating-blob .text {
+        font-size: 0.875rem;
+    }
+    
+    .floating-blob .icon {
+        width: 20px;
+        height: 20px;
+    }
+    .floating-blob:hover .text {
+        width: 6.5rem;
+    }
+}

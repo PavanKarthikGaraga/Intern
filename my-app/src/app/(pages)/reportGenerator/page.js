@@ -2,22 +2,17 @@
 
 import React, { useState, useRef } from "react";
 import toast, { Toaster } from 'react-hot-toast';
-import "./page.css";
 import { DOMAINS } from '../../Data/domains.js';
+import { dailyActivities } from '../../Data/activities.js';
+import styles from './page.module.css';
 
 const ReportGenerator = () => {
-  // Define activities with timing, name, and maxLen
-  const activityDefinitions = [
-    { timing: '5:30 am - 6:00 am', name: 'Physical Exercise', maxLen: 100 },
-    { timing: '6:00 am - 6:30 am', name: 'Yoga / Meditation', maxLen: 100 },
-    { timing: '6:30 am - 7:30 am', name: '7-Days Swachhata Challenge', maxLen: 100 },
-    { timing: '8:30 am - 10:00 am', name: 'Domain Specialized Field Study', maxLen: 600 },
-    { timing: '10:00 am - 11:30 am', name: 'Conduct a mini-survey and analyze 10 responses', maxLen: 100 },
-    { timing: '11:30 am - 12:00 pm', name: 'Indian Heritage Culture - LIPI Task', maxLen: 100 },
-    { timing: '1:30 pm - 3:00 pm', name: 'Domain Study assigned in your 7 Days Domain Schedule', maxLen: 600 },
-    { timing: '3:00 pm - 4:00 pm', name: 'Field Study / Field Visit', maxLen: 100 },
-    { timing: '4:00 pm - 5:00 pm', name: 'Interview a community elder about traditional knowledge', maxLen: 100 },
-  ];
+  // Helper to get daily activity titles and timings for the selected day
+  function getDailyActivity(day, id) {
+    const dayObj = dailyActivities.find(d => d.day === Number(day));
+    if (!dayObj) return null;
+    return dayObj.activities.find(a => a.id === id) || null;
+  }
 
   // Helper to parse time range and return array of 30-min slot labels
   function getTimeSlotsFromTiming(timing) {
@@ -44,6 +39,51 @@ const ReportGenerator = () => {
     return slots;
   }
 
+  // Define activities with timing, name, and maxLen
+  function getActivityDefinitions(day) {
+    const activity4 = getDailyActivity(day, 4);
+    const activity9 = getDailyActivity(day, 9);
+    return [
+      { timing: '5:30 am - 6:00 am', name: 'Physical Exercise', maxLen: 100 },
+      { timing: '6:00 am - 6:30 am', name: 'Yoga / Meditation', maxLen: 100 },
+      { timing: '6:30 am - 7:30 am', name: '7-Days Swachhata Challenge', maxLen: 100 },
+      { timing: '8:30 am - 10:00 am', name: 'Domain Specialized Field Study', maxLen: 600 },
+      { timing: activity4 ? `${activity4.startTime} - ${activity4.endTime}` : '10:00 am - 11:30 am', name: activity4 ? activity4.title : 'Conduct a mini-survey and analyze 10 responses', maxLen: 100 },
+      { timing: '11:30 am - 12:00 pm', name: 'Indian Heritage Culture - LIPI Task', maxLen: 100 },
+      { timing: '1:30 pm - 3:00 pm', name: 'Domain Study assigned in your 7 Days Domain Schedule', maxLen: 600 },
+      { timing: '3:00 pm - 4:00 pm', name: 'Field Study / Field Visit', maxLen: 100 },
+      { timing: activity9 ? `${activity9.startTime} - ${activity9.endTime}` : '4:00 pm - 5:00 pm', name: activity9 ? activity9.title : 'Interview a community elder about traditional knowledge', maxLen: 100 },
+    ];
+  }
+
+  const [formData, setFormData] = useState({
+    username: "",
+    slot: "1",
+    mode: "Remote",
+    day: "1",
+    domain: "",
+    date: "",
+    location: "",
+    duration: "",
+    people: "",
+    activities: getActivityDefinitions("1").map(def => {
+      const imageSlots = getTimeSlotsFromTiming(def.timing);
+      return {
+        name: def.name,
+        timing: def.timing,
+        maxLen: def.maxLen,
+        imageSlots,
+        images: imageSlots.map(() => null),
+        description: ''
+      };
+    })
+  });
+
+  const [isGenerating, setIsGenerating] = useState(false);
+  const reportRef = useRef();
+  const [charCount, setCharCount] = useState(0);
+  const MAX_CHARS = 600;
+
   // Helper to parse time range and activity name
   function parseActivity(desc) {
     // e.g., '5:30 am – 6:00 am Physical Exercise'
@@ -65,38 +105,6 @@ const ReportGenerator = () => {
     '3:00 pm - 4:00 pm Field Study / Field Visit',
     '4:00 pm - 5:00 pm Interview a community elder about traditional knowledge'
   ];
-
-  // Build initial activities state with correct number of image slots
-  const initialActivities = activityDefinitions.map(def => {
-    const imageSlots = getTimeSlotsFromTiming(def.timing);
-    return {
-      name: def.name,
-      timing: def.timing,
-      maxLen: def.maxLen,
-      imageSlots,
-      images: imageSlots.map(() => null),
-      description: ''
-    };
-  });
-
-  const [formData, setFormData] = useState({
-    username: "",
-    slot: "1",
-    mode: "Remote",
-    day: "1",
-    domain: "",
-    date: "",
-    location: "",
-    duration: "",
-    people: "",
-    activities: initialActivities
-  });
-
-  // const [showPreview, setShowPreview] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const reportRef = useRef();
-  const [charCount, setCharCount] = useState(0);
-  const MAX_CHARS = 600;
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '';
@@ -195,27 +203,24 @@ const ReportGenerator = () => {
 
   const handleDownload = async () => {
     if (!validateForm()) return;
-
-    const element = reportRef.current;
-    const opt = {
-      margin: 0.3,
-      filename: `report_${formData.username}_day${formData.day}.pdf`,
-      image: { type: "jpeg", quality: 0.98 },
-      html2canvas: { scale: 2 },
-      jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
-    };
-    
-    toast.promise(
-      (async () => {
-        const html2pdf = (await import('html2pdf.js')).default;
-        await html2pdf().set(opt).from(element).save();
-      })(),
-      {
-        loading: 'Generating PDF...',
-        success: 'PDF generated successfully!',
-        error: 'Failed to generate PDF'
-      }
-    );
+    setIsGenerating(true);
+    try {
+      const element = reportRef.current;
+      const opt = {
+        margin: 0.3,
+        filename: `report_${formData.username}_day${formData.day}.pdf`,
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
+      };
+      
+      const html2pdf = (await import('html2pdf.js')).default;
+      await html2pdf().set(opt).from(element).save();
+    } catch (error) {
+      toast.error('Failed to generate PDF');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   // Helper to get duration in minutes from timing string
@@ -242,13 +247,39 @@ const ReportGenerator = () => {
     reorderedActivities.splice(idxDomainSpecialized, 0, domainStudy);
   }
 
+  // Update activities when day changes
+  React.useEffect(() => {
+    const newDefs = getActivityDefinitions(formData.day);
+    setFormData(prev => ({
+      ...prev,
+      activities: newDefs.map((def, idx) => {
+        // Try to preserve existing descriptions and images if possible
+        const prevAct = prev.activities[idx] || {};
+        const imageSlots = getTimeSlotsFromTiming(def.timing);
+        let images = prevAct.images || [];
+        // If the number of image slots changed, reset images
+        if (images.length !== imageSlots.length) {
+          images = imageSlots.map(() => null);
+        }
+        return {
+          name: def.name,
+          timing: def.timing,
+          maxLen: def.maxLen,
+          imageSlots,
+          images,
+          description: prevAct.description || ''
+        };
+      })
+    }));
+  }, [formData.day]);
+
   return (
-    <div className="report-container">
+    <div className={styles.reportContainer}>
       <Toaster position="top-right" />
       <h1>Report Generator</h1>
-      <div className="report-form">
-        <div className="form-student-info">
-          <div className="form-group">
+      <div className={styles.reportForm}>
+        <div className={styles.formStudentInfo}>
+          <div className={styles.formGroup}>
             <label>Student ID:</label>
             <input
               type="text"
@@ -260,7 +291,7 @@ const ReportGenerator = () => {
               required
             />
           </div>
-          <div className="form-group">
+          <div className={styles.formGroup}>
             <label>Domain:</label>
             <select name="domain" value={formData.domain} onChange={handleInputChange}>
               {DOMAINS.map(domain => (
@@ -270,9 +301,9 @@ const ReportGenerator = () => {
           </div>
         </div>
 
-        <div className="form-details-container">
-          <div className="form-details-left">
-            <div className="form-group">
+        <div className={styles.formDetailsContainer}>
+          <div className={styles.formDetailsLeft}>
+            <div className={styles.formGroup}>
               <label>Date:</label>
               <input
                 type="date"
@@ -282,7 +313,7 @@ const ReportGenerator = () => {
                 required
               />
             </div>
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>Venue:</label>
               <input
                 type="text"
@@ -292,7 +323,7 @@ const ReportGenerator = () => {
                 required
               />
             </div>
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>Mode:</label>
               <select name="mode" value={formData.mode} onChange={handleInputChange}>
                 <option value="Remote">Remote</option>
@@ -300,7 +331,7 @@ const ReportGenerator = () => {
                 <option value="In Village">In Village</option>
               </select>
             </div>
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>Duration:</label>
               <input
                 type="text"
@@ -312,8 +343,8 @@ const ReportGenerator = () => {
             </div>
           </div>
 
-          <div className="form-details-right">
-            <div className="form-group">
+          <div className={styles.formDetailsRight}>
+            <div className={styles.formGroup}>
               <label>Slot:</label>
               <select name="slot" value={formData.slot} onChange={handleInputChange}>
                 <option value="1">Slot 1</option>
@@ -322,7 +353,7 @@ const ReportGenerator = () => {
                 <option value="4">Slot 4</option>
               </select>
             </div>
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>Day:</label>
               <select name="day" value={formData.day} onChange={handleInputChange}>
                 {[1, 2, 3, 4, 5, 6, 7].map(day => (
@@ -330,7 +361,7 @@ const ReportGenerator = () => {
                 ))}
               </select>
             </div>
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>People:</label>
               <input
                 type="text"
@@ -343,19 +374,19 @@ const ReportGenerator = () => {
           </div>
         </div>
 
-        <div className="activities-section">
+        <div className={styles.activitiesSection}>
           {formData.activities.map((activity, activityIdx) => {
             const maxLen = activity.maxLen;
             const isThreeImages = activity.imageSlots.length === 3;
             const duration = getDurationMinutes(activity.timing);
             return (
-              <div className="activity-form-block" key={activityIdx}>
+              <div className={styles.activityFormBlock} key={activityIdx}>
                 <h3>{activity.name}</h3>
-                <div className="activity-row-flex">
-                  <div className="activity-desc-col">
+                <div className={styles.activityRowFlex}>
+                  <div className={styles.activityDescCol}>
                     <textarea
                       name="description"
-                      className="activity-description-input"
+                      className={styles.activityDescriptionInput}
                       value={activity.description}
                       onChange={(e) => handleInputChange(e, activityIdx)}
                       required
@@ -364,22 +395,21 @@ const ReportGenerator = () => {
                       cols={100}
                       placeholder="Enter activity description"
                     />
-                    <div className="char-count">{activity.description.length}/{maxLen} characters</div>
-                    {/* If 3 images, render 2 image uploads below textarea */}
+                    <div className={styles.charCount}>{activity.description.length}/{maxLen} characters</div>
                     {isThreeImages && (
-                      <div className="activity-images-upload activity-images-upload-below">
+                      <div className={`${styles.activityImagesUpload} ${styles.activityImagesUploadBelow}`}>
                         {[1, 2].map((imgIdx) => (
-                          <div className="form-group image-upload-group" key={imgIdx}>
-                            <div className="image-upload-row-top">
+                          <div className={`${styles.formGroup} ${styles.imageUploadGroup}`} key={imgIdx}>
+                            <div className={styles.imageUploadRowTop}>
                               <label>Image ({activity.imageSlots[imgIdx]}):</label>
                               <img
                                 src={activity.images[imgIdx] ? activity.images[imgIdx] : 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='}
                                 alt={activity.images[imgIdx] ? `Preview ${activity.imageSlots[imgIdx]}` : 'No Preview'}
-                                className="activity-image-preview"
+                                className={styles.activityImagePreview}
                                 style={{ visibility: activity.images[imgIdx] ? 'visible' : 'hidden' }}
                               />
                             </div>
-                            <div className="image-upload-row-bottom">
+                            <div className={styles.imageUploadRowBottom}>
                               <input
                                 type="file"
                                 accept="image/*"
@@ -391,21 +421,20 @@ const ReportGenerator = () => {
                       </div>
                     )}
                   </div>
-                  <div className="activity-images-upload">
-                    {/* If 3 images, render the first image upload beside textarea, else render all here */}
+                  <div className={styles.activityImagesUpload}>
                     {isThreeImages
                       ? [0].map((imgIdx) => (
-                          <div className="form-group image-upload-group" key={imgIdx}>
-                            <div className="image-upload-row-top">
+                          <div className={`${styles.formGroup} ${styles.imageUploadGroup}`} key={imgIdx}>
+                            <div className={styles.imageUploadRowTop}>
                               <label>Image ({activity.imageSlots[imgIdx]}):</label>
                               <img
                                 src={activity.images[imgIdx] ? activity.images[imgIdx] : 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='}
                                 alt={activity.images[imgIdx] ? `Preview ${activity.imageSlots[imgIdx]}` : 'No Preview'}
-                                className="activity-image-preview"
+                                className={styles.activityImagePreview}
                                 style={{ visibility: activity.images[imgIdx] ? 'visible' : 'hidden' }}
                               />
                             </div>
-                            <div className="image-upload-row-bottom">
+                            <div className={styles.imageUploadRowBottom}>
                               <input
                                 type="file"
                                 accept="image/*"
@@ -415,17 +444,17 @@ const ReportGenerator = () => {
                           </div>
                         ))
                       : activity.imageSlots.map((slot, imgIdx) => (
-                          <div className="form-group image-upload-group" key={imgIdx}>
-                            <div className="image-upload-row-top">
+                          <div className={`${styles.formGroup} ${styles.imageUploadGroup}`} key={imgIdx}>
+                            <div className={styles.imageUploadRowTop}>
                               <label>Image ({slot}):</label>
                               <img
                                 src={activity.images[imgIdx] ? activity.images[imgIdx] : 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='}
                                 alt={activity.images[imgIdx] ? `Preview ${slot}` : 'No Preview'}
-                                className="activity-image-preview"
+                                className={styles.activityImagePreview}
                                 style={{ visibility: activity.images[imgIdx] ? 'visible' : 'hidden' }}
                               />
                             </div>
-                            <div className="image-upload-row-bottom">
+                            <div className={styles.imageUploadRowBottom}>
                               <input
                                 type="file"
                                 accept="image/*"
@@ -442,44 +471,44 @@ const ReportGenerator = () => {
         </div>
 
         <button 
-          className="download-btn" 
+          className={styles.downloadBtn} 
           onClick={handleDownload}
-          disabled={isLoading}
+          disabled={isGenerating}
         >
-          {isLoading ? 'Generating PDF...' : 'Download PDF'}
+          {isGenerating ? 'Generating PDF...' : 'Download PDF'}
         </button>
       </div>
 
       {/* Hidden report template for PDF generation */}
       <div style={{ display: 'none' }}>
-        <div ref={reportRef} className="pdf-template">
+        <div ref={reportRef} className={styles.pdfTemplate}>
           {/* Header */}
-          <div className="pdf-header">
-            <div className="pdf-header-title">Koneru Lakshmaiah Education Foundation</div>
-            <div className="pdf-header-subtitle">(Deemed to be University)</div>
+          <div className={styles.pdfHeader}>
+            <div className={styles.pdfHeaderTitle}>Koneru Lakshmaiah Education Foundation</div>
+            <div className={styles.pdfHeaderSubtitle}>(Deemed to be University)</div>
           </div>
           {/* SAC Logo and Social Internship 2025 below header */}
-          <div className="pdf-header-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '24px', margin: '12px 0' }}>
+          <div className={styles.pdfHeaderRow} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '24px', margin: '12px 0' }}>
             <img src="/sac.webp" alt="SAC Logo" style={{ height: '48px', width: 'auto' }} />
-            <div className="pdf-header-internship" style={{ fontWeight: 600, fontSize: '1.2rem', color: '#8b0000' }}>Social Internship 2025</div>
+            <div className={styles.pdfHeaderInternship} style={{ fontWeight: 600, fontSize: '1.2rem', color: '#8b0000' }}>Social Internship 2025</div>
           </div>
           {/* Student Info Row */}
-          <div className="pdf-info-row">
-            <span><strong>Student ID:</strong> {formData.username }</span>
-            <span><strong>Domain:</strong> {formData.domain }</span>
+          <div className={styles.pdfInfoRow}>
+            <span><strong>Student ID:</strong> {formData.username}</span>
+            <span><strong>Domain:</strong> {formData.domain}</span>
           </div>
           {/* Details Table */}
-          <div className="pdf-details-table">
+          <div className={styles.pdfDetailsTable}>
             <div>
-              <div className="pdf-details-table-item"><strong>Date:</strong> {formatDate(formData.date) }</div>
-              <div className="pdf-details-table-item"><strong>Venue:</strong> {formData.location }</div>
-              <div className="pdf-details-table-item"><strong>Mode:</strong> {formData.mode }</div>
-              <div className="pdf-details-table-item"><strong>Duration:</strong> {formData.duration }</div>
+              <div className={styles.pdfDetailsTableItem}><strong>Date:</strong> {formatDate(formData.date)}</div>
+              <div className={styles.pdfDetailsTableItem}><strong>Venue:</strong> {formData.location}</div>
+              <div className={styles.pdfDetailsTableItem}><strong>Mode:</strong> {formData.mode}</div>
+              <div className={styles.pdfDetailsTableItem}><strong>Duration:</strong> {formData.duration}</div>
             </div>
             <div>
-              <div className="pdf-details-table-item"><strong>Slot:</strong> {formData.slot }</div>
-              <div className="pdf-details-table-item"><strong>Day:</strong> {`Day ${formData.day}`}</div>
-              <div className="pdf-details-table-item"><strong>People:</strong> {formData.people }</div>
+              <div className={styles.pdfDetailsTableItem}><strong>Slot:</strong> {formData.slot}</div>
+              <div className={styles.pdfDetailsTableItem}><strong>Day:</strong> {`Day ${formData.day}`}</div>
+              <div className={styles.pdfDetailsTableItem}><strong>People:</strong> {formData.people}</div>
             </div>
           </div>
           
@@ -496,14 +525,14 @@ const ReportGenerator = () => {
               const acts = reorderedActivities.filter(a => group.includes(a.name));
               acts.forEach((activity, activityIdx) => {
                 rendered.push(
-                  <div className="pdf-activity-section" key={activity.name}>
-                    <div className="pdf-activity-title">{activity.name}</div>
-                    <div className="pdf-activity-content">
-                      <ul className="pdf-activity-desc-list">
+                  <div className={styles.pdfActivitySection} key={activity.name}>
+                    <div className={styles.pdfActivityTitle}>{activity.name}</div>
+                    <div className={styles.pdfActivityContent}>
+                      <ul className={styles.pdfActivityDescList}>
                         <li>{activity.description}</li>
                       </ul>
                       {activity.images.length === 3 ? (
-                        <div className="pdf-activity-images" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                        <div className={styles.pdfActivityImages} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
                           <div style={{ display: 'flex', flexDirection: 'row', gap: '24px', width: '100%', justifyContent: 'center' }}>
                             {[0, 1].map(i => (
                               <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -511,14 +540,14 @@ const ReportGenerator = () => {
                                   <img
                                     src={activity.images[i]}
                                     alt={`Activity ${activityIdx + 1} Image ${i + 1}`}
-                                    className="pdf-activity-img"
+                                    className={styles.pdfActivityImg}
                                   />
                                 ) : (
-                                  <div className="pdf-activity-img" style={{ background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#aaa', fontSize: '0.9rem', flexDirection: 'column' }}>
+                                  <div className={styles.pdfActivityImg} style={{ background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#aaa', fontSize: '0.9rem', flexDirection: 'column' }}>
                                     No Image
                                   </div>
                                 )}
-                                <div className="pdf-activity-timeline" style={{ marginTop: '6px' }}>{activity.imageSlots[i]}</div>
+                                <div className={styles.pdfActivityTimeline} style={{ marginTop: '6px' }}>{activity.imageSlots[i]}</div>
                               </div>
                             ))}
                           </div>
@@ -528,33 +557,33 @@ const ReportGenerator = () => {
                                 <img
                                   src={activity.images[2]}
                                   alt={`Activity ${activityIdx + 1} Image 3`}
-                                  className="pdf-activity-img"
+                                  className={styles.pdfActivityImg}
                                 />
                               ) : (
-                                <div className="pdf-activity-img" style={{ background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#aaa', fontSize: '0.9rem', flexDirection: 'column' }}>
+                                <div className={styles.pdfActivityImg} style={{ background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#aaa', fontSize: '0.9rem', flexDirection: 'column' }}>
                                   No Image
                                 </div>
                               )}
-                              <div className="pdf-activity-timeline" style={{ marginTop: '6px' }}>{activity.imageSlots[2]}</div>
+                              <div className={styles.pdfActivityTimeline} style={{ marginTop: '6px' }}>{activity.imageSlots[2]}</div>
                             </div>
                           </div>
                         </div>
                       ) : (
-                        <div className="pdf-activity-images">
+                        <div className={styles.pdfActivityImages}>
                           {activity.images.map((img, i) => (
                             img ? (
                               <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                                 <img
                                   src={img}
                                   alt={`Activity ${activityIdx + 1} Image ${i + 1}`}
-                                  className="pdf-activity-img"
+                                  className={styles.pdfActivityImg}
                                 />
-                                <div className="pdf-activity-timeline">{activity.imageSlots[i]}</div>
+                                <div className={styles.pdfActivityTimeline}>{activity.imageSlots[i]}</div>
                               </div>
                             ) : (
-                              <div key={i} className="pdf-activity-img" style={{ background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#aaa', fontSize: '0.9rem', flexDirection: 'column' }}>
+                              <div key={i} className={styles.pdfActivityImg} style={{ background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#aaa', fontSize: '0.9rem', flexDirection: 'column' }}>
                                 No Image
-                                <div className="pdf-activity-timeline">{activity.imageSlots[i]}</div>
+                                <div className={styles.pdfActivityTimeline}>{activity.imageSlots[i]}</div>
                               </div>
                             )
                           ))}
@@ -565,13 +594,13 @@ const ReportGenerator = () => {
                 );
               });
               if (groupIdx < groups.length - 1) {
-                rendered.push(<div className="pdf-page-break" key={`break-${groupIdx}`} />);
+                rendered.push(<div className={styles.pdfPageBreak} key={`break-${groupIdx}`} />);
               }
             });
             return rendered;
           })()}
           {/* PDF Footer (only after last page) */}
-          <div className="pdf-footer">
+          <div className={styles.pdfFooter}>
             <div>KLSAC</div>
             <div>Social Internship 2025</div>
           </div>

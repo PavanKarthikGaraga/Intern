@@ -18,6 +18,13 @@ export const AuthProvider = ({ children }) => {
   const checkInitialAuth = async () => {
     if (!mountedRef.current || authCheckedRef.current) return;
 
+    // Skip auth check for reportGenerator route
+    if (window.location.pathname.startsWith('/reportGenerator')) {
+      setIsLoading(false);
+      authCheckedRef.current = true;
+      return;
+    }
+
     console.log('[AuthContext] checkInitialAuth called');
     setIsLoading(true);
 
