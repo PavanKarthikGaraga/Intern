@@ -5,7 +5,11 @@ const nextConfig = {
     },
     allowedDevOrigins: [
         'socialinternship.kluniversity.in',
-        'https://socialinternship.kluniversity.in'
+        'https://socialinternship.kluniversity.in',
+        '192.168.2.49',
+        'http://192.168.2.49',
+        'http://192.168.2.49:3000',
+        'http://192.168.2.49:3002'
     ],
     async headers() {
         return [
@@ -14,7 +18,7 @@ const nextConfig = {
                 headers: [
                     {
                         key: 'Access-Control-Allow-Origin',
-                        value: 'https://socialinternship.kluniversity.in',
+                        value: '*',  // Allow all origins in development
                     },
                     {
                         key: 'Access-Control-Allow-Methods',
