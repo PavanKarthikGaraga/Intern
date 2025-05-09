@@ -161,16 +161,17 @@ export async function POST(req) {
                     console.log(existingMarksRecord);
 
                     if (existingMarksRecord.length > 0) {
-                        const totalMarks = totalMarks + 
-                            (existingMarksRecord[0].caseStudyReportMarks || 0) + 
-                            (existingMarksRecord[0].conductParticipationMarks || 0);
+                        const internalMarks = totalMarks;
+                        const caseStudyReportMarks = existingMarksRecord[0].caseStudyReportMarks || 0;
+                        const conductParticipationMarks = existingMarksRecord[0].conductParticipationMarks || 0;
+                        const totalMarksSum = internalMarks + caseStudyReportMarks + conductParticipationMarks;
 
                         await connection.query(
                             `UPDATE marks 
                              SET internalMarks = ?,
                                  totalMarks = ?
                              WHERE username = ?`,
-                            [totalMarks, totalMarks, username]
+                            [internalMarks, totalMarksSum, username]
                         );
                     } else {
                         // Insert new record in marks table if it doesn't exist
