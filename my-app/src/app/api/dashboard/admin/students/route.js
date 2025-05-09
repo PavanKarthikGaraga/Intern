@@ -189,6 +189,10 @@ export async function DELETE(request) {
       await connection.query('DELETE FROM attendance WHERE username = ?', [username]);
       await connection.query('DELETE FROM registrations WHERE username = ?', [username]);
       await connection.query('DELETE FROM users WHERE username = ?', [username]);
+      await connection.query('DELETE FROM dailyMarks WHERE username = ?', [username]);
+      await connection.query('DELETE FROM marks WHERE username = ?', [username]);
+      // await connection.query('DELETE FROM studentLeads WHERE username = ?', [username]);
+      // await connection.query('DELETE FROM facultyMentors WHERE username = ?', [username]);
 
       // Update stats table
       let slotModeField;
