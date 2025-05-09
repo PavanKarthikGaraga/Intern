@@ -1,0 +1,76 @@
+.container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.controls {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.controls label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.controls input {
+    width: 80px;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.controls button {
+    padding: 8px 16px;
+    background-color: #0070f3;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.controls button:hover {
+    background-color: #0051a2;
+}
+
+.logsContainer {
+    background-color: #1e1e1e;
+    border-radius: 8px;
+    padding: 20px;
+    overflow: auto;
+    max-height: 70vh;
+}
+
+.logs {
+    color: #d4d4d4;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.error {
+    background-color: #ffebee;
+    color: #c62828;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+
+.loading {
+    color: #666;
+    text-align: center;
+    padding: 20px;
+} 
