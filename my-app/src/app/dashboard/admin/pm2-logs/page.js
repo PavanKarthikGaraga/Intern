@@ -36,14 +36,24 @@ export default function PM2Logs() {
         const eventSource = new EventSource(`/api/dashboard/admin/pm2-logs?lines=${lines}&live=true`);
         eventSourceRef.current = eventSource;
 
+        let reconnectAttempts = 0;
+        const maxReconnectAttempts = 5;
+        const reconnectDelay = 1000; // Start with 1 second
+
         eventSource.onmessage = (event) => {
             console.log('PM2 Logs: Received SSE update');
             try {
                 const data = JSON.parse(event.data);
                 if (data.success) {
-                    setLogs(data.logs);
+                    setLogs(prevLogs => {
+                        // Append new logs to existing logs
+                        const newLogs = data.logs;
+                        return prevLogs + newLogs;
+                    });
                     setProcesses(data.processes);
                     setError(null);
+                    // Reset reconnect attempts on successful message
+                    reconnectAttempts = 0;
                 } else {
                     setError(data.error || 'Failed to fetch logs');
                 }
@@ -55,10 +65,25 @@ export default function PM2Logs() {
 
         eventSource.onerror = (error) => {
             console.error('PM2 Logs: EventSource error:', error);
-            setError('Connection lost. Retrying...');
             eventSource.close();
-            // Attempt to reconnect after a delay
-            setTimeout(setupEventSource, 5000);
+            
+            if (reconnectAttempts < maxReconnectAttempts) {
+                const delay = reconnectDelay * Math.pow(2, reconnectAttempts); // Exponential backoff
+                setError(`Connection lost. Reconnecting in ${delay/1000} seconds...`);
+                setTimeout(() => {
+                    reconnectAttempts++;
+                    setupEventSource();
+                }, delay);
+            } else {
+                setError('Connection lost. Please refresh the page to reconnect.');
+            }
+        };
+
+        // Add connection opened handler
+        eventSource.onopen = () => {
+            console.log('PM2 Logs: EventSource connection opened');
+            setError(null);
+            reconnectAttempts = 0;
         };
     };
 

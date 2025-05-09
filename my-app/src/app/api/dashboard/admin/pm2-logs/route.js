@@ -119,7 +119,7 @@ export async function GET(request) {
                         fileSizes.set(file, stats.size);
                     }
 
-                    // Check for updates every second
+                    // Check for updates every 500ms instead of 1000ms
                     const interval = setInterval(async () => {
                         try {
                             let hasUpdates = false;
@@ -133,9 +133,13 @@ export async function GET(request) {
 
                                 if (currentSize > previousSize) {
                                     hasUpdates = true;
-                                    const content = await fs.readFile(filePath, 'utf8');
-                                    const logLines = content.split('\n').slice(-requestedLines).join('\n');
-                                    updatedLogs += `\n=== ${file} ===\n${logLines}\n`;
+                                    // Only read the new content instead of the entire file
+                                    const fileHandle = await fs.open(filePath, 'r');
+                                    const buffer = Buffer.alloc(currentSize - previousSize);
+                                    await fileHandle.read(buffer, 0, currentSize - previousSize, previousSize);
+                                    await fileHandle.close();
+                                    const newContent = buffer.toString('utf8');
+                                    updatedLogs += `\n=== ${file} ===\n${newContent}\n`;
                                     fileSizes.set(file, currentSize);
                                 }
                             }
@@ -150,7 +154,7 @@ export async function GET(request) {
                         } catch (error) {
                             console.error('PM2 Logs API: Error in live update:', error);
                         }
-                    }, 1000);
+                    }, 500); // Reduced to 500ms for more frequent updates
 
                     // Clean up on close
                     request.signal.addEventListener('abort', () => {
