@@ -16,6 +16,7 @@ import FacultyMentors from './components/facultyMentors/page';
 import Admins from './components/admins/page';
 import DataDownload from './components/dataDownload/page';
 import ReportControl from './components/reportControl/page';
+import PM2Logs from './components/pm2-logs/page';
 
 export default function AdminDashboard() {
   const { user, isLoading, isAuthenticated } = useAuth();
@@ -115,6 +116,14 @@ export default function AdminDashboard() {
               <span className="item-label">Data Download</span>
             </button>
           )}
+          {user.username === '2300032048' && (
+          <button
+            className={`sidebar-item ${activeSection === 'pm2-logs' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('pm2-logs')}
+          >
+            <span className="item-label">PM2 Logs</span>
+            </button>
+          )}
           <button
             className={`sidebar-item ${activeSection === 'report-control' ? 'active' : ''}`}
             onClick={() => handleSectionClick('report-control')}
@@ -140,6 +149,7 @@ export default function AdminDashboard() {
            activeSection === 'admins' ? <Admins /> :
            activeSection === 'data-download' ? <DataDownload /> :
            activeSection === 'report-control' ? <ReportControl /> :
+           activeSection === 'pm2-logs' ? <PM2Logs /> :
            <ChangePassword />}
         </main>
       </div>
