@@ -1,50 +1,88 @@
 import { NextResponse } from 'next/server';
-import { exec } from 'child_process';
+import { exec, spawn } from 'child_process';
 import { promisify } from 'util';
 import { verifyAccessToken } from '@/lib/jwt';
 import { cookies } from 'next/headers';
-import fs from 'fs/promises';
 import path from 'path';
 
 const execAsync = promisify(exec);
 
-// Function to read log files
-async function readLogFiles(requestedLines) {
-    const logDir = path.join(process.env.HOME || process.env.USERPROFILE, '.pm2', 'logs');
-    let allLogs = '';
+// Store current working directory in memory
+let currentWorkingDir = process.cwd();
 
+// Store active processes
+const activeProcesses = new Map();
+
+// Store active watchers
+const activeWatchers = new Map();
+
+// Store previous working directory for MySQL session
+let previousWorkingDir = null;
+
+// Function to check if a port is in use
+async function isPortInUse(port) {
     try {
-        const files = await fs.readdir(logDir);
-        const logFiles = files.filter(file => file.endsWith('.log'));
-        
-        for (const file of logFiles) {
-            try {
-                const filePath = path.join(logDir, file);
-                const content = await fs.readFile(filePath, 'utf8');
-                const logLines = content.split('\n').slice(-requestedLines).join('\n');
-                allLogs += `\n=== ${file} ===\n${logLines}\n`;
+        const { stdout } = await execAsync(`lsof -i :${port}`);
+        return stdout.length > 0;
             } catch (error) {
-                console.error(`PM2 Logs API: Error reading ${file}:`, error);
-            }
-        }
-    } catch (error) {
-        console.error('PM2 Logs API: Error reading log directory:', error);
-        allLogs = 'Error reading log files: ' + error.message;
+        return false;
     }
-
-    return allLogs;
 }
 
-export async function GET(request) {
-    console.log('PM2 Logs API: Request received');
+// Function to kill process using a port
+async function killProcessOnPort(port) {
+    try {
+        await execAsync(`lsof -ti :${port} | xargs kill -9`);
+        return true;
+    } catch (error) {
+        return false;
+    }
+}
+
+// Function to format MySQL output
+function formatMySQLOutput(stdout) {
+    const lines = stdout.split('\n');
+    if (lines.length > 1) {
+        // Get headers and data
+        const headers = lines[0].split('\t');
+        const data = lines.slice(1).map(line => line.split('\t'));
+        
+        // Create HTML table structure
+        let tableHtml = '<table class="mysql-table">';
+        
+        // Add headers
+        tableHtml += '<thead><tr>';
+        headers.forEach(header => {
+            tableHtml += `<th>${header}</th>`;
+        });
+        tableHtml += '</tr></thead>';
+        
+        // Add data rows
+        tableHtml += '<tbody>';
+        data.forEach(row => {
+            tableHtml += '<tr>';
+            row.forEach(cell => {
+                tableHtml += `<td>${cell || 'NULL'}</td>`;
+            });
+            tableHtml += '</tr>';
+        });
+        tableHtml += '</tbody></table>';
+        
+        return tableHtml;
+    }
+    return stdout;
+}
+
+export async function POST(request) {
+    console.log('Remote Access API: Request received');
     try {
         // Verify admin authentication
         const cookieStore = await cookies();
         const accessToken = await cookieStore.get('accessToken');
-        console.log('PM2 Logs API: Access token present:', !!accessToken?.value);
+        console.log('Remote Access API: Access token present:', !!accessToken?.value);
 
         if (!accessToken?.value) {
-            console.log('PM2 Logs API: No access token found');
+            console.log('Remote Access API: No access token found');
             return NextResponse.json({ 
                 success: false, 
                 error: 'Authentication required' 
@@ -52,63 +90,281 @@ export async function GET(request) {
         }
 
         const decoded = await verifyAccessToken(accessToken.value);
-        console.log('PM2 Logs API: Token decoded, role:', decoded?.role);
+        console.log('Remote Access API: Token decoded, role:', decoded?.role);
 
         if (!decoded || decoded.role !== 'admin') {
-            console.log('PM2 Logs API: Unauthorized access attempt');
+            console.log('Remote Access API: Unauthorized access attempt');
             return NextResponse.json({ 
                 success: false, 
                 error: 'Unauthorized access' 
             }, { status: 403 });
         }
 
-        // Get the number of lines to fetch from query params
-        const { searchParams } = new URL(request.url);
-        const requestedLines = parseInt(searchParams.get('lines') || '500');
-        console.log('PM2 Logs API: Requested lines:', requestedLines);
-
-        // First check if PM2 is installed and running
-        console.log('PM2 Logs API: Checking PM2 availability...');
-        try {
-            await execAsync('pm2 ping');
-            console.log('PM2 Logs API: PM2 is running');
-        } catch (error) {
-            console.error('PM2 Logs API: PM2 not available:', error.message);
+        // Get command from request body
+        const { command, action, password, watch } = await request.json();
+        
+        if (!command && !action) {
             return NextResponse.json({
                 success: false,
-                error: 'PM2 is not running or not installed'
-            }, { status: 500 });
+                error: 'No command or action provided'
+            }, { status: 400 });
         }
 
-        // Get list of PM2 processes using jlist
-        console.log('PM2 Logs API: Fetching PM2 process list...');
-        const { stdout: listOutput } = await execAsync('pm2 jlist');
-        let processes = [];
-        try {
-            processes = JSON.parse(listOutput);
-            console.log('PM2 Logs API: Found processes:', processes.length);
-        } catch (error) {
-            console.error('PM2 Logs API: Error parsing process list:', error);
-            processes = [];
-        }
+        let output = '';
+        let error = null;
 
-        // Read log files
-        console.log('PM2 Logs API: Reading log files...');
-        const allLogs = await readLogFiles(requestedLines);
-        console.log('PM2 Logs API: Successfully fetched logs');
+        // Handle process management actions
+        if (action === 'kill') {
+            const processId = command;
+            if (activeProcesses.has(processId)) {
+                const process = activeProcesses.get(processId);
+                process.kill();
+                activeProcesses.delete(processId);
+                output = `Process ${processId} terminated`;
+            } else {
+                error = `Process ${processId} not found`;
+            }
+        } else if (action === 'list') {
+            output = Array.from(activeProcesses.keys()).join('\n');
+        } else {
+            // Handle cd command separately
+            if (command.trim().startsWith('cd ')) {
+                const newPath = command.trim().slice(3).trim();
+                try {
+                    const targetPath = path.resolve(currentWorkingDir, newPath);
+                    // Verify the path exists and is accessible
+                    await execAsync(`cd "${targetPath}" && pwd`);
+                    currentWorkingDir = targetPath;
+                    output = `Changed directory to: ${currentWorkingDir}`;
+                } catch (err) {
+                    error = `Failed to change directory: ${err.message}`;
+                }
+            } else if (command.trim() === 'cd') {
+                // Handle 'cd' without arguments - go to home directory
+                try {
+                    const homeDir = process.env.HOME || process.env.USERPROFILE;
+                    currentWorkingDir = homeDir;
+                    output = `Changed directory to: ${currentWorkingDir}`;
+                } catch (err) {
+                    error = `Failed to change directory: ${err.message}`;
+                }
+            } else if (command.trim() === 'cd ~') {
+                // Handle 'cd ~' - go to home directory
+                try {
+                    const homeDir = process.env.HOME || process.env.USERPROFILE;
+                    currentWorkingDir = homeDir;
+                    output = `Changed directory to: ${currentWorkingDir}`;
+                } catch (err) {
+                    error = `Failed to change directory: ${err.message}`;
+                }
+            } else if (command.trim() === 'cd ..') {
+                // Handle 'cd ..' - go to parent directory
+                try {
+                    const parentDir = path.dirname(currentWorkingDir);
+                    await execAsync(`cd "${parentDir}" && pwd`);
+                    currentWorkingDir = parentDir;
+                    output = `Changed directory to: ${currentWorkingDir}`;
+                } catch (err) {
+                    error = `Failed to change directory: ${err.message}`;
+                }
+            } else {
+                // Check if this is a MySQL command for an active MySQL session
+                const mysqlProcess = Array.from(activeProcesses.entries()).find(([_, proc]) => 
+                    proc.isMySQL
+                );
+
+                if (mysqlProcess) {
+                    const [processId, proc] = mysqlProcess;
+                    try {
+                        // Handle exit command to end MySQL session
+                        if (command.trim().toLowerCase() === 'exit' || command.trim().toLowerCase() === 'quit') {
+                            if (activeProcesses.has(processId)) {
+                                proc.process.kill();
+                                activeProcesses.delete(processId);
+                                // Restore the previous working directory
+                                if (previousWorkingDir) {
+                                    currentWorkingDir = previousWorkingDir;
+                                    previousWorkingDir = null;
+                                }
+                                output = 'Exited MySQL session.';
+                                return NextResponse.json({
+                                    success: true,
+                                    output: output,
+                                    error: null,
+                                    currentDir: currentWorkingDir
+                                });
+                            }
+                        }
+
+                        // Handle USE command to update current database
+                        if (command.trim().toLowerCase().startsWith('use ')) {
+                            const dbName = command.trim().slice(4).trim();
+                            proc.currentDatabase = dbName;
+                            output = `Database changed to: ${dbName}`;
+                            return NextResponse.json({
+                                success: true,
+                                output: output,
+                                error: null,
+                                currentDir: currentWorkingDir
+                            });
+                        }
+
+                        // Create a temporary file for the command
+                        const tempFile = path.join(currentWorkingDir, `.mysql_cmd_${processId}.sql`);
+                        
+                        // If we have a current database, add USE statement
+                        let fullCommand = command;
+                        if (proc.currentDatabase && !command.trim().toLowerCase().startsWith('use ')) {
+                            fullCommand = `USE ${proc.currentDatabase};\n${command}`;
+                        }
+                        
+                        // Write command to temporary file
+                        await execAsync(`echo "${fullCommand.replace(/"/g, '\\"')}" > "${tempFile}"`);
+                        
+                        // Create a temporary file for MySQL configuration
+                        const configFile = path.join(currentWorkingDir, `.mysql_cnf_${processId}.cnf`);
+                        await execAsync(`echo "[client]\nuser=root\npassword=${proc.password}" > "${configFile}"`);
+                        
+                        // Execute the command through mysql using the config file
+                        const mysqlCommand = `mysql --defaults-file="${configFile}" < "${tempFile}"`;
+                        const { stdout, stderr } = await execAsync(mysqlCommand, {
+                            cwd: currentWorkingDir,
+                            env: {
+                                ...process.env,
+                                PATH: process.env.PATH,
+                                HOME: process.env.HOME,
+                                USER: process.env.USER,
+                                PWD: currentWorkingDir
+                            }
+                        });
+                        
+                        // Clean up the temporary files
+                        await execAsync(`rm "${tempFile}" "${configFile}"`);
+                        
+                        if (stdout) {
+                            output = formatMySQLOutput(stdout);
+                        } else if (stderr && !stderr.includes('Warning: Using a password')) {
+                            error = stderr;
+                        } else {
+                            output = 'Command executed successfully';
+                        }
+                    } catch (err) {
+                        error = `Failed to execute MySQL command: ${err.message}`;
+                    }
+                } else if (command.includes('mysql')) {
+                    try {
+                        // Check if there's already an active MySQL session
+                        const existingMySQL = Array.from(activeProcesses.entries()).find(([_, proc]) => 
+                            proc.isMySQL
+                        );
+
+                        if (existingMySQL) {
+                            output = 'MySQL session already active. Use the existing session.';
+                            return NextResponse.json({
+                                success: true,
+                                output: output,
+                                error: null,
+                                currentDir: currentWorkingDir
+                            });
+                        }
+
+                        // Store the previous working directory and switch to /home/karthik
+                        previousWorkingDir = currentWorkingDir;
+                        currentWorkingDir = '/home/karthik';
+
+                        // Create a new process
+                        const processId = Date.now().toString();
+                        
+                        // Create a temporary file for MySQL configuration
+                        const configFile = path.join(currentWorkingDir, `.mysql_cnf_${processId}.cnf`);
+                        await execAsync(`echo "[client]\nuser=root\npassword=${password}" > "${configFile}"`);
+                        
+                        // Construct MySQL command using config file
+                        const mysqlCommand = `mysql --defaults-file="${configFile}"`;
+                        
+                        // Create a new MySQL process
+                        const childProcess = spawn('bash', ['-c', mysqlCommand], {
+                            cwd: currentWorkingDir,
+                            env: {
+                                ...process.env,
+                                PATH: process.env.PATH,
+                                HOME: process.env.HOME,
+                                USER: process.env.USER,
+                                PWD: currentWorkingDir
+                            },
+                            stdio: ['pipe', 'pipe', 'pipe']
+                        });
+
+                        // Store process and its state
+                        activeProcesses.set(processId, {
+                            process: childProcess,
+                            password: password,
+                            isMySQL: true,
+                            currentDatabase: null
+                        });
+
+                        // Handle process output
+                        let processOutput = '';
+                        childProcess.stdout.on('data', (data) => {
+                            processOutput += data.toString();
+                            output = processOutput;
+                        });
+
+                        childProcess.stderr.on('data', (data) => {
+                            processOutput += data.toString();
+                            error = data.toString();
+                        });
+
+                        childProcess.on('close', (code) => {
+                            activeProcesses.delete(processId);
+                            // Clean up the config file
+                            execAsync(`rm "${configFile}"`).catch(console.error);
+                            // Restore the previous working directory
+                            if (previousWorkingDir) {
+                                currentWorkingDir = previousWorkingDir;
+                                previousWorkingDir = null;
+                            }
+                            output = `MySQL process ${processId} closed with code ${code}`;
+                        });
+
+                        output = `MySQL process started with ID: ${processId}\nUse 'kill ${processId}' to stop the process`;
+                    } catch (err) {
+                        error = `Failed to start MySQL process: ${err.message}`;
+                    }
+                } else {
+                    // Execute other commands
+                    try {
+                        const { stdout, stderr } = await execAsync(command, {
+                            cwd: currentWorkingDir,
+                            env: {
+                                ...process.env,
+                                PATH: process.env.PATH,
+                                HOME: process.env.HOME,
+                                USER: process.env.USER,
+                                PWD: currentWorkingDir
+                            }
+                        });
+                        output = stdout || stderr || 'Command executed successfully';
+                        error = stderr || null;
+                    } catch (err) {
+                        error = err.message;
+                    }
+                }
+            }
+        }
         
         return NextResponse.json({
             success: true,
-            logs: allLogs || 'No logs available',
-            processes: processes
+            output: output,
+            error: error,
+            currentDir: currentWorkingDir
         });
 
     } catch (error) {
-        console.error('PM2 Logs API: Error:', error);
-        console.error('PM2 Logs API: Error stack:', error.stack);
+        console.error('Remote Access API: Error:', error);
         return NextResponse.json({
             success: false,
-            error: error.message || 'Failed to fetch PM2 logs',
+            error: error.message || 'Failed to execute command',
             details: error.stack
         }, { status: 500 });
     }

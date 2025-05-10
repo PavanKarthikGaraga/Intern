@@ -2,75 +2,185 @@
     padding: 20px;
     max-width: 1200px;
     margin: 0 auto;
+    height: calc(100vh - 40px);
+    display: flex;
+    flex-direction: column;
 }
 
 .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     margin-bottom: 20px;
 }
 
-.controls {
-    display: flex;
-    gap: 15px;
-    align-items: center;
+.header h1 {
+    color: #333;
+    font-size: 24px;
+    margin: 0 0 10px 0;
 }
 
-.controls label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.controls input {
-    width: 80px;
-    padding: 5px;
-    border: 1px solid #ccc;
+.activeProcesses {
+    background-color: #f5f5f5;
     border-radius: 4px;
+    padding: 10px;
+    margin-top: 10px;
 }
 
-.controls button {
-    padding: 8px 16px;
-    background-color: #0070f3;
+.activeProcesses h3 {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    color: #333;
+}
+
+.processItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    background-color: #fff;
+    border-radius: 4px;
+    margin-bottom: 5px;
+}
+
+.killButton {
+    padding: 4px 8px;
+    background-color: #dc3545;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
+    font-size: 12px;
 }
 
-.controls button:hover {
-    background-color: #0051a2;
+.killButton:hover {
+    background-color: #c82333;
 }
 
-.logsContainer {
+.terminal {
+    flex: 1;
     background-color: #1e1e1e;
     border-radius: 8px;
     padding: 20px;
-    overflow: auto;
-    max-height: 70vh;
+    font-family: 'Consolas', 'Monaco', monospace;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
-.logs {
-    color: #d4d4d4;
-    font-family: 'Consolas', 'Monaco', monospace;
-    font-size: 14px;
-    line-height: 1.5;
-    margin: 0;
+.terminalContent {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+.terminalLine {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 4px;
+    line-height: 1.4;
     white-space: pre-wrap;
     word-wrap: break-word;
 }
 
-.error {
-    background-color: #ffebee;
-    color: #c62828;
-    padding: 10px;
-    border-radius: 4px;
-    margin-bottom: 20px;
+.prompt {
+    color: #00ff00;
+    margin-right: 8px;
+    user-select: none;
 }
 
-.loading {
+.content {
+    color: #fff;
+    flex: 1;
+}
+
+.command {
+    color: #fff;
+}
+
+.output {
+    color: #d4d4d4;
+}
+
+.error {
+    color: #ff5555;
+}
+
+.commandForm, .passwordForm {
+    margin-top: 8px;
+}
+
+.inputGroup {
+    display: flex;
+    align-items: center;
+}
+
+.commandInput, .passwordInput {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 14px;
+    padding: 0;
+    outline: none;
+}
+
+.passwordInput {
+    -webkit-text-security: disc;
+    text-security: disc;
+}
+
+.commandInput::placeholder {
     color: #666;
-    text-align: center;
-    padding: 20px;
+}
+
+/* Scrollbar styling */
+.terminalContent::-webkit-scrollbar {
+    width: 8px;
+}
+
+.terminalContent::-webkit-scrollbar-track {
+    background: #2d2d2d;
+    border-radius: 4px;
+}
+
+.terminalContent::-webkit-scrollbar-thumb {
+    background: #666;
+    border-radius: 4px;
+}
+
+.terminalContent::-webkit-scrollbar-thumb:hover {
+    background: #888;
+}
+
+.mysql-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+    font-family: monospace;
+    font-size: 14px;
+    background-color: #1e1e1e;
+    color: #d4d4d4;
+}
+
+.mysql-table th {
+    background-color: #2d2d2d;
+    color: #569cd6;
+    padding: 8px;
+    text-align: left;
+    border: 1px solid #3d3d3d;
+    font-weight: bold;
+}
+
+.mysql-table td {
+    padding: 8px;
+    border: 1px solid #3d3d3d;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.mysql-table tr:nth-child(even) {
+    background-color: #252525;
+}
+
+.mysql-table tr:hover {
+    background-color: #2d2d2d;
 } 
