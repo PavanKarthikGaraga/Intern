@@ -270,7 +270,7 @@ export async function POST(request) {
 
                         // Store the previous working directory and switch to /home/sac/lntern/my-app
                         previousWorkingDir = currentWorkingDir;
-                        currentWorkingDir = '/home/sac/lntern/my-app';
+                        currentWorkingDir = '/home/sac/';
 
                         // Create a new process
                         const processId = Date.now().toString();
