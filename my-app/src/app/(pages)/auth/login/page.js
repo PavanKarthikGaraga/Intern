@@ -153,16 +153,20 @@ const Login = () => {
                                 </>
                             ) : 'Sign In'}
                         </button>
-                        <Link href="/register" prefetch={true}>
+                        {/* <Link href="/register" prefetch={true}>
                             <p>Don't have an account? Register here</p>
                         </Link>
                         <Link href="/auth/forgot-password" prefetch={true}>
                             <p>Forgot Password?</p>
+                        </Link> */}
+                        <Link href="/reportGenerator" className="report-generator-button" prefetch={true}>
+                            
+                                <h6>Report Generator</h6>
                         </Link>
                     </div>
                 </form>
             </div>
-            <Link href="/reportGenerator" className="floating-blob">
+            {/* <Link href="/reportGenerator" className="floating-blob">
                 <span className="icon">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -173,7 +177,7 @@ const Login = () => {
                     </svg>
                 </span>
                 <span className="text">Report Generator</span>
-            </Link>
+            </Link> */}
         </div>
     );
 };

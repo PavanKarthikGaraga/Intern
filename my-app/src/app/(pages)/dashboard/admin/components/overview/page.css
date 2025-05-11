@@ -300,3 +300,108 @@
     color: #333;
     margin-bottom: 1rem;
 }
+
+.progress-stats-section {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.progress-stats-section h2 {
+    margin-bottom: 1.5rem;
+    color: #333;
+    font-size: 1.5rem;
+}
+
+.progress-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.progress-filters .filter-group {
+    flex: 1;
+    min-width: 200px;
+}
+
+.progress-filters label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #495057;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.progress-filters .filter-select,
+.progress-filters .day-select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    color: #495057;
+    background-color: white;
+    transition: all 0.2s ease;
+}
+
+.progress-filters .filter-select:hover,
+.progress-filters .day-select:hover {
+    border-color: #8884d8;
+}
+
+.progress-filters .filter-select:focus,
+.progress-filters .day-select:focus {
+    outline: none;
+    border-color: #8884d8;
+    box-shadow: 0 0 0 2px rgba(136, 132, 216, 0.2);
+}
+
+.progress-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.progress-stat-card {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    text-align: center;
+    transition: transform 0.3s ease;
+    border: 1px solid #e9ecef;
+}
+
+.progress-stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.progress-stat-card h3 {
+    color: #666;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.progress-stat-card p {
+    color: #333;
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .progress-filters {
+        flex-direction: column;
+    }
+    
+    .progress-filters .filter-group {
+        width: 100%;
+    }
+}

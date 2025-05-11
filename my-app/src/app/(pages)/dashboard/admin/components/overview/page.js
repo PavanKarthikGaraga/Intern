@@ -24,6 +24,13 @@ export default function Overview() {
     const [showDistrictWise, setShowDistrictWise] = useState(false);
     const [slotFilter, setSlotFilter] = useState('all');
     const [modeFilter, setModeFilter] = useState('all');
+    const [progressStats, setProgressStats] = useState(null);
+    const [selectedDay, setSelectedDay] = useState('day1');
+    const [selectedSlot, setSelectedSlot] = useState('all');
+    const [selectedFacultyMentor, setSelectedFacultyMentor] = useState('all');
+    const [selectedStudentLead, setSelectedStudentLead] = useState('all');
+    const [facultyMentors, setFacultyMentors] = useState([]);
+    const [studentLeads, setStudentLeads] = useState([]);
 
     useEffect(() => {
         const fetchOverviewData = async () => {
@@ -58,6 +65,84 @@ export default function Overview() {
             fetchOverviewData();
         }
     }, [user]);
+
+    useEffect(() => {
+        const fetchFacultyMentors = async () => {
+            try {
+                const response = await fetch('/api/dashboard/admin/faculty-mentors', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        setFacultyMentors(data.facultyMentors);
+                    }
+                }
+            } catch (err) {
+                console.error('Error fetching faculty mentors:', err);
+            }
+        };
+
+        const fetchStudentLeads = async () => {
+            try {
+                const response = await fetch('/api/dashboard/admin/student-leads', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        setStudentLeads(data.studentLeads);
+                    }
+                }
+            } catch (err) {
+                console.error('Error fetching student leads:', err);
+            }
+        };
+
+        if (user?.username) {
+            fetchFacultyMentors();
+            fetchStudentLeads();
+        }
+    }, [user]);
+
+    useEffect(() => {
+        const fetchProgressStats = async () => {
+            try {
+                const params = new URLSearchParams({
+                    day: selectedDay,
+                    ...(selectedSlot !== 'all' && { slot: selectedSlot }),
+                    ...(selectedFacultyMentor !== 'all' && { facultyMentorId: selectedFacultyMentor }),
+                    ...(selectedStudentLead !== 'all' && { studentLeadId: selectedStudentLead })
+                });
+
+                const response = await fetch(`/api/dashboard/admin/progress-stats?${params}`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to fetch progress stats');
+                }
+
+                const data = await response.json();
+                if (data.success) {
+                    setProgressStats(data.stats);
+                } else {
+                    throw new Error(data.error || 'Failed to fetch progress stats');
+                }
+            } catch (err) {
+                console.error('Error fetching progress stats:', err);
+                toast.error(err.message);
+            }
+        };
+
+        if (user?.username) {
+            fetchProgressStats();
+        }
+    }, [user, selectedDay, selectedSlot, selectedFacultyMentor, selectedStudentLead]);
 
     if (loading) {
         return <div className="loading">Loading...</div>;
@@ -501,6 +586,104 @@ export default function Overview() {
                         </div>
                     ))}
                 </div>
+            </div>
+
+            <div className="progress-stats-section">
+                <h2>Daily Progress Statistics</h2>
+                <div className="progress-filters">
+                    <div className="filter-group">
+                        <label htmlFor="day">Day</label>
+                        <select 
+                            id="day"
+                            value={selectedDay} 
+                            onChange={(e) => setSelectedDay(e.target.value)}
+                            className="day-select"
+                        >
+                            <option value="day1">Day 1</option>
+                            <option value="day2">Day 2</option>
+                            <option value="day3">Day 3</option>
+                            <option value="day4">Day 4</option>
+                            <option value="day5">Day 5</option>
+                            <option value="day6">Day 6</option>
+                            <option value="day7">Day 7</option>
+                        </select>
+                    </div>
+
+                    <div className="filter-group">
+                        <label htmlFor="slot">Slot</label>
+                        <select 
+                            id="slot"
+                            value={selectedSlot} 
+                            onChange={(e) => setSelectedSlot(e.target.value)}
+                            className="filter-select"
+                        >
+                            <option value="all">All Slots</option>
+                            <option value="1">Slot 1</option>
+                            <option value="2">Slot 2</option>
+                            <option value="3">Slot 3</option>
+                            <option value="4">Slot 4</option>
+                        </select>
+                    </div>
+
+                    <div className="filter-group">
+                        <label htmlFor="facultyMentor">Faculty Mentor</label>
+                        <select 
+                            id="facultyMentor"
+                            value={selectedFacultyMentor} 
+                            onChange={(e) => setSelectedFacultyMentor(e.target.value)}
+                            className="filter-select"
+                        >
+                            <option value="all">All Faculty Mentors</option>
+                            {facultyMentors.map(mentor => (
+                                <option key={mentor.username} value={mentor.username}>
+                                    {mentor.name} ({mentor.username})
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="filter-group">
+                        <label htmlFor="studentLead">Student Lead</label>
+                        <select 
+                            id="studentLead"
+                            value={selectedStudentLead} 
+                            onChange={(e) => setSelectedStudentLead(e.target.value)}
+                            className="filter-select"
+                        >
+                            <option value="all">All Student Leads</option>
+                            {studentLeads.map(lead => (
+                                <option key={lead.username} value={lead.username}>
+                                    {lead.name} ({lead.username})
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+                
+                {progressStats && (
+                    <div className="progress-stats-grid">
+                        <div className="progress-stat-card">
+                            <h3>Uploads</h3>
+                            <p>{progressStats.uploadsCount}</p>
+                        </div>
+                        <div className="progress-stat-card">
+                            <h3>Verified</h3>
+                            <p>{progressStats.verifiedCount}</p>
+                        </div>
+                        <div className="progress-stat-card">
+                            <h3>Present</h3>
+                            <p>{progressStats.presentCount}</p>
+                        </div>
+                        <div className="progress-stat-card">
+                            <h3>Absent</h3>
+                            <p>{progressStats.absentCount}</p>
+                        </div>
+                        <div className="progress-stat-card">
+                            <h3>Attendance Not Posted</h3>
+                            <p>{progressStats.notPostedAttendance}</p>
+                        </div>
+                    </div>
+                )}
             </div>
 
             <p className="beta-note">

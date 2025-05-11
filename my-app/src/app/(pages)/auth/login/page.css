@@ -126,7 +126,7 @@
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     transition: background-color 0.15s ease;
     position: relative;
     display: flex;
@@ -370,4 +370,30 @@
     .floating-blob:hover .text {
         width: 6.5rem;
     }
+}
+
+.report-generator-button{
+    width: 100%;
+    padding: 1rem;
+    background: rgb(151, 0, 3);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    font-size: 1.2rem;
+}
+
+.report-generator-button:hover{
+    background: rgb(120, 0, 2);
+}
+
+Link{
+    color: white;
 }
