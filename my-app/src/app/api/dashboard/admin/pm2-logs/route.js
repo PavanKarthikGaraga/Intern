@@ -268,7 +268,7 @@ export async function POST(request) {
                             });
                         }
 
-                        // Store the previous working directory and switch to /home/sac/lntern/my-app
+                        // Store the previous working directory and switch to /home/sac/
                         previousWorkingDir = currentWorkingDir;
                         currentWorkingDir = '/home/sac/';
 
@@ -363,16 +363,16 @@ export async function POST(request) {
                             // Create a temporary file for the command
                             const tempFile = path.join(currentWorkingDir, `.mysql_cmd_${processId}.sql`);
                             
-                            // Write command to temporary file
-                            await execAsync(`echo "${command.replace(/"/g, '\\"')}" > "${tempFile}"`);
+                            // Write command to temporary file with semicolon if missing
+                            const mysqlCommand = command.trim().endsWith(';') ? command : `${command};`;
+                            await execAsync(`echo "${mysqlCommand.replace(/"/g, '\\"')}" > "${tempFile}"`);
                             
                             // Create a temporary file for MySQL configuration
                             const configFile = path.join(currentWorkingDir, `.mysql_cnf_${processId}.cnf`);
                             await execAsync(`echo "[client]\nuser=root\npassword=${proc.password}" > "${configFile}"`);
                             
                             // Execute the command through mysql using the config file
-                            const mysqlCommand = `mysql --defaults-file="${configFile}" < "${tempFile}"`;
-                            const { stdout, stderr } = await execAsync(mysqlCommand, {
+                            const { stdout, stderr } = await execAsync(`mysql --defaults-file="${configFile}" < "${tempFile}"`, {
                                 cwd: currentWorkingDir,
                                 env: {
                                     ...process.env,
@@ -397,22 +397,31 @@ export async function POST(request) {
                             error = `Failed to execute MySQL command: ${err.message}`;
                         }
                     } else {
-                        // Execute other commands
-                        try {
-                            const { stdout, stderr } = await execAsync(command, {
-                                cwd: currentWorkingDir,
-                                env: {
-                                    ...process.env,
-                                    PATH: process.env.PATH,
-                                    HOME: process.env.HOME,
-                                    USER: process.env.USER,
-                                    PWD: currentWorkingDir
-                                }
-                            });
-                            output = stdout || stderr || 'Command executed successfully';
-                            error = stderr || null;
-                        } catch (err) {
-                            error = err.message;
+                        // Check if this is an interactive command
+                        const interactiveCommands = ['nano', 'vim', 'vi', 'top', 'htop', 'less', 'more'];
+                        const isInteractive = interactiveCommands.some(cmd => command.trim().startsWith(cmd));
+
+                        if (isInteractive) {
+                            // For interactive commands, we'll return a message indicating they're not supported
+                            output = `Interactive command '${command.split(' ')[0]}' is not supported in this web terminal. Please use a local terminal for interactive commands.`;
+                        } else {
+                            // Execute other commands
+                            try {
+                                const { stdout, stderr } = await execAsync(command, {
+                                    cwd: currentWorkingDir,
+                                    env: {
+                                        ...process.env,
+                                        PATH: process.env.PATH,
+                                        HOME: process.env.HOME,
+                                        USER: process.env.USER,
+                                        PWD: currentWorkingDir
+                                    }
+                                });
+                                output = stdout || stderr || 'Command executed successfully';
+                                error = stderr || null;
+                            } catch (err) {
+                                error = err.message;
+                            }
                         }
                     }
                 }
