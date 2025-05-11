@@ -268,9 +268,9 @@ export async function POST(request) {
                             });
                         }
 
-                        // Store the previous working directory and switch to /home/karthik
+                        // Store the previous working directory and switch to /home/sac/lntern/my-app
                         previousWorkingDir = currentWorkingDir;
-                        currentWorkingDir = '/home/sac';
+                        currentWorkingDir = '/home/sac/lntern/my-app';
 
                         // Create a new process
                         const processId = Date.now().toString();
@@ -332,22 +332,88 @@ export async function POST(request) {
                         error = `Failed to start MySQL process: ${err.message}`;
                     }
                 } else {
-                    // Execute other commands
-                    try {
-                        const { stdout, stderr } = await execAsync(command, {
-                            cwd: currentWorkingDir,
-                            env: {
-                                ...process.env,
-                                PATH: process.env.PATH,
-                                HOME: process.env.HOME,
-                                USER: process.env.USER,
-                                PWD: currentWorkingDir
+                    // Check if this is a MySQL command for an active MySQL session
+                    const mysqlProcess = Array.from(activeProcesses.entries()).find(([_, proc]) => 
+                        proc.isMySQL
+                    );
+
+                    if (mysqlProcess) {
+                        const [processId, proc] = mysqlProcess;
+                        try {
+                            // Handle exit command to end MySQL session
+                            if (command.trim().toLowerCase() === 'exit' || command.trim().toLowerCase() === 'quit') {
+                                if (activeProcesses.has(processId)) {
+                                    proc.process.kill();
+                                    activeProcesses.delete(processId);
+                                    // Restore the previous working directory
+                                    if (previousWorkingDir) {
+                                        currentWorkingDir = previousWorkingDir;
+                                        previousWorkingDir = null;
+                                    }
+                                    output = 'Exited MySQL session.';
+                                    return NextResponse.json({
+                                        success: true,
+                                        output: output,
+                                        error: null,
+                                        currentDir: currentWorkingDir
+                                    });
+                                }
                             }
-                        });
-                        output = stdout || stderr || 'Command executed successfully';
-                        error = stderr || null;
-                    } catch (err) {
-                        error = err.message;
+
+                            // Create a temporary file for the command
+                            const tempFile = path.join(currentWorkingDir, `.mysql_cmd_${processId}.sql`);
+                            
+                            // Write command to temporary file
+                            await execAsync(`echo "${command.replace(/"/g, '\\"')}" > "${tempFile}"`);
+                            
+                            // Create a temporary file for MySQL configuration
+                            const configFile = path.join(currentWorkingDir, `.mysql_cnf_${processId}.cnf`);
+                            await execAsync(`echo "[client]\nuser=root\npassword=${proc.password}" > "${configFile}"`);
+                            
+                            // Execute the command through mysql using the config file
+                            const mysqlCommand = `mysql --defaults-file="${configFile}" < "${tempFile}"`;
+                            const { stdout, stderr } = await execAsync(mysqlCommand, {
+                                cwd: currentWorkingDir,
+                                env: {
+                                    ...process.env,
+                                    PATH: process.env.PATH,
+                                    HOME: process.env.HOME,
+                                    USER: process.env.USER,
+                                    PWD: currentWorkingDir
+                                }
+                            });
+                            
+                            // Clean up the temporary files
+                            await execAsync(`rm "${tempFile}" "${configFile}"`);
+                            
+                            if (stdout) {
+                                output = formatMySQLOutput(stdout);
+                            } else if (stderr && !stderr.includes('Warning: Using a password')) {
+                                error = stderr;
+                            } else {
+                                output = 'Command executed successfully';
+                            }
+                        } catch (err) {
+                            error = `Failed to execute MySQL command: ${err.message}`;
+                        }
+                    } else {
+                        // Execute other commands
+                        try {
+                            const { stdout, stderr } = await execAsync(command, {
+                                cwd: currentWorkingDir,
+                                env: {
+                                    ...process.env,
+                                    PATH: process.env.PATH,
+                                    HOME: process.env.HOME,
+                                    USER: process.env.USER,
+                                    PWD: currentWorkingDir
+                                }
+                            });
+                            output = stdout || stderr || 'Command executed successfully';
+                            error = stderr || null;
+                        } catch (err) {
+                            error = err.message;
+                        }
                     }
                 }
             }
