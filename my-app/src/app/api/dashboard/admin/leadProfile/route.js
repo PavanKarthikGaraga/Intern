@@ -3,6 +3,25 @@ import pool from '@/lib/db';
 
 export async function GET(request) {
     try {
+
+        const cookieStore = await cookies();
+        const accessToken = await cookieStore.get('accessToken');
+    
+        if (!accessToken?.value) {
+          return NextResponse.json({ 
+            success: false, 
+            error: 'Authentication required. Please login again.' 
+          }, { status: 401 });
+        }
+    
+        const decoded = await verifyAccessToken(accessToken.value);
+        if (!decoded || decoded.role !== 'admin') {
+          return NextResponse.json({ 
+            success: false, 
+            error: 'Access denied. Only admin members can access this data.' 
+          }, { status: 403 });
+        }
+        
         const { searchParams } = new URL(request.url);
         const username = searchParams.get('username');
 

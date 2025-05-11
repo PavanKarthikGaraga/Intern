@@ -1,0 +1,51 @@
+.sql-executor {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.sql-executor h2 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  color: #555;
+}
+
+.form-group textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  font-family: monospace;
+  resize: vertical;
+  min-height: 150px;
+}
+
+.sql-executor button {
+  background-color: #dc3545;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.2s;
+}
+
+.sql-executor button:hover {
+  background-color: #c82333;
+}
+
+.sql-executor button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+} 

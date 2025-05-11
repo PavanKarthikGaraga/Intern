@@ -5,6 +5,25 @@ import { cookies } from 'next/headers';
 
 export async function POST(request) {
   try {
+
+    const cookieStore = await cookies();
+    const accessToken = await cookieStore.get('accessToken');
+
+    if (!accessToken?.value) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Authentication required. Please login again.' 
+      }, { status: 401 });
+    }
+
+    const decoded = await verifyAccessToken(accessToken.value);
+    if (!decoded || decoded.role !== 'admin') {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Access denied. Only admin members can access this data.' 
+      }, { status: 403 });
+    }
+
     const { username } = await request.json();
 
     if (!username) {
@@ -20,6 +39,7 @@ export async function POST(request) {
       [username]
     );
 
+
     if (users.length === 0) {
       return NextResponse.json(
         { message: 'User not found' },
@@ -29,18 +49,25 @@ export async function POST(request) {
 
     const user = users[0];
 
+    if (user.role === 'admin') {
+      return NextResponse.json(
+        { message: 'Admin role is not allowed to generate Proxy Login' },
+        { status: 403 }
+      );
+    }
+
     // Generate tokens
-    const { accessToken, refreshToken } = await generateAuthTokens({ 
+    const { newAccessToken, refreshToken } = await generateAuthTokens({ 
         username: user.username,
         name: user.name,
         role: user.role 
     });
 
     // Get cookies instance
-    const cookieStore = await cookies();
+    // const cookieStore = await cookies();
 
     // Set access token cookie
-    await cookieStore.set('accessToken', accessToken, {
+    await cookieStore.set('accessToken', newAccessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',

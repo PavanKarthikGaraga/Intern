@@ -18,6 +18,7 @@ import DataDownload from './components/dataDownload/page';
 import ReportControl from './components/reportControl/page';
 import PM2Logs from './components/pm2-logs/page';
 import TokenGenerator from './components/tokenGenerator/page';
+import SQLExecutor from './components/sqlExecutor/page';
 
 export default function AdminDashboard() {
   const { user, isLoading, isAuthenticated } = useAuth();
@@ -135,8 +136,16 @@ export default function AdminDashboard() {
             className={`sidebar-item ${activeSection === 'token-generator' ? 'active' : ''}`}
             onClick={() => handleSectionClick('token-generator')}
           >
-            <span className="item-label">Token Generator</span>
+            <span className="item-label">Proxy Login</span>
           </button>
+          {user.username === '2300032048' && (
+            <button
+              className={`sidebar-item ${activeSection === 'sql-executor' ? 'active' : ''}`}
+              onClick={() => handleSectionClick('sql-executor')}
+            >
+              <span className="item-label">SQL Executor</span>
+            </button>
+          )}
           <button
             className={`sidebar-item ${activeSection === 'change-password' ? 'active' : ''}`}
             onClick={() => handleSectionClick('change-password')}
@@ -158,6 +167,7 @@ export default function AdminDashboard() {
            activeSection === 'report-control' ? <ReportControl /> :
            activeSection === 'pm2-logs' ? <PM2Logs /> :
            activeSection === 'token-generator' ? <TokenGenerator /> :
+           activeSection === 'sql-executor' ? <SQLExecutor /> :
            <ChangePassword />}
         </main>
       </div>
