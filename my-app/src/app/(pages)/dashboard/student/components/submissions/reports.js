@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaEye, FaEyeSlash, FaVideo } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 // import Loader from '@/app/components/loader/loader';
 
@@ -332,17 +332,40 @@ export default function Reports({ user }) {
                 <form onSubmit={(e) => handleSubmit(activeAccordion, e)} className="submission-form">
                   <div className="form-header">
                     <h4>Submit Your Report</h4>
+                    <ul className="upload-instructions">
+                      <li><b>Step 1:</b> Upload your report document to <b>Google Drive</b> or <b>OneDrive</b>.</li>
+                      <li><b>Step 2:</b> Set the sharing settings to <b>Anyone with the link can view</b> (public link).</li>
+                      <li><b>Step 3:</b> Copy the public link and paste it below.</li>
+                      <li className="warning"><b>Important:</b> <span style={{color: 'red'}}>Do NOT submit a private or restricted link. Private links will be <b>rejected</b>.</span></li>
+                      <li>Check this video for reference <FaVideo
+                        style={{ cursor: 'pointer', color: '#1976d2', fontSize: '1.5em' }}  
+                        title="Open link in new tab"
+                        onClick={() => window.open('https://streamable.com/b6a23r', '_blank')} /></li>
+                    </ul>
                     <p>Please ensure your document contains all required information before submitting.</p>
                   </div>
                   <div className="form-group">
-                    <label htmlFor="link">Document Link</label>
-                    <input
-                      type="url"
-                      id="link"
-                      name="link"
-                      placeholder="Enter the link to your document"
-                      required
-                    />
+                    <label htmlFor="link">Document Link</label> 
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <input
+                        type="url"
+                        id="link"
+                        name="link"
+                        placeholder="Enter the link to your document"
+                        required
+                        style={{ flex: 1 }}
+                      />
+                      <FaVideo
+                        style={{ cursor: 'pointer', color: '#1976d2', fontSize: '1.5em' }}
+                        title="Open link in new tab"
+                        onClick={() => {
+                          const input = document.getElementById('link');
+                          if (input && input.value) {
+                            window.open(input.value, '_blank');
+                          }
+                        }}
+                      />
+                    </div>
                   </div>
                   <button type="submit" className="submit-button">
                     Submit Report
