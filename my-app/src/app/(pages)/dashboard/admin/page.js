@@ -17,6 +17,7 @@ import Admins from './components/admins/page';
 import DataDownload from './components/dataDownload/page';
 import ReportControl from './components/reportControl/page';
 import PM2Logs from './components/pm2-logs/page';
+import TokenGenerator from './components/tokenGenerator/page';
 
 export default function AdminDashboard() {
   const { user, isLoading, isAuthenticated } = useAuth();
@@ -131,6 +132,12 @@ export default function AdminDashboard() {
             <span className="item-label">Report Control</span>
           </button>
           <button
+            className={`sidebar-item ${activeSection === 'token-generator' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('token-generator')}
+          >
+            <span className="item-label">Token Generator</span>
+          </button>
+          <button
             className={`sidebar-item ${activeSection === 'change-password' ? 'active' : ''}`}
             onClick={() => handleSectionClick('change-password')}
           >
@@ -150,6 +157,7 @@ export default function AdminDashboard() {
            activeSection === 'data-download' ? <DataDownload /> :
            activeSection === 'report-control' ? <ReportControl /> :
            activeSection === 'pm2-logs' ? <PM2Logs /> :
+           activeSection === 'token-generator' ? <TokenGenerator /> :
            <ChangePassword />}
         </main>
       </div>
