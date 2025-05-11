@@ -192,6 +192,7 @@ export default function VerifyModal({ student, onClose, onVerify }) {
                           target="_blank" 
                           rel="noopener noreferrer"
                           className="report-link"
+                          title={report.link}
                         >
                           View Report
                         </a>
