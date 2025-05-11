@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { generateAuthTokens } from '@/lib/jwt';
+import { generateAuthTokens, verifyAccessToken } from '@/lib/jwt';
 import pool from '@/lib/db';
 import { cookies } from 'next/headers';
 
@@ -57,7 +57,7 @@ export async function POST(request) {
     }
 
     // Generate tokens
-    const { newAccessToken, refreshToken } = await generateAuthTokens({ 
+    const { accessToken: newAccessToken, refreshToken } = await generateAuthTokens({ 
         username: user.username,
         name: user.name,
         role: user.role 
