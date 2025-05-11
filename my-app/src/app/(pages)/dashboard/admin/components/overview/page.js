@@ -25,12 +25,13 @@ export default function Overview() {
     const [slotFilter, setSlotFilter] = useState('all');
     const [modeFilter, setModeFilter] = useState('all');
     const [progressStats, setProgressStats] = useState(null);
-    const [selectedDay, setSelectedDay] = useState('day1');
+    const [selectedDay, setSelectedDay] = useState('all');
     const [selectedSlot, setSelectedSlot] = useState('all');
     const [selectedFacultyMentor, setSelectedFacultyMentor] = useState('all');
     const [selectedStudentLead, setSelectedStudentLead] = useState('all');
     const [facultyMentors, setFacultyMentors] = useState([]);
     const [studentLeads, setStudentLeads] = useState([]);
+    const [filteredStudentLeads, setFilteredStudentLeads] = useState([]);
 
     useEffect(() => {
         const fetchOverviewData = async () => {
@@ -67,51 +68,10 @@ export default function Overview() {
     }, [user]);
 
     useEffect(() => {
-        const fetchFacultyMentors = async () => {
-            try {
-                const response = await fetch('/api/dashboard/admin/faculty-mentors', {
-                    method: 'GET',
-                    credentials: 'include'
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.success) {
-                        setFacultyMentors(data.facultyMentors);
-                    }
-                }
-            } catch (err) {
-                console.error('Error fetching faculty mentors:', err);
-            }
-        };
-
-        const fetchStudentLeads = async () => {
-            try {
-                const response = await fetch('/api/dashboard/admin/student-leads', {
-                    method: 'GET',
-                    credentials: 'include'
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.success) {
-                        setStudentLeads(data.studentLeads);
-                    }
-                }
-            } catch (err) {
-                console.error('Error fetching student leads:', err);
-            }
-        };
-
-        if (user?.username) {
-            fetchFacultyMentors();
-            fetchStudentLeads();
-        }
-    }, [user]);
-
-    useEffect(() => {
         const fetchProgressStats = async () => {
             try {
                 const params = new URLSearchParams({
-                    day: selectedDay,
+                    ...(selectedDay !== 'all' && { day: selectedDay }),
                     ...(selectedSlot !== 'all' && { slot: selectedSlot }),
                     ...(selectedFacultyMentor !== 'all' && { facultyMentorId: selectedFacultyMentor }),
                     ...(selectedStudentLead !== 'all' && { studentLeadId: selectedStudentLead })
@@ -130,6 +90,9 @@ export default function Overview() {
                 const data = await response.json();
                 if (data.success) {
                     setProgressStats(data.stats);
+                    setFacultyMentors(data.facultyMentors);
+                    setStudentLeads(data.studentLeads);
+                    setFilteredStudentLeads(data.studentLeads);
                 } else {
                     throw new Error(data.error || 'Failed to fetch progress stats');
                 }
@@ -143,6 +106,21 @@ export default function Overview() {
             fetchProgressStats();
         }
     }, [user, selectedDay, selectedSlot, selectedFacultyMentor, selectedStudentLead]);
+
+    useEffect(() => {
+        if (selectedFacultyMentor === 'all') {
+            setFilteredStudentLeads(studentLeads);
+        } else {
+            const filtered = studentLeads.filter(lead => 
+                lead.facultyMentorId === selectedFacultyMentor
+            );
+            setFilteredStudentLeads(filtered);
+            // Reset student lead selection if current selection is not in filtered list
+            if (selectedStudentLead !== 'all' && !filtered.some(lead => lead.username === selectedStudentLead)) {
+                setSelectedStudentLead('all');
+            }
+        }
+    }, [selectedFacultyMentor, studentLeads]);
 
     if (loading) {
         return <div className="loading">Loading...</div>;
@@ -599,6 +577,7 @@ export default function Overview() {
                             onChange={(e) => setSelectedDay(e.target.value)}
                             className="day-select"
                         >
+                            <option value="all">All Days</option>
                             <option value="day1">Day 1</option>
                             <option value="day2">Day 2</option>
                             <option value="day3">Day 3</option>
@@ -649,9 +628,10 @@ export default function Overview() {
                             value={selectedStudentLead} 
                             onChange={(e) => setSelectedStudentLead(e.target.value)}
                             className="filter-select"
+                            disabled={selectedFacultyMentor === 'all'}
                         >
                             <option value="all">All Student Leads</option>
-                            {studentLeads.map(lead => (
+                            {filteredStudentLeads.map(lead => (
                                 <option key={lead.username} value={lead.username}>
                                     {lead.name} ({lead.username})
                                 </option>
@@ -681,6 +661,14 @@ export default function Overview() {
                         <div className="progress-stat-card">
                             <h3>Attendance Not Posted</h3>
                             <p>{progressStats.notPostedAttendance}</p>
+                        </div>
+                        <div className="progress-stat-card">
+                            <h3>Verified by Faculty Mentor</h3>
+                            <p>{progressStats.verifiedByFacultyMentor}</p>
+                        </div>
+                        <div className="progress-stat-card">
+                            <h3>Attendance by Student Lead</h3>
+                            <p>{progressStats.attendanceByStudentLead}</p>
                         </div>
                     </div>
                 )}
