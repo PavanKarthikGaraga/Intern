@@ -98,7 +98,7 @@ export default function Students({ user }) {
   const handleVerify = (day, status) => {
     setStudents(prevStudents => 
       prevStudents.map(student => {
-        if (student.username === selectedStudent.username) {
+        if (student.username === selectedStudent) {
           return {
             ...student,
             verify: {
@@ -222,7 +222,7 @@ export default function Students({ user }) {
                     <div className="action-buttons">
                       <button 
                         className="verify-btn"
-                        onClick={() => setSelectedStudent(student)}
+                        onClick={() => setSelectedStudent(student.username)}
                       >
                         Verify Docs
                       </button>
@@ -238,7 +238,7 @@ export default function Students({ user }) {
 
       {selectedStudent && (
         <VerifyModal
-          student={selectedStudent}
+          username={selectedStudent}
           onClose={() => setSelectedStudent(null)}
           onVerify={handleVerify}
         />

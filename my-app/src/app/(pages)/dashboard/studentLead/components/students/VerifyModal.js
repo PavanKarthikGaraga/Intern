@@ -3,113 +3,81 @@ import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import './page.css';
 
-export default function VerifyModal({ student, onClose, onVerify }) {
+export default function VerifyModal({ username, onClose, onVerify }) {
   const [verificationStatus, setVerificationStatus] = useState({});
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [localVerifyStatus, setLocalVerifyStatus] = useState({});
+  const [studentData, setStudentData] = useState(null);
 
-  useEffect(() => {
-    // Initialize local verify status from student data
-    if (student?.verify) {
-      setLocalVerifyStatus(student.verify);
-    }
-  }, [student]);
-
-  useEffect(() => {
-    const fetchReports = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(`/api/dashboard/studentLead/reports?username=${student.username}`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch reports');
-        }
-        const data = await response.json();
-        if (data.success) {
-          setReports(data.data);
-        }
-      } catch (err) {
-        console.error('Error fetching reports:', err);
-        setError(err.message);
-        toast.error('Failed to load reports');
-      } finally {
-        setLoading(false);
+  const fetchStudentData = async (username) => {
+    try {
+      const res = await fetch(`/api/dashboard/studentLead/student?username=${username}`);
+      if (!res.ok) throw new Error('Failed to fetch student data');
+      const data = await res.json();
+      if (data.success) {
+        setStudentData(data.student);
+        setReports(data.uploads);
       }
-    };
-
-    if (student?.username) {
-      fetchReports();
+    } catch (err) {
+      toast.error('Failed to refresh student data');
+    } finally {
+      setLoading(false);
     }
-  }, [student]);
+  };
+
+  useEffect(() => {
+    if (username) {
+      setLoading(true);
+      fetchStudentData(username);
+    }
+    // eslint-disable-next-line
+  }, [username]);
 
   const handleVerify = async (day, status) => {
     try {
-      // Check if the day is already verified
-      if (localVerifyStatus?.[`day${day}`] === 1 && !status) {
+      if (studentData.verify?.[`day${day}`] === 1 && !status) {
         toast.error('Cannot reject an already verified day');
         return;
       }
-
-      // Check if previous day is verified
-      if (day > 1 && status) {
-        const previousDay = day - 1;
-        if (localVerifyStatus?.[`day${previousDay}`] !== 1) {
-          toast.error(`Please verify Day ${previousDay} first`);
-          return;
-        }
-      }
-
-      // Update the verify table
       const verifyResponse = await fetch('/api/dashboard/studentLead/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username: student.username,
+          username,
           day,
           status
         })
       });
-
       if (!verifyResponse.ok) {
         throw new Error('Failed to update verification status');
       }
-
-      // Only update attendance table if rejecting
       if (!status) {
         const attendanceResponse = await fetch('/api/dashboard/studentLead/attendance', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            username: student.username,
+            username,
             day,
-            status: 'A' // Only mark as absent when rejecting
+            status: 'A'
           })
         });
-
         if (!attendanceResponse.ok) {
           throw new Error('Failed to update attendance status');
         }
       }
-
       const verifyData = await verifyResponse.json();
       if (verifyData.success) {
-        // Update local state immediately
-        setLocalVerifyStatus(prev => ({
-          ...prev,
-          [`day${day}`]: status ? 1 : 0
-        }));
+        await fetchStudentData(username); // Refresh student data from DB
         setVerificationStatus(prev => ({
           ...prev,
           [day]: status
         }));
         onVerify(day, status);
-        
-        // Show success toast
         if (status) {
-          toast.success(`Day ${day} report accepted successfully`);
+          toast.success(`Day ${day} report verified successfully`);
         } else {
-          toast.success(`Day ${day} report rejected successfully`);
+          toast.success(`Day ${day} report rejected and marked absent`);
         }
       }
     } catch (error) {
@@ -119,8 +87,17 @@ export default function VerifyModal({ student, onClose, onVerify }) {
   };
 
   const isDayVerifiable = (day) => {
-    if (day === 1) return true;
-    return localVerifyStatus?.[`day${day - 1}`] === 1;
+    if (!studentData) return false;
+    if (day === 1) {
+      const report = reports.find(r => r.dayNumber === day);
+      return !!report?.link;
+    }
+    const previousDay = day - 1;
+    const previousDayVerified = studentData.verify?.[`day${previousDay}`] === 1;
+    const previousDayAbsent = studentData.attendance?.[`day${previousDay}`] === 'A';
+    const currentDayReport = reports.find(r => r.dayNumber === day);
+    const hasCurrentDayReport = !!currentDayReport?.link;
+    return (previousDayVerified || previousDayAbsent) && hasCurrentDayReport;
   };
 
   if (loading) {
@@ -128,7 +105,7 @@ export default function VerifyModal({ student, onClose, onVerify }) {
       <div className="modal-overlay">
         <div className="modal-content">
           <div className="modal-header">
-            <h2>Verify Documents - {student.name}</h2>
+            <h2>Verify Documents</h2>
             <button className="close-btn" onClick={onClose}>×</button>
           </div>
           <div className="modal-body">
@@ -139,16 +116,16 @@ export default function VerifyModal({ student, onClose, onVerify }) {
     );
   }
 
-  if (error) {
+  if (error || !studentData) {
     return (
       <div className="modal-overlay">
         <div className="modal-content">
           <div className="modal-header">
-            <h2>Verify Documents - {student.name}</h2>
+            <h2>Verify Documents</h2>
             <button className="close-btn" onClick={onClose}>×</button>
           </div>
           <div className="modal-body">
-            <div className="error">Error loading reports: {error}</div>
+            <div className="error">Error loading reports: {error || 'No data'}</div>
           </div>
         </div>
       </div>
@@ -159,7 +136,7 @@ export default function VerifyModal({ student, onClose, onVerify }) {
     <div className="modal-overlay">
       <div className="modal-content">
         <div className="modal-header">
-          <h2>Verify Documents - {student.name}</h2>
+          <h2>Verify Documents - {studentData.name}</h2>
           <button className="close-btn" onClick={onClose}>×</button>
         </div>
         
@@ -178,8 +155,13 @@ export default function VerifyModal({ student, onClose, onVerify }) {
               {[1, 2, 3, 4, 5, 6, 7].map(day => {
                 const report = reports.find(r => r.dayNumber === day);
                 const hasUpload = report?.link;
-                const isVerified = localVerifyStatus?.[`day${day}`] === 1;
-                const status = isVerified ? 'verified' : hasUpload ? 'pending' : 'not_uploaded';
+                const isVerified = studentData.verify?.[`day${day}`] === 1;
+                const isRejected = studentData.attendance?.[`day${day}`] === 'A';
+                let status;
+                if (isVerified) status = 'verified';
+                else if (isRejected) status = 'rejected';
+                else if (hasUpload) status = 'pending';
+                else status = 'not_uploaded';
                 const isVerifiable = isDayVerifiable(day);
                 
                 return (
@@ -206,12 +188,13 @@ export default function VerifyModal({ student, onClose, onVerify }) {
                     <td>
                       <span className={`status-badge ${status}`}>
                         {status === 'verified' ? 'Verified' : 
+                         status === 'rejected' ? 'Rejected' :
                          status === 'pending' ? 'Pending' : 
                          'Not Uploaded'}
                       </span>
                     </td>
                     <td>
-                      {hasUpload && !isVerified && (
+                      {hasUpload && !isVerified && !isRejected && (
                         <div className="action-buttons">
                           {isVerifiable ? (
                             <>
@@ -219,7 +202,7 @@ export default function VerifyModal({ student, onClose, onVerify }) {
                                 className="accept-btn"
                                 onClick={() => handleVerify(day, true)}
                               >
-                                Accept
+                                Verify
                               </button>
                               <button 
                                 className="reject-btn"
@@ -230,7 +213,7 @@ export default function VerifyModal({ student, onClose, onVerify }) {
                             </>
                           ) : (
                             <span className="verify-message">
-                              Verify Day {day - 1} first
+                              {day === 1 ? 'Report not uploaded' : 'Verify Day ' + (day - 1) + ' first'}
                             </span>
                           )}
                         </div>

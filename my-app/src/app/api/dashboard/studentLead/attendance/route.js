@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
-import { verifyAccessToken } from '@/lib/jwt';
 import { cookies } from 'next/headers';
+import { verifyAccessToken } from '@/lib/jwt';
 
-export async function POST(request) {
+export async function POST(req) {
   try {
     const cookieStore = await cookies();
     const accessToken = await cookieStore.get('accessToken');
@@ -19,69 +19,53 @@ export async function POST(request) {
     if (!decoded || decoded.role !== 'studentLead') {
       return NextResponse.json({ 
         success: false, 
-        error: 'Access denied. Only student leads can access this data.' 
+        error: 'Access denied. Only student leads can update attendance.' 
       }, { status: 403 });
     }
 
-    const { username, day, status } = await request.json();
+    const { username, day, status } = await req.json();
 
-    // Validate input
     if (!username || !day || !status) {
       return NextResponse.json(
-        { success: false, error: 'Missing required fields' },
+        { success: false, message: 'Invalid request parameters' },
         { status: 400 }
       );
     }
 
-    // Validate day is between 1 and 7
-    if (day < 1 || day > 7) {
+    // Validate status
+    if (!['P', 'A', 'S'].includes(status)) {
       return NextResponse.json(
-        { success: false, error: 'Invalid day number' },
+        { success: false, message: 'Invalid attendance status' },
         { status: 400 }
       );
     }
 
-    // Validate status is either 'P' or 'A'
-    if (status !== 'P' && status !== 'A') {
-      return NextResponse.json(
-        { success: false, error: 'Invalid status' },
-        { status: 400 }
+    // First, check if the record exists
+    const [existing] = await pool.query(
+      `SELECT * FROM attendance WHERE username = ?`,
+      [username]
+    );
+
+    if (existing.length === 0) {
+      // Create a new record if it doesn't exist
+      await pool.query(
+        `INSERT INTO attendance (username, day${day}) VALUES (?, ?)`,
+        [username, status]
+      );
+    } else {
+      // Update the existing record
+      await pool.query(
+        `UPDATE attendance SET day${day} = ? WHERE username = ?`,
+        [status, username]
       );
     }
 
-    // Get a connection from the pool
-    const db = await pool.getConnection();
+    return NextResponse.json({ success: true });
 
-    try {
-      // Check if attendance record exists
-      const [existingRecords] = await db.execute(
-        'SELECT * FROM attendance WHERE username = ?',
-        [username]
-      );
-
-      if (existingRecords.length === 0) {
-        // Create new attendance record
-        await db.execute(
-          `INSERT INTO attendance (username, day${day}) VALUES (?, ?)`,
-          [username, status]
-        );
-      } else {
-        // Update existing attendance record
-        await db.execute(
-          `UPDATE attendance SET day${day} = ? WHERE username = ?`,
-          [status, username]
-        );
-      }
-
-      return NextResponse.json({ success: true });
-    } finally {
-      // Release the connection back to the pool
-      db.release();
-    }
   } catch (error) {
     console.error('Error updating attendance:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to update attendance' },
+      { success: false, message: 'Internal server error' },
       { status: 500 }
     );
   }

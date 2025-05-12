@@ -24,7 +24,13 @@ export async function POST(req) {
             }, { status: 403 });
         }
 
-        const { username } = await req.json();
+        let username;
+        try {
+            const body = await req.json();
+            username = body.username;
+        } catch (err) {
+            return NextResponse.json({ error: 'Invalid or missing JSON body' }, { status: 400 });
+        }
 
         if (!username) {
             return NextResponse.json({ error: 'Username is required' }, { status: 400 });
