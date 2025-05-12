@@ -41,18 +41,28 @@ const ReportGenerator = () => {
 
   // Define activities with timing, name, and maxLen
   function getActivityDefinitions(day) {
-    const activity4 = getDailyActivity(day, 4);
-    const activity9 = getDailyActivity(day, 9);
+    const dayObj = dailyActivities.find(d => d.day === Number(day));
+    const activity4 = dayObj ? dayObj.activities.find(a => a.id === 4) : null;
+    const activity9 = dayObj ? dayObj.activities.find(a => a.id === 9) : null;
+
     return [
       { timing: '5:30 am - 6:00 am', name: 'Physical Exercise', maxLen: 100 },
       { timing: '6:00 am - 6:30 am', name: 'Yoga / Meditation', maxLen: 100 },
       { timing: '6:30 am - 7:30 am', name: '7-Days Swachhata Challenge', maxLen: 100 },
       { timing: '8:30 am - 10:00 am', name: 'Domain Specialized Field Study', maxLen: 600 },
-      { timing: activity4 ? `${activity4.startTime} - ${activity4.endTime}` : '10:00 am - 11:30 am', name: activity4 ? activity4.title : 'Conduct a mini-survey and analyze 10 responses', maxLen: 100 },
+      { 
+        timing: activity4 ? `${activity4.startTime} - ${activity4.endTime}` : '10:00 am - 11:30 am', 
+        name: activity4 ? activity4.title : 'Conduct a mini-survey and analyze 10 responses', 
+        maxLen: 600 
+      },
       { timing: '11:30 am - 12:00 pm', name: 'Indian Heritage Culture - LIPI Task', maxLen: 100 },
       { timing: '1:30 pm - 3:00 pm', name: 'Domain Study assigned in your 7 Days Domain Schedule', maxLen: 600 },
       { timing: '3:00 pm - 4:00 pm', name: 'Field Study / Field Visit', maxLen: 100 },
-      { timing: activity9 ? `${activity9.startTime} - ${activity9.endTime}` : '4:00 pm - 5:00 pm', name: activity9 ? activity9.title : 'Interview a community elder about traditional knowledge', maxLen: 100 },
+      { 
+        timing: activity9 ? `${activity9.startTime} - ${activity9.endTime}` : '4:00 pm - 5:00 pm', 
+        name: activity9 ? activity9.title : 'Interview a community elder about traditional knowledge', 
+        maxLen: 100 
+      },
     ];
   }
 
@@ -136,15 +146,54 @@ const ReportGenerator = () => {
   const handleImageUpload = (e, activityIdx, imageIdx) => {
     const file = e.target.files[0];
     if (file) {
+      // Check file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image size should be less than 5MB');
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = (event) => {
-        setFormData(prev => {
-          const updatedActivities = [...prev.activities];
-          const updatedImages = [...updatedActivities[activityIdx].images];
-          updatedImages[imageIdx] = event.target.result;
-          updatedActivities[activityIdx].images = updatedImages;
-          return { ...prev, activities: updatedActivities };
-        });
+        // Create a new image to get dimensions
+        const img = new Image();
+        img.onload = () => {
+          // Calculate new dimensions while maintaining aspect ratio
+          const MAX_WIDTH = 800;
+          const MAX_HEIGHT = 600;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height = Math.round((height * MAX_WIDTH) / width);
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width = Math.round((width * MAX_HEIGHT) / height);
+              height = MAX_HEIGHT;
+            }
+          }
+
+          // Create canvas for resizing
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Convert to base64 with reduced quality
+          const resizedImage = canvas.toDataURL('image/jpeg', 0.8);
+
+          setFormData(prev => {
+            const updatedActivities = [...prev.activities];
+            const updatedImages = [...updatedActivities[activityIdx].images];
+            updatedImages[imageIdx] = resizedImage;
+            updatedActivities[activityIdx].images = updatedImages;
+            return { ...prev, activities: updatedActivities };
+          });
+        };
+        img.src = event.target.result;
       };
       reader.readAsDataURL(file);
     }
@@ -206,18 +255,40 @@ const ReportGenerator = () => {
     setIsGenerating(true);
     try {
       const element = reportRef.current;
+      
+      // Wait for all images to load
+      const images = element.getElementsByTagName('img');
+      await Promise.all(Array.from(images).map(img => {
+        if (img.complete) return Promise.resolve();
+        return new Promise(resolve => {
+          img.onload = resolve;
+          img.onerror = resolve;
+        });
+      }));
+
       const opt = {
         margin: 0.3,
         filename: `report_${formData.username}_day${formData.day}.pdf`,
         image: { type: "jpeg", quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
+        html2canvas: { 
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          allowTaint: true
+        },
+        jsPDF: { 
+          unit: "in", 
+          format: "a4", 
+          orientation: "portrait",
+          compress: true
+        },
       };
       
       const html2pdf = (await import('html2pdf.js')).default;
       await html2pdf().set(opt).from(element).save();
     } catch (error) {
-      toast.error('Failed to generate PDF');
+      console.error('PDF generation error:', error);
+      toast.error('Failed to generate PDF. Please try again.');
     } finally {
       setIsGenerating(false);
     }
@@ -272,6 +343,29 @@ const ReportGenerator = () => {
       })
     }));
   }, [formData.day]);
+
+  // Add this function to handle text overflow
+  const truncateText = (text, maxLength) => {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+  };
+
+  // Update the activity description rendering
+  const renderActivityDescription = (description, maxLen) => {
+    const truncatedDesc = truncateText(description, maxLen);
+    return (
+      <ul className={styles.pdfActivityDescList}>
+        <li style={{ 
+          fontSize: '12px', 
+          lineHeight: '1.5',
+          marginBottom: '10px',
+          wordWrap: 'break-word'
+        }}>
+          {truncatedDesc}
+        </li>
+      </ul>
+    );
+  };
 
   return (
     <div className={styles.reportContainer}>
@@ -517,84 +611,132 @@ const ReportGenerator = () => {
             // Group activities for PDF pages
             const group1 = ['Physical Exercise', 'Yoga / Meditation', '7-Days Swachhata Challenge'];
             const group2 = ['Domain Study assigned in your 7 Days Domain Schedule', 'Domain Specialized Field Study'];
-            const group3 = ['Conduct a mini-survey and analyze 10 responses', 'Indian Heritage Culture - LIPI Task', 'Field Study / Field Visit'];
-            const group4 = ['Interview a community elder about traditional knowledge'];
+            const group3 = ['Conduct a mini-survey', 'Design a poster', 'Create a social media post', 'Conduct a household', 'Write a short reflective', 'Record a 2-min', 'Identify and write', 'Indian Heritage Culture', 'Field Study / Field Visit'];
+            const group4 = ['Interview a community elder', 'Assist in organizing', 'Create a digital reel', 'Facilitate a children', 'Sketch a simple solution', 'Edit and compile', 'Document a success story'];
             const groups = [group1, group2, group3, group4];
             let rendered = [];
+            
             groups.forEach((group, groupIdx) => {
-              const acts = reorderedActivities.filter(a => group.includes(a.name));
-              acts.forEach((activity, activityIdx) => {
-                rendered.push(
-                  <div className={styles.pdfActivitySection} key={activity.name}>
-                    <div className={styles.pdfActivityTitle}>{activity.name}</div>
-                    <div className={styles.pdfActivityContent}>
-                      <ul className={styles.pdfActivityDescList}>
-                        <li>{activity.description}</li>
-                      </ul>
-                      {activity.images.length === 3 ? (
-                        <div className={styles.pdfActivityImages} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                          <div style={{ display: 'flex', flexDirection: 'row', gap: '24px', width: '100%', justifyContent: 'center' }}>
-                            {[0, 1].map(i => (
-                              <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                {activity.images[i] ? (
+              const acts = reorderedActivities.filter(a => 
+                group.some(keyword => a.name.toLowerCase().includes(keyword.toLowerCase()))
+              );
+              
+              if (acts.length > 0) {
+                acts.forEach((activity, activityIdx) => {
+                  rendered.push(
+                    <div className={styles.pdfActivitySection} key={`${activity.name}-${activityIdx}`}>
+                      <div className={styles.pdfActivityTitle}>{activity.name}</div>
+                      <div className={styles.pdfActivityContent}>
+                        {renderActivityDescription(activity.description, activity.maxLen)}
+                        {activity.images.length === 3 ? (
+                          <div className={styles.pdfActivityImages} style={{ 
+                            display: 'flex', 
+                            flexDirection: 'column', 
+                            alignItems: 'center', 
+                            gap: '8px',
+                            marginTop: '10px'
+                          }}>
+                            <div style={{ display: 'flex', flexDirection: 'row', gap: '24px', width: '100%', justifyContent: 'center' }}>
+                              {[0, 1].map(i => (
+                                <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '45%' }}>
+                                  {activity.images[i] ? (
+                                    <img
+                                      src={activity.images[i]}
+                                      alt={`Activity ${activityIdx + 1} Image ${i + 1}`}
+                                      className={styles.pdfActivityImg}
+                                      style={{ width: '100%', height: 'auto', objectFit: 'cover' }}
+                                    />
+                                  ) : (
+                                    <div className={styles.pdfActivityImg} style={{ 
+                                      background: '#eee', 
+                                      display: 'flex', 
+                                      alignItems: 'center', 
+                                      justifyContent: 'center', 
+                                      color: '#aaa', 
+                                      fontSize: '0.9rem', 
+                                      flexDirection: 'column',
+                                      width: '100%',
+                                      height: '200px'
+                                    }}>
+                                      No Image
+                                    </div>
+                                  )}
+                                  <div className={styles.pdfActivityTimeline} style={{ marginTop: '6px' }}>{activity.imageSlots[i]}</div>
+                                </div>
+                              ))}
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', width: '100%', marginTop: '8px' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '45%' }}>
+                                {activity.images[2] ? (
                                   <img
-                                    src={activity.images[i]}
-                                    alt={`Activity ${activityIdx + 1} Image ${i + 1}`}
+                                    src={activity.images[2]}
+                                    alt={`Activity ${activityIdx + 1} Image 3`}
                                     className={styles.pdfActivityImg}
+                                    style={{ width: '100%', height: 'auto', objectFit: 'cover' }}
                                   />
                                 ) : (
-                                  <div className={styles.pdfActivityImg} style={{ background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#aaa', fontSize: '0.9rem', flexDirection: 'column' }}>
+                                  <div className={styles.pdfActivityImg} style={{ 
+                                    background: '#eee', 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center', 
+                                    color: '#aaa', 
+                                    fontSize: '0.9rem', 
+                                    flexDirection: 'column',
+                                    width: '100%',
+                                    height: '200px'
+                                  }}>
                                     No Image
                                   </div>
                                 )}
-                                <div className={styles.pdfActivityTimeline} style={{ marginTop: '6px' }}>{activity.imageSlots[i]}</div>
+                                <div className={styles.pdfActivityTimeline} style={{ marginTop: '6px' }}>{activity.imageSlots[2]}</div>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className={styles.pdfActivityImages} style={{ 
+                            display: 'flex', 
+                            flexDirection: 'row', 
+                            gap: '24px', 
+                            justifyContent: 'center',
+                            marginTop: '10px'
+                          }}>
+                            {activity.images.map((img, i) => (
+                              <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '45%' }}>
+                                {img ? (
+                                  <img
+                                    src={img}
+                                    alt={`Activity ${activityIdx + 1} Image ${i + 1}`}
+                                    className={styles.pdfActivityImg}
+                                    style={{ width: '100%', height: 'auto', objectFit: 'cover' }}
+                                  />
+                                ) : (
+                                  <div className={styles.pdfActivityImg} style={{ 
+                                    background: '#eee', 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center', 
+                                    color: '#aaa', 
+                                    fontSize: '0.9rem', 
+                                    flexDirection: 'column',
+                                    width: '100%',
+                                    height: '200px'
+                                  }}>
+                                    No Image
+                                  </div>
+                                )}
+                                <div className={styles.pdfActivityTimeline}>{activity.imageSlots[i]}</div>
                               </div>
                             ))}
                           </div>
-                          <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', width: '100%', marginTop: '0' }}>
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                              {activity.images[2] ? (
-                                <img
-                                  src={activity.images[2]}
-                                  alt={`Activity ${activityIdx + 1} Image 3`}
-                                  className={styles.pdfActivityImg}
-                                />
-                              ) : (
-                                <div className={styles.pdfActivityImg} style={{ background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#aaa', fontSize: '0.9rem', flexDirection: 'column' }}>
-                                  No Image
-                                </div>
-                              )}
-                              <div className={styles.pdfActivityTimeline} style={{ marginTop: '6px' }}>{activity.imageSlots[2]}</div>
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className={styles.pdfActivityImages}>
-                          {activity.images.map((img, i) => (
-                            img ? (
-                              <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                <img
-                                  src={img}
-                                  alt={`Activity ${activityIdx + 1} Image ${i + 1}`}
-                                  className={styles.pdfActivityImg}
-                                />
-                                <div className={styles.pdfActivityTimeline}>{activity.imageSlots[i]}</div>
-                              </div>
-                            ) : (
-                              <div key={i} className={styles.pdfActivityImg} style={{ background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#aaa', fontSize: '0.9rem', flexDirection: 'column' }}>
-                                No Image
-                                <div className={styles.pdfActivityTimeline}>{activity.imageSlots[i]}</div>
-                              </div>
-                            )
-                          ))}
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
-                  </div>
-                );
-              });
-              if (groupIdx < groups.length - 1) {
-                rendered.push(<div className={styles.pdfPageBreak} key={`break-${groupIdx}`} />);
+                  );
+                });
+                if (groupIdx < groups.length - 1) {
+                  rendered.push(<div className={styles.pdfPageBreak} key={`break-${groupIdx}`} />);
+                }
               }
             });
             return rendered;
