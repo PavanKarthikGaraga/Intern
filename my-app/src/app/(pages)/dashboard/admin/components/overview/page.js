@@ -31,7 +31,6 @@ export default function Overview() {
     const [selectedStudentLead, setSelectedStudentLead] = useState('all');
     const [facultyMentors, setFacultyMentors] = useState([]);
     const [studentLeads, setStudentLeads] = useState([]);
-    const [filteredStudentLeads, setFilteredStudentLeads] = useState([]);
 
     useEffect(() => {
         const fetchOverviewData = async () => {
@@ -107,7 +106,6 @@ export default function Overview() {
                     setProgressStats(data.stats);
                     setFacultyMentors(data.facultyMentors);
                     setStudentLeads(data.studentLeads);
-                    setFilteredStudentLeads(data.studentLeads);
                 } else {
                     throw new Error(data.error || 'Failed to fetch progress stats');
                 }
@@ -119,21 +117,6 @@ export default function Overview() {
 
         fetchProgressStats();
     }, [user, selectedDay, selectedSlot, selectedFacultyMentor, selectedStudentLead]);
-
-    useEffect(() => {
-        if (selectedFacultyMentor === 'all') {
-            setFilteredStudentLeads(studentLeads);
-        } else {
-            const filtered = studentLeads.filter(lead => 
-                lead.facultyMentorId === selectedFacultyMentor
-            );
-            setFilteredStudentLeads(filtered);
-            // Reset student lead selection if current selection is not in filtered list
-            if (selectedStudentLead !== 'all' && !filtered.some(lead => lead.username === selectedStudentLead)) {
-                setSelectedStudentLead('all');
-            }
-        }
-    }, [selectedFacultyMentor, studentLeads]);
 
     if (loading) {
         return <div className="loading">Loading...</div>;
@@ -618,35 +601,46 @@ export default function Overview() {
                     </div>
 
                     <div className="filter-group">
-                        <label htmlFor="facultyMentor">Faculty Mentor</label>
+                        <label htmlFor="studentLead">Student Lead</label>
                         <select 
-                            id="facultyMentor"
-                            value={selectedFacultyMentor} 
-                            onChange={(e) => setSelectedFacultyMentor(e.target.value)}
+                            id="studentLead"
+                            value={selectedStudentLead} 
+                            onChange={(e) => {
+                                const selectedLead = e.target.value;
+                                setSelectedStudentLead(selectedLead);
+                                if (selectedLead !== 'all') {
+                                    const lead = studentLeads.find(l => l.username === selectedLead);
+                                    if (lead) {
+                                        setSelectedFacultyMentor(lead.facultyMentorId);
+                                    }
+                                } else {
+                                    setSelectedFacultyMentor('all');
+                                }
+                            }}
                             className="filter-select"
                         >
-                            <option value="all">All Faculty Mentors</option>
-                            {facultyMentors.map(mentor => (
-                                <option key={mentor.username} value={mentor.username}>
-                                    {mentor.name} ({mentor.username})
+                            <option value="all">All Student Leads</option>
+                            {studentLeads.map(lead => (
+                                <option key={lead.username} value={lead.username}>
+                                    {lead.name} ({lead.username})
                                 </option>
                             ))}
                         </select>
                     </div>
 
                     <div className="filter-group">
-                        <label htmlFor="studentLead">Student Lead</label>
+                        <label htmlFor="facultyMentor">Faculty Mentor</label>
                         <select 
-                            id="studentLead"
-                            value={selectedStudentLead} 
-                            onChange={(e) => setSelectedStudentLead(e.target.value)}
+                            id="facultyMentor"
+                            value={selectedFacultyMentor} 
+                            onChange={(e) => setSelectedFacultyMentor(e.target.value)}
                             className="filter-select"
-                            disabled={selectedFacultyMentor === 'all'}
+                            disabled={selectedStudentLead !== 'all'}
                         >
-                            <option value="all">All Student Leads</option>
-                            {filteredStudentLeads.map(lead => (
-                                <option key={lead.username} value={lead.username}>
-                                    {lead.name} ({lead.username})
+                            <option value="all">All Faculty Mentors</option>
+                            {facultyMentors.map(mentor => (
+                                <option key={mentor.username} value={mentor.username}>
+                                    {mentor.name} ({mentor.username})
                                 </option>
                             ))}
                         </select>
@@ -675,9 +669,9 @@ export default function Overview() {
                 )}
             </div>
 
-            <p className="beta-note">
+            {/* <p className="beta-note">
                 Note: This is a beta version. If you experience any issues or discrepancies, please report them to SAC Department.
-            </p>
+            </p> */}
         </div>
     );
 }
