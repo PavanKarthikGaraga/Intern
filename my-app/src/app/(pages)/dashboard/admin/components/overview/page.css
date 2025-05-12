@@ -364,36 +364,30 @@
 
 .progress-stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
-    margin-top: 1.5rem;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-top: 1rem;
 }
 
 .progress-stat-card {
-    background: #f8f9fa;
-    padding: 1.5rem;
+    background: #fff;
+    padding: 1rem;
     border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     text-align: center;
-    transition: transform 0.3s ease;
-    border: 1px solid #e9ecef;
-}
-
-.progress-stat-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .progress-stat-card h3 {
+    margin: 0;
     color: #666;
-    font-size: 1rem;
-    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
 }
 
 .progress-stat-card p {
-    color: #333;
+    margin: 0.5rem 0 0;
     font-size: 1.5rem;
     font-weight: bold;
-    margin: 0;
+    color: #333;
 }
 
 @media (max-width: 768px) {

@@ -70,14 +70,29 @@ export default function Overview() {
     useEffect(() => {
         const fetchProgressStats = async () => {
             try {
-                const params = new URLSearchParams({
-                    ...(selectedDay !== 'all' && { day: selectedDay }),
-                    ...(selectedSlot !== 'all' && { slot: selectedSlot }),
-                    ...(selectedFacultyMentor !== 'all' && { facultyMentorId: selectedFacultyMentor }),
-                    ...(selectedStudentLead !== 'all' && { studentLeadId: selectedStudentLead })
-                });
+                // Only proceed if we have a user
+                if (!user?.username) return;
 
-                const response = await fetch(`/api/dashboard/admin/progress-stats?${params}`, {
+                const params = new URLSearchParams();
+                
+                // Always include the day parameter
+                params.append('day', selectedDay);
+                
+                // Only add other parameters if they are not 'all'
+                if (selectedSlot !== 'all') {
+                    params.append('slot', selectedSlot);
+                }
+                if (selectedFacultyMentor !== 'all') {
+                    params.append('facultyMentorId', selectedFacultyMentor);
+                }
+                if (selectedStudentLead !== 'all') {
+                    params.append('studentLeadId', selectedStudentLead);
+                }
+
+                const queryString = params.toString();
+                const url = `/api/dashboard/admin/progress-stats${queryString ? `?${queryString}` : ''}`;
+
+                const response = await fetch(url, {
                     method: 'GET',
                     credentials: 'include'
                 });
@@ -102,9 +117,7 @@ export default function Overview() {
             }
         };
 
-        if (user?.username) {
-            fetchProgressStats();
-        }
+        fetchProgressStats();
     }, [user, selectedDay, selectedSlot, selectedFacultyMentor, selectedStudentLead]);
 
     useEffect(() => {
@@ -458,7 +471,7 @@ export default function Overview() {
             </div>
 
             {/* Other charts in a row below */}
-            <div className="charts-section charts-row">
+            {/* <div className="charts-section charts-row">
                 <div className="chart-container">
                     <h2>Completion Status</h2>
                     <ResponsiveContainer width="100%" height={300}>
@@ -511,11 +524,11 @@ export default function Overview() {
                         </LineChart>
                     </ResponsiveContainer>
                 </div>
-            </div>
+            </div> */}
 
            
 
-            <div className="slot-distribution-section">
+            {/* <div className="slot-distribution-section">
                 <h2>Slot Distribution</h2>
                 <div className="distribution-grid">
                     {slotStats.map((slot, index) => (
@@ -564,7 +577,7 @@ export default function Overview() {
                         </div>
                     ))}
                 </div>
-            </div>
+            </div> */}
 
             <div className="progress-stats-section">
                 <h2>Daily Progress Statistics</h2>
@@ -657,18 +670,6 @@ export default function Overview() {
                         <div className="progress-stat-card">
                             <h3>Absent</h3>
                             <p>{progressStats.absentCount}</p>
-                        </div>
-                        <div className="progress-stat-card">
-                            <h3>Attendance Not Posted</h3>
-                            <p>{progressStats.notPostedAttendance}</p>
-                        </div>
-                        <div className="progress-stat-card">
-                            <h3>Verified by Faculty Mentor</h3>
-                            <p>{progressStats.verifiedByFacultyMentor}</p>
-                        </div>
-                        <div className="progress-stat-card">
-                            <h3>Attendance by Student Lead</h3>
-                            <p>{progressStats.attendanceByStudentLead}</p>
                         </div>
                     </div>
                 )}

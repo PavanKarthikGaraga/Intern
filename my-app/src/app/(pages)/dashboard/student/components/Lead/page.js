@@ -5,6 +5,7 @@ export default function Lead({ user, studentData }) {
   if (!studentData) {
     return <div className="loading">Loading Lead data...</div>;
   }
+  console.log(studentData);
 
   return (
     <div className="lead-section">
