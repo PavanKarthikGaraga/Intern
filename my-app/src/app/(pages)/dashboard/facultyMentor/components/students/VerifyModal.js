@@ -393,18 +393,11 @@ export default function VerifyModal({ student, onClose }) {
                           rel="noopener noreferrer"
                           className="report-link"
                           onClick={e => {
-                            if (isVerified && canMark && currentAttendance !== 'P') {
-                              // Open both windows synchronously
-                              window.open(hasUpload, '_blank');
-                              window.open(
-                                `/dashboard/facultyMentor/marks-modal?day=${day}&initialMarks=${marks[`day${day}`] || 0}`,
-                                'marksModal',
-                                'width=500,height=500'
-                              );
+                            if (!isVerified) {
                               e.preventDefault();
-                            } else if (!isVerified) {
                               toast.error('Please verify the report first.');
                             } else if (!canMark) {
+                              e.preventDefault();
                               toast.error('Please mark previous days as present first.');
                             }
                           }}
