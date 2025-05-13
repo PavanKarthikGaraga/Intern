@@ -259,6 +259,12 @@
   color: #c62828;
 }
 
+.status-badge.new {
+  background-color: #e3f0ff;
+  color: #1976d2;
+  border: 1px solid #1976d2;
+}
+
 .accept-btn,
 .reject-btn {
   padding: 0.25rem 0.75rem;

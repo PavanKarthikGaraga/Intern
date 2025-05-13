@@ -64,8 +64,21 @@ export default function Reports({ user }) {
           throw new Error('Failed to fetch reports');
         }
         const data = await response.json();
-        if (data.success) {
-          setReports(data.data);
+        if (data.success && data.data) {
+          // Transform the object into an array of reports
+          const reportsArray = [];
+          for (let i = 1; i <= 7; i++) {
+            if (data.data[`day${i}`]) {
+              reportsArray.push({
+                dayNumber: i,
+                link: data.data[`day${i}`],
+                verified: data.data[`verified${i}`],
+                attendance: data.data[`attendance${i}`],
+                status: data.data[`status${i}`]
+              });
+            }
+          }
+          setReports(reportsArray);
         }
       } catch (err) {
         console.error('Error fetching reports:', err);
@@ -134,8 +147,21 @@ export default function Reports({ user }) {
         const reportsResponse = await fetch(`/api/dashboard/student/reports?username=${user.username}`);
         if (reportsResponse.ok) {
           const reportsData = await reportsResponse.json();
-          if (reportsData.success) {
-            setReports(reportsData.data);
+          if (reportsData.success && reportsData.data) {
+            // Transform the object into an array of reports
+            const reportsArray = [];
+            for (let i = 1; i <= 7; i++) {
+              if (reportsData.data[`day${i}`]) {
+                reportsArray.push({
+                  dayNumber: i,
+                  link: reportsData.data[`day${i}`],
+                  verified: reportsData.data[`verified${i}`],
+                  attendance: reportsData.data[`attendance${i}`],
+                  status: reportsData.data[`status${i}`]
+                });
+              }
+            }
+            setReports(reportsArray);
           }
         }
         const studentResponse = await fetch('/api/dashboard/student/data', {

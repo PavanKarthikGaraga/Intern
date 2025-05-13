@@ -17,7 +17,7 @@ export default function VerifyModal({ username, onClose, onVerify }) {
       const data = await res.json();
       if (data.success) {
         setStudentData(data.student);
-        setReports(data.uploads);
+        setReports(data.student.uploads?.details || []);
       }
     } catch (err) {
       toast.error('Failed to refresh student data');
@@ -35,9 +35,11 @@ export default function VerifyModal({ username, onClose, onVerify }) {
   }, [username]);
 
   const handleVerify = async (day, status) => {
+    let loadingToastId;
     try {
+      loadingToastId = toast.loading(status ? 'Verifying report...' : 'Rejecting report...');
       if (studentData.verify?.[`day${day}`] === 1 && !status) {
-        toast.error('Cannot reject an already verified day');
+        toast.error('Cannot reject an already verified day', { id: loadingToastId });
         return;
       }
       const verifyResponse = await fetch('/api/dashboard/studentLead/verify', {
@@ -50,54 +52,47 @@ export default function VerifyModal({ username, onClose, onVerify }) {
         })
       });
       if (!verifyResponse.ok) {
+        toast.error('Failed to update verification status', { id: loadingToastId });
         throw new Error('Failed to update verification status');
       }
-      if (!status) {
-        const attendanceResponse = await fetch('/api/dashboard/studentLead/attendance', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            username,
-            day,
-            status: 'A'
-          })
-        });
-        if (!attendanceResponse.ok) {
-          throw new Error('Failed to update attendance status');
-        }
-      }
-      const verifyData = await verifyResponse.json();
-      if (verifyData.success) {
-        await fetchStudentData(username); // Refresh student data from DB
-        setVerificationStatus(prev => ({
-          ...prev,
-          [day]: status
-        }));
-        onVerify(day, status);
-        if (status) {
-          toast.success(`Day ${day} report verified successfully`);
-        } else {
-          toast.success(`Day ${day} report rejected and marked absent`);
-        }
-      }
+      // Always refresh from backend after verify/reject
+      await fetchStudentData(username);
+      setVerificationStatus(prev => ({
+        ...prev,
+        [day]: status
+      }));
+      onVerify(day, status);
+      toast.success(status ? `Day ${day} report verified successfully` : `Day ${day} report rejected and marked absent`, { id: loadingToastId });
     } catch (error) {
       console.error('Error updating verification:', error);
-      toast.error('Failed to update verification status');
+      toast.error('Failed to update verification status', { id: loadingToastId });
     }
   };
+
+  // Defensive: Ensure reports is always an array
+  const reportArray = Array.isArray(reports) ? reports : [];
 
   const isDayVerifiable = (day) => {
     if (!studentData) return false;
     if (day === 1) {
-      const report = reports.find(r => r.dayNumber === day);
+      const report = reportArray.find(r => r.dayNumber === day);
       return !!report?.link;
     }
     const previousDay = day - 1;
     const previousDayVerified = studentData.verify?.[`day${previousDay}`] === 1;
-    const previousDayAbsent = studentData.attendance?.[`day${previousDay}`] === 'A';
-    const currentDayReport = reports.find(r => r.dayNumber === day);
+    const previousDayAbsent = studentData.attendance?.details?.[`day${previousDay}`] === 'A';
+    const currentDayReport = reportArray.find(r => r.dayNumber === day);
     const hasCurrentDayReport = !!currentDayReport?.link;
     return (previousDayVerified || previousDayAbsent) && hasCurrentDayReport;
+  };
+
+  // Helper: can submit if previous day is verified or absent
+  const canSubmitDay = (dayIndex) => {
+    if (dayIndex === 0) return true;
+    const prevDayKey = `day${dayIndex}`;
+    const prevDayVerified = studentData?.verify?.[prevDayKey] === 1;
+    const prevDayAbsent = studentData?.attendance?.details?.[prevDayKey] === 'A';
+    return prevDayVerified || prevDayAbsent;
   };
 
   if (loading) {
@@ -153,14 +148,22 @@ export default function VerifyModal({ username, onClose, onVerify }) {
             </thead>
             <tbody>
               {[1, 2, 3, 4, 5, 6, 7].map(day => {
-                const report = reports.find(r => r.dayNumber === day);
+                const report = reportArray.find(r => r.dayNumber === day);
                 const hasUpload = report?.link;
                 const isVerified = studentData.verify?.[`day${day}`] === 1;
-                const isRejected = studentData.attendance?.[`day${day}`] === 'A';
+                const isRejected = studentData.attendance?.details?.[`day${day}`] === 'A';
+                // Debug log for status logic
+                console.log('day', day, 'isRejected', isRejected, 'status', studentData.status?.[`day${day}`], 'attendance', studentData.attendance?.details?.[`day${day}`], 'hasUpload', hasUpload);
                 let status;
                 if (isVerified) status = 'verified';
-                else if (isRejected) status = 'rejected';
-                else if (hasUpload) status = 'pending';
+                else if (isRejected && (!studentData.status || studentData.status[`day${day}`] !== 'new')) status = 'rejected';
+                else if (hasUpload && studentData.status && studentData.status[`day${day}`] === 'new' && isRejected) status = 'new';
+                else if (
+                  hasUpload &&
+                  canSubmitDay(day - 1) &&
+                  (!studentData.status || studentData.status[`day${day}`] !== 'new') &&
+                  !isVerified && !isRejected
+                ) status = 'pending';
                 else status = 'not_uploaded';
                 const isVerifiable = isDayVerifiable(day);
                 
@@ -183,18 +186,19 @@ export default function VerifyModal({ username, onClose, onVerify }) {
                       )}
                     </td>
                     <td>
-                      {hasUpload ? new Date(report.createdAt).toLocaleDateString() : '-'}
+                      {hasUpload ? new Date(report.updatedAt).toLocaleDateString() : '-'}
                     </td>
                     <td>
                       <span className={`status-badge ${status}`}>
                         {status === 'verified' ? 'Verified' : 
                          status === 'rejected' ? 'Rejected' :
+                         status === 'new' ? 'New' :
                          status === 'pending' ? 'Pending' : 
                          'Not Uploaded'}
                       </span>
                     </td>
                     <td>
-                      {hasUpload && !isVerified && !isRejected && (
+                      {((status === 'pending' && hasUpload && !isRejected) || (status === 'new' && hasUpload && isRejected)) && (
                         <div className="action-buttons">
                           {isVerifiable ? (
                             <>

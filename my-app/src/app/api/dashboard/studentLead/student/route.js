@@ -58,7 +58,8 @@ export async function GET(req) {
       `SELECT day1, day2, day3, day4, day5, day6, day7 FROM status WHERE username = ?`,
       [username]
     );
-    const status = statusRows[0] || {};
+    // Only include status if a row exists
+    const status = statusRows.length > 0 ? statusRows[0] : undefined;
 
     // Get uploads info
     const [uploadsRows] = await pool.query(
@@ -70,7 +71,7 @@ export async function GET(req) {
     const uploads = [1,2,3,4,5,6,7].map(day => ({
       dayNumber: day,
       link: uploadsRaw[`day${day}`] || null,
-      createdAt: uploadsRaw.createdAt || null
+      updatedAt: uploadsRaw.updatedAt || null
     }));
 
     return NextResponse.json({
@@ -81,7 +82,7 @@ export async function GET(req) {
           details: attendance
         },
         verify: verify,
-        status: status,
+        ...(status !== undefined ? { status } : {}),
         uploads: {
           details: uploads
         }

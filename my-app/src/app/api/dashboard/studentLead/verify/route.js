@@ -54,32 +54,47 @@ export async function POST(req) {
         );
       }
 
-      // Check if status record exists
-      const [statusRecord] = await connection.query(
-        `SELECT * FROM status WHERE username = ?`,
-        [username]
-      );
-
-      if (statusRecord.length === 0) {
-        // Create new status record
+      if (status === false) {
+        // If rejected, set attendance to 'A' and status to NULL
         await connection.query(
-          `INSERT INTO status (username, day${day}) VALUES (?, ?)`,
-          [username, status ? null : 'new']
-        );
-      } else {
-        // Update status record
-        await connection.query(
-          `UPDATE status SET day${day} = ? WHERE username = ?`,
-          [status ? null : 'new', username]
-        );
-      }
-
-      // If status is false (rejected), reset attendance
-      if (!status) {
-        await connection.query(
-          `UPDATE attendance SET day${day} = NULL WHERE username = ?`,
+          `UPDATE attendance SET day${day} = 'A' WHERE username = ?`,
           [username]
         );
+        // Set status to NULL (not 'new')
+        const [statusRecord] = await connection.query(
+          `SELECT * FROM status WHERE username = ?`,
+          [username]
+        );
+        if (statusRecord.length === 0) {
+          await connection.query(
+            `INSERT INTO status (username, day${day}) VALUES (?, NULL)` ,
+            [username]
+          );
+        } else {
+          await connection.query(
+            `UPDATE status SET day${day} = NULL WHERE username = ?`,
+            [username]
+          );
+        }
+      }
+
+      if (status === true) {
+        // Set status to NULL (clear 'new' if present)
+        const [statusRecord] = await connection.query(
+          `SELECT * FROM status WHERE username = ?`,
+          [username]
+        );
+        if (statusRecord.length === 0) {
+          await connection.query(
+            `INSERT INTO status (username, day${day}) VALUES (?, NULL)`,
+            [username]
+          );
+        } else {
+          await connection.query(
+            `UPDATE status SET day${day} = NULL WHERE username = ?`,
+            [username]
+          );
+        }
       }
 
       return NextResponse.json({ success: true });
