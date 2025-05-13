@@ -24,7 +24,7 @@ export async function POST(request) {
             }, { status: 403 });
         }
 
-        const { username, day, link } = await request.json();
+            const { username, day, link } = await request.json();
 
         if (!username || !day || !link) {
             return NextResponse.json({ 
@@ -38,7 +38,7 @@ export async function POST(request) {
                 success: false, 
                 error: 'You can only submit reports for yourself.' 
             }, { status: 403 });
-        }
+            }
 
         if (day < 1 || day > 7) {
             return NextResponse.json({ 
@@ -87,11 +87,11 @@ export async function POST(request) {
                 await connection.query(
                     `UPDATE status SET day${day} = ? WHERE username = ?`,
                     ['new', username]
-                );
+            );
             }
         }
 
-        return NextResponse.json({
+        return NextResponse.json({ 
             success: true,
             message: 'Report submitted successfully.'
         });
@@ -100,7 +100,7 @@ export async function POST(request) {
         console.error('Error in reports POST:', error);
         return NextResponse.json(
             { 
-                success: false,
+            success: false, 
                 error: 'Internal server error' 
             },
             { status: 500 }
@@ -132,10 +132,10 @@ export async function GET(request) {
             }, { status: 403 });
         }
 
-        const { searchParams } = new URL(request.url);
-        const username = searchParams.get('username');
+            const { searchParams } = new URL(request.url);
+            const username = searchParams.get('username');
 
-        if (!username) {
+            if (!username) {
             return NextResponse.json({ 
                 success: false, 
                 error: 'Username is required.' 
@@ -147,7 +147,7 @@ export async function GET(request) {
                 success: false, 
                 error: 'You can only view your own reports.' 
             }, { status: 403 });
-        }
+            }
 
         // Get all reports for the student
         const [reports] = await connection.query(
@@ -179,11 +179,11 @@ export async function GET(request) {
             LEFT JOIN attendance a ON u.username = a.username
             LEFT JOIN status s ON u.username = s.username
             WHERE u.username = ?`,
-            [username]
-        );
+                [username]
+            );
 
         return NextResponse.json({
-            success: true,
+                        success: true, 
             data: reports[0] || null
         });
 
@@ -195,8 +195,8 @@ export async function GET(request) {
                 error: 'Internal server error' 
             },
             { status: 500 }
-        );
-    } finally {
+            );
+        } finally {
         connection.release();
     }
 }

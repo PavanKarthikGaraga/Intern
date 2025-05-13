@@ -6,6 +6,21 @@ import { DOMAINS } from '../../Data/domains.js';
 import { dailyActivities } from '../../Data/activities.js';
 import styles from './page.module.css';
 
+// Helper to get duration in minutes from timing string
+function getDurationMinutes(timing) {
+  const match = timing.match(/(\d{1,2}):(\d{2}) ?([ap]m)[ –-]+(\d{1,2}):(\d{2}) ?([ap]m)/i);
+  if (!match) return 30;
+  let [ , sh, sm, sap, eh, em, eap ] = match;
+  sh = parseInt(sh, 10); sm = parseInt(sm, 10); eh = parseInt(eh, 10); em = parseInt(em, 10);
+  if (sap.toLowerCase() === 'pm' && sh !== 12) sh += 12;
+  if (sap.toLowerCase() === 'am' && sh === 12) sh = 0;
+  if (eap.toLowerCase() === 'pm' && eh !== 12) eh += 12;
+  if (eap.toLowerCase() === 'am' && eh === 12) eh = 0;
+  const start = sh * 60 + sm;
+  const end = eh * 60 + em;
+  return end - start;
+}
+
 const ReportGenerator = () => {
   // Helper to get daily activity titles and timings for the selected day
   function getDailyActivity(day, id) {
@@ -45,10 +60,11 @@ const ReportGenerator = () => {
     const activity4 = dayObj ? dayObj.activities.find(a => a.id === 4) : null;
     const activity9 = dayObj ? dayObj.activities.find(a => a.id === 9) : null;
 
-    return [
+    // List of activity definitions
+    const defs = [
       { timing: '5:30 am - 6:00 am', name: 'Physical Exercise', maxLen: 100 },
       { timing: '6:00 am - 6:30 am', name: 'Yoga / Meditation', maxLen: 100 },
-      { timing: '6:30 am - 7:30 am', name: '7-Days Swachhata Challenge', maxLen: 100 },
+      { timing: '6:30 am - 7:30 am', name: '7-Days Swachhata Challenge', maxLen: 150 },
       { timing: '8:30 am - 10:00 am', name: 'Domain Specialized Field Study', maxLen: 600 },
       { 
         timing: activity4 ? `${activity4.startTime} - ${activity4.endTime}` : '10:00 am - 11:30 am', 
@@ -57,13 +73,23 @@ const ReportGenerator = () => {
       },
       { timing: '11:30 am - 12:00 pm', name: 'Indian Heritage Culture - LIPI Task', maxLen: 100 },
       { timing: '1:30 pm - 3:00 pm', name: 'Domain Study assigned in your 7 Days Domain Schedule', maxLen: 600 },
-      { timing: '3:00 pm - 4:00 pm', name: 'Field Study / Field Visit', maxLen: 100 },
+      { timing: '3:00 pm - 4:00 pm', name: 'Field Study / Field Visit', maxLen: 150 },
       { 
         timing: activity9 ? `${activity9.startTime} - ${activity9.endTime}` : '4:00 pm - 5:00 pm', 
         name: activity9 ? activity9.title : 'Interview a community elder about traditional knowledge', 
-        maxLen: 100 
+        maxLen: 150
       },
     ];
+
+    // Set maxLen to 150 for 1hr activities with 2 images
+    return defs.map(def => {
+      const duration = getDurationMinutes(def.timing);
+      const imageSlots = getTimeSlotsFromTiming(def.timing);
+      if (duration === 60 && imageSlots.length === 2) {
+        return { ...def, maxLen: 150 };
+      }
+      return def;
+    });
   }
 
   const [formData, setFormData] = useState({
@@ -326,30 +352,6 @@ const ReportGenerator = () => {
       setIsGenerating(false);
     }
   };
-
-  // Helper to get duration in minutes from timing string
-  function getDurationMinutes(timing) {
-    const match = timing.match(/(\d{1,2}):(\d{2}) ?([ap]m)[ –-]+(\d{1,2}):(\d{2}) ?([ap]m)/i);
-    if (!match) return 30;
-    let [ , sh, sm, sap, eh, em, eap ] = match;
-    sh = parseInt(sh, 10); sm = parseInt(sm, 10); eh = parseInt(eh, 10); em = parseInt(em, 10);
-    if (sap.toLowerCase() === 'pm' && sh !== 12) sh += 12;
-    if (sap.toLowerCase() === 'am' && sh === 12) sh = 0;
-    if (eap.toLowerCase() === 'pm' && eh !== 12) eh += 12;
-    if (eap.toLowerCase() === 'am' && eh === 12) eh = 0;
-    const start = sh * 60 + sm;
-    const end = eh * 60 + em;
-    return end - start;
-  }
-
-  // Before rendering activities in the PDF, reorder so 'Domain Study assigned in your 7 Days Domain Schedule' comes before 'Domain Specialized Field Study'
-  const reorderedActivities = [...formData.activities];
-  const idxDomainStudy = reorderedActivities.findIndex(a => a.name === 'Domain Study assigned in your 7 Days Domain Schedule');
-  const idxDomainSpecialized = reorderedActivities.findIndex(a => a.name === 'Domain Specialized Field Study');
-  if (idxDomainStudy > -1 && idxDomainSpecialized > -1 && idxDomainStudy > idxDomainSpecialized) {
-    const [domainStudy] = reorderedActivities.splice(idxDomainStudy, 1);
-    reorderedActivities.splice(idxDomainSpecialized, 0, domainStudy);
-  }
 
   // Update activities when day changes
   React.useEffect(() => {
@@ -641,22 +643,14 @@ const ReportGenerator = () => {
           
           {/* Activity Sections (PDF) */}
           {(() => {
-            // Group activities for PDF pages
-            const group1 = ['Physical Exercise', 'Yoga / Meditation', '7-Days Swachhata Challenge'];
-            const group2 = ['Domain Study assigned in your 7 Days Domain Schedule', 'Domain Specialized Field Study'];
-            const group3 = ['Conduct a mini-survey', 'Design a poster', 'Create a social media post', 'Conduct a household', 'Write a short reflective', 'Record a 2-min', 'Identify and write', 'Indian Heritage Culture', 'Field Study / Field Visit'];
-            const group4 = ['Interview a community elder', 'Assist in organizing', 'Create a digital reel', 'Facilitate a children', 'Sketch a simple solution', 'Edit and compile', 'Document a success story'];
-            const groups = [group1, group2, group3, group4];
-            let rendered = [];
-            
-            groups.forEach((group, groupIdx) => {
-              const acts = reorderedActivities.filter(a => 
-                group.some(keyword => a.name.toLowerCase().includes(keyword.toLowerCase()))
-              );
-              
-              if (acts.length > 0) {
-                acts.forEach((activity, activityIdx) => {
-                  rendered.push(
+            // Chunk activities into groups of 3 for each page
+            const chunkSize = 3;
+            const pages = [];
+            for (let i = 0; i < formData.activities.length; i += chunkSize) {
+              const chunk = formData.activities.slice(i, i + chunkSize);
+              pages.push(
+                <div key={`pdf-page-${i / chunkSize}`}>
+                  {chunk.map((activity, activityIdx) => (
                     <div className={styles.pdfActivitySection} key={`${activity.name}-${activityIdx}`}>
                       <div className={styles.pdfActivityTitle}>{activity.name}</div>
                       <div className={styles.pdfActivityContent}>
@@ -765,14 +759,15 @@ const ReportGenerator = () => {
                         )}
                       </div>
                     </div>
-                  );
-                });
-                if (groupIdx < groups.length - 1) {
-                  rendered.push(<div className={styles.pdfPageBreak} key={`break-${groupIdx}`} />);
-                }
-              }
-            });
-            return rendered;
+                  ))}
+                  {/* Page break after each chunk except the last */}
+                  {i + chunkSize < formData.activities.length && (
+                    <div className={styles.pdfPageBreak} key={`break-${i / chunkSize}`} />
+                  )}
+                </div>
+              );
+            }
+            return pages;
           })()}
           {/* PDF Footer (only after last page) */}
           <div className={styles.pdfFooter}>
