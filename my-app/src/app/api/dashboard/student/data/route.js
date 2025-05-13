@@ -57,7 +57,8 @@ export async function POST(request) {
                     sl.name as leadName,
                     sl.username,
                     fm.name as mentorName,
-                    fm.username as mentorId
+                    fm.username as mentorId,
+                    fm.email as mentorEmail
                 FROM registrations r
                 JOIN users u ON r.username = u.username
                 LEFT JOIN studentLeads sl ON r.studentLeadId = sl.username

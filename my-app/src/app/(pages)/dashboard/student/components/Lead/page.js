@@ -34,7 +34,7 @@ export default function Lead({ user, studentData }) {
           <label>lead Email</label>
           <div className="info-value">
             <MailOutlined className="info-icon" />
-            {studentData.mentorId ? `${studentData.mentorId}@kluniversity.in` : 'Not Available'}
+            {studentData.mentorEmail || 'Not Available'}
             <div className="value-underline"></div>
           </div>
         </div>

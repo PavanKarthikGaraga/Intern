@@ -129,11 +129,28 @@ const ReportGenerator = () => {
   const handleInputChange = (e, activityIdx = null) => {
     const { name, value } = e.target;
     if (name === 'description' && activityIdx !== null) {
+      const activity = formData.activities[activityIdx];
+      const trimmedValue = value.trim();
+      
+      // Check if the new value exceeds maxLen before updating
+      if (trimmedValue.length > activity.maxLen) {
+        toast.error(`Description for "${activity.name}" cannot exceed ${activity.maxLen} characters`);
+        return;
+      }
+
+      // Show warning if minimum length is not met
+      if (activity.maxLen === 600 && trimmedValue.length < 100) {
+        toast.error(`Description for "${activity.name}" must be at least 100 characters`, { duration: 2000 });
+      } else if (activity.maxLen === 100 && trimmedValue.length < 50) {
+        toast.error(`Description for "${activity.name}" must be at least 50 characters`, { duration: 2000 });
+      }
+
       setFormData(prev => {
         const updatedActivities = [...prev.activities];
         updatedActivities[activityIdx].description = value;
         return { ...prev, activities: updatedActivities };
       });
+      // Update char count for this specific activity
       setCharCount(value.length);
     } else {
       setFormData(prev => ({
@@ -235,15 +252,39 @@ const ReportGenerator = () => {
       toast.error("People field is required");
       return false;
     }
-  
-    if (activities.some(activity => !activity.description.trim() || activity.description.length > MAX_CHARS)) {
-      toast.error("Activity descriptions must be under 600 characters");
-      return false;
-    }
-  
-    if (activities.some(activity => activity.images.some(img => !img))) {
-      toast.error("Please upload an image for each 30-minute slot");
-      return false;
+
+    // Check each activity individually
+    for (let i = 0; i < activities.length; i++) {
+      const activity = activities[i];
+      const description = activity.description.trim();
+      
+      // Check if description is empty
+      if (!description) {
+        toast.error(`Description is required for activity: "${activity.name}"`);
+        return false;
+      }
+
+      // Check minimum length requirements
+      if (activity.maxLen === 600 && description.length < 100) {
+        toast.error(`Description for "${activity.name}" must be at least 100 characters (currently ${description.length} characters)`);
+        return false;
+      } else if (activity.maxLen === 100 && description.length < 50) {
+        toast.error(`Description for "${activity.name}" must be at least 50 characters (currently ${description.length} characters)`);
+        return false;
+      }
+
+      // Check if description exceeds max length
+      if (description.length > activity.maxLen) {
+        toast.error(`Description for "${activity.name}" exceeds ${activity.maxLen} characters (currently ${description.length} characters)`);
+        return false;
+      }
+
+      // Check if all images are uploaded
+      const missingImages = activity.images.findIndex(img => !img);
+      if (missingImages !== -1) {
+        toast.error(`Please upload an image for "${activity.name}" at ${activity.imageSlots[missingImages]}`);
+        return false;
+      }
     }
   
     return true;

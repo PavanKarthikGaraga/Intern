@@ -44,11 +44,19 @@ export async function GET(req) {
                 a.day4 as attendance4,
                 a.day5 as attendance5,
                 a.day6 as attendance6,
-                a.day7 as attendance7
+                a.day7 as attendance7,
+                s.day1 as status1,
+                s.day2 as status2,
+                s.day3 as status3,
+                s.day4 as status4,
+                s.day5 as status5,
+                s.day6 as status6,
+                s.day7 as status7
              FROM registrations r
              LEFT JOIN uploads u ON r.username = u.username
              LEFT JOIN verify v ON r.username = v.username
              LEFT JOIN attendance a ON r.username = a.username
+             LEFT JOIN status s ON r.username = s.username
              WHERE r.facultyMentorId = ? 
              AND (
                  u.day1 IS NOT NULL OR

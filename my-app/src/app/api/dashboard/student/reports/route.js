@@ -4,6 +4,7 @@ import { verifyAccessToken } from '@/lib/jwt';
 import { NextResponse } from 'next/server';
 
 export async function POST(request) {
+    const connection = await pool.getConnection();
     try {
         const cookieStore = await cookies();
         const accessToken = await cookieStore.get('accessToken');
@@ -23,65 +24,95 @@ export async function POST(request) {
             }, { status: 403 });
         }
 
-        let db;
-        try {
-            db = await pool.getConnection();
-            const { username, day, link } = await request.json();
-            if(username !== decoded.username) {
-                return new Response(
-                    JSON.stringify({ success: false, error: "You cannot submit reports for other" }),
-                    { status: 400, headers: { "Content-Type": "application/json" } }
-                );
-            }
+        const { username, day, link } = await request.json();
 
-            if (!username || !day || !link) {
-                return new Response(
-                    JSON.stringify({ success: false, error: "Missing required fields" }),
-                    { status: 400, headers: { "Content-Type": "application/json" } }
-                );
-            }
-
-            // Check if the student already has an entry
-            const checkQuery = `SELECT username FROM uploads WHERE username = ?`;
-            const [existing] = await db.execute(checkQuery, [username]);
-
-            const dayColumn = `day${day}`;
-
-            if (existing.length === 0) {
-                // Create new record
-                const insertQuery = `INSERT INTO uploads (username, ${dayColumn}) VALUES (?, ?)`;
-                await db.execute(insertQuery, [username, link]);
-            } else {
-                // Update existing record
-                const updateQuery = `UPDATE uploads SET ${dayColumn} = ? WHERE username = ?`;
-                await db.execute(updateQuery, [link, username]);
-            }
-
-            return new Response(
-                JSON.stringify({ success: true, message: "Report submitted successfully" }),
-                { status: 200, headers: { "Content-Type": "application/json" } }
-            );
-
-        } catch (err) {
-            console.error("Error submitting report", err);
-            return new Response(
-                JSON.stringify({ success: false, error: err.message }),
-                { status: 500, headers: { "Content-Type": "application/json" } }
-            );
-        } finally {
-            if (db) await db.release();
+        if (!username || !day || !link) {
+            return NextResponse.json({ 
+                success: false, 
+                error: 'Invalid request data. Username, day, and link are required.' 
+            }, { status: 400 });
         }
-    } catch (err) {
-        console.error("Error in POST route", err);
-        return NextResponse.json({ 
-            success: false, 
-            error: 'An error occurred. Please try again later.' 
-        }, { status: 500 });
+
+        if (username !== decoded.username) {
+            return NextResponse.json({ 
+                success: false, 
+                error: 'You can only submit reports for yourself.' 
+            }, { status: 403 });
+        }
+
+        if (day < 1 || day > 7) {
+            return NextResponse.json({ 
+                success: false, 
+                error: 'Invalid day. Day must be between 1 and 7.' 
+            }, { status: 400 });
+        }
+
+        // Check if this is a resubmission
+        const [existingReport] = await connection.query(
+            `SELECT 1 FROM uploads WHERE username = ? AND day${day} IS NOT NULL`,
+            [username]
+        );
+
+        // Check if record exists in uploads table
+        const [uploadCheck] = await connection.query(
+            `SELECT 1 FROM uploads WHERE username = ?`,
+            [username]
+        );
+
+        if (uploadCheck.length === 0) {
+            await connection.query(
+                `INSERT INTO uploads (username, day${day}) VALUES (?, ?)`,
+                [username, link]
+            );
+        } else {
+            await connection.query(
+                `UPDATE uploads SET day${day} = ? WHERE username = ?`,
+                [link, username]
+            );
+        }
+
+        // If this is a resubmission, update status to 'new'
+        if (existingReport.length > 0) {
+            const [statusCheck] = await connection.query(
+                `SELECT 1 FROM status WHERE username = ?`,
+                [username]
+            );
+
+            if (statusCheck.length === 0) {
+                await connection.query(
+                    `INSERT INTO status (username, day${day}) VALUES (?, ?)`,
+                    [username, 'new']
+                );
+            } else {
+                await connection.query(
+                    `UPDATE status SET day${day} = ? WHERE username = ?`,
+                    ['new', username]
+                );
+            }
+        }
+
+        return NextResponse.json({
+            success: true,
+            message: 'Report submitted successfully.'
+        });
+
+    } catch (error) {
+        console.error('Error in reports POST:', error);
+        return NextResponse.json(
+            { 
+                success: false,
+                error: 'Internal server error' 
+            },
+            { status: 500 }
+        );
+    } finally {
+        connection.release();
     }
 }
 
 // GET Route: Fetch all reports submitted by a student
 export async function GET(request) {
+    const connection = await pool.getConnection();
     try {
         const cookieStore = await cookies();
         const accessToken = await cookieStore.get('accessToken');
@@ -97,80 +128,75 @@ export async function GET(request) {
         if (!decoded || decoded.role !== 'student') {
             return NextResponse.json({ 
                 success: false, 
-                error: 'Access denied. Only students can view reports.' 
+                error: 'Access denied. Only students can view their reports.' 
             }, { status: 403 });
         }
 
-        let db;
-        try {
-            db = await pool.getConnection();
+        const { searchParams } = new URL(request.url);
+        const username = searchParams.get('username');
 
-            // Extract query parameters from the request URL
-            const { searchParams } = new URL(request.url);
-            const username = searchParams.get('username');
-
-            if (!username) {
-                return new Response(
-                    JSON.stringify({ success: false, error: "Student username is required" }),
-                    { status: 400, headers: { "Content-Type": "application/json" } }
-                );
-            }
-
-            // First, get the uploads data
-            const [uploads] = await db.execute(
-                `SELECT * FROM uploads WHERE username = ?`,
-                [username]
-            );
-
-            if (uploads.length === 0) {
-                return new Response(
-                    JSON.stringify({ 
-                        success: true, 
-                        data: [],
-                        message: "No reports found"
-                    }),
-                    { status: 200, headers: { "Content-Type": "application/json" } }
-                );
-            }
-
-            // Transform the data into the required format
-            const reports = [];
-            const upload = uploads[0];
-
-            for (let day = 1; day <= 7; day++) {
-                const dayColumn = `day${day}`;
-                if (upload[dayColumn]) {
-                    reports.push({
-                        dayNumber: day,
-                        link: upload[dayColumn],
-                        createdAt: upload.createdAt
-                    });
-                }
-            }
-
-            return new Response(
-                JSON.stringify({ 
-                    success: true, 
-                    data: reports,
-                    message: "Reports fetched successfully"
-                }),
-                { status: 200, headers: { "Content-Type": "application/json" } }
-            );
-
-        } catch (err) {
-            console.error("Error fetching reports:", err);
-            return new Response(
-                JSON.stringify({ success: false, error: err.message }),
-                { status: 500, headers: { "Content-Type": "application/json" } }
-            );
-        } finally {
-            if (db) await db.release();
+        if (!username) {
+            return NextResponse.json({ 
+                success: false, 
+                error: 'Username is required.' 
+            }, { status: 400 });
         }
-    } catch (err) {
-        console.error("Error in GET route", err);
-        return NextResponse.json({ 
-            success: false, 
-            error: 'An error occurred. Please try again later.' 
-        }, { status: 500 });
+
+        if (username !== decoded.username) {
+            return NextResponse.json({ 
+                success: false, 
+                error: 'You can only view your own reports.' 
+            }, { status: 403 });
+        }
+
+        // Get all reports for the student
+        const [reports] = await connection.query(
+            `SELECT 
+                u.*,
+                v.day1 as verified1,
+                v.day2 as verified2,
+                v.day3 as verified3,
+                v.day4 as verified4,
+                v.day5 as verified5,
+                v.day6 as verified6,
+                v.day7 as verified7,
+                a.day1 as attendance1,
+                a.day2 as attendance2,
+                a.day3 as attendance3,
+                a.day4 as attendance4,
+                a.day5 as attendance5,
+                a.day6 as attendance6,
+                a.day7 as attendance7,
+                s.day1 as status1,
+                s.day2 as status2,
+                s.day3 as status3,
+                s.day4 as status4,
+                s.day5 as status5,
+                s.day6 as status6,
+                s.day7 as status7
+            FROM uploads u
+            LEFT JOIN verify v ON u.username = v.username
+            LEFT JOIN attendance a ON u.username = a.username
+            LEFT JOIN status s ON u.username = s.username
+            WHERE u.username = ?`,
+            [username]
+        );
+
+        return NextResponse.json({
+            success: true,
+            data: reports[0] || null
+        });
+
+    } catch (error) {
+        console.error('Error in reports GET:', error);
+        return NextResponse.json(
+            { 
+                success: false,
+                error: 'Internal server error' 
+            },
+            { status: 500 }
+        );
+    } finally {
+        connection.release();
     }
 }

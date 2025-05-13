@@ -32,28 +32,60 @@ export async function POST(req) {
       );
     }
 
-    // First, check if the record exists
-    const [existing] = await pool.query(
-      `SELECT * FROM verify WHERE username = ?`,
-      [username]
-    );
+    const connection = await pool.getConnection();
+    try {
+      // First, check if the record exists in verify table
+      const [existing] = await connection.query(
+        `SELECT * FROM verify WHERE username = ?`,
+        [username]
+      );
 
-    if (existing.length === 0) {
-      // Create a new record if it doesn't exist
-      await pool.query(
-        `INSERT INTO verify (username, day${day}) VALUES (?, ?)`,
-        [username, status]
+      if (existing.length === 0) {
+        // Create a new record if it doesn't exist
+        await connection.query(
+          `INSERT INTO verify (username, day${day}) VALUES (?, ?)`,
+          [username, status]
+        );
+      } else {
+        // Update the existing record
+        await connection.query(
+          `UPDATE verify SET day${day} = ? WHERE username = ?`,
+          [status, username]
+        );
+      }
+
+      // Check if status record exists
+      const [statusRecord] = await connection.query(
+        `SELECT * FROM status WHERE username = ?`,
+        [username]
       );
-    } else {
-      // Update the existing record
-      await pool.query(
-        `UPDATE verify SET day${day} = ? WHERE username = ?`,
-        [status, username]
-      );
+
+      if (statusRecord.length === 0) {
+        // Create new status record
+        await connection.query(
+          `INSERT INTO status (username, day${day}) VALUES (?, ?)`,
+          [username, status ? null : 'new']
+        );
+      } else {
+        // Update status record
+        await connection.query(
+          `UPDATE status SET day${day} = ? WHERE username = ?`,
+          [status ? null : 'new', username]
+        );
+      }
+
+      // If status is false (rejected), reset attendance
+      if (!status) {
+        await connection.query(
+          `UPDATE attendance SET day${day} = NULL WHERE username = ?`,
+          [username]
+        );
+      }
+
+      return NextResponse.json({ success: true });
+    } finally {
+      connection.release();
     }
-
-    return NextResponse.json({ success: true });
-
   } catch (error) {
     console.error('Error updating verification:', error);
     return NextResponse.json(

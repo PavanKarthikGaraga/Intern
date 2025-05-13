@@ -6,8 +6,8 @@ import { cookies } from 'next/headers';
 export async function POST(request) {
   const connection = await pool.getConnection();
   try {
-    const cookieStore =await cookies();
-    const accessToken =await cookieStore.get('accessToken');
+    const cookieStore = await cookies();
+    const accessToken = await cookieStore.get('accessToken');
 
     if (!accessToken?.value) {
       return NextResponse.json({ 
@@ -69,27 +69,53 @@ export async function POST(request) {
       }, { status: 404 });
     }
 
-    // Update verification status
-    await connection.query(
-      `INSERT INTO verify (username, day${day}) 
-       VALUES (?, ?) 
-       ON DUPLICATE KEY UPDATE day${day} = ?`,
-      [username, verified, verified]
+    // Update verify table
+    const [verifyCheck] = await connection.query(
+      `SELECT 1 FROM verify WHERE username = ?`,
+      [username]
     );
 
-    // If marking as unverified, also remove attendance if present
+    if (verifyCheck.length === 0) {
+      await connection.query(
+        `INSERT INTO verify (username, day${day}) VALUES (?, ?)`,
+        [username, verified]
+      );
+    } else {
+      await connection.query(
+        `UPDATE verify SET day${day} = ? WHERE username = ?`,
+        [verified, username]
+      );
+    }
+
+    // Update status table
+    const [statusCheck] = await connection.query(
+      `SELECT 1 FROM status WHERE username = ?`,
+      [username]
+    );
+
+    if (statusCheck.length === 0) {
+      await connection.query(
+        `INSERT INTO status (username, day${day}) VALUES (?, NULL)`,
+        [username]
+      );
+    } else {
+      await connection.query(
+        `UPDATE status SET day${day} = NULL WHERE username = ?`,
+        [username]
+      );
+    }
+
+    // If verified is false, reset attendance for that day
     if (!verified) {
       await connection.query(
-        `UPDATE attendance 
-         SET day${day} = NULL 
-         WHERE username = ?`,
+        `UPDATE attendance SET day${day} = NULL WHERE username = ?`,
         [username]
       );
     }
 
     return NextResponse.json({
       success: true,
-      message: `Report for day ${day} has been ${verified ? 'verified' : 'unverified'} successfully.`
+      message: `Report has been ${verified ? 'verified' : 'rejected'}.`
     });
 
   } catch (error) {

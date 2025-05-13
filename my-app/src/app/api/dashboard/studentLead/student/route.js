@@ -53,9 +53,16 @@ export async function GET(req) {
     );
     const verify = verifyRows[0] || {};
 
+    // Get status info
+    const [statusRows] = await pool.query(
+      `SELECT day1, day2, day3, day4, day5, day6, day7 FROM status WHERE username = ?`,
+      [username]
+    );
+    const status = statusRows[0] || {};
+
     // Get uploads info
     const [uploadsRows] = await pool.query(
-      `SELECT day1, day2, day3, day4, day5, day6, day7, createdAt FROM uploads WHERE username = ?`,
+      `SELECT day1, day2, day3, day4, day5, day6, day7, updatedAt FROM uploads WHERE username = ?`,
       [username]
     );
     const uploadsRaw = uploadsRows[0] || {};
@@ -70,15 +77,20 @@ export async function GET(req) {
       success: true,
       student: {
         ...student,
-        attendance,
-        verify
-      },
-      uploads
+        attendance: {
+          details: attendance
+        },
+        verify: verify,
+        status: status,
+        uploads: {
+          details: uploads
+        }
+      }
     });
   } catch (error) {
-    console.error('Error fetching student:', error);
+    console.error('Error fetching student data:', error);
     return NextResponse.json(
-      { success: false, error: 'Internal server error', details: error.message },
+      { success: false, error: 'Internal server error' },
       { status: 500 }
     );
   }

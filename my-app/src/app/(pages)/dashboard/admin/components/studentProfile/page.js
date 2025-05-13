@@ -93,6 +93,14 @@ export default function StudentProfile({ isOpen, onClose, username }) {
                                 <label>Gender:</label>
                                 <span>{studentData?.gender}</span>
                             </div>
+                            <div className="info-item">
+                                <label>Student Lead:</label>
+                                <span>{studentData?.studentLeadId || 'Not Available'}</span>
+                            </div>
+                            <div className="info-item">
+                                <label>Mentor Id:</label>
+                                <span>{studentData?.facultyMentorId || 'Not Available'}</span>
+                            </div>
                         </div>
                     </div>
 
