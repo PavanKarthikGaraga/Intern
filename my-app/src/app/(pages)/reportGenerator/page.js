@@ -130,19 +130,11 @@ const ReportGenerator = () => {
     const { name, value } = e.target;
     if (name === 'description' && activityIdx !== null) {
       const activity = formData.activities[activityIdx];
-      const trimmedValue = value.trim();
       
-      // Check if the new value exceeds maxLen before updating
-      if (trimmedValue.length > activity.maxLen) {
+      // Only check maximum length during typing
+      if (value.length > activity.maxLen) {
         toast.error(`Description for "${activity.name}" cannot exceed ${activity.maxLen} characters`);
         return;
-      }
-
-      // Show warning if minimum length is not met
-      if (activity.maxLen === 600 && trimmedValue.length < 100) {
-        toast.error(`Description for "${activity.name}" must be at least 100 characters`, { duration: 2000 });
-      } else if (activity.maxLen === 100 && trimmedValue.length < 50) {
-        toast.error(`Description for "${activity.name}" must be at least 50 characters`, { duration: 2000 });
       }
 
       setFormData(prev => {
@@ -264,7 +256,7 @@ const ReportGenerator = () => {
         return false;
       }
 
-      // Check minimum length requirements
+      // Check minimum length requirements only during PDF generation
       if (activity.maxLen === 600 && description.length < 100) {
         toast.error(`Description for "${activity.name}" must be at least 100 characters (currently ${description.length} characters)`);
         return false;
