@@ -35,9 +35,59 @@ export default function VerifyModal({ username, onClose, onVerify }) {
   }, [username]);
 
   const handleVerify = async (day, status) => {
+    if (status) {
+      // Open MarksModal in a new window
+      const width = 500;
+      const height = 500;
+      const left = 0;
+      const top = 0;
+      
+      const marksWindow = window.open(
+        `/dashboard/studentLead/marks?username=${username}&day=${day}&name=${studentData.name}`,
+        'MarksModal',
+        `width=${width},height=${height},left=${left},top=${top}`
+      );
+
+      // Listen for message from the marks window
+      window.addEventListener('message', async (event) => {
+        if (event.data.type === 'MARKS_SAVED') {
+          const { marks } = event.data;
+          let loadingToastId;
+          try {
+            loadingToastId = toast.loading('Verifying report...');
+            const verifyResponse = await fetch('/api/dashboard/studentLead/verify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                username,
+                day,
+                status: true,
+                marks
+              })
+            });
+            if (!verifyResponse.ok) {
+              toast.error('Failed to update verification status', { id: loadingToastId });
+              throw new Error('Failed to update verification status');
+            }
+            await fetchStudentData(username);
+            setVerificationStatus(prev => ({
+              ...prev,
+              [day]: true
+            }));
+            onVerify(day, true);
+            toast.success(`Day ${day} report verified successfully`, { id: loadingToastId });
+          } catch (error) {
+            console.error('Error updating verification:', error);
+            toast.error('Failed to update verification status', { id: loadingToastId });
+          }
+        }
+      });
+      return;
+    }
+    
     let loadingToastId;
     try {
-      loadingToastId = toast.loading(status ? 'Verifying report...' : 'Rejecting report...');
+      loadingToastId = toast.loading('Rejecting report...');
       if (studentData.verify?.[`day${day}`] === 1 && !status) {
         toast.error('Cannot reject an already verified day', { id: loadingToastId });
         return;
@@ -55,14 +105,13 @@ export default function VerifyModal({ username, onClose, onVerify }) {
         toast.error('Failed to update verification status', { id: loadingToastId });
         throw new Error('Failed to update verification status');
       }
-      // Always refresh from backend after verify/reject
       await fetchStudentData(username);
       setVerificationStatus(prev => ({
         ...prev,
         [day]: status
       }));
       onVerify(day, status);
-      toast.success(status ? `Day ${day} report verified successfully` : `Day ${day} report rejected and marked absent`, { id: loadingToastId });
+      toast.success(`Day ${day} report rejected and marked absent`, { id: loadingToastId });
     } catch (error) {
       console.error('Error updating verification:', error);
       toast.error('Failed to update verification status', { id: loadingToastId });
@@ -131,7 +180,7 @@ export default function VerifyModal({ username, onClose, onVerify }) {
     <div className="modal-overlay">
       <div className="modal-content">
         <div className="modal-header">
-          <h2>Verify Documents - {studentData.name}</h2>
+          <h2>Verify Documents - {studentData.name} ({studentData.username})</h2>
           <button className="close-btn" onClick={onClose}>×</button>
         </div>
         
@@ -143,6 +192,7 @@ export default function VerifyModal({ username, onClose, onVerify }) {
                 <th>Report</th>
                 <th>Uploaded On</th>
                 <th>Status</th>
+                <th>Marks</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -152,8 +202,7 @@ export default function VerifyModal({ username, onClose, onVerify }) {
                 const hasUpload = report?.link;
                 const isVerified = studentData.verify?.[`day${day}`] === 1;
                 const isRejected = studentData.attendance?.details?.[`day${day}`] === 'A';
-                // Debug log for status logic
-                console.log('day', day, 'isRejected', isRejected, 'status', studentData.status?.[`day${day}`], 'attendance', studentData.attendance?.details?.[`day${day}`], 'hasUpload', hasUpload);
+                const marks = studentData.dailyMarks?.[`day${day}`] || '-';
                 let status;
                 if (isVerified) status = 'verified';
                 else if (isRejected && (!studentData.status || studentData.status[`day${day}`] !== 'new')) status = 'rejected';
@@ -196,6 +245,9 @@ export default function VerifyModal({ username, onClose, onVerify }) {
                          status === 'pending' ? 'Pending' : 
                          'Not Uploaded'}
                       </span>
+                    </td>
+                    <td>
+                      {isVerified ? marks : '-'}
                     </td>
                     <td>
                       {((status === 'pending' && hasUpload && !isRejected) || 

@@ -368,7 +368,7 @@ export default function VerifyModal({ student, onClose }) {
               <tr>
                 <th>Day</th>
                 <th>Report</th>
-                <th>Uploaded On</th>
+                {/* <th>Uploaded On</th> */}
                 <th>Status</th>
                 <th>Total Marks</th>
                 <th>Actions</th>
@@ -408,9 +408,9 @@ export default function VerifyModal({ student, onClose }) {
                         <span className="no-upload">Not Uploaded</span>
                       )}
                     </td>
-                    <td>
+                    {/* <td>
                       {hasUpload ? new Date(report.createdAt).toLocaleDateString() : '-'}
-                    </td>
+                    </td> */}
                     <td>
                       <div className="status-container">
                         {currentAttendance === 'A' ? (
@@ -470,9 +470,15 @@ export default function VerifyModal({ student, onClose }) {
                               <>
                                 <button 
                                   className="accept-btn"
+                                  onClick={() => handleAttendanceChange(day, 'P')}
+                                >
+                                  Accept Marks
+                                </button>
+                                <button 
+                                  className="edit-btn"
                                   onClick={() => handleOpenMarksModal(day, marks[`day${day}`] || 0)}
                                 >
-                                  Mark Present
+                                  Edit Marks
                                 </button>
                                 <button 
                                   className="reject-btn"

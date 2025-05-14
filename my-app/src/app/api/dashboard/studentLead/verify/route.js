@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
+import { verifyAccessToken } from '@/lib/jwt';
 import pool from '@/lib/db';
 import { cookies } from 'next/headers';
-import { verifyAccessToken } from '@/lib/jwt';
 
-export async function POST(req) {
+export async function POST(request) {
+  const connection = await pool.getConnection();
   try {
     const cookieStore = await cookies();
     const accessToken = await cookieStore.get('accessToken');
@@ -23,89 +24,183 @@ export async function POST(req) {
       }, { status: 403 });
     }
 
-    const { username, day, status } = await req.json();
+    const { username, day, status, marks } = await request.json();
 
+    // Validate inputs
     if (!username || !day || typeof status !== 'boolean') {
-      return NextResponse.json(
-        { success: false, message: 'Invalid request parameters' },
-        { status: 400 }
-      );
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Invalid request data. Username, day, and status are required.' 
+      }, { status: 400 });
     }
 
-    const connection = await pool.getConnection();
+    if (day < 1 || day > 7) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Invalid day. Day must be between 1 and 7.' 
+      }, { status: 400 });
+    }
+
+    // Check if the student belongs to this student lead
+    const [studentCheck] = await connection.query(
+      `SELECT 1 FROM registrations 
+       WHERE username = ? AND studentLeadId = ?`,
+      [username, decoded.username]
+    );
+
+    if (studentCheck.length === 0) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Student not found or not assigned to you.' 
+      }, { status: 404 });
+    }
+
+    // Check if report exists for the day
+    const [reportCheck] = await connection.query(
+      `SELECT 1 FROM uploads 
+       WHERE username = ? AND day${day} IS NOT NULL`,
+      [username]
+    );
+
+    if (reportCheck.length === 0) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'No report found for this day.' 
+      }, { status: 404 });
+    }
+
+    await connection.beginTransaction();
+
     try {
-      // First, check if the record exists in verify table
-      const [existing] = await connection.query(
-        `SELECT * FROM verify WHERE username = ?`,
-        [username]
+      // Update verification status
+      await connection.query(
+        `INSERT INTO verify (username, day${day})
+         VALUES (?, ?)
+         ON DUPLICATE KEY UPDATE day${day} = ?`,
+        [username, status, status]
       );
 
-      if (existing.length === 0) {
-        // Create a new record if it doesn't exist
+      // If verifying (status=true) and marks are provided, update daily marks
+      if (status && typeof marks === 'number') {
         await connection.query(
-          `INSERT INTO verify (username, day${day}) VALUES (?, ?)`,
-          [username, status]
-        );
-      } else {
-        // Update the existing record
-        await connection.query(
-          `UPDATE verify SET day${day} = ? WHERE username = ?`,
-          [status, username]
+          `INSERT INTO dailyMarks (username, day${day})
+           VALUES (?, ?)
+           ON DUPLICATE KEY UPDATE day${day} = ?`,
+          [username, marks, marks]
         );
       }
 
-      if (status === false) {
-        // If rejected, set attendance to 'A' and status to NULL
+      // If rejecting (status=false), mark as absent
+      if (!status) {
         await connection.query(
-          `UPDATE attendance SET day${day} = 'A' WHERE username = ?`,
+          `INSERT INTO attendance (username, day${day})
+           VALUES (?, 'A')
+           ON DUPLICATE KEY UPDATE day${day} = 'A'`,
           [username]
         );
-        // Set status to NULL (not 'new')
-        const [statusRecord] = await connection.query(
-          `SELECT * FROM status WHERE username = ?`,
-          [username]
-        );
-        if (statusRecord.length === 0) {
-          await connection.query(
-            `INSERT INTO status (username, day${day}) VALUES (?, NULL)` ,
-            [username]
-          );
-        } else {
-          await connection.query(
-            `UPDATE status SET day${day} = NULL WHERE username = ?`,
-            [username]
-          );
-        }
       }
 
-      if (status === true) {
-        // Set status to NULL (clear 'new' if present)
-        const [statusRecord] = await connection.query(
-          `SELECT * FROM status WHERE username = ?`,
-          [username]
-        );
-        if (statusRecord.length === 0) {
-          await connection.query(
-            `INSERT INTO status (username, day${day}) VALUES (?, NULL)`,
-            [username]
-          );
-        } else {
-          await connection.query(
-            `UPDATE status SET day${day} = NULL WHERE username = ?`,
-            [username]
-          );
-        }
-      }
+      await connection.commit();
 
-      return NextResponse.json({ success: true });
-    } finally {
-      connection.release();
+      return NextResponse.json({
+        success: true,
+        message: status ? 'Report verified successfully' : 'Report rejected successfully'
+      });
+
+    } catch (error) {
+      await connection.rollback();
+      throw error;
     }
+
   } catch (error) {
-    console.error('Error updating verification:', error);
+    console.error('Error in verify POST:', error);
     return NextResponse.json(
-      { success: false, message: 'Internal server error' },
+      { 
+        success: false,
+        error: 'Internal server error' 
+      },
       { status: 500 }
     );
+  } finally {
+    connection.release();
+  }
+}
+
+// GET endpoint to fetch verification status for a student
+export async function GET(request) {
+  const connection = await pool.getConnection();
+  try {
+    const cookieStore = cookies();
+    const accessToken = await cookieStore.get('accessToken');
+
+    if (!accessToken?.value) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Authentication required. Please login again.' 
+      }, { status: 401 });
+    }
+
+    const decoded = await verifyAccessToken(accessToken.value);
+    if (!decoded || decoded.role !== 'studentLead') {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Access denied. Only student leads can access verification status.' 
+      }, { status: 403 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const username = searchParams.get('username');
+
+    if (!username) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Student username is required.' 
+      }, { status: 400 });
+    }
+
+    // Check if the student belongs to this student lead
+    const [studentCheck] = await connection.query(
+      `SELECT 1 FROM registrations 
+       WHERE username = ? AND studentLeadId = ?`,
+      [username, decoded.username]
+    );
+
+    if (studentCheck.length === 0) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Student not found or not assigned to you.' 
+      }, { status: 404 });
+    }
+
+    // Get verification status only
+    const [verificationData] = await connection.query(
+      `SELECT * FROM verify WHERE username = ?`,
+      [username]
+    );
+
+    return NextResponse.json({
+      success: true,
+      data: verificationData[0] || {
+        day1: false,
+        day2: false,
+        day3: false,
+        day4: false,
+        day5: false,
+        day6: false,
+        day7: false
+      }
+    });
+
+  } catch (error) {
+    console.error('Error in verify GET:', error);
+    return NextResponse.json(
+      { 
+        success: false,
+        error: 'Internal server error' 
+      },
+      { status: 500 }
+    );
+  } finally {
+    connection.release();
   }
 } 

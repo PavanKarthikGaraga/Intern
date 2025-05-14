@@ -474,4 +474,18 @@
 
 .save-marks-btn:hover {
   background-color: rgb(120, 0, 2);
+}
+
+.edit-btn {
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin: 0 5px;
+}
+
+.edit-btn:hover {
+  background-color: #357abd;
 } 

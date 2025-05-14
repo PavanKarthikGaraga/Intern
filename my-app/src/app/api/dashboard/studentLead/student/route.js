@@ -74,6 +74,13 @@ export async function GET(req) {
       updatedAt: uploadsRaw.updatedAt || null
     }));
 
+    // Get daily marks info
+    const [marksRows] = await pool.query(
+      `SELECT day1, day2, day3, day4, day5, day6, day7 FROM dailyMarks WHERE username = ?`,
+      [username]
+    );
+    const dailyMarks = marksRows[0] || {};
+
     return NextResponse.json({
       success: true,
       student: {
@@ -85,7 +92,8 @@ export async function GET(req) {
         ...(status !== undefined ? { status } : {}),
         uploads: {
           details: uploads
-        }
+        },
+        dailyMarks: dailyMarks
       }
     });
   } catch (error) {
