@@ -31,7 +31,11 @@ export default function Students({ user }) {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch students');
+        if(response.status === 401){
+          toast.error('Session expired. Please login again.');
+        } else {
+          toast.error('Failed to fetch students');
+        }
       }
 
       const data = await response.json();

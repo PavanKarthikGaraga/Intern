@@ -195,3 +195,25 @@
     align-items: flex-start;
   }
 }  */
+
+.message-container {
+  width: 100%;
+  margin: 10px 0;
+}
+
+.message-textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 0.9rem;
+  min-height: 80px;
+}
+
+.message-textarea:focus {
+  outline: none;
+  border-color: #a10000;
+  box-shadow: 0 0 0 2px rgba(161, 0, 0, 0.1);
+}

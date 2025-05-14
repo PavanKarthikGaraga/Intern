@@ -13,14 +13,18 @@ export default function VerifyModal({ username, onClose, onVerify }) {
   const fetchStudentData = async (username) => {
     try {
       const res = await fetch(`/api/dashboard/studentLead/student?username=${username}`);
-      if (!res.ok) throw new Error('Failed to fetch student data');
+      if (!res.ok) throw new Error(res.error);
       const data = await res.json();
       if (data.success) {
         setStudentData(data.student);
         setReports(data.student.uploads?.details || []);
       }
     } catch (err) {
-      toast.error('Failed to refresh student data');
+      console.log(err);
+      if(err.status === 401){
+        toast.error('Session expired. Please login again.');
+      }
+      toast.error('Failed to refresh data');
     } finally {
       setLoading(false);
     }
@@ -86,7 +90,7 @@ export default function VerifyModal({ username, onClose, onVerify }) {
   useEffect(() => {
     const handleMarksMessage = async (event) => {
       if (event.data.type === 'MARKS_SAVED') {
-        const { marks, day: currentDay } = event.data;
+        const { marks, day: currentDay, message } = event.data;
         console.log('VerifyModal - Received day value:', currentDay, typeof currentDay); // Debug log
         let loadingToastId;
         try {
@@ -98,7 +102,8 @@ export default function VerifyModal({ username, onClose, onVerify }) {
               username,
               day: currentDay,
               status: true,
-              marks
+              marks,
+              message
             })
           });
           if (!verifyResponse.ok) {
@@ -278,6 +283,39 @@ export default function VerifyModal({ username, onClose, onVerify }) {
                             </span>
                           )}
                         </div>
+                      )}
+                      {isVerified && studentData.messages?.[`day${day}`] && (
+                        <span 
+                          className="view-remarks"
+                          onClick={(e) => {
+                            const rect = e.target.getBoundingClientRect();
+                            const popup = document.createElement('div');
+                            popup.className = 'remarks-popup';
+                            popup.innerHTML = `
+                              <div class="remarks-content">
+                                <h4>Day ${day} Remarks</h4>
+                                <ul>
+                                  ${studentData.messages[`day${day}`].split(', ').map(msg => 
+                                    `<li>${msg}</li>`
+                                  ).join('')}
+                                </ul>
+                              </div>
+                            `;
+                            popup.style.top = `${rect.top}px`;
+                            popup.style.left = `${rect.right + 50}px`;
+                            document.body.appendChild(popup);
+                            
+                            const closePopup = (e) => {
+                              if (!popup.contains(e.target) && e.target !== popup) {
+                                popup.remove();
+                                document.removeEventListener('click', closePopup);
+                              }
+                            };
+                            setTimeout(() => document.addEventListener('click', closePopup), 0);
+                          }}
+                        >
+                          View Remarks
+                        </span>
                       )}
                     </td>
                   </tr>

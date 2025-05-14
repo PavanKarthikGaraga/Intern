@@ -24,7 +24,7 @@ export async function POST(request) {
       }, { status: 403 });
     }
 
-    const { username, day, status, marks } = await request.json();
+    const { username, day, status, marks,message } = await request.json();
 
     // Validate inputs
     if (!username || !day || typeof status !== 'boolean') {
@@ -97,6 +97,23 @@ export async function POST(request) {
            VALUES (?, 'A')
            ON DUPLICATE KEY UPDATE day${day} = 'A'`,
           [username]
+        );
+      }
+
+      // Add message if provided
+      if (message) {
+        // Split message by newlines and commas, filter out empty strings, and join with commas
+        const messageList = message
+          .split(/[\n,]+/)
+          .map(msg => msg.trim())
+          .filter(msg => msg.length > 0)
+          .join(', ');
+
+        await connection.query(
+          `INSERT INTO messages (username, day${day})
+           VALUES (?, ?)
+           ON DUPLICATE KEY UPDATE day${day} = ?`,
+          [username, messageList, messageList]
         );
       }
 

@@ -14,6 +14,7 @@ export default function MarksPage() {
 
   const [checkedActivities, setCheckedActivities] = useState({});
   const [totalMarks, setTotalMarks] = useState(0);
+  const [message, setMessage] = useState('');
 
   // Helper to get all keys for the current day
   const getAllKeysForDay = () => {
@@ -62,7 +63,12 @@ export default function MarksPage() {
   const handleSave = () => {
     console.log('Saving marks for day:', day, typeof day); // Debug log
     if (window.opener) {
-      window.opener.postMessage({ type: 'MARKS_SAVED', marks: totalMarks, day }, '*');
+      window.opener.postMessage({ 
+        type: 'MARKS_SAVED', 
+        marks: totalMarks, 
+        day,
+        message 
+      }, '*');
     }
     window.close();
   };
@@ -70,7 +76,12 @@ export default function MarksPage() {
   const handleMarkZero = () => {
     console.log('Marking zero for day:', day, typeof day); // Debug log
     if (window.opener) {
-      window.opener.postMessage({ type: 'MARKS_SAVED', marks: 0, day }, '*');
+      window.opener.postMessage({ 
+        type: 'MARKS_SAVED', 
+        marks: 0, 
+        day,
+        message 
+      }, '*');
     }
     window.close();
   };
@@ -157,11 +168,20 @@ export default function MarksPage() {
             <div className="total-marks-display">
               Total Marks: <span>{totalMarks} / 8.5</span>
             </div>
+            <div className="message-container">
+              <textarea
+                className="message-textarea"
+                placeholder="Add a message (optional)"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                rows={3}
+              />
+            </div>
             <div className="marks-buttons">
-            <button className="save-marks-btn" onClick={handleSave}>
-              Save Marks
-            </button>
-            <button className="reject-marks-btn" onClick={handleMarkZero}>
+              <button className="save-marks-btn" onClick={handleSave}>
+                Save Marks
+              </button>
+              <button className="reject-marks-btn" onClick={handleMarkZero}>
                 Mark 0
               </button>
             </div>

@@ -1,0 +1,28 @@
+.remarks-list {
+  margin-top: 8px;
+}
+
+.remark-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.remark-bullet {
+  color: #a10000;
+  font-size: 1.2em;
+  line-height: 1;
+}
+
+.remark-text {
+  color: #333;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.detail-item.remarks {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #eee;
+} 

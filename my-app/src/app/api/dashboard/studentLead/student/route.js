@@ -81,6 +81,13 @@ export async function GET(req) {
     );
     const dailyMarks = marksRows[0] || {};
 
+    // Get messages info
+    const [messagesRows] = await pool.query(
+      `SELECT day1, day2, day3, day4, day5, day6, day7 FROM messages WHERE username = ?`,
+      [username]
+    );
+    const messages = messagesRows[0] || {};
+
     return NextResponse.json({
       success: true,
       student: {
@@ -93,7 +100,8 @@ export async function GET(req) {
         uploads: {
           details: uploads
         },
-        dailyMarks: dailyMarks
+        dailyMarks: dailyMarks,
+        messages: messages
       }
     });
   } catch (error) {

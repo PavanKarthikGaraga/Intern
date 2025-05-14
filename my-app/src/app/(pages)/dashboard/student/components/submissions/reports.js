@@ -299,9 +299,21 @@ export default function Reports({ user }) {
                       <div className="detail-item marks">
                         <span className="detail-label">Marks:</span>
                         <span className="detail-value marks-value">
-                          {/* {reports.find(r => r.dayNumber === activeAccordion + 1).marks}/8.5 */}
                           {Number(reports.find(r => r.dayNumber === activeAccordion + 1).marks)}/8.5
                         </span>
+                      </div>
+                    )}
+                    {reports.find(r => r.dayNumber === activeAccordion + 1)?.message && (
+                      <div className="detail-item remarks">
+                        <span className="detail-label">Remarks:</span>
+                        <div className="remarks-list">
+                          {reports.find(r => r.dayNumber === activeAccordion + 1).message.split(', ').map((msg, index) => (
+                            <div key={index} className="remark-item">
+                              <span className="remark-bullet">•</span>
+                              <span className="remark-text">{msg}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>

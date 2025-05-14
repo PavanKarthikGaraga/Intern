@@ -187,12 +187,20 @@ export async function GET(request) {
                 m.day4 as marks4,
                 m.day5 as marks5,
                 m.day6 as marks6,
-                m.day7 as marks7
+                m.day7 as marks7,
+                msg.day1 as message1,
+                msg.day2 as message2,
+                msg.day3 as message3,
+                msg.day4 as message4,
+                msg.day5 as message5,
+                msg.day6 as message6,
+                msg.day7 as message7
             FROM uploads u
             LEFT JOIN verify v ON u.username = v.username
             LEFT JOIN attendance a ON u.username = a.username
             LEFT JOIN status s ON u.username = s.username
             LEFT JOIN dailyMarks m ON u.username = m.username
+            LEFT JOIN messages msg ON u.username = msg.username
             WHERE u.username = ?`,
                 [username]
             );
@@ -208,7 +216,8 @@ export async function GET(request) {
                         verified: reports[0][`verified${i}`],
                         attendance: reports[0][`attendance${i}`],
                         status: reports[0][`status${i}`],
-                        marks: reports[0][`marks${i}`]
+                        marks: reports[0][`marks${i}`],
+                        message: reports[0][`message${i}`]
                     });
                 }
             }
