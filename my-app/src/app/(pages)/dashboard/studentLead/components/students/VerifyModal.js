@@ -157,7 +157,7 @@ export default function VerifyModal({ username, onClose, onVerify }) {
                 let status;
                 if (isVerified) status = 'verified';
                 else if (isRejected && (!studentData.status || studentData.status[`day${day}`] !== 'new')) status = 'rejected';
-                else if (hasUpload && studentData.status && studentData.status[`day${day}`] === 'new' && isRejected) status = 'new';
+                else if (hasUpload && studentData.status && studentData.status[`day${day}`] === 'new') status = 'new';
                 else if (
                   hasUpload &&
                   canSubmitDay(day - 1) &&
@@ -198,7 +198,8 @@ export default function VerifyModal({ username, onClose, onVerify }) {
                       </span>
                     </td>
                     <td>
-                      {((status === 'pending' && hasUpload && !isRejected) || (status === 'new' && hasUpload && isRejected)) && (
+                      {((status === 'pending' && hasUpload && !isRejected) || 
+                        (status === 'new' && hasUpload)) && (
                         <div className="action-buttons">
                           {isVerifiable ? (
                             <>

@@ -13,6 +13,7 @@ export default function Reports({ user }) {
   const [submittedLinks, setSubmittedLinks] = useState({});
   const [reports, setReports] = useState([]);
   const [verifyStatus, setVerifyStatus] = useState({});
+  const [marks, setMarks] = useState({});
 
   useEffect(() => {
     const fetchStudentData = async () => {
@@ -45,6 +46,7 @@ export default function Reports({ user }) {
           setSubmissions(updatedSubmissions);
           setSubmittedLinks(links);
           setVerifyStatus(data.student.verify || {});
+          setMarks(data.student.marks || {});
         } else {
           throw new Error(data.error || 'Failed to fetch student data');
         }
@@ -65,20 +67,7 @@ export default function Reports({ user }) {
         }
         const data = await response.json();
         if (data.success && data.data) {
-          // Transform the object into an array of reports
-          const reportsArray = [];
-          for (let i = 1; i <= 7; i++) {
-            if (data.data[`day${i}`]) {
-              reportsArray.push({
-                dayNumber: i,
-                link: data.data[`day${i}`],
-                verified: data.data[`verified${i}`],
-                attendance: data.data[`attendance${i}`],
-                status: data.data[`status${i}`]
-              });
-            }
-          }
-          setReports(reportsArray);
+          setReports(data.data);
         }
       } catch (err) {
         console.error('Error fetching reports:', err);
@@ -143,37 +132,12 @@ export default function Reports({ user }) {
         setSubmittedLinks(newSubmittedLinks);
         setActiveAccordion(null);
         
-        // Refresh reports and student data
+        // Refresh reports
         const reportsResponse = await fetch(`/api/dashboard/student/reports?username=${user.username}`);
         if (reportsResponse.ok) {
           const reportsData = await reportsResponse.json();
           if (reportsData.success && reportsData.data) {
-            // Transform the object into an array of reports
-            const reportsArray = [];
-            for (let i = 1; i <= 7; i++) {
-              if (reportsData.data[`day${i}`]) {
-                reportsArray.push({
-                  dayNumber: i,
-                  link: reportsData.data[`day${i}`],
-                  verified: reportsData.data[`verified${i}`],
-                  attendance: reportsData.data[`attendance${i}`],
-                  status: reportsData.data[`status${i}`]
-                });
-              }
-            }
-            setReports(reportsArray);
-          }
-        }
-        const studentResponse = await fetch('/api/dashboard/student/data', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: user.username })
-        });
-        if (studentResponse.ok) {
-          const studentData = await studentResponse.json();
-          if (studentData.success) {
-            setStudentData(studentData.student);
-            setVerifyStatus(studentData.student.verify || {});
+            setReports(reportsData.data);
           }
         }
       } else {
@@ -196,24 +160,30 @@ export default function Reports({ user }) {
   };
 
   const getStatus = (dayNumber) => {
-    const dayKey = `day${dayNumber}`;
-    const attendanceStatus = studentData?.attendance?.details[dayKey];
+    const report = reports.find(r => r.dayNumber === dayNumber);
     const isSubmitted = submissions[dayNumber - 1];
 
     if (!isSubmitted) {
-      if (attendanceStatus === 'A') {
-        return { text: 'Absent', className: 'rejected' };
-      }
       return { text: 'Not Submitted', className: 'not-submitted' };
     }
 
-    if (attendanceStatus === 'A') {
+    if (report?.attendance === 'P') {
+      return { text: 'Approved', className: 'approved' };
+    }
+    
+    if (report?.verified) {
+      return { text: 'Verified', className: 'verified' };
+    }
+
+    if (report?.attendance === 'A') {
       return { text: 'Rejected', className: 'rejected' };
     }
 
-    if (attendanceStatus === 'P') {
-      return { text: 'Approved', className: 'approved' };
-    }
+
+
+    // if (report?.status === 'new') {
+    //   return { text: 'New Submission', className: 'pending' };
+    // }
 
     return { text: 'Pending Review', className: 'pending' };
   };
@@ -324,6 +294,16 @@ export default function Reports({ user }) {
                         {getStatus(activeAccordion + 1).text}
                       </span>
                     </div>
+                    {getStatus(activeAccordion + 1).className === 'approved' && 
+                      reports.find(r => r.dayNumber === activeAccordion + 1)?.marks && (
+                      <div className="detail-item marks">
+                        <span className="detail-label">Marks:</span>
+                        <span className="detail-value marks-value">
+                          {/* {reports.find(r => r.dayNumber === activeAccordion + 1).marks}/8.5 */}
+                          {Number(reports.find(r => r.dayNumber === activeAccordion + 1).marks)}/8.5
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {getStatus(activeAccordion + 1).className === 'rejected' && (
@@ -410,6 +390,10 @@ export default function Reports({ user }) {
                   <div className="legend-item">
                     <span className="legend-icon approved">✓</span>
                     <span>Approved</span>
+                  </div>
+                  <div className="legend-item">
+                    <span className="legend-icon verified">✓</span>
+                    <span>Verified</span>
                   </div>
                   <div className="legend-item">
                     <span className="legend-icon pending">⏳</span>

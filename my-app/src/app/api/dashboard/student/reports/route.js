@@ -89,6 +89,13 @@ export async function POST(request) {
                     ['new', username]
             );
             }
+        
+            // Update the daily marks for the student
+            await connection.query(
+                `UPDATE attendance SET day${day} = NULL WHERE username = ?`,
+                [username]
+            );
+            
         }
 
         return NextResponse.json({ 
@@ -173,18 +180,43 @@ export async function GET(request) {
                 s.day4 as status4,
                 s.day5 as status5,
                 s.day6 as status6,
-                s.day7 as status7
+                s.day7 as status7,
+                m.day1 as marks1,
+                m.day2 as marks2,
+                m.day3 as marks3,
+                m.day4 as marks4,
+                m.day5 as marks5,
+                m.day6 as marks6,
+                m.day7 as marks7
             FROM uploads u
             LEFT JOIN verify v ON u.username = v.username
             LEFT JOIN attendance a ON u.username = a.username
             LEFT JOIN status s ON u.username = s.username
+            LEFT JOIN dailyMarks m ON u.username = m.username
             WHERE u.username = ?`,
                 [username]
             );
 
+        // Transform the data into an array format
+        const reportsArray = [];
+        if (reports[0]) {
+            for (let i = 1; i <= 7; i++) {
+                if (reports[0][`day${i}`]) {
+                    reportsArray.push({
+                        dayNumber: i,
+                        link: reports[0][`day${i}`],
+                        verified: reports[0][`verified${i}`],
+                        attendance: reports[0][`attendance${i}`],
+                        status: reports[0][`status${i}`],
+                        marks: reports[0][`marks${i}`]
+                    });
+                }
+            }
+        }
+
         return NextResponse.json({
-                        success: true, 
-            data: reports[0] || null
+            success: true, 
+            data: reportsArray
         });
 
     } catch (error) {
