@@ -464,27 +464,31 @@ export default function VerifyModal({ student, onClose }) {
                         )}
 
                         {/* Attendance Actions */}
-                        {canMarkAttendance(day) && currentAttendance !== 'P' && (
+                        {canMarkAttendance(day) && (
                           <div className="attendance-actions">
                             {hasUpload ? (
                               <>
-                                <button 
-                                  className="accept-btn"
-                                  onClick={() => handleAttendanceChange(day, 'P')}
-                                >
-                                  Accept Marks
-                                </button>
+                                {currentAttendance !== 'P' && (
+                                  <>
+                                    <button 
+                                      className="accept-btn"
+                                      onClick={() => handleAttendanceChange(day, 'P')}
+                                    >
+                                      Accept Marks
+                                    </button>
+                                    <button 
+                                      className="reject-btn"
+                                      onClick={() => handleAttendanceChange(day, 'A')}
+                                    >
+                                      Mark Absent
+                                    </button>
+                                  </>
+                                )}
                                 <button 
                                   className="edit-btn"
                                   onClick={() => handleOpenMarksModal(day, marks[`day${day}`] || 0)}
                                 >
                                   Edit Marks
-                                </button>
-                                <button 
-                                  className="reject-btn"
-                                  onClick={() => handleAttendanceChange(day, 'A')}
-                                >
-                                  Mark Absent
                                 </button>
                               </>
                             ) : (
