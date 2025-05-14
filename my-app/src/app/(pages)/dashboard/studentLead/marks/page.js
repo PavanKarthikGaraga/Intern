@@ -9,6 +9,9 @@ export default function MarksPage() {
   const username = searchParams.get('username');
   const name = searchParams.get('name');
   const day = parseInt(searchParams.get('day'));
+  
+  console.log('Marks Modal - Day value:', day, typeof day); // Debug log
+
   const [checkedActivities, setCheckedActivities] = useState({});
   const [totalMarks, setTotalMarks] = useState(0);
 
@@ -57,15 +60,17 @@ export default function MarksPage() {
   }, [checkedActivities, day]);
 
   const handleSave = () => {
+    console.log('Saving marks for day:', day, typeof day); // Debug log
     if (window.opener) {
-      window.opener.postMessage({ type: 'MARKS_SAVED', marks: totalMarks }, '*');
+      window.opener.postMessage({ type: 'MARKS_SAVED', marks: totalMarks, day }, '*');
     }
     window.close();
   };
 
   const handleMarkZero = () => {
+    console.log('Marking zero for day:', day, typeof day); // Debug log
     if (window.opener) {
-      window.opener.postMessage({ type: 'MARKS_SAVED', marks: 0 }, '*');
+      window.opener.postMessage({ type: 'MARKS_SAVED', marks: 0, day }, '*');
     }
     window.close();
   };

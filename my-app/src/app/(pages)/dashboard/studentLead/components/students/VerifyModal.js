@@ -42,46 +42,11 @@ export default function VerifyModal({ username, onClose, onVerify }) {
       const left = 0;
       const top = 0;
       
-      const marksWindow = window.open(
+      window.open(
         `/dashboard/studentLead/marks?username=${username}&day=${day}&name=${studentData.name}`,
         'MarksModal',
         `width=${width},height=${height},left=${left},top=${top}`
       );
-
-      // Listen for message from the marks window
-      window.addEventListener('message', async (event) => {
-        if (event.data.type === 'MARKS_SAVED') {
-          const { marks } = event.data;
-          let loadingToastId;
-          try {
-            loadingToastId = toast.loading('Verifying report...');
-            const verifyResponse = await fetch('/api/dashboard/studentLead/verify', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                username,
-                day,
-                status: true,
-                marks
-              })
-            });
-            if (!verifyResponse.ok) {
-              toast.error('Failed to update verification status', { id: loadingToastId });
-              throw new Error('Failed to update verification status');
-            }
-            await fetchStudentData(username);
-            setVerificationStatus(prev => ({
-              ...prev,
-              [day]: true
-            }));
-            onVerify(day, true);
-            toast.success(`Day ${day} report verified successfully`, { id: loadingToastId });
-          } catch (error) {
-            console.error('Error updating verification:', error);
-            toast.error('Failed to update verification status', { id: loadingToastId });
-          }
-        }
-      });
       return;
     }
     
@@ -102,8 +67,7 @@ export default function VerifyModal({ username, onClose, onVerify }) {
         })
       });
       if (!verifyResponse.ok) {
-        toast.error('Failed to update verification status', { id: loadingToastId });
-        throw new Error('Failed to update verification status');
+        toast.error(verifyResponse.error || 'Failed to update verification status', { id: loadingToastId });
       }
       await fetchStudentData(username);
       setVerificationStatus(prev => ({
@@ -114,9 +78,49 @@ export default function VerifyModal({ username, onClose, onVerify }) {
       toast.success(`Day ${day} report rejected and marked absent`, { id: loadingToastId });
     } catch (error) {
       console.error('Error updating verification:', error);
-      toast.error('Failed to update verification status', { id: loadingToastId });
+      toast.error(error.message || 'Failed to update verification status', { id: loadingToastId });
     }
   };
+
+  // Add event listener for marks window
+  useEffect(() => {
+    const handleMarksMessage = async (event) => {
+      if (event.data.type === 'MARKS_SAVED') {
+        const { marks, day: currentDay } = event.data;
+        console.log('VerifyModal - Received day value:', currentDay, typeof currentDay); // Debug log
+        let loadingToastId;
+        try {
+          loadingToastId = toast.loading('Verifying report...');
+          const verifyResponse = await fetch('/api/dashboard/studentLead/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              username,
+              day: currentDay,
+              status: true,
+              marks
+            })
+          });
+          if (!verifyResponse.ok) {
+            toast.error(verifyResponse.error || 'Failed to update verification status', { id: loadingToastId });
+          }
+          await fetchStudentData(username);
+          setVerificationStatus(prev => ({
+            ...prev,
+            [currentDay]: true
+          }));
+          onVerify(currentDay, true);
+          toast.success(`Day ${currentDay} report verified successfully`, { id: loadingToastId });
+        } catch (error) {
+          console.error('Error updating verification:', error);
+          toast.error(error.message || 'Failed to update verification status', { id: loadingToastId });
+        }
+      }
+    };
+
+    window.addEventListener('message', handleMarksMessage);
+    return () => window.removeEventListener('message', handleMarksMessage);
+  }, [username, onVerify]);
 
   // Defensive: Ensure reports is always an array
   const reportArray = Array.isArray(reports) ? reports : [];
