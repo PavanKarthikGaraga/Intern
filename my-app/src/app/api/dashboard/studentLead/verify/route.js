@@ -98,6 +98,13 @@ export async function POST(request) {
            ON DUPLICATE KEY UPDATE day${day} = 'A'`,
           [username]
         );
+
+        await connection.query(
+          `INSERT INTO status (username, day${day})
+           VALUES (?, 'A')
+           ON DUPLICATE KEY UPDATE day${day} = NULL`,
+          [username]
+        );
       }
 
       // Add message if provided

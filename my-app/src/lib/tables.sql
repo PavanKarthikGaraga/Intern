@@ -167,20 +167,20 @@ CREATE TABLE attendance (
     FOREIGN KEY (username) REFERENCES registrations(username)
 );
 
-CREATE TABLE messages (
-                          id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                          username VARCHAR(10) NOT NULL UNIQUE,
-                          day1 TEXT DEFAULT NULL,
-                          day2 TEXT DEFAULT NULL,
-                          day3 TEXT DEFAULT NULL,
-                          day4 TEXT DEFAULT NULL,
-                          day5 TEXT DEFAULT NULL,
-                          day6 TEXT DEFAULT NULL,
-                          day7 TEXT DEFAULT NULL,
-                          createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                          updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                          FOREIGN KEY (username) REFERENCES registrations(username)
-);
+    CREATE TABLE messages (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        username VARCHAR(10) NOT NULL UNIQUE,
+        day1 TEXT DEFAULT NULL,
+        day2 TEXT DEFAULT NULL,
+        day3 TEXT DEFAULT NULL,
+        day4 TEXT DEFAULT NULL,
+        day5 TEXT DEFAULT NULL,
+        day6 TEXT DEFAULT NULL,
+        day7 TEXT DEFAULT NULL,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (username) REFERENCES registrations(username)
+    );
 
 -- Create Final Report table
 CREATE TABLE final (
