@@ -54,36 +54,82 @@ export default function VerifyModal({ username, onClose, onVerify }) {
       return;
     }
     
-    let loadingToastId;
-    try {
-      loadingToastId = toast.loading('Rejecting report...');
-      if (studentData.verify?.[`day${day}`] === 1 && !status) {
-        toast.error('Cannot reject an already verified day', { id: loadingToastId });
-        return;
+    // For rejection, show remarks dialog first
+    const rect = event.target.getBoundingClientRect();
+    const popup = document.createElement('div');
+    popup.className = 'remarks-popup';
+    popup.innerHTML = `
+      <div class="remarks-content">
+        <h4>Rejection Remarks</h4>
+        <textarea id="rejectionRemarks" placeholder="Enter rejection remarks..." rows="4" style="width: 100%; margin: 10px 0;"></textarea>
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+          <button id="cancelRejection" style="padding: 5px 10px;">Cancel</button>
+          <button id="confirmRejection" style="padding: 5px 10px; background: #dc3545; color: white; border: none; border-radius: 4px;">Confirm Rejection</button>
+        </div>
+      </div>
+    `;
+    popup.style.top = `${rect.top}px`;
+    popup.style.left = `${rect.right + 50}px`;
+    document.body.appendChild(popup);
+
+    const handleRejection = async (remarks) => {
+      let loadingToastId;
+      try {
+        loadingToastId = toast.loading('Rejecting report...');
+        if (studentData.verify?.[`day${day}`] === 1 && !status) {
+          toast.error('Cannot reject an already verified day', { id: loadingToastId });
+          return;
+        }
+        const verifyResponse = await fetch('/api/dashboard/studentLead/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username,
+            day,
+            status,
+            message: remarks
+          })
+        });
+        if (!verifyResponse.ok) {
+          toast.error(verifyResponse.error || 'Failed to update verification status', { id: loadingToastId });
+        }
+        await fetchStudentData(username);
+        setVerificationStatus(prev => ({
+          ...prev,
+          [day]: status
+        }));
+        onVerify(day, status);
+        toast.success(`Day ${day} report rejected and marked absent`, { id: loadingToastId });
+      } catch (error) {
+        console.error('Error updating verification:', error);
+        toast.error(error.message || 'Failed to update verification status', { id: loadingToastId });
       }
-      const verifyResponse = await fetch('/api/dashboard/studentLead/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username,
-          day,
-          status
-        })
+    };
+
+    const closePopup = (e) => {
+      if (!popup.contains(e.target) && e.target !== popup) {
+        popup.remove();
+        document.removeEventListener('click', closePopup);
+      }
+    };
+
+    setTimeout(() => {
+      document.addEventListener('click', closePopup);
+      document.getElementById('cancelRejection').addEventListener('click', () => {
+        popup.remove();
+        document.removeEventListener('click', closePopup);
       });
-      if (!verifyResponse.ok) {
-        toast.error(verifyResponse.error || 'Failed to update verification status', { id: loadingToastId });
-      }
-      await fetchStudentData(username);
-      setVerificationStatus(prev => ({
-        ...prev,
-        [day]: status
-      }));
-      onVerify(day, status);
-      toast.success(`Day ${day} report rejected and marked absent`, { id: loadingToastId });
-    } catch (error) {
-      console.error('Error updating verification:', error);
-      toast.error(error.message || 'Failed to update verification status', { id: loadingToastId });
-    }
+      document.getElementById('confirmRejection').addEventListener('click', () => {
+        const remarks = document.getElementById('rejectionRemarks').value;
+        if (!remarks.trim()) {
+          toast.error('Please enter rejection remarks');
+          return;
+        }
+        handleRejection(remarks);
+        popup.remove();
+        document.removeEventListener('click', closePopup);
+      });
+    }, 0);
   };
 
   // Add event listener for marks window
@@ -256,7 +302,39 @@ export default function VerifyModal({ username, onClose, onVerify }) {
                       </span>
                     </td>
                     <td>
-                      {isVerified ? marks : '-'}
+                      {status === 'new' && studentData.messages?.[`day${day}`] ? (
+                        <span 
+                          className="view-remarks"
+                          onClick={(e) => {
+                            const rect = e.target.getBoundingClientRect();
+                            const popup = document.createElement('div');
+                            popup.className = 'remarks-popup';
+                            popup.innerHTML = `
+                              <div class="remarks-content">
+                                <h4>Day ${day} Remarks</h4>
+                                <ul>
+                                  ${studentData.messages[`day${day}`].split(', ').map(msg => 
+                                    `<li>${msg}</li>`
+                                  ).join('')}
+                                </ul>
+                              </div>
+                            `;
+                            popup.style.top = `${rect.top}px`;
+                            popup.style.left = `${rect.right + 50}px`;
+                            document.body.appendChild(popup);
+                            
+                            const closePopup = (e) => {
+                              if (!popup.contains(e.target) && e.target !== popup) {
+                                popup.remove();
+                                document.removeEventListener('click', closePopup);
+                              }
+                            };
+                            setTimeout(() => document.addEventListener('click', closePopup), 0);
+                          }}
+                        >
+                          View Remarks
+                        </span>
+                      ) : (isVerified ? marks : '-')}
                     </td>
                     <td>
                       {((status === 'pending' && hasUpload && !isRejected) || 

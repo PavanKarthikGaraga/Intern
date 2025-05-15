@@ -152,7 +152,7 @@ CREATE TABLE verify (
 );
 
 -- Create attendance table
-CREATE TABLE attendance (
+CREATE TABLE attendance (5
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(10) NOT NULL UNIQUE,
     day1 ENUM('P','S','A') DEFAULT NULL,
@@ -167,19 +167,19 @@ CREATE TABLE attendance (
     FOREIGN KEY (username) REFERENCES registrations(username)
 );
 
-    CREATE TABLE messages (
-        id BIGINT AUTO_INCREMENT PRIMARY KEY,
-        username VARCHAR(10) NOT NULL UNIQUE,
-        day1 TEXT DEFAULT NULL,
-        day2 TEXT DEFAULT NULL,
-        day3 TEXT DEFAULT NULL,
-        day4 TEXT DEFAULT NULL,
-        day5 TEXT DEFAULT NULL,
-        day6 TEXT DEFAULT NULL,
-        day7 TEXT DEFAULT NULL,
-        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (username) REFERENCES registrations(username)
+CREATE TABLE messages (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(10) NOT NULL UNIQUE,
+    day1 TEXT DEFAULT NULL,
+    day2 TEXT DEFAULT NULL,
+    day3 TEXT DEFAULT NULL,
+    day4 TEXT DEFAULT NULL,
+    day5 TEXT DEFAULT NULL,
+    day6 TEXT DEFAULT NULL,
+    day7 TEXT DEFAULT NULL,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (username) REFERENCES registrations(username)
     );
 
 -- Create Final Report table
@@ -204,7 +204,7 @@ CREATE TABLE dailyMarks (
     day5 DECIMAL(4,2) DEFAULT 0,
     day6 DECIMAL(4,2) DEFAULT 0,
     day7 DECIMAL(4,2) DEFAULT 0,
-    internalMarks INT DEFAULT 0,
+    internalMarks DECIMAL(4,2) DEFAULT 0,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (username) REFERENCES registrations(username)
@@ -215,10 +215,10 @@ CREATE TABLE marks (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(10) NOT NULL UNIQUE,
     facultyMentorId VARCHAR(10) NOT NULL,
-    internalMarks INT NOT NULL DEFAULT 0, -- 60 marks from daily submissions
-    caseStudyReportMarks INT NOT NULL DEFAULT 0,    -- 30 marks
-    conductParticipationMarks INT NOT NULL DEFAULT 0, -- 10 marks
-    totalMarks INT NOT NULL DEFAULT 0,
+    internalMarks DECIMAL(4,2) NOT NULL DEFAULT 0, -- 60 marks from daily submissions
+    caseStudyReportMarks DECIMAL(4,2) NOT NULL DEFAULT 0,    -- 30 marks
+    conductParticipationMarks DECIMAL(4,2) NOT NULL DEFAULT 0, -- 10 marks
+    totalMarks DECIMAL(4,2) NOT NULL DEFAULT 0,
     grade VARCHAR(50) NOT NULL DEFAULT 'Not Qualified',
     feedback TEXT,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

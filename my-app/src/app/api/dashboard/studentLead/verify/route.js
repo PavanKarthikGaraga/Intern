@@ -82,12 +82,29 @@ export async function POST(request) {
 
       // If verifying (status=true) and marks are provided, update daily marks
       if (status && typeof marks === 'number') {
-        await connection.query(
-          `INSERT INTO dailyMarks (username, day${day})
-           VALUES (?, ?)
-           ON DUPLICATE KEY UPDATE day${day} = ?`,
-          [username, marks, marks]
+        // Check if dailyMarks exists
+        const [existingMarks] = await connection.query(
+          'SELECT * FROM dailyMarks WHERE username = ?',
+          [username]
         );
+
+        if (existingMarks.length > 0) {
+          // Update the specific day's marks and recalculate internalMarks
+          await connection.query(
+            `UPDATE dailyMarks 
+             SET day${day} = ?,
+                 internalMarks = COALESCE(day1,0)+COALESCE(day2,0)+COALESCE(day3,0)+COALESCE(day4,0)+COALESCE(day5,0)+COALESCE(day6,0)+COALESCE(day7,0)
+             WHERE username = ?`,
+            [marks, username]
+          );
+        } else {
+          // Insert new marks
+          await connection.query(
+            `INSERT INTO dailyMarks (username, day${day}, internalMarks)
+             VALUES (?, ?, ?)`,
+            [username, marks, marks]
+          );
+        }
       }
 
       // If rejecting (status=false), mark as absent
@@ -115,13 +132,24 @@ export async function POST(request) {
           .map(msg => msg.trim())
           .filter(msg => msg.length > 0)
           .join(', ');
-
-        await connection.query(
-          `INSERT INTO messages (username, day${day})
+        
+        const [messagecheck] = await connection.query(
+          `SELECT 1 FROM messages WHERE username = ? AND day${day} = ?`,
+          [username, day]
+        );
+        if(messagecheck.length === 0){
+          await connection.query(
+            `INSERT INTO messages (username, day${day})
            VALUES (?, ?)
            ON DUPLICATE KEY UPDATE day${day} = ?`,
           [username, messageList, messageList]
         );
+        }else{
+          await connection.query(
+            `UPDATE messages SET day${day} = ? WHERE username = ?`,
+            [messageList, username]
+          );
+        }
       }
 
       await connection.commit();
