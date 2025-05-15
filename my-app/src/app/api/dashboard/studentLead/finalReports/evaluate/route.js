@@ -24,7 +24,15 @@ export async function POST(request) {
         }
 
         const body = await request.json();
-        const { username, caseStudyReportMarks = 0, conductParticipationMarks = 0, feedback = '', totalMarks = 0, grade = 'Not Qualified', internalMarks = 0 } = body;
+        const { 
+            username, 
+            finalReport = 0, 
+            finalPresentation = 0, 
+            feedback = '', 
+            totalMarks = 0, 
+            grade = 'Not Qualified', 
+            internalMarks = 0 
+        } = body;
 
         if (!username) {
             return NextResponse.json({ success: false, error: 'Username is required.' }, { status: 400 });
@@ -47,14 +55,14 @@ export async function POST(request) {
                 // Update
                 await db.query(
                     `UPDATE marks SET 
-                        caseStudyReportMarks = ?, 
-                        conductParticipationMarks = ?, 
+                        finalReport = ?, 
+                        finalPresentation = ?, 
                         feedback = ?, 
                         totalMarks = ?, 
                         grade = ?, 
                         internalMarks = ?
                     WHERE username = ?`,
-                    [caseStudyReportMarks, conductParticipationMarks, feedback, totalMarks, grade, actualInternalMarks, username]
+                    [finalReport, finalPresentation, feedback, totalMarks, grade, actualInternalMarks, username]
                 );
             } else {
                 // Insert
@@ -62,9 +70,9 @@ export async function POST(request) {
                 const [regRows] = await db.query('SELECT facultyMentorId FROM registrations WHERE username = ?', [username]);
                 const facultyMentorId = regRows[0]?.facultyMentorId || null;
                 await db.query(
-                    `INSERT INTO marks (username, facultyMentorId, internalMarks, caseStudyReportMarks, conductParticipationMarks, totalMarks, grade, feedback)
+                    `INSERT INTO marks (username, facultyMentorId, internalMarks, finalReport, finalPresentation, totalMarks, grade, feedback)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-                    [username, facultyMentorId, actualInternalMarks, caseStudyReportMarks, conductParticipationMarks, totalMarks, grade, feedback]
+                    [username, facultyMentorId, actualInternalMarks, finalReport, finalPresentation, totalMarks, grade, feedback]
                 );   
             }
 
@@ -75,13 +83,13 @@ export async function POST(request) {
 
             return NextResponse.json({ success: true, message: 'Evaluation submitted successfully.' });
         } catch (err) {
-            // console.error('Error evaluating report:', err);
+            console.error('Error evaluating report:', err);
             return NextResponse.json({ success: false, error: err.message }, { status: 500 });
         } finally {
             if (db) await db.release();
         }
     } catch (err) {
-        // console.error('Error in POST route', err);
+        console.error('Error in POST route', err);
         return NextResponse.json({ 
             success: false, 
             error: 'An error occurred. Please try again later.' 

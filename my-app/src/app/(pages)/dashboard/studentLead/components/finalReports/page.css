@@ -261,27 +261,30 @@ input[type=number] {
 .grade-badge {
   display: inline-block;
   padding: 0.5rem 1.2rem;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 1.1rem;
   font-weight: 700;
   letter-spacing: 1px;
-  background: #7151e76d;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  border: 2px solid #eee;
-}
-.grade-badge.A {
-  color: #0d47a1;
-  border-color: #0d47a1;
+  background: #fff;
+  color: #222;
+  box-shadow: 0 2px 8px rgba(80, 80, 180, 0.10);
+  border: none;
+  min-width: 48px;
+  text-align: center;
 }
 .grade-badge.B {
-  color: #087f23;
-  border-color: #087f23;
+  background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
+  color: #0a3d2c;
+}
+.grade-badge.A {
+  background: linear-gradient(90deg, #43a6f6 0%, #6d5bfa 100%);
+  color: #0a1a3d;
 }
 .grade-badge.C {
-  color: #e65100;
-  border-color: #e65100;
+  background: linear-gradient(90deg, #f7971e 0%, #ffd200 100%);
+  color: #7a4a00;
 }
 .grade-badge.F {
-  color: #b71c1c;
-  border-color: #b71c1c;
+  background: linear-gradient(90deg, #f857a6 0%, #ff5858 100%);
+  color: #7a0022;
 } 

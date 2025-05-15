@@ -38,12 +38,18 @@ export async function GET(request) {
         sl.name as studentLeadName,
         sl.username as studentLeadUsername,
         f.finalReport,
-        f.completed,
-        dm.internalMarks
+        f.finalPresentation,
+        m.internalMarks,
+        m.finalReport as finalReportMarks,
+        m.finalPresentation as finalPresentationMarks,
+        m.totalMarks,
+        m.grade,
+        m.feedback,
+        m.completed
       FROM registrations r
       INNER JOIN final f ON r.username = f.username
       LEFT JOIN studentLeads sl ON r.studentLeadId = sl.username
-      LEFT JOIN dailyMarks dm ON r.username = dm.username
+      LEFT JOIN marks m ON r.username = m.username
       WHERE r.facultyMentorId = ? AND f.finalReport IS NOT NULL
       ORDER BY r.name ASC`,
       [decoded.username]
@@ -61,15 +67,24 @@ export async function GET(request) {
         r.mode,
         r.slot,
         sl.name as studentLeadName,
-        sl.username as studentLeadUsername
+        sl.username as studentLeadUsername,
+        m.internalMarks,
+        m.finalReport as finalReportMarks,
+        m.finalPresentation as finalPresentationMarks,
+        m.totalMarks,
+        m.grade,
+        m.feedback,
+        m.completed
       FROM registrations r
       INNER JOIN final f ON r.username = f.username
       LEFT JOIN studentLeads sl ON r.studentLeadId = sl.username
+      LEFT JOIN marks m ON r.username = m.username
       WHERE r.facultyMentorId = ? AND f.finalReport IS NULL
       ORDER BY r.name ASC`,
       [decoded.username]
     );
 
+    // console.log(submittedReports);
     return NextResponse.json({
       success: true,
       data: {

@@ -136,6 +136,7 @@ export default function FinalReports() {
                   <th>Mode</th>
                   <th>Slot</th>
                   <th>Report</th>
+                  <th>Presentation</th>
                   <th>Status</th>
                   <th>Internal Marks</th>
                   <th>Actions</th>
@@ -161,6 +162,20 @@ export default function FinalReports() {
                       >
                         View Report
                       </a>
+                    </td>
+                    <td>
+                      {student.finalPresentation ? (
+                        <a
+                          href={student.finalPresentation}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="report-link"
+                        >
+                          View Presentation
+                        </a>
+                      ) : (
+                        <span className="status-badge pending">Not Submitted</span>
+                      )}
                     </td>
                     <td>
                       <span className={`status-badge ${student.completed ? 'completed' : 'pending'}`}>{student.completed ? 'Completed' : 'Pending'}</span>

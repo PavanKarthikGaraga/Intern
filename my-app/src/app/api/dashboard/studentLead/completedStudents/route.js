@@ -31,8 +31,16 @@ export async function POST(request) {
       }, { status: 400 });
     }
 
-    const { username, page = 1, limit = 10, slot } = body;
-    const offset = (page - 1) * limit;
+    const { 
+      username, 
+      completedPage = 1, 
+      pendingPage = 1, 
+      limit = 10, 
+      slot 
+    } = body;
+
+    const completedOffset = Math.max(0, (completedPage - 1) * limit);
+    const pendingOffset = Math.max(0, (pendingPage - 1) * limit);
 
     const db = await pool.getConnection();
     try {
@@ -48,60 +56,69 @@ export async function POST(request) {
 
       const conditions = baseConditions.join(' AND ');
 
-      // Get verified students (7/7 attendance and in final table)
-      const [verifiedStudents] = await db.query(
-        `SELECT r.*, u.name as studentName, f.completed as finalCompleted
-         FROM registrations r 
-         JOIN users u ON r.username = u.username 
-         LEFT JOIN final f ON r.username = f.username
-         WHERE ${conditions} AND r.verified = true
-         LIMIT ? OFFSET ?`,
-        [...queryParams, limit, offset]
-      );
-
-      // Get total count of verified students
-      const [verifiedCount] = await db.query(
-        `SELECT COUNT(*) as total
+      // Get completed students (completed = true in final table)
+      const [completedStudents] = await db.query(
+        `SELECT r.*, u.name as studentName, f.finalReport, f.finalPresentation, m.grade, m.totalMarks
          FROM registrations r
-         WHERE ${conditions} AND r.verified = true`,
-        queryParams
+         JOIN users u ON r.username = u.username
+         JOIN final f ON r.username = f.username
+         LEFT JOIN marks m ON r.username = m.username
+         WHERE ${conditions} 
+           AND f.completed = true
+         ORDER BY r.name ASC
+         LIMIT ? OFFSET ?`,
+        [...queryParams, limit, completedOffset]
       );
 
-      // Get failed students (not verified or not in final table)
-      const [failedStudents] = await db.query(
-        `SELECT r.*, u.name as studentName
+      // Get pending students (completed = false or not in final table)
+      const [pendingStudents] = await db.query(
+        `SELECT r.*, u.name as studentName, f.finalReport, f.finalPresentation
          FROM registrations r
          JOIN users u ON r.username = u.username
          LEFT JOIN final f ON r.username = f.username
          WHERE ${conditions} 
-           AND r.verified = false
-           AND f.username IS NULL
+           AND (f.completed = false OR f.username IS NULL)
+         ORDER BY r.name ASC
          LIMIT ? OFFSET ?`,
-        [...queryParams, limit, offset]
+        [...queryParams, limit, pendingOffset]
       );
 
-      // Get total count of failed students
-      const [failedCount] = await db.query(
+      // Get total count of completed students
+      const [completedCount] = await db.query(
+        `SELECT COUNT(*) as total
+         FROM registrations r
+         JOIN final f ON r.username = f.username
+         WHERE ${conditions} 
+           AND f.completed = true`,
+        queryParams
+      );
+
+      // Get total count of pending students
+      const [pendingCount] = await db.query(
         `SELECT COUNT(*) as total
          FROM registrations r
          LEFT JOIN final f ON r.username = f.username
          WHERE ${conditions} 
-           AND r.verified = false
-           AND f.username IS NULL`,
+           AND (f.completed = false OR f.username IS NULL)`,
         queryParams
       );
 
       return NextResponse.json({ 
         success: true,
-        verifiedStudents,
-        failedStudents,
-        pagination: {
-          verifiedTotal: verifiedCount[0]?.total || 0,
-          failedTotal: failedCount[0]?.total || 0,
-          currentPage: page,
-          totalPages: {
-            verified: Math.ceil((verifiedCount[0]?.total || 0) / limit),
-            failed: Math.ceil((failedCount[0]?.total || 0) / limit)
+        data: {
+          completedStudents,
+          pendingStudents,
+          pagination: {
+            completedTotal: completedCount[0]?.total || 0,
+            pendingTotal: pendingCount[0]?.total || 0,
+            currentPage: {
+              completed: completedPage,
+              pending: pendingPage
+            },
+            totalPages: {
+              completed: Math.ceil((completedCount[0]?.total || 0) / limit),
+              pending: Math.ceil((pendingCount[0]?.total || 0) / limit)
+            }
           }
         }
       });

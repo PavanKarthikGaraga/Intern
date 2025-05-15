@@ -11,10 +11,12 @@ const FinalReportPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [finalReport, setFinalReport] = useState("");
+  const [finalPresentation, setFinalPresentation] = useState("");
   const [status, setStatus] = useState({
     // verified: false,
     completed: false,
     finalReport: null,
+    finalPresentation: null,
     submissionOpen: false
   });
 
@@ -52,10 +54,14 @@ const FinalReportPage = () => {
             // verified: data.data.verified,
             completed: data.data.completed,
             finalReport: data.data.finalReport,
+            finalPresentation: data.data.finalPresentation,
             submissionOpen: data.data.submissionOpen
           });
           if (data.data.finalReport) {
             setFinalReport(data.data.finalReport);
+          }
+          if (data.data.finalPresentation) {
+            setFinalPresentation(data.data.finalPresentation);
           }
         }
       } catch (err) {
@@ -79,7 +85,7 @@ const FinalReportPage = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ finalReport })
+        body: JSON.stringify({ finalReport, finalPresentation })
       });
 
       const data = await response.json();
@@ -89,7 +95,7 @@ const FinalReportPage = () => {
       }
 
       if (data.success) {
-        setStatus(prev => ({ ...prev, finalReport }));
+        setStatus(prev => ({ ...prev, finalReport, finalPresentation }));
         toast.success('Final report submitted successfully!');
       } else {
         throw new Error(data.error || 'Failed to submit final report');
@@ -159,6 +165,14 @@ const FinalReportPage = () => {
             <a href={status.finalReport} target="_blank" rel="noopener noreferrer" className="report-link">
               View Final Report
             </a>
+            {status.finalPresentation && (
+              <>
+                <h3>Submitted Presentation</h3>
+                <a href={status.finalPresentation} target="_blank" rel="noopener noreferrer" className="report-link">
+                  View Final Presentation
+                </a>
+              </>
+            )}
             <p className="status-message">
               {status.completed 
                 ? "Your final report has been reviewed and marked as completed by your faculty mentor."
@@ -180,6 +194,19 @@ const FinalReportPage = () => {
                 required
               />
               <p className="input-hint">Please provide a shareable link to your final report document</p>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="finalPresentation">Final Presentation Link</label>
+              <input
+                type="url"
+                id="finalPresentation"
+                value={finalPresentation}
+                onChange={(e) => setFinalPresentation(e.target.value)}
+                placeholder="Enter the link to your final presentation (e.g., Google Drive, OneDrive, etc.)"
+                required
+              />
+              <p className="input-hint">Please provide a shareable link to your final presentation</p>
             </div>
 
             <div className="form-actions">

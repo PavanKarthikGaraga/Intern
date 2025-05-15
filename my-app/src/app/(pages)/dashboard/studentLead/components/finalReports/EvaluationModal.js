@@ -3,8 +3,8 @@ import './page.css';
 
 const EvaluationModal = ({ isOpen, onClose, onSubmit, student }) => {
   const [marks, setMarks] = useState({
-    caseStudyReportMarks: 0,
-    conductParticipationMarks: 0,
+    finalReport: 0,
+    finalPresentation: 0,
     feedback: ''
   });
 
@@ -16,8 +16,8 @@ const EvaluationModal = ({ isOpen, onClose, onSubmit, student }) => {
 
   useEffect(() => {
     const total =
-      (parseFloat(marks.caseStudyReportMarks) || 0) +
-      (parseFloat(marks.conductParticipationMarks) || 0);
+      (parseFloat(marks.finalReport) || 0) +
+      (parseFloat(marks.finalPresentation) || 0);
     setTotalMarks(internalMarks + total);
     if (internalMarks + total >= 90) {
       setGrade('Certificate of Excellence');
@@ -32,8 +32,15 @@ const EvaluationModal = ({ isOpen, onClose, onSubmit, student }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    const numValue = name === 'feedback' ? value : Math.min(30, Math.max(0, parseInt(value) || 0));
-    setMarks(prev => ({ ...prev, [name]: numValue }));
+    if (name === 'finalPresentation') {
+      const numValue = Math.min(15, Math.max(0, parseInt(value) || 0));
+      setMarks(prev => ({ ...prev, [name]: numValue }));
+    } else if (name === 'finalReport') {
+      const numValue = Math.min(25, Math.max(0, parseInt(value) || 0));
+      setMarks(prev => ({ ...prev, [name]: numValue }));
+    } else {
+      setMarks(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSubmit = (e) => {
@@ -67,26 +74,26 @@ const EvaluationModal = ({ isOpen, onClose, onSubmit, student }) => {
               />
             </div>
             <div className="form-group">
-              <label>Case Study Report (30 Marks)</label>
+              <label>Final Report (25 Marks)</label>
               <input
                 type="number"
-                name="caseStudyReportMarks"
-                value={marks.caseStudyReportMarks}
+                name="finalReport"
+                value={marks.finalReport}
                 onChange={handleChange}
                 min="0"
-                max="30"
+                max="25"
                 required
               />
             </div>
             <div className="form-group">
-              <label>Conduct & Participation (10 Marks)</label>
+              <label>Final Presentation (15 Marks)</label>
               <input
                 type="number"
-                name="conductParticipationMarks"
-                value={marks.conductParticipationMarks}
+                name="finalPresentation"
+                value={marks.finalPresentation}
                 onChange={handleChange}
                 min="0"
-                max="10"
+                max="15"
                 required
               />
             </div>

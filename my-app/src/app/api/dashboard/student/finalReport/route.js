@@ -61,16 +61,15 @@ export async function GET(request) {
            
             // Then check final table
             const [final] = await db.query(
-                `SELECT finalReport, completed FROM final WHERE username = ?`,
+                `SELECT finalReport, finalPresentation, completed FROM final WHERE username = ?`,
                 [decoded.username]
             );
-
 
             return NextResponse.json({ 
                 success: true,
                 data: {
-                    // verified: registration[0].verified === 1,
                     finalReport: final[0]?.finalReport || null,
+                    finalPresentation: final[0]?.finalPresentation || null,
                     completed: final[0]?.completed === 1 || false,
                     submissionOpen: isAllowed
                 }
@@ -111,12 +110,12 @@ export async function POST(request) {
         }
 
         const body = await request.json();
-        const { finalReport } = body;
+        const { finalReport, finalPresentation } = body;
 
-        if (!finalReport) {
+        if (!finalReport || !finalPresentation) {
             return NextResponse.json({ 
                 success: false, 
-                error: 'Final report is required.' 
+                error: 'Both final report and presentation are required.' 
             }, { status: 400 });
         }
 
@@ -161,15 +160,15 @@ export async function POST(request) {
             if (!existing || existing.length === 0) {
                 // Insert new record
                 await db.query(
-                    `INSERT INTO final (username, facultyMentorId, finalReport)
-                     VALUES (?, ?, ?)`,
-                    [decoded.username, registration[0].facultyMentorId, finalReport]
+                    `INSERT INTO final (username, facultyMentorId, finalReport, finalPresentation)
+                     VALUES (?, ?, ?, ?)`,
+                    [decoded.username, registration[0].facultyMentorId, finalReport, finalPresentation]
                 );
             } else {
                 // Update existing record
                 await db.query(
-                    `UPDATE final SET finalReport = ? WHERE username = ?`,
-                    [finalReport, decoded.username]
+                    `UPDATE final SET finalReport = ?, finalPresentation = ? WHERE username = ?`,
+                    [finalReport, finalPresentation, decoded.username]
                 );
             }   
 

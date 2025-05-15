@@ -17,7 +17,6 @@ export default function FinalReports() {
   });
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [viewedReports, setViewedReports] = useState(new Set());
 
   useEffect(() => {
     if (!user) {
@@ -57,17 +56,42 @@ export default function FinalReports() {
 
   const handleDocumentClick = (student) => {
     setSelectedStudent(student);
-    setViewedReports(prev => new Set([...prev, student.username]));
   };
 
-  const handleEvaluationClick = (student) => {
+  const handleEditClick = (student) => {
     setSelectedStudent(student);
     setIsModalOpen(true);
   };
 
+  const handleAcceptMarks = async (student) => {
+    try {
+      const response = await fetch('/api/dashboard/facultyMentor/finalReports/evaluate', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          username: student.username
+        })
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to accept marks');
+      }
+
+      await fetchReports();
+      toast.success('Marks accepted successfully');
+    } catch (err) {
+      console.error('Error accepting marks:', err);
+      toast.error(err.message);
+    }
+  };
+
   const handleEvaluationSubmit = async (evaluationData) => {
     try {
-      const response = await fetch('/api/dashboard/facultyMentor/evaluate', {
+      const response = await fetch('/api/dashboard/facultyMentor/finalReports/evaluate', {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -81,14 +105,14 @@ export default function FinalReports() {
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || 'Failed to submit evaluation');
+        throw new Error(data.error || 'Failed to update evaluation');
       }
 
       await fetchReports();
       setIsModalOpen(false);
-      toast.success('Evaluation submitted successfully');
+      toast.success('Evaluation updated successfully');
     } catch (err) {
-      console.error('Error submitting evaluation:', err);
+      console.error('Error updating evaluation:', err);
       toast.error(err.message);
     }
   };
@@ -129,7 +153,12 @@ export default function FinalReports() {
                   <th>Slot</th>
                   <th>Student Lead</th>
                   <th>Report</th>
+                  <th>Presentation</th>
                   <th>Internal Marks</th>
+                  <th>Final Report</th>
+                  <th>Final Presentation</th>
+                  <th>Total Marks</th>
+                  <th>Grade</th>
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>
@@ -171,24 +200,63 @@ export default function FinalReports() {
                       </a>
                     </td>
                     <td>
-                      <span className="internal-marks">{typeof student.internalMarks === 'number' ? `${student.internalMarks} / 60` : '-'}</span>
+                      {student.finalPresentation && (
+                        <a
+                          href={student.finalPresentation}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="report-link"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleDocumentClick(student);
+                            window.open(student.finalPresentation, '_blank');
+                          }}
+                        >
+                          View Presentation
+                        </a>
+                      )}
                     </td>
                     <td>
-                      <span className={`status-badge ${student.completed ? 'completed' : 'pending'}`}>
-                        {student.completed ? 'Completed' : 'Pending'}
+                      <span className="internal-marks">{student.internalMarks} / 60</span>
+                    </td>
+                    <td>
+                      <span className="marks">{student.finalReportMarks} / 25</span>
+                    </td>
+                    <td>
+                      <span className="marks">{student.finalPresentationMarks} / 15</span>
+                    </td>
+                    <td>
+                      <span className="total-marks">{student.totalMarks} / 100</span>
+                    </td>
+                    <td>
+                      <span className={`grade-badge ${student.grade?.toLowerCase()}`}>
+                        {student.grade || '-'}
                       </span>
                     </td>
                     <td>
-                      {viewedReports.has(student.username) && (
-                        <div className="action-buttons">
-                          <button
-                            className="verify-btn"
-                            onClick={() => handleEvaluationClick(student)}
-                          >
-                            Evaluate Report
-                          </button>
-                        </div>
-                      )}
+                      <span className={`status-badge ${student.completed === 'P' ? 'completed' : 'pending'}`}>
+                        {student.completed === 'P' ? 'Accepted' : 'Pending'}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="action-buttons">
+                        {student.completed !== 'P' && (
+                          <>
+                            <button
+                              className="accept-btn"
+                              onClick={() => handleAcceptMarks(student)}
+                            >
+                              Accept
+                            </button>
+                            <button
+                              className="edit-btn"
+                              onClick={() => handleEditClick(student)}
+                            >
+                              Edit
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -213,6 +281,11 @@ export default function FinalReports() {
                   <th>Mode</th>
                   <th>Slot</th>
                   <th>Student Lead</th>
+                  <th>Internal Marks</th>
+                  <th>Final Report</th>
+                  <th>Final Presentation</th>
+                  <th>Total Marks</th>
+                  <th>Grade</th>
                   <th>Status</th>
                 </tr>
               </thead>
@@ -238,6 +311,23 @@ export default function FinalReports() {
                       </div>
                     </td>
                     <td>
+                      <span className="internal-marks">{student.internalMarks} / 60</span>
+                    </td>
+                    <td>
+                      <span className="marks">{student.finalReportMarks} / 25</span>
+                    </td>
+                    <td>
+                      <span className="marks">{student.finalPresentationMarks} / 15</span>
+                    </td>
+                    <td>
+                      <span className="total-marks">{student.totalMarks} / 100</span>
+                    </td>
+                    <td>
+                      <span className={`grade-badge ${student.grade?.toLowerCase()}`}>
+                        {student.grade || '-'}
+                      </span>
+                    </td>
+                    <td>
                       <span className="status-badge pending">No Report</span>
                     </td>
                   </tr>
@@ -254,6 +344,7 @@ export default function FinalReports() {
           onClose={() => setIsModalOpen(false)}
           onSubmit={handleEvaluationSubmit}
           student={selectedStudent}
+          isEdit={true}
         />
       )}
     </div>

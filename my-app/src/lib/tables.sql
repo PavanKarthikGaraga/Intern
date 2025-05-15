@@ -188,6 +188,7 @@ CREATE TABLE final (
     username VARCHAR(10) NOT NULL UNIQUE,
     facultyMentorId VARCHAR(10) NOT NULL,
     finalReport VARCHAR(200) DEFAULT NULL,
+    finalPresentation VARCHAR(200) DEFAULT NULL,`
     completed BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (facultyMentorId) REFERENCES facultyMentors(username),
     FOREIGN KEY (username) REFERENCES registrations(username)
@@ -216,11 +217,12 @@ CREATE TABLE marks (
     username VARCHAR(10) NOT NULL UNIQUE,
     facultyMentorId VARCHAR(10) NOT NULL,
     internalMarks DECIMAL(4,2) NOT NULL DEFAULT 0, -- 60 marks from daily submissions
-    caseStudyReportMarks DECIMAL(4,2) NOT NULL DEFAULT 0,    -- 30 marks
-    conductParticipationMarks DECIMAL(4,2) NOT NULL DEFAULT 0, -- 10 marks
+    finalReport DECIMAL(4,2) NOT NULL DEFAULT 0,    -- 25 marks
+    finalPresentation DECIMAL(4,2) NOT NULL DEFAULT 0, -- 15 marks
     totalMarks DECIMAL(4,2) NOT NULL DEFAULT 0,
     grade VARCHAR(50) NOT NULL DEFAULT 'Not Qualified',
     feedback TEXT,
+    completed ENUM('P','A') NOT NULL DEFAULT NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (username) REFERENCES registrations(username),
