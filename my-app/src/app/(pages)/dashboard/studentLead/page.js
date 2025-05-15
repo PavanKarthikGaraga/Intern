@@ -11,6 +11,7 @@ import Profile from './components/profile/page';
 import ChangePassword from './components/changePassword/page';
 import Students from './components/students/page';
 import CompletedStudents from './components/completedStudents/page';
+import FinalReports from './components/finalReports/page';
 
 export default function StudentLeadDashboard() {
   const { user } = useAuth();
@@ -63,6 +64,12 @@ export default function StudentLeadDashboard() {
             <span className="item-label">Students</span>
           </button>
           <button
+            className={`sidebar-item ${activeSection === 'final-reports' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('final-reports')}
+          >
+            <span className="item-label">Final Reports</span>
+          </button>
+          <button
             className={`sidebar-item ${activeSection === 'completed-students' ? 'active' : ''}`}
             onClick={() => handleSectionClick('completed-students')}
           >
@@ -80,8 +87,9 @@ export default function StudentLeadDashboard() {
           {activeSection === 'overview' ? <Overview user={user} /> : 
            activeSection === 'profile' ? <Profile user={user} /> :
            activeSection === 'students' ? <Students user={user} /> :
+           activeSection === 'final-reports' ? <FinalReports user={user} /> : 
            activeSection === 'completed-students' ? <CompletedStudents user={user} /> :
-           <ChangePassword user={user} />}
+           activeSection === 'change-password' ? <ChangePassword user={user} /> : null}
         </main>
       </div>
 

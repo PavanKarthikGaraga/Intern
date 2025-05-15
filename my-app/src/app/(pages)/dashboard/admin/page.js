@@ -24,6 +24,7 @@ export default function AdminDashboard() {
   const { user, isLoading, isAuthenticated } = useAuth();
   const [activeSection, setActiveSection] = useState('overview');
   const [showUsersDropdown, setShowUsersDropdown] = useState(false);
+  const [showDevDropdown, setShowDevDropdown] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -42,6 +43,7 @@ export default function AdminDashboard() {
   const handleSectionClick = (section) => {
     setActiveSection(section);
     setShowUsersDropdown(false);
+    setShowDevDropdown(false);
   };
 
   return (
@@ -110,41 +112,49 @@ export default function AdminDashboard() {
           >
             <span className="item-label">Completed Students</span>
           </button>
-          {user.username === '2300032048' && (
-            <button
-              className={`sidebar-item ${activeSection === 'data-download' ? 'active' : ''}`}
-              onClick={() => handleSectionClick('data-download')}
-            >
-              <span className="item-label">Data Download</span>
-            </button>
-          )}
-          {user.username === '2300032048' && (
-          <button
-            className={`sidebar-item ${activeSection === 'pm2-logs' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('pm2-logs')}
-          >
-            <span className="item-label">PM2 Logs</span>
-            </button>
-          )}
           <button
             className={`sidebar-item ${activeSection === 'report-control' ? 'active' : ''}`}
             onClick={() => handleSectionClick('report-control')}
           >
-            <span className="item-label">Report Control</span>
+            Report Control
           </button>
           <button
             className={`sidebar-item ${activeSection === 'token-generator' ? 'active' : ''}`}
             onClick={() => handleSectionClick('token-generator')}
           >
-            <span className="item-label">Proxy Login</span>
-          </button>
+            Proxy Login
+                  </button>
           {user.username === '2300032048' && (
-            <button
-              className={`sidebar-item ${activeSection === 'sql-executor' ? 'active' : ''}`}
-              onClick={() => handleSectionClick('sql-executor')}
-            >
-              <span className="item-label">SQL Executor</span>
-            </button>
+            <div className="dropdown">
+              <button
+                className={`sidebar-item ${['data-download','pm2-logs','report-control','token-generator','sql-executor'].includes(activeSection) ? 'active' : ''}`}
+                onClick={() => setShowDevDropdown(!showDevDropdown)}
+              >
+                <span className="item-label">Dev</span>
+              </button>
+              {showDevDropdown && (
+                <div className="dropdown-content">
+                  <button
+                    className={`dropdown-item ${activeSection === 'data-download' ? 'active' : ''}`}
+                    onClick={() => handleSectionClick('data-download')}
+                  >
+                    Data Download
+                  </button>
+                  <button
+                    className={`dropdown-item ${activeSection === 'pm2-logs' ? 'active' : ''}`}
+                    onClick={() => handleSectionClick('pm2-logs')}
+                  >
+                    PM2 Logs
+                  </button>
+                  <button
+                    className={`dropdown-item ${activeSection === 'sql-executor' ? 'active' : ''}`}
+                    onClick={() => handleSectionClick('sql-executor')}
+                  >
+                    SQL Executor
+                  </button>
+                </div>
+              )}
+            </div>
           )}
           <button
             className={`sidebar-item ${activeSection === 'change-password' ? 'active' : ''}`}
