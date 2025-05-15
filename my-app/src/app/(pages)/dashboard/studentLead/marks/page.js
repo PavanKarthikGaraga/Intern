@@ -1,10 +1,10 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { commonActivities, dailyActivities } from '@/app/Data/activities';
 import './page.css';
 
-export default function MarksPage() {
+function MarksContent() {
   const searchParams = useSearchParams();
   const username = searchParams.get('username');
   const name = searchParams.get('name');
@@ -189,5 +189,13 @@ export default function MarksPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function MarksPage() {
+  return (
+    <Suspense fallback={<div className="loading">Loading...</div>}>
+      <MarksContent />
+    </Suspense>
   );
 }
