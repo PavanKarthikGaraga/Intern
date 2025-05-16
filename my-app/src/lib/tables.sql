@@ -85,7 +85,7 @@ CREATE TABLE registrations (
     slot INT NOT NULL,
     studentLeadId VARCHAR(10),
     facultyMentorId VARCHAR(10),
-    verified BOOLEAN NOT NULL DEFAULT FALSE,
+    pass ENUM('P','F') DEFAULT NULL,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     branch VARCHAR(50) NOT NULL,

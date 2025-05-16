@@ -39,7 +39,7 @@ export async function GET(request) {
         sl.username as studentLeadUsername,
         f.finalReport,
         f.finalPresentation,
-        m.internalMarks,
+        dm.internalMarks,
         m.finalReport as finalReportMarks,
         m.finalPresentation as finalPresentationMarks,
         m.totalMarks,
@@ -50,6 +50,7 @@ export async function GET(request) {
       INNER JOIN final f ON r.username = f.username
       LEFT JOIN studentLeads sl ON r.studentLeadId = sl.username
       LEFT JOIN marks m ON r.username = m.username
+      LEFT JOIN dailyMarks dm ON r.username = dm.username
       WHERE r.facultyMentorId = ? AND f.finalReport IS NOT NULL
       ORDER BY r.name ASC`,
       [decoded.username]
@@ -68,7 +69,7 @@ export async function GET(request) {
         r.slot,
         sl.name as studentLeadName,
         sl.username as studentLeadUsername,
-        m.internalMarks,
+        dm.internalMarks,
         m.finalReport as finalReportMarks,
         m.finalPresentation as finalPresentationMarks,
         m.totalMarks,
@@ -76,11 +77,12 @@ export async function GET(request) {
         m.feedback,
         m.completed
       FROM registrations r
-      INNER JOIN final f ON r.username = f.username
+      LEFT JOIN final f ON r.username = f.username
       LEFT JOIN studentLeads sl ON r.studentLeadId = sl.username
       LEFT JOIN marks m ON r.username = m.username
-      WHERE r.facultyMentorId = ? AND f.finalReport IS NULL
-      ORDER BY r.name ASC`,
+      LEFT JOIN dailyMarks dm ON r.username = dm.username
+      WHERE r.facultyMentorId = ? AND (f.finalReport IS NULL OR f.username IS NULL) AND r.pass != 'F';
+      `,
       [decoded.username]
     );
 

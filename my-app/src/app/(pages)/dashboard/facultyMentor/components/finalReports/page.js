@@ -147,6 +147,7 @@ export default function FinalReports() {
             <table className="reports-table">
               <thead>
                 <tr>
+                <th>S no</th>
                   <th>Name</th>
                   <th>ID</th>
                   <th>Mode</th>
@@ -164,8 +165,9 @@ export default function FinalReports() {
                 </tr>
               </thead>
               <tbody>
-                {reports.submittedReports.map((student) => (
-                  <tr key={student.username}>
+                {reports.submittedReports.map((student,index) => (
+                  <tr key={student.username} className='roe'>
+                    <td>{index+1}</td>
                     <td>{student.name}</td>
                     <td>{student.username}</td>
                     <td>
@@ -216,7 +218,7 @@ export default function FinalReports() {
                         </a>
                       )}
                     </td>
-                    <td>
+                    <td>  
                       <span className="internal-marks">{student.internalMarks} / 60</span>
                     </td>
                     <td>
@@ -239,24 +241,31 @@ export default function FinalReports() {
                       </span>
                     </td>
                     <td>
-                      <div className="action-buttons">
-                        {student.completed !== 'P' && (
-                          <>
-                            <button
-                              className="accept-btn"
-                              onClick={() => handleAcceptMarks(student)}
-                            >
-                              Accept
-                            </button>
-                            <button
-                              className="edit-btn"
-                              onClick={() => handleEditClick(student)}
-                            >
-                              Edit
-                            </button>
-                          </>
-                        )}
-                      </div>
+                    <div className="action-buttons">
+                      {student.completed !== 'P' && student.totalMarks !== null ? (
+                        <>
+                          <button
+                            className="accept-btn"
+                            onClick={() => handleAcceptMarks(student)}
+                          >
+                            Accept
+                          </button>
+                          <button
+                            className="edit-btn"
+                            onClick={() => handleEditClick(student)}
+                          >
+                            Edit
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          className="edit-btn"
+                          onClick={() => handleEditClick(student)}
+                        >
+                          Evaluate
+                        </button>
+                      )}
+                    </div>
                     </td>
                   </tr>
                 ))}
@@ -276,22 +285,24 @@ export default function FinalReports() {
             <table className="reports-table">
               <thead>
                 <tr>
+                  <th>S no</th>
                   <th>Name</th>
                   <th>ID</th>
                   <th>Mode</th>
                   <th>Slot</th>
                   <th>Student Lead</th>
                   <th>Internal Marks</th>
-                  <th>Final Report</th>
+                  {/* <th>Final Report</th>
                   <th>Final Presentation</th>
-                  <th>Total Marks</th>
+                  <th>Total Marks</th> */}
                   <th>Grade</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                {reports.pendingReports.map((student) => (
+                {reports.pendingReports.map((student,index) => (
                   <tr key={student.username}>
+                    <td>{index+1}</td>
                     <td>{student.name}</td>
                     <td>{student.username}</td>
                     <td>
@@ -313,7 +324,7 @@ export default function FinalReports() {
                     <td>
                       <span className="internal-marks">{student.internalMarks} / 60</span>
                     </td>
-                    <td>
+                    {/* <td>
                       <span className="marks">{student.finalReportMarks} / 25</span>
                     </td>
                     <td>
@@ -321,7 +332,7 @@ export default function FinalReports() {
                     </td>
                     <td>
                       <span className="total-marks">{student.totalMarks} / 100</span>
-                    </td>
+                    </td> */}
                     <td>
                       <span className={`grade-badge ${student.grade?.toLowerCase()}`}>
                         {student.grade || '-'}

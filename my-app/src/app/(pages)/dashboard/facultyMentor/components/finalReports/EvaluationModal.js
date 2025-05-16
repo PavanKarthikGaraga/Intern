@@ -3,8 +3,8 @@ import './page.css';
 
 const EvaluationModal = ({ isOpen, onClose, onSubmit, student }) => {
   const [marks, setMarks] = useState({
-    caseStudyReportMarks: 0,
-    conductParticipationMarks: 0,
+    finalReport: 0,
+    finalPresentation: 0,
     feedback: ''
   });
 
@@ -12,15 +12,13 @@ const EvaluationModal = ({ isOpen, onClose, onSubmit, student }) => {
   const [grade, setGrade] = useState('Not Qualified');
 
   // Internal marks from dailyMarks
-  const internalMarks = typeof student.internalMarks === 'number' ? student.internalMarks : 0;
+  // Ensure internalMarks is a number
+const internalMarks = Number(student.internalMarks) || 0;
+
 
   useEffect(() => {
-    const total = Object.entries(marks)
-      .filter(([key]) => key !== 'feedback')
-      .reduce((sum, [_, value]) => sum + (value || 0), 0);
-    
+    const total = (parseInt(marks.finalReport) || 0) + (parseInt(marks.finalPresentation) || 0);
     setTotalMarks(internalMarks + total);
-    
     if (internalMarks + total >= 90) {
       setGrade('Certificate of Excellence');
     } else if (internalMarks + total >= 75) {
@@ -34,17 +32,23 @@ const EvaluationModal = ({ isOpen, onClose, onSubmit, student }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    const numValue = name === 'feedback' ? value : Math.min(30, Math.max(0, parseInt(value) || 0));
-    setMarks(prev => ({ ...prev, [name]: numValue }));
+    if (name === 'finalPresentation') {
+      const numValue = Math.min(15, Math.max(0, parseInt(value) || 0));
+      setMarks(prev => ({ ...prev, [name]: numValue }));
+    } else if (name === 'finalReport') {
+      const numValue = Math.min(25, Math.max(0, parseInt(value) || 0));
+      setMarks(prev => ({ ...prev, [name]: numValue }));
+    } else {
+      setMarks(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit({
-      ...marks,
-      totalMarks,
-      grade,
-      internalMarks
+      finalReportMarks: marks.finalReport,
+      finalPresentationMarks: marks.finalPresentation,
+      feedback: marks.feedback
     });
   };
 
@@ -69,26 +73,26 @@ const EvaluationModal = ({ isOpen, onClose, onSubmit, student }) => {
               />
             </div>
             <div className="form-group">
-              <label>Case Study Report (30 Marks)</label>
+              <label>Final Report (25 Marks)</label>
               <input
                 type="number"
-                name="caseStudyReportMarks"
-                value={marks.caseStudyReportMarks}
+                name="finalReport"
+                value={marks.finalReport}
                 onChange={handleChange}
                 min="0"
-                max="30"
+                max="25"
                 required
               />
             </div>
             <div className="form-group">
-              <label>Conduct & Participation (10 Marks)</label>
+              <label>Final Presentation (15 Marks)</label>
               <input
                 type="number"
-                name="conductParticipationMarks"
-                value={marks.conductParticipationMarks}
+                name="finalPresentation"
+                value={marks.finalPresentation}
                 onChange={handleChange}
                 min="0"
-                max="10"
+                max="15"
                 required
               />
             </div>

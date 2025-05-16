@@ -54,6 +54,24 @@ export async function POST(request) {
         }, { status: 404 });
       }
 
+      // Ensure a row exists in marks for this student
+      const [existingMarks] = await db.query(
+        `SELECT 1 FROM marks WHERE username = ? AND facultyMentorId = ?`,
+        [username, decoded.username]
+      );
+      if (existingMarks.length === 0) {
+        // Get internal marks from dailyMarks
+        const [daily] = await db.query(
+          `SELECT internalMarks FROM dailyMarks WHERE username = ?`,
+          [username]
+        );
+        const internal = daily.length > 0 ? daily[0].internalMarks : 0;
+        await db.query(
+          `INSERT INTO marks (username, facultyMentorId, internalMarks) VALUES (?, ?, ?)`,
+          [username, decoded.username, internal]
+        );
+      }
+
       // If marks are provided, update them along with completed status
       if (finalReportMarks !== undefined && finalPresentationMarks !== undefined) {
         // Get current marks to calculate total
@@ -69,7 +87,7 @@ export async function POST(request) {
           }, { status: 404 });
         }
 
-        const internalMarks = currentMarks[0];
+        const internalMarks = Number(currentMarks[0].internalMarks) || 0;
         const totalMarks = internalMarks + finalReportMarks + finalPresentationMarks;
 
         // Determine grade based on total marks
@@ -103,6 +121,12 @@ export async function POST(request) {
           ]
         );
 
+        await db.query(
+          "UPDATE registrations SET pass = 'P' WHERE username = ?",
+          [username]
+        );
+        
+
         return NextResponse.json({
           success: true,
           message: 'Marks evaluated and accepted successfully'
@@ -116,6 +140,11 @@ export async function POST(request) {
           [username, decoded.username]
         );
 
+        await db.query(
+          "UPDATE registrations SET pass = 'P' WHERE username = ?",
+          [username]
+        );
+        
         return NextResponse.json({
           success: true,
           message: 'Marks accepted successfully'
