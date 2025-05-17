@@ -27,7 +27,8 @@ export default function Students() {
     currentPage: 1,
     totalPages: 1,
     totalItems: 0,
-    limit: 20
+    limit: 30,
+    pendingPage: null
   });
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [selectedProfile, setSelectedProfile] = useState(null);
@@ -104,10 +105,25 @@ export default function Students() {
   };
 
   const handlePageChange = (newPage) => {
+    if (newPage < 1 || newPage > pagination.totalPages) return;
     setPagination(prev => ({ ...prev, currentPage: newPage }));
   };
 
+  const handlePageInput = (e) => {
+    const value = parseInt(e.target.value);
+    if (!isNaN(value)) {
+      setPagination(prev => ({ ...prev, pendingPage: value }));
+    }
+  };
 
+  const handlePageInputKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      const value = parseInt(e.target.value);
+      if (!isNaN(value)) {
+        handlePageChange(value);
+      }
+    }
+  };
 
   const handleVerify = async (day, status) => {
     try {
@@ -224,6 +240,12 @@ export default function Students() {
     }
   };
 
+  const getSerialNumber = (index) => {
+    const page = pagination.currentPage || 1;
+    const limit = pagination.limit || 30;
+    return ((page - 1) * limit) + index + 1;
+  };
+
   if (loading) {
     // return <Loader />;
     return <div className="loading">Loading...</div>;
@@ -330,6 +352,7 @@ export default function Students() {
         <table>
           <thead>
             <tr>
+              <th>S.No</th>
               <th>ID</th>
               <th>Name</th>
               <th>Domain</th>
@@ -340,8 +363,9 @@ export default function Students() {
             </tr>
           </thead>
           <tbody>
-            {students.map(student => (
+            {students.map((student, index) => (
               <tr key={student.username}>
+                <td>{getSerialNumber(index)}</td>
                 <td>{student.username}</td>
                 <td>{student.name}</td>
                 <td>{student.selectedDomain}</td>
@@ -383,7 +407,18 @@ export default function Students() {
         >
           Previous
         </button>
-        <span>Page {pagination.currentPage} of {pagination.totalPages}</span>
+        <div className="page-input-container">
+          <input
+            type="number"
+            min="1"
+            max={pagination.totalPages}
+            value={pagination.pendingPage || pagination.currentPage}
+            onChange={handlePageInput}
+            onKeyPress={handlePageInputKeyPress}
+            className="page-input"
+          />
+          <span>of {pagination.totalPages}</span>
+        </div>
         <button
           onClick={() => handlePageChange(pagination.currentPage + 1)}
           disabled={pagination.currentPage === pagination.totalPages}

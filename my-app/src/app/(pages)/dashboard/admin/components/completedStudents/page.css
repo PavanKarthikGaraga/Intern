@@ -74,8 +74,6 @@
   border-bottom: 1px solid #e0e0e0;
 }
 
-
-
 .students-table th {
   background-color: #f0f7f0;
   color: #333333;
@@ -147,6 +145,37 @@
 .pagination span {
   color: #333333;
   font-weight: 500;
+}
+
+.page-input-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.page-input {
+  width: 60px;
+  padding: 8px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.page-input:focus {
+  outline: none;
+  border-color: rgb(151, 0, 3);
+  box-shadow: 0 0 0 2px rgba(151, 0, 3, 0.1);
+}
+
+.page-input::-webkit-inner-spin-button,
+.page-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.page-input[type=number] {
+  -moz-appearance: textfield;
 }
 
 /* Loading and Error States */

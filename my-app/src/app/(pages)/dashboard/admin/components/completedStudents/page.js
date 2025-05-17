@@ -17,7 +17,8 @@ export default function CompletedStudents() {
     currentPage: 1,
     totalPages: 1,
     totalStudents: 0,
-    limit: 20
+    limit: 20,
+    pendingPage: null
   });
 
   useEffect(() => {
@@ -65,7 +66,30 @@ export default function CompletedStudents() {
   };
 
   const handlePageChange = (newPage) => {
+    if (newPage < 1 || newPage > pagination.totalPages) return;
     setPagination(prev => ({ ...prev, currentPage: newPage }));
+  };
+
+  const handlePageInput = (e) => {
+    const value = parseInt(e.target.value);
+    if (!isNaN(value)) {
+      setPagination(prev => ({ ...prev, pendingPage: value }));
+    }
+  };
+
+  const handlePageInputKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      const value = parseInt(e.target.value);
+      if (!isNaN(value)) {
+        handlePageChange(value);
+      }
+    }
+  };
+
+  const getSerialNumber = (index) => {
+    const page = pagination.currentPage || 1;
+    const limit = pagination.limit || 20;
+    return ((page - 1) * limit) + index + 1;
   };
 
   if (loading) {
@@ -127,6 +151,7 @@ export default function CompletedStudents() {
           <table className="students-table">
             <thead>
               <tr>
+                <th>S.No</th>
                 <th>Name</th>
                 <th>ID</th>
                 <th>Domain</th>
@@ -138,8 +163,9 @@ export default function CompletedStudents() {
               </tr>
             </thead>
             <tbody>
-              {students.map((student) => (
+              {students.map((student, index) => (
                 <tr key={student.username}>
+                  <td>{getSerialNumber(index)}</td>
                   <td>{student.name}</td>
                   <td>{student.username}</td>
                   <td>{student.selectedDomain}</td>
@@ -172,9 +198,18 @@ export default function CompletedStudents() {
         >
           Previous
         </button>
-        <span>
-          Page {pagination.currentPage} of {pagination.totalPages}
-        </span>
+        <div className="page-input-container">
+          <input
+            type="number"
+            min="1"
+            max={pagination.totalPages}
+            value={pagination.pendingPage || pagination.currentPage}
+            onChange={handlePageInput}
+            onKeyPress={handlePageInputKeyPress}
+            className="page-input"
+          />
+          <span>of {pagination.totalPages}</span>
+        </div>
         <button 
           onClick={() => handlePageChange(pagination.currentPage + 1)}
           disabled={pagination.currentPage === pagination.totalPages}

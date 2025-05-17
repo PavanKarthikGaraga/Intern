@@ -50,7 +50,7 @@ export async function GET(req) {
     const mode = searchParams.get('mode');
     const search = searchParams.get('search');
     const gender = searchParams.get('gender');
-    const itemsPerPage = 10;
+    const itemsPerPage = 30;
     const offset = (page - 1) * itemsPerPage;
 
     let conditions = [];
@@ -107,7 +107,7 @@ export async function GET(req) {
       LEFT JOIN studentLeads sl ON r.studentLeadId = sl.username
       LEFT JOIN facultyMentors fm ON r.facultyMentorId = fm.username
       ${whereClause}
-      ORDER BY r.updatedAt DESC
+      ORDER BY r.slot
       LIMIT ? OFFSET ?
     `;
 
