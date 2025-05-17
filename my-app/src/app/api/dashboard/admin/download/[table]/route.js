@@ -30,10 +30,15 @@ export async function GET(req, { params }) {
             'facultyMentors',
             'registrations',
             'uploads',
+            'status',
             'verify',
             'attendance',
+            'messages',
             'final',
-            'stats'
+            'dailyMarks',
+            'marks',
+            'stats',
+            'reportOpen'
         ];
 
         if (!validTables.includes(table)) {
