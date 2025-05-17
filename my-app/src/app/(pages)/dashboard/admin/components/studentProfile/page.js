@@ -1,11 +1,13 @@
 'use client';
 import { useState, useEffect } from 'react';
 import './page.css';
+import VerifyModalAdmin from './VerifyModalAdmin';
 
 export default function StudentProfile({ isOpen, onClose, username }) {
     const [studentData, setStudentData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [showVerifyModal, setShowVerifyModal] = useState(false);
 
     useEffect(() => {
         if (username) {
@@ -162,6 +164,7 @@ export default function StudentProfile({ isOpen, onClose, username }) {
 
                     <div className="profile-section">
                         <h3>Daily Submissions</h3>
+                        <button className="view-all-btn" onClick={() => setShowVerifyModal(true)} style={{marginBottom: '1rem'}}>View All</button>
                         <div className="submissions-grid">
                             {[1, 2, 3, 4, 5, 6, 7].map((day) => (
                                 <div key={day} className="submission-item">
@@ -248,6 +251,9 @@ export default function StudentProfile({ isOpen, onClose, username }) {
                     )}
                 </div>
             </div>
+            {showVerifyModal && (
+                <VerifyModalAdmin student={studentData} onClose={() => setShowVerifyModal(false)} />
+            )}
         </div>
     );
 } 

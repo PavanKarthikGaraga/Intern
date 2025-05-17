@@ -265,4 +265,141 @@
     background-color: #f8d7da;
     border-radius: 4px;
     margin-bottom: 1rem;
+}
+
+.view-all-btn {
+    background: #970003;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 24px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-bottom: 1rem;
+}
+.view-all-btn:hover {
+    background: #b3000a;
+}
+
+/* Modal content for VerifyModal and MarksModal */
+.modal-cont {
+    background: #fff;
+    border-radius: 10px;
+    padding: 2rem 2.5rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    max-width: 1000px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+.marks-modal {
+    max-width: 480px;
+    padding: 2rem 1.5rem;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    color: #970003;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+.close-btn:hover {
+    color: #b3000a;
+}
+
+.verification-table th, .verification-table td {
+    padding: 0.7rem 1rem;
+    text-align: center;
+}
+.verification-table th {
+    background: #f8f9fa;
+    color: #970003;
+    font-weight: 700;
+    border-bottom: 2px solid #eee;
+}
+.verification-table tr {
+    border-bottom: 1px solid #f0f0f0;
+}
+.verification-table td {
+    font-size: 1rem;
+}
+
+.present-btn, .absent-btn {
+    padding: 7px 18px;
+    border-radius: 5px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.97rem;
+    transition: background 0.2s, color 0.2s;
+}
+.present-btn {
+    background: #d4edda;
+    color: #155724;
+}
+.present-btn:hover {
+    background: #b7e4c7;
+}
+.absent-btn {
+    background: #f8d7da;
+    color: #721c24;
+}
+.absent-btn:hover {
+    background: #f5b7b1;
+}
+
+/* MarksModal specific */
+.marks-modal .modal-header {
+    border-bottom: 1px solid #eee;
+    margin-bottom: 1.2rem;
+}
+.activities-checklist {
+    margin-bottom: 1.2rem;
+}
+.activity-item {
+    margin-bottom: 0.7rem;
+    font-size: 1rem;
+}
+.marks-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 1.5rem;
+}
+.total-marks-display {
+    font-weight: 600;
+    color: #970003;
+    font-size: 1.1rem;
+}
+.save-marks-btn {
+    background: #970003;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.save-marks-btn:hover {
+    background: #b3000a;
+}
+.reject-marks-btn {
+    background: #c62828;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.reject-marks-btn:hover {
+    background: #a31515;
 } 
