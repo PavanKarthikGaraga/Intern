@@ -12,12 +12,12 @@ const EvaluationModal = ({ isOpen, onClose, onSubmit, student }) => {
   const [grade, setGrade] = useState('Not Qualified');
 
   // Internal marks from dailyMarks
-  // Ensure internalMarks is a number
-const internalMarks = Number(student.internalMarks) || 0;
-
+  const internalMarks = typeof student.internalMarks === 'number' ? student.internalMarks : parseFloat(student.internalMarks) || 0;
 
   useEffect(() => {
-    const total = (parseInt(marks.finalReport) || 0) + (parseInt(marks.finalPresentation) || 0);
+    const total =
+      (parseFloat(marks.finalReport) || 0) +
+      (parseFloat(marks.finalPresentation) || 0);
     setTotalMarks(internalMarks + total);
     if (internalMarks + total >= 90) {
       setGrade('Certificate of Excellence');
@@ -46,9 +46,10 @@ const internalMarks = Number(student.internalMarks) || 0;
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit({
-      finalReportMarks: marks.finalReport,
-      finalPresentationMarks: marks.finalPresentation,
-      feedback: marks.feedback
+      ...marks,
+      totalMarks,
+      grade,
+      internalMarks
     });
   };
 

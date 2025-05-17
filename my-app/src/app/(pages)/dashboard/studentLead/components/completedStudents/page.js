@@ -4,33 +4,47 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import "./page.css";
 
-const CompletedStudentsPage = () => {
+const CompletedStudents = () => {
   const router = useRouter();
   const { user } = useAuth();
-  const [completedStudents, setCompletedStudents] = useState([]);
-  const [failedStudents, setFailedStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedSlot, setSelectedSlot] = useState("all");
-  const [pagination, setPagination] = useState({
-    verified: { currentPage: 1, totalPages: 1 },
-    failed: { currentPage: 1, totalPages: 1 }
+  const [students, setStudents] = useState({
+    completedStudents: [],
+    pendingStudents: []
   });
+  const [pagination, setPagination] = useState({
+    completedTotal: 0,
+    pendingTotal: 0,
+    currentPage: {
+      completed: 1,
+      pending: 1
+    },
+    totalPages: {
+      completed: 1,
+      pending: 1
+    }
+  });
+  const [selectedSlot, setSelectedSlot] = useState("all");
 
-  const fetchStudents = async (page = 1, slot = selectedSlot) => {
+  useEffect(() => {
+    if (!user) return;
+    fetchStudents();
+  }, [user, selectedSlot, pagination.currentPage.completed, pagination.currentPage.pending]);
+
+  const fetchStudents = async () => {
     try {
       setLoading(true);
       const response = await fetch('/api/dashboard/studentLead/completedStudents', {
         method: 'POST',
-        credentials: 'include',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ 
-          username: user?.username,
-          page,
-          limit: 10,
-          slot: slot === 'all' ? null : parseInt(slot)
+        body: JSON.stringify({
+          username: user.username,
+          completedPage: pagination.currentPage.completed,
+          pendingPage: pagination.currentPage.pending,
+          slot: selectedSlot !== 'all' ? parseInt(selectedSlot) : undefined
         })
       });
 
@@ -40,75 +54,55 @@ const CompletedStudentsPage = () => {
 
       const data = await response.json();
       if (data.success) {
-        setCompletedStudents(data.verifiedStudents || []);
-        setFailedStudents(data.failedStudents || []);
-        setPagination({
-          verified: {
-            currentPage: data.pagination.currentPage,
-            totalPages: data.pagination.totalPages.verified
-          },
-          failed: {
-            currentPage: data.pagination.currentPage,
-            totalPages: data.pagination.totalPages.failed
-          }
-        });
+        setStudents(data.data);
+        setPagination(data.data.pagination);
       } else {
         throw new Error(data.error || 'Failed to fetch students');
       }
     } catch (err) {
-      console.error('Error fetching students:', err);
       setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    if (user?.username) {
-      fetchStudents();
-    }
-  }, [user]);
-
   const handleSlotChange = (e) => {
-    const newSlot = e.target.value;
-    setSelectedSlot(newSlot);
-    fetchStudents(1, newSlot);
+    setSelectedSlot(e.target.value);
+    setPagination(prev => ({
+      ...prev,
+      currentPage: {
+        completed: 1,
+        pending: 1
+      }
+    }));
   };
 
-  const handlePageChange = (type, page) => {
-    fetchStudents(page, selectedSlot);
+  const handlePageChange = (type, newPage) => {
+    if (newPage < 1 || newPage > pagination.totalPages[type]) return;
+    
+    setPagination(prev => ({
+      ...prev,
+      currentPage: {
+        ...prev.currentPage,
+        [type]: newPage
+      }
+    }));
   };
 
   if (loading) {
-    return (
-      <div className="completed-section">
-        <div className="loading">Loading...</div>
-      </div>
-    );
+    return <div className="loading">Loading...</div>;
   }
 
   if (error) {
-    return (
-      <div className="completed-section">
-        <div className="error">{error}</div>
-      </div>
-    );
+    return <div className="error">{error}</div>;
   }
 
   return (
-    <div className="completed-section">
+    <div className="completed-students-section">
       <div className="section-header">
-        <h1>Completed Students</h1>
-      </div>
-
-      <div className="filters">
-        <div className="filter-group">
-          <label htmlFor="slot-filter">Filter by Slot</label>
-          <select
-            id="slot-filter"
-            value={selectedSlot}
-            onChange={handleSlotChange}
-          >
+        <h1>Student Progress</h1>
+        <div className="filters">
+          <select value={selectedSlot} onChange={handleSlotChange}>
             <option value="all">All Slots</option>
             <option value="1">Slot 1</option>
             <option value="2">Slot 2</option>
@@ -118,152 +112,176 @@ const CompletedStudentsPage = () => {
         </div>
       </div>
 
-      <div className="status-sections">
-        <div className="status-section">
-          <h2>
-            Successfully Completed ({completedStudents.length})
-          </h2>
-          <p className="section-description">
-            Students who have successfully completed their internship
-          </p>
+      <div className="students-grid">
+        <div className="completed-section">
+          <h2>Completed Students ({pagination.completedTotal})</h2>
           <div className="table-container">
-            <table className="completed-table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Username</th>
-                  <th>Branch</th>
-                  <th>Domain</th>
-                  <th>Mode</th>
-                  <th>Slot</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {completedStudents.length > 0 ? (
-                  completedStudents.map((student) => (
-                    <tr key={student.username}>
-                      <td>{student.studentName}</td>
-                      <td>{student.username}</td>
-                      <td>{student.branch}</td>
-                      <td>{student.selectedDomain}</td>
-                      <td>
-                        <span className={`mode-badge ${student.mode.toLowerCase()}`}>
-                          {student.mode}
-                        </span>
-                      </td>
-                      <td>
-                        <span className="slot-badge">{student.slot}</span>
-                      </td>
-                      <td>
-                        <span className="status-badge completed">Completed</span>
-                      </td>
+            {students.completedStudents.length === 0 ? (
+              <p className="no-data">No completed students found.</p>
+            ) : (
+              <>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>ID</th>
+                      <th>Slot</th>
+                      <th>Mode</th>
+                      <th>Grade</th>
+                      <th>Total Marks</th>
+                      <th>Report</th>
+                      <th>Presentation</th>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="7">
-                      <div className="no-students">
-                        <p className="no-students-message">
-                          No completed students found
-                        </p>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-          <div className="pagination-controls">
-            <button
-              onClick={() => handlePageChange('verified', pagination.verified.currentPage - 1)}
-              disabled={pagination.verified.currentPage === 1}
-            >
-              Previous
-            </button>
-            <span>
-              Page {pagination.verified.currentPage} of {pagination.verified.totalPages}
-            </span>
-            <button
-              onClick={() => handlePageChange('verified', pagination.verified.currentPage + 1)}
-              disabled={pagination.verified.currentPage === pagination.verified.totalPages}
-            >
-              Next
-            </button>
+                  </thead>
+                  <tbody>
+                    {students.completedStudents.map((student) => (
+                      <tr key={student.username}>
+                        <td>{student.studentName}</td>
+                        <td>{student.username}</td>
+                        <td>{student.slot}</td>
+                        <td>
+                          <span className={`mode-badge ${student.mode?.toLowerCase()}`}>
+                            {student.mode}
+                          </span>
+                        </td>
+                        <td>
+                          <span className={`grade-badge ${student.grade?.toLowerCase()}`}>
+                            {student.grade}
+                          </span>
+                        </td>
+                        <td>{student.totalMarks}/100</td>
+                        <td>
+                          <a
+                            href={student.finalReport}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="report-link"
+                          >
+                            View Report
+                          </a>
+                        </td>
+                        <td>
+                          <a
+                            href={student.finalPresentation}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="report-link"
+                          >
+                            View Presentation
+                          </a>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <div className="pagination-controls">
+                  <button
+                    onClick={() => handlePageChange('completed', pagination.currentPage.completed - 1)}
+                    disabled={pagination.currentPage.completed === 1}
+                  >
+                    Previous
+                  </button>
+                  <span>
+                    Page {pagination.currentPage.completed} of {pagination.totalPages.completed}
+                  </span>
+                  <button
+                    onClick={() => handlePageChange('completed', pagination.currentPage.completed + 1)}
+                    disabled={pagination.currentPage.completed === pagination.totalPages.completed}
+                  >
+                    Next
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
-        <div className="status-section">
-          <h2>
-            Failed Students ({failedStudents.length})
-          </h2>
-          <p className="section-description">
-            Students who did not complete their internship successfully
-          </p>
+        <div className="pending-section">
+          <h2>Pending Students ({pagination.pendingTotal})</h2>
           <div className="table-container">
-            <table className="completed-table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Username</th>
-                  <th>Branch</th>
-                  <th>Domain</th>
-                  <th>Mode</th>
-                  <th>Slot</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {failedStudents.length > 0 ? (
-                  failedStudents.map((student) => (
-                    <tr key={student.username}>
-                      <td>{student.studentName}</td>
-                      <td>{student.username}</td>
-                      <td>{student.branch}</td>
-                      <td>{student.selectedDomain}</td>
-                      <td>
-                        <span className={`mode-badge ${student.mode.toLowerCase()}`}>
-                          {student.mode}
-                        </span>
-                      </td>
-                      <td>
-                        <span className="slot-badge">{student.slot}</span>
-                      </td>
-                      <td>
-                        <span className="status-badge failed">Failed</span>
-                      </td>
+            {students.pendingStudents.length === 0 ? (
+              <p className="no-data">No pending students found.</p>
+            ) : (
+              <>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>ID</th>
+                      <th>Slot</th>
+                      <th>Mode</th>
+                      <th>Status</th>
+                      <th>Report</th>
+                      <th>Presentation</th>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="7">
-                      <div className="no-students">
-                        <p className="no-students-message">
-                          No failed students found
-                        </p>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-          <div className="pagination-controls">
-            <button
-              onClick={() => handlePageChange('failed', pagination.failed.currentPage - 1)}
-              disabled={pagination.failed.currentPage === 1}
-            >
-              Previous
-            </button>
-            <span>
-              Page {pagination.failed.currentPage} of {pagination.failed.totalPages}
-            </span>
-            <button
-              onClick={() => handlePageChange('failed', pagination.failed.currentPage + 1)}
-              disabled={pagination.failed.currentPage === pagination.failed.totalPages}
-            >
-              Next
-            </button>
+                  </thead>
+                  <tbody>
+                    {students.pendingStudents.map((student) => (
+                      <tr key={student.username}>
+                        <td>{student.studentName}</td>
+                        <td>{student.username}</td>
+                        <td>{student.slot}</td>
+                        <td>
+                          <span className={`mode-badge ${student.mode?.toLowerCase()}`}>
+                            {student.mode}
+                          </span>
+                        </td>
+                        <td>
+                          <span className="status-badge pending">
+                            {student.finalReport ? 'Pending Evaluation' : 'Not Submitted'}
+                          </span>
+                        </td>
+                        <td>
+                          {student.finalReport ? (
+                            <a
+                              href={student.finalReport}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="report-link"
+                            >
+                              View Report
+                            </a>
+                          ) : (
+                            <span className="not-submitted">Not Submitted</span>
+                          )}
+                        </td>
+                        <td>
+                          {student.finalPresentation ? (
+                            <a
+                              href={student.finalPresentation}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="report-link"
+                            >
+                              View Presentation
+                            </a>
+                          ) : (
+                            <span className="not-submitted">Not Submitted</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <div className="pagination-controls">
+                  <button
+                    onClick={() => handlePageChange('pending', pagination.currentPage.pending - 1)}
+                    disabled={pagination.currentPage.pending === 1}
+                  >
+                    Previous
+                  </button>
+                  <span>
+                    Page {pagination.currentPage.pending} of {pagination.totalPages.pending}
+                  </span>
+                  <button
+                    onClick={() => handlePageChange('pending', pagination.currentPage.pending + 1)}
+                    disabled={pagination.currentPage.pending === pagination.totalPages.pending}
+                  >
+                    Next
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -271,4 +289,4 @@ const CompletedStudentsPage = () => {
   );
 };
 
-export default CompletedStudentsPage;
+export default CompletedStudents;

@@ -243,4 +243,33 @@
     padding: 0.8rem 0.7rem;
     font-size: 1rem;
   }
+}
+
+@media (max-width: 480px) {
+  .final-report-section {
+    padding: 0.5rem;
+    max-width: 99vw;
+  }
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding-bottom: 0.25rem;
+  }
+  .submitted-report {
+    margin-top: 0.5rem;
+    gap: 0.5rem;
+  }
+  .status-message {
+    padding: 0.5rem 0.3rem;
+    font-size: 0.95rem;
+  }
+  .report-link {
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+  }
+  .form-actions button {
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+  }
 } 

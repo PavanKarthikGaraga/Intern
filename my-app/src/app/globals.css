@@ -210,3 +210,7 @@
   page-break-after: always;
   margin: 40px 0;
 }
+
+tr:hover {
+  background-color: #f8f9fa;
+}

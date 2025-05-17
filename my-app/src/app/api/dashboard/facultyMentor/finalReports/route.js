@@ -38,11 +38,18 @@ export async function GET(request) {
         sl.name as studentLeadName,
         sl.username as studentLeadUsername,
         f.finalReport,
-        f.completed,
-        dm.internalMarks
+        f.finalPresentation,
+        dm.internalMarks,
+        m.finalReport as finalReportMarks,
+        m.finalPresentation as finalPresentationMarks,
+        m.totalMarks,
+        m.grade,
+        m.feedback,
+        m.completed
       FROM registrations r
       INNER JOIN final f ON r.username = f.username
       LEFT JOIN studentLeads sl ON r.studentLeadId = sl.username
+      LEFT JOIN marks m ON r.username = m.username
       LEFT JOIN dailyMarks dm ON r.username = dm.username
       WHERE r.facultyMentorId = ? AND f.finalReport IS NOT NULL
       ORDER BY r.name ASC`,
@@ -61,15 +68,25 @@ export async function GET(request) {
         r.mode,
         r.slot,
         sl.name as studentLeadName,
-        sl.username as studentLeadUsername
+        sl.username as studentLeadUsername,
+        dm.internalMarks,
+        m.finalReport as finalReportMarks,
+        m.finalPresentation as finalPresentationMarks,
+        m.totalMarks,
+        m.grade,
+        m.feedback,
+        m.completed
       FROM registrations r
-      INNER JOIN final f ON r.username = f.username
+      LEFT JOIN final f ON r.username = f.username
       LEFT JOIN studentLeads sl ON r.studentLeadId = sl.username
-      WHERE r.facultyMentorId = ? AND f.finalReport IS NULL
-      ORDER BY r.name ASC`,
+      LEFT JOIN marks m ON r.username = m.username
+      LEFT JOIN dailyMarks dm ON r.username = dm.username
+      WHERE r.facultyMentorId = ? AND (f.finalReport IS NULL OR f.username IS NULL) AND r.pass != 'F';
+      `,
       [decoded.username]
     );
 
+    // console.log(submittedReports);
     return NextResponse.json({
       success: true,
       data: {

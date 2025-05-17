@@ -37,13 +37,33 @@ export async function GET(req) {
         db = await pool.getConnection();
 
         // Get students directly from registrations table where facultyMentorId matches
-        const [students] = await db.query(
-            `SELECT r.*, usr.name, usr.role
-             FROM registrations r
-             JOIN users usr ON r.username = usr.username
-             WHERE r.facultyMentorId = ?`,
-            [username]
+        const studentCols = Array.from({ length: 30 }, (_, i) => `student${i + 1}Username`);
+
+        const subqueries = studentCols.flatMap(col => [
+        `SELECT sl.${col} AS studentUsername FROM studentLeads sl WHERE sl.username = (SELECT lead1Id FROM facultyMentors WHERE username = ?)`
+        ]).concat(
+        studentCols.map(col =>
+            `SELECT sl.${col} AS studentUsername FROM studentLeads sl WHERE sl.username = (SELECT lead2Id FROM facultyMentors WHERE username = ?)`
+        )
         );
+
+        const sql = `
+        SELECT r.*, usr.name, usr.role
+        FROM registrations r
+        JOIN users usr ON r.username = usr.username
+        LEFT JOIN uploads u ON r.username = u.username
+        WHERE r.username IN (
+            SELECT studentUsername FROM (
+            ${subqueries.join(' UNION ALL ')}
+            ) AS studentList
+            WHERE studentUsername IS NOT NULL
+        )
+        ORDER BY u.updatedAt DESC
+        `;
+
+const params = Array(60).fill(username);
+const [students] = await db.query(sql, params);
+
 
         if (!students || students.length === 0) {
             return NextResponse.json({
@@ -143,7 +163,9 @@ export async function POST(req) {
             `SELECT r.username
              FROM registrations r
              JOIN studentLeads sl ON r.studentLeadId = sl.username
-             WHERE r.username = ? AND sl.facultyMentorId = ?`,
+             LEFT JOIN uploads u ON r.username = u.username
+             WHERE r.username = ? AND sl.facultyMentorId = ?
+             ORDER BY u.updatedAt DESC`,
             [username, decoded.username]
         );
 
