@@ -1,3 +1,4 @@
+// 'use client';
 import { Poppins } from "next/font/google";
 import "./globals.css";
 // import PropTypes from 'prop-types';
@@ -17,8 +18,11 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body className={`${poppins.variable}`}>
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      </head>
+      <body className={`${poppins.variable}`} suppressHydrationWarning>
         <AuthProvider>
           {children}
         </AuthProvider>

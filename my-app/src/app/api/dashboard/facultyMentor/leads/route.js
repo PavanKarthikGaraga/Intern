@@ -59,8 +59,7 @@ export async function POST(req) {
             const [leads] = await connection.query(
                 `SELECT 
                     sl.*,
-                    (SELECT COUNT(*) FROM registrations r WHERE r.studentLeadId = sl.username) as totalStudents,
-                    (SELECT COUNT(*) FROM registrations r WHERE r.studentLeadId = sl.username AND r.verified = TRUE) as verifiedStudents
+                    (SELECT COUNT(*) FROM registrations r WHERE r.studentLeadId = sl.username) as totalStudents
                  FROM studentLeads sl
                  WHERE sl.username IN (${leadIds.map(() => '?').join(',')})`,
                 leadIds

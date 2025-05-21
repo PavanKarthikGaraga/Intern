@@ -21,7 +21,7 @@
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 .total-students {
@@ -557,4 +557,28 @@
     width: 95%;
     margin: 1rem;
   }
+}
+
+.filters {
+  margin-right: 1rem;
+}
+
+.slot-filter {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: white;
+  font-size: 0.9rem;
+  min-width: 120px;
+  cursor: pointer;
+}
+
+.slot-filter:hover {
+  border-color: #999;
+}
+
+.slot-filter:focus {
+  outline: none;
+  border-color: #666;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
 } 

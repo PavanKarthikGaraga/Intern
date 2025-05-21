@@ -13,6 +13,8 @@ export default function Students({ user }) {
   const [error, setError] = useState(null);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [currentSlot, setCurrentSlot] = useState(1);
+  const [selectedSlot, setSelectedSlot] = useState('current');
   const { isAuthenticated } = useAuth();
   const router = useRouter();
 
@@ -43,7 +45,20 @@ export default function Students({ user }) {
       }
 
       if (data.success) {
-        setStudents(data.students || []);
+        setCurrentSlot(data.currentSlot);
+        // Filter students based on selected slot
+        let filteredStudents;
+        if (selectedSlot === 'current') {
+          // Show only current slot students by default
+          filteredStudents = data.students.filter(student => student.slot === data.currentSlot);
+        } else if (selectedSlot === 'all') {
+          // Show all students up to current slot
+          filteredStudents = data.students.filter(student => student.slot <= data.currentSlot);
+        } else {
+          // Show specific slot
+          filteredStudents = data.students.filter(student => student.slot === parseInt(selectedSlot));
+        }
+        setStudents(filteredStudents);
       } else {
         setError(data.error || 'Failed to fetch students');
         toast.error(data.error || 'Failed to fetch students');
@@ -64,7 +79,7 @@ export default function Students({ user }) {
     } else {
       router.push('/auth/login');
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, selectedSlot]);
 
   const handleRefresh = () => {
     setRefreshing(true);
@@ -134,11 +149,30 @@ export default function Students({ user }) {
       <div className="section-header">
         <h1>Your Students</h1>
         <div className="header-actions">
+          <div className="filters">
+            <select 
+              value={selectedSlot} 
+              onChange={(e) => setSelectedSlot(e.target.value)}
+              className="slot-filter"
+            >
+              <option value="current">Slot {currentSlot}</option>
+              <option value="all">All Slots</option>
+              {[...Array(currentSlot)]
+                .map((_, i) => i + 1)
+                .filter(slot => slot !== currentSlot)
+                .reverse()
+                .map(slot => (
+                  <option key={slot} value={slot}>
+                    Slot {slot}
+                  </option>
+                ))}
+            </select>
+          </div>
           <div className="total-students">
             Total Students: {students.length}
           </div>
           <button 
-            className="total-students"
+            className="refresh-btn"
             onClick={handleRefresh}
             disabled={refreshing}
           >
@@ -152,6 +186,7 @@ export default function Students({ user }) {
         <table className="students-table">
           <thead>
             <tr>
+              <th>Sno</th>
               <th>Name</th>
               <th>ID</th>
               <th>Domain</th>
@@ -163,10 +198,11 @@ export default function Students({ user }) {
             </tr>
           </thead>
           <tbody>
-            {students.map((student) => {
+            {students.map((student,index) => {
               const uploadCount = getUploadCount(student.uploads);
               return (
                 <tr key={student.username}>
+                  <td>{index+1}</td>
                   <td>{student.name}</td>
                   <td>{student.username}</td>
                   <td>{student.selectedDomain}</td>

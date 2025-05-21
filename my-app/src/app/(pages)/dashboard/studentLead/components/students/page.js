@@ -16,10 +16,12 @@ export default function Students({ user }) {
   const [fetching, setFetching] = useState(false);
   const [reportOpen, setReportOpen] = useState({});
   const [fetchError, setFetchError] = useState(null);
+  const [currentSlot, setCurrentSlot] = useState(1);
+  const [selectedSlot, setSelectedSlot] = useState('current');
 
   useEffect(() => {
     fetchStudents();
-  }, [user]);
+  }, [user, selectedSlot]);
 
   const fetchStudents = async () => {
     try {
@@ -36,15 +38,29 @@ export default function Students({ user }) {
         } else {
           toast.error('Failed to fetch students');
         }
+        return;
       }
 
       const data = await response.json();
+      // console.log(data);
       if (data.success) {
-        setStudents(data.students);
-        setTotalStudents(data.total);
+        setCurrentSlot(data.currentSlot);
+        // Filter students based on selected slot
+        let filteredStudents;
+        if (selectedSlot === 'current') {
+          // Show only current slot students by default
+          filteredStudents = data.students.filter(student => student.slot === data.currentSlot);
+        } else if (selectedSlot === 'all') {
+          // Show all students up to current slot
+          filteredStudents = data.students.filter(student => student.slot <= data.currentSlot);
+        } else {
+          // Show specific slot
+          filteredStudents = data.students.filter(student => student.slot === parseInt(selectedSlot));
+        }
+        setStudents(filteredStudents);
+        setTotalStudents(filteredStudents.length);
         setReportOpen(data.reportOpen);
       }
-      console.log(data.students);
     } catch (err) {
       console.error('Error fetching students:', err);
       setError(err.message);
@@ -130,6 +146,25 @@ export default function Students({ user }) {
       <div className="section-header">
         <h1>Your Students</h1>
         <div className="header-actions">
+          <div className="filters">
+            <select 
+              value={selectedSlot} 
+              onChange={(e) => setSelectedSlot(e.target.value)}
+              className="slot-filter"
+            >
+              <option value="current">Slot {currentSlot}</option>
+              <option value="all">All Slots</option>
+              {[...Array(currentSlot)]
+                .map((_, i) => i + 1)
+                .filter(slot => slot !== currentSlot)
+                .reverse()
+                .map(slot => (
+                  <option key={slot} value={slot}>
+                    Slot {slot}
+                  </option>
+                ))}
+            </select>
+          </div>
           <div className="total-students">
             Total Students: {totalStudents}
             <button 
@@ -141,7 +176,6 @@ export default function Students({ user }) {
             </button>
           </div>
           {(() => {
-            const currentSlot = students[0]?.slot || 1;
             const hasStudents = students.length > 0;
             let canFetch, errorMsg;
             if (!hasStudents) {
@@ -181,6 +215,7 @@ export default function Students({ user }) {
         <table className="students-table">
           <thead>
             <tr>
+              <th>Sno</th>
               <th>Name</th>
               <th>ID</th>
               {/* <th>Branch</th> */}
@@ -193,10 +228,11 @@ export default function Students({ user }) {
             </tr>
           </thead>
           <tbody>
-            {students.map((student) => {
+            {students.map((student,index) => {
               const uploadCount = getUploadCount(student.uploads);
               return (
                 <tr key={student.username}>
+                  <td>{index+1}</td>
                   <td>{student.name}</td>
                   <td>{student.username}</td>
                   {/* <td>{student.branch}</td> */}

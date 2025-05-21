@@ -110,7 +110,7 @@ export default function Leads({ user }) {
               <th>Email</th>
               <th>Phone</th>
               <th>Slot</th>
-              <th>Students</th>
+              {/* <th>Students</th> */}
             </tr>
           </thead>
           <tbody>
@@ -121,7 +121,7 @@ export default function Leads({ user }) {
                 <td>{lead.email}</td>
                 <td>{lead.phoneNumber}</td>
                 <td>{lead.slot}</td>
-                <td>
+                {/* <td>
                   <div className="student-count">
                     {Object.values(lead).filter(value => 
                       typeof value === 'string' && 
@@ -130,7 +130,7 @@ export default function Leads({ user }) {
                       lead[value]
                     ).length}/30
                   </div>
-                </td>
+                </td> */}
               </tr>
             ))}
           </tbody>

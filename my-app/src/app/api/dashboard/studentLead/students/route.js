@@ -27,24 +27,32 @@ export async function POST(req) {
 
         db = await pool.getConnection();
 
+        // Get studentLead's slot first
+        const [studentLead] = await db.query(
+            "SELECT slot FROM studentLeads WHERE username = ?",
+            [username]
+        );
+
+        if (!studentLead || studentLead.length === 0) {
+            return NextResponse.json({ 
+                success: false, 
+                error: 'Student lead not found' 
+            }, { status: 404 });
+        }
+
+        const currentSlot = studentLead[0].slot;
+
         // Get students directly from registrations table where studentLeadId matches
-        const selects = Array.from({ length: 30 }, (_, i) => 
-            `SELECT sl.student${i + 1}Username FROM studentLeads sl WHERE sl.username = ?`
-          ).join(" UNION ");
-          
-          const sql = `
-            SELECT r.*,u.updatedAt
+        const sql = `
+            SELECT r.*, u.updatedAt
             FROM registrations r
             LEFT JOIN uploads u ON r.username = u.username
-            WHERE r.username IN (
-              ${selects}
-            )
-            ORDER BY u.updatedAt DESC
-          `;
+            WHERE r.studentLeadId = ?
+            AND r.slot <= ?
+            ORDER BY r.slot DESC, u.updatedAt DESC
+        `;
           
-          const params = Array(30).fill(username);
-          const [students] = await db.query(sql, params);
-          
+        const [students] = await db.query(sql, [username, currentSlot]);
 
         // Get report open status
         const [reportOpen] = await db.query(
@@ -102,7 +110,8 @@ export async function POST(req) {
             success: true,
             students: studentsWithData,
             total: students.length,
-            reportOpen: reportOpen[0] || { slot1: false, slot2: false, slot3: false, slot4: false }
+            reportOpen: reportOpen[0] || { slot1: false, slot2: false, slot3: false, slot4: false },
+            currentSlot: currentSlot
         });
     } catch (error) {
         console.error('Error in get students API:', error);
