@@ -47,8 +47,6 @@ export async function GET(request) {
                 f.completed, 
                 f.finalReport,
                 m.internalMarks,
-                m.caseStudyReportMarks, 
-                m.conductParticipationMarks, 
                 m.totalMarks, 
                 m.grade,
                 m.feedback,
@@ -117,8 +115,6 @@ export async function GET(request) {
                     },
                     marks: student.totalMarks > 0 ? {
                         internalMarks: student.internalMarks,
-                        caseStudyReportMarks: student.caseStudyReportMarks,
-                        conductParticipationMarks: student.conductParticipationMarks,
                         totalMarks: student.totalMarks,
                         grade: student.grade,
                         feedback: student.feedback

@@ -95,6 +95,19 @@ export async function POST(request) {
 
             const [uploadsRows] = await db.execute(uploadsQuery, [username]);
 
+            // Get marks data
+            const marksQuery = `
+                SELECT 
+                    m.internalMarks,
+                    m.totalMarks,
+                    m.grade,
+                    m.completed
+                FROM marks m
+                WHERE m.username = ?;
+            `;
+
+            const [marksRows] = await db.execute(marksQuery, [username]);
+
             // Calculate attendance stats
             const attendance = attendanceRows[0] || {};
             const attendanceValues = Object.values(attendance);
@@ -120,6 +133,12 @@ export async function POST(request) {
                     totalUploads,
                     lastUpload,
                     details: uploads
+                },
+                marks: marksRows[0] || {
+                    internalMarks: 0,
+                    totalMarks: 0,
+                    grade: 'Not Qualified',
+                    completed: null
                 }
             };
 
