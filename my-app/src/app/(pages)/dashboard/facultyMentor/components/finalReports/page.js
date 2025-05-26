@@ -257,7 +257,10 @@ export default function FinalReports() {
                         >
                           Evaluate
                         </button>
-                      ) : student.finalReportMarks > 0 && student.finalPresentationMarks > 0 ? (
+                      ) : (student.finalReportMarks !== null && student.finalReportMarks !== undefined &&
+                            student.finalPresentationMarks !== null && student.finalPresentationMarks !== undefined &&
+                            !(Number(student.finalReportMarks) === 0 && Number(student.finalPresentationMarks) === 0)
+                      ) ? (
                         <>
                           <button
                             className="accept-btn"
