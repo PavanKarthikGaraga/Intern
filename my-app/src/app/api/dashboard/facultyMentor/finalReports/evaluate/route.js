@@ -121,6 +121,12 @@ export async function POST(request) {
           ]
         );
 
+        // Also update final.completed to 1 so studentLead UI shows grade
+        await db.query(
+          `UPDATE final SET completed = 1 WHERE username = ?`,
+          [username]
+        );
+
         await db.query(
           "UPDATE registrations SET pass = 'P' WHERE username = ?",
           [username]

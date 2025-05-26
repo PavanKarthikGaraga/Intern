@@ -228,7 +228,15 @@ export default function FinalReports() {
                       <span className="marks">{student.finalPresentationMarks} / 15</span>
                     </td>
                     <td>
-                      <span className="total-marks">{student.totalMarks} / 100</span>
+                      <span className="total-marks">
+                        {(student.finalReportMarks !== null && student.finalReportMarks !== undefined &&
+                          student.finalPresentationMarks !== null && student.finalPresentationMarks !== undefined &&
+                          !(Number(student.finalReportMarks) === 0 && Number(student.finalPresentationMarks) === 0)
+                        )
+                          ? ((Number(student.internalMarks) || 0) + (Number(student.finalReportMarks) || 0) + (Number(student.finalPresentationMarks) || 0))
+                          : 0
+                        } / 100
+                      </span>
                     </td>
                     <td>
                       <span className={`grade-badge ${student.grade?.toLowerCase()}`}>
@@ -242,7 +250,14 @@ export default function FinalReports() {
                     </td>
                     <td>
                     <div className="action-buttons">
-                      {student.completed !== 'P' && student.totalMarks !== null ? (
+                      {student.completed === 'P' ? (
+                        <button
+                          className="edit-btn"
+                          onClick={() => handleEditClick(student)}
+                        >
+                          Evaluate
+                        </button>
+                      ) : student.finalReportMarks > 0 && student.finalPresentationMarks > 0 ? (
                         <>
                           <button
                             className="accept-btn"

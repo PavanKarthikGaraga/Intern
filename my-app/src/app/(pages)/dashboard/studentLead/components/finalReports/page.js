@@ -59,7 +59,7 @@ export default function FinalReports() {
   };
 
   const getGrade = (student) => {
-    if (student.completed) {
+    if (student.completed || student.marksCompleted === 'P') {
       if(student.grade === 'Certificate of Excellence') {
         return 'A';
       } else if(student.grade === 'Certificate of Appreciation') {
@@ -184,7 +184,7 @@ export default function FinalReports() {
                       <span className="internal-marks">{student.internalMarks} / 60.00</span>
                     </td>
                     <td>
-                      {student.completed ? (
+                      {student.completed || student.marksCompleted === 'P' ? (
                         <span className={`grade-badge ${getGrade(student)}`}>{getGrade(student)}</span>
                       ) : (
                         <div className="action-buttons">
@@ -252,4 +252,4 @@ export default function FinalReports() {
       )}
     </div>
   );
-} 
+}

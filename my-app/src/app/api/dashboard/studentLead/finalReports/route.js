@@ -69,7 +69,7 @@ export async function GET(request) {
             if (usernames.length) {
                 // Get all final reports for these students, join dailyMarks for internalMarks
                 const [finalRows] = await db.query(
-                    `SELECT f.username, f.finalReport, f.finalPresentation, f.completed, r.name, r.mode, r.slot, dm.internalMarks, sl.name as studentLeadName, sl.username as studentLeadUsername, m.grade
+                    `SELECT f.username, f.finalReport, f.finalPresentation, f.completed, r.name, r.mode, r.slot, dm.internalMarks, sl.name as studentLeadName, sl.username as studentLeadUsername, m.grade, m.completed as marksCompleted
                      FROM final f
                      JOIN registrations r ON f.username = r.username
                      LEFT JOIN dailyMarks dm ON f.username = dm.username
@@ -86,6 +86,7 @@ export async function GET(request) {
                     finalReport: row.finalReport,
                     finalPresentation: row.finalPresentation,
                     completed: !!row.completed,
+                    marksCompleted: row.marksCompleted,
                     internalMarks: row.internalMarks,
                     studentLeadName: row.studentLeadName,
                     studentLeadUsername: row.studentLeadUsername,
