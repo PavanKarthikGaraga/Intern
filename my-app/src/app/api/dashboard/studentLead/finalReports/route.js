@@ -58,7 +58,11 @@ export async function GET(request) {
             if (!students.length) {
                 return NextResponse.json({
                     success: true,
-                    data: { submittedReports: [], pendingReports: [] }
+                    data: { 
+                        submittedReports: [], 
+                        pendingReports: [],
+                        availableSlots: slotsToFetch 
+                    }
                 }, { status: 200 });
             }
 
@@ -67,9 +71,26 @@ export async function GET(request) {
             let submittedReports = [];
             let pendingReports = [];
             if (usernames.length) {
-                // Get all final reports for these students, join dailyMarks for internalMarks
+                // Get all final reports for these students, join with marks table for evaluation data
                 const [finalRows] = await db.query(
-                    `SELECT f.username, f.finalReport, f.finalPresentation, f.completed, r.name, r.mode, r.slot, dm.internalMarks, sl.name as studentLeadName, sl.username as studentLeadUsername, m.grade, m.completed as marksCompleted
+                    `SELECT 
+                        f.username, 
+                        f.finalReport, 
+                        f.finalPresentation, 
+                        f.completed, 
+                        r.name, 
+                        r.mode, 
+                        r.slot, 
+                        dm.internalMarks,
+                        sl.name as studentLeadName, 
+                        sl.username as studentLeadUsername,
+                        m.grade,
+                        m.completed as marksCompleted,
+                        m.finalReport as finalReportMarks,
+                        m.finalPresentation as finalPresentationMarks,
+                        m.totalMarks,
+                        m.feedback,
+                        m.updatedAt as evaluatedAt
                      FROM final f
                      JOIN registrations r ON f.username = r.username
                      LEFT JOIN dailyMarks dm ON f.username = dm.username
@@ -90,7 +111,12 @@ export async function GET(request) {
                     internalMarks: row.internalMarks,
                     studentLeadName: row.studentLeadName,
                     studentLeadUsername: row.studentLeadUsername,
-                    grade: row.grade
+                    grade: row.grade,
+                    finalReportMarks: row.finalReportMarks,
+                    finalPresentationMarks: row.finalPresentationMarks,
+                    totalMarks: row.totalMarks,
+                    feedback: row.feedback,
+                    evaluatedAt: row.evaluatedAt
                 }));
 
                 // Pending: students who are verified but have not submitted final report
@@ -117,7 +143,11 @@ export async function GET(request) {
 
             return NextResponse.json({
                 success: true,
-                data: { submittedReports, pendingReports }
+                data: { 
+                    submittedReports, 
+                    pendingReports,
+                    availableSlots: slotsToFetch 
+                }
             }, { status: 200 });
         } catch (err) {
             // console.error('Error fetching student lead final reports:', err);

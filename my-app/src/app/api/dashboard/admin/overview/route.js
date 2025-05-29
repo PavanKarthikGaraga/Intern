@@ -27,9 +27,17 @@ export async function GET(req) {
     const [leadsCount] = await pool.query('SELECT COUNT(*) as count FROM studentLeads');
     const [studentsCount] = await pool.query('SELECT COUNT(*) as count FROM registrations');
     const [completedCount] = await pool.query(`
-      SELECT COUNT(*) as count 
-      FROM final 
-      WHERE completed = true
+      SELECT COUNT(*) AS completedInternships
+      FROM uploads u
+      JOIN final f ON u.username = f.username
+      JOIN marks m ON u.username = m.username
+      JOIN registrations r ON u.username = r.username
+      WHERE r.slot = 1
+        AND u.day1 IS NOT NULL AND u.day2 IS NOT NULL AND u.day3 IS NOT NULL
+        AND u.day4 IS NOT NULL AND u.day5 IS NOT NULL AND u.day6 IS NOT NULL
+        AND u.day7 IS NOT NULL
+        AND f.finalReport IS NOT NULL AND f.finalPresentation IS NOT NULL
+        AND m.totalMarks > 0;
     `);
     const [facultyCount] = await pool.query('SELECT COUNT(*) as count FROM facultyMentors');
 

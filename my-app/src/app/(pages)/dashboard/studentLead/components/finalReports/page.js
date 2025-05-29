@@ -16,12 +16,14 @@ export default function FinalReports() {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [viewedReports, setViewedReports] = useState(new Set());
+  const [selectedSlot, setSelectedSlot] = useState('all');
+  const [availableSlots, setAvailableSlots] = useState([]);
 
   useEffect(() => {
     if (!user) return;
     fetchReports();
     // eslint-disable-next-line
-  }, [user]);
+  }, [user, selectedSlot]);
 
   const fetchReports = async () => {
     try {
@@ -36,7 +38,7 @@ export default function FinalReports() {
       const data = await response.json();
       if (data.success) {
         setReports(data.data);
-        // console.log("data",data.data.submittedReports); 
+        setAvailableSlots(data.data.availableSlots || []);
       } else {
         throw new Error(data.error || 'Failed to fetch final reports');
       }
@@ -46,6 +48,15 @@ export default function FinalReports() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSlotChange = (e) => {
+    setSelectedSlot(e.target.value);
+  };
+
+  const filterReportsBySlot = (reports) => {
+    if (selectedSlot === 'all') return reports;
+    return reports.filter(report => report.slot === parseInt(selectedSlot));
   };
 
   const handleDocumentClick = (student) => {
@@ -60,13 +71,15 @@ export default function FinalReports() {
 
   const getGrade = (student) => {
     if (student.completed || student.marksCompleted === 'P') {
-      if(student.grade === 'Certificate of Excellence') {
+      if (student.totalMarks >= 90) {
         return 'A';
-      } else if(student.grade === 'Certificate of Appreciation') {
+      } else if (student.totalMarks >= 80) {
         return 'B';
-      } else if(student.grade === 'Certificate of Participation') {
+      } else if (student.totalMarks >= 70) {
         return 'C';
-      } else if(student.grade === 'Not Qualified') {
+      } else if (student.totalMarks >= 60) {
+        return 'D';
+      } else {
         return 'F';
       }
     }
@@ -121,11 +134,29 @@ export default function FinalReports() {
   return (
     <div className="final-reports-section">
       <h1>Final Reports</h1>
+      
+      <div className="filters">
+        <div className="filter-group">
+          <label htmlFor="slot-filter">Filter by Slot:</label>
+          <select 
+            id="slot-filter" 
+            value={selectedSlot} 
+            onChange={handleSlotChange}
+            className="slot-filter"
+          >
+            <option value="all">All Slots</option>
+            {availableSlots.map(slot => (
+              <option key={slot} value={slot}>Slot {slot}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
       <div className="reports-section">
-        <h2>Submitted Reports ({reports.submittedReports.length})</h2>
+        <h2>Submitted Reports ({filterReportsBySlot(reports.submittedReports).length})</h2>
         <p className="section-description">Students who have submitted their final reports</p>
         <div className="table-container">
-          {reports.submittedReports.length === 0 ? (
+          {filterReportsBySlot(reports.submittedReports).length === 0 ? (
             <div className="no-reports-message">No final reports submitted yet.</div>
           ) : (
             <table className="reports-table">
@@ -139,11 +170,15 @@ export default function FinalReports() {
                   <th>Presentation</th>
                   <th>Status</th>
                   <th>Internal Marks</th>
+                  <th>Final Report</th>
+                  <th>Final Presentation</th>
+                  <th>Total Marks</th>
+                  <th>Grade</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {reports.submittedReports.map((student) => (
+                {filterReportsBySlot(reports.submittedReports).map((student) => (
                   <tr key={student.username}>
                     <td>{student.name}</td>
                     <td>{student.username}</td>
@@ -178,14 +213,59 @@ export default function FinalReports() {
                       )}
                     </td>
                     <td>
-                      <span className={`status-badge ${student.completed ? 'completed' : 'pending'}`}>{student.completed ? 'Completed' : 'Pending'}</span>
+                      <span className={`status-badge ${student.completed ? 'completed' : 'pending'}`}>
+                        {student.completed ? 'Completed' : 'Pending'}
+                      </span>
                     </td>
                     <td>
                       <span className="internal-marks">{student.internalMarks} / 60.00</span>
                     </td>
                     <td>
-                      {student.completed || student.marksCompleted === 'P' ? (
+                      {student.finalReportMarks !== null ? (
+                        <span className="marks">{student.finalReportMarks} / 25.00</span>
+                      ) : (
+                        <span className="status-badge pending">Pending</span>
+                      )}
+                    </td>
+                    <td>
+                      {student.finalPresentationMarks !== null ? (
+                        <span className="marks">{student.finalPresentationMarks} / 15.00</span>
+                      ) : (
+                        <span className="status-badge pending">Pending</span>
+                      )}
+                    </td>
+                    <td>
+                      {student.totalMarks !== null ? (
+                        <span className="total-marks">{student.totalMarks} / 100.00</span>
+                      ) : (
+                        <span className="status-badge pending">Pending</span>
+                      )}
+                    </td>
+                    <td>
+                      {student.grade ? (
                         <span className={`grade-badge ${getGrade(student)}`}>{getGrade(student)}</span>
+                      ) : (
+                        <span className="status-badge pending">Pending</span>
+                      )}
+                    </td>
+                    <td>
+                      {student.completed || student.marksCompleted === 'P' ? (
+                        <div className="evaluation-info">
+                          {student.feedback && (
+                            <button 
+                              className="feedback-btn"
+                              onClick={() => toast.success(student.feedback, { duration: 5000 })}
+                              title="View Feedback"
+                            >
+                              View Feedback
+                            </button>
+                          )}
+                          {student.evaluatedAt && (
+                            <span className="evaluation-date">
+                              Evaluated: {new Date(student.evaluatedAt).toLocaleDateString()}
+                            </span>
+                          )}
+                        </div>
                       ) : (
                         <div className="action-buttons">
                           <button
@@ -204,11 +284,12 @@ export default function FinalReports() {
           )}
         </div>
       </div>
+
       <div className="reports-section">
-        <h2>Pending Reports ({reports.pendingReports.length})</h2>
+        <h2>Pending Reports ({filterReportsBySlot(reports.pendingReports).length})</h2>
         <p className="section-description">Students who are verified but haven't submitted their reports yet</p>
         <div className="table-container">
-          {reports.pendingReports.length === 0 ? (
+          {filterReportsBySlot(reports.pendingReports).length === 0 ? (
             <div className="no-reports-message">No pending reports.</div>
           ) : (
             <table className="reports-table">
@@ -222,7 +303,7 @@ export default function FinalReports() {
                 </tr>
               </thead>
               <tbody>
-                {reports.pendingReports.map((student) => (
+                {filterReportsBySlot(reports.pendingReports).map((student) => (
                   <tr key={student.username}>
                     <td>{student.name}</td>
                     <td>{student.username}</td>
