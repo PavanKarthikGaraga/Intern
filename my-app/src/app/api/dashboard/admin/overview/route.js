@@ -145,7 +145,7 @@ export async function GET(req) {
       overviewData: {
         leadsCount: leadsCount[0].count,
         studentsCount: studentsCount[0].count,
-        completedCount: completedCount[0].count,
+        completedCount: completedCount[0].completedInternships,
         facultyCount: facultyCount[0].count,
         verificationStats: verificationStats[0],
         attendanceStats: attendanceStats[0],

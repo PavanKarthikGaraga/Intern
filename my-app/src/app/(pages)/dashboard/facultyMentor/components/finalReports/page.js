@@ -17,6 +17,8 @@ export default function FinalReports() {
   });
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState('all');
+  const [availableSlots, setAvailableSlots] = useState([]);
 
   useEffect(() => {
     if (!user) {
@@ -25,7 +27,7 @@ export default function FinalReports() {
     }
 
     fetchReports();
-  }, [user, router]);
+  }, [user, router, selectedSlot]);
 
   const fetchReports = async () => {
     try {
@@ -42,6 +44,7 @@ export default function FinalReports() {
       const data = await response.json();
       if (data.success) {
         setReports(data.data);
+        setAvailableSlots(data.data.availableSlots || []);
       } else {
         throw new Error(data.error || 'Failed to fetch final reports');
       }
@@ -52,6 +55,15 @@ export default function FinalReports() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSlotChange = (e) => {
+    setSelectedSlot(e.target.value);
+  };
+
+  const filterReportsBySlot = (reports) => {
+    if (selectedSlot === 'all') return reports;
+    return reports.filter(report => report.slot === parseInt(selectedSlot));
   };
 
   const handleDocumentClick = (student) => {
@@ -137,11 +149,28 @@ export default function FinalReports() {
     <div className="final-reports-section">
       <h1>Final Reports</h1>
 
+      <div className="filters">
+        <div className="filter-group">
+          <label htmlFor="slot-filter">Filter by Slot:</label>
+          <select 
+            id="slot-filter" 
+            value={selectedSlot} 
+            onChange={handleSlotChange}
+            className="slot-filter"
+          >
+            <option value="all">All Slots</option>
+            {availableSlots.map(slot => (
+              <option key={slot} value={slot}>Slot {slot}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
       <div className="reports-section">
-        <h2>Submitted Reports ({reports.submittedReports.length})</h2>
+        <h2>Submitted Reports ({filterReportsBySlot(reports.submittedReports).length})</h2>
         <p className="section-description">Students who have submitted their final reports</p>
         <div className="table-container">
-          {reports.submittedReports.length === 0 ? (
+          {filterReportsBySlot(reports.submittedReports).length === 0 ? (
             <div className="no-reports-message">No final reports submitted yet.</div>
           ) : (
             <table className="reports-table">
@@ -165,7 +194,7 @@ export default function FinalReports() {
                 </tr>
               </thead>
               <tbody>
-                {reports.submittedReports.map((student,index) => (
+                {filterReportsBySlot(reports.submittedReports).map((student,index) => (
                   <tr key={student.username} className='roe'>
                     <td>{index+1}</td>
                     <td>{student.name}</td>
@@ -244,8 +273,8 @@ export default function FinalReports() {
                       </span>
                     </td>
                     <td>
-                      <span className={`status-badge ${student.completed === 'P' ? 'completed' : 'pending'}`}>
-                        {student.completed === 'P' ? 'Accepted' : 'Pending'}
+                      <span className={`status-badge ${student.completed ? 'completed' : 'pending'}`}>
+                        {student.completed ? 'Accepted' : 'Pending'}
                       </span>
                     </td>
                     <td>
@@ -257,10 +286,7 @@ export default function FinalReports() {
                         >
                           Evaluate
                         </button>
-                      ) : (student.finalReportMarks !== null && student.finalReportMarks !== undefined &&
-                            student.finalPresentationMarks !== null && student.finalPresentationMarks !== undefined &&
-                            !(Number(student.finalReportMarks) === 0 && Number(student.finalPresentationMarks) === 0)
-                      ) ? (
+                      ) : student.totalMarks > 0 && student.marksCompleted === null ? (
                         <>
                           <button
                             className="accept-btn"
@@ -294,10 +320,10 @@ export default function FinalReports() {
       </div>
 
       <div className="reports-section">
-        <h2>Pending Reports ({reports.pendingReports.length})</h2>
+        <h2>Pending Reports ({filterReportsBySlot(reports.pendingReports).length})</h2>
         <p className="section-description">Students who are verified but haven't submitted their reports yet</p>
         <div className="table-container">
-          {reports.pendingReports.length === 0 ? (
+          {filterReportsBySlot(reports.pendingReports).length === 0 ? (
             <div className="no-reports-message">No pending reports.</div>
           ) : (
             <table className="reports-table">
@@ -318,7 +344,7 @@ export default function FinalReports() {
                 </tr>
               </thead>
               <tbody>
-                {reports.pendingReports.map((student,index) => (
+                {filterReportsBySlot(reports.pendingReports).map((student,index) => (
                   <tr key={student.username}>
                     <td>{index+1}</td>
                     <td>{student.name}</td>
