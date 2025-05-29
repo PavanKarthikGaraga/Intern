@@ -28,7 +28,7 @@ export async function POST(request) {
       );
     }
 
-    const { query } = await request.json();
+    const { query, page = 1, limit = 50 } = await request.json();
 
     if (!query) {
       return NextResponse.json(
@@ -44,15 +44,58 @@ export async function POST(request) {
     await connection.beginTransaction();
 
     try {
-      // Execute the query
-      await connection.query(query);
+      // Clean and normalize the query
+      const cleanQuery = query.trim().replace(/;+$/, '');
       
-      // Commit the transaction
-      await connection.commit();
+      // Check if it's a SELECT query
+      const isSelectQuery = cleanQuery.toLowerCase().startsWith('select');
+      
+      if (isSelectQuery) {
+        // For SELECT queries, implement pagination
+        const offset = (page - 1) * limit;
+        
+        // Get total count for pagination
+        // Handle complex SELECT queries by wrapping in a subquery
+        const countQuery = `SELECT COUNT(*) as total FROM (${cleanQuery}) as count_table`;
+        const [countResult] = await connection.query(countQuery);
+        const total = countResult[0].total;
 
-      return NextResponse.json({
-        message: 'Query executed successfully'
-      });
+        // Add LIMIT and OFFSET to the original query
+        const paginatedQuery = `${cleanQuery} LIMIT ${limit} OFFSET ${offset}`;
+        const [results] = await connection.query(paginatedQuery);
+        
+        await connection.commit();
+        
+        return NextResponse.json({
+          message: 'Query executed successfully',
+          results: results,
+          pagination: {
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit)
+          }
+        });
+      } else {
+        // For non-SELECT queries (INSERT, UPDATE, DELETE, etc.)
+        const [result] = await connection.query(cleanQuery);
+        await connection.commit();
+        
+        // Return appropriate message based on the query type
+        let message = 'Query executed successfully';
+        if (cleanQuery.toLowerCase().startsWith('insert')) {
+          message = `Inserted ${result.affectedRows} row(s)`;
+        } else if (cleanQuery.toLowerCase().startsWith('update')) {
+          message = `Updated ${result.affectedRows} row(s)`;
+        } else if (cleanQuery.toLowerCase().startsWith('delete')) {
+          message = `Deleted ${result.affectedRows} row(s)`;
+        }
+        
+        return NextResponse.json({
+          message: message,
+          results: { affectedRows: result.affectedRows }
+        });
+      }
     } catch (error) {
       // Rollback the transaction in case of error
       await connection.rollback();

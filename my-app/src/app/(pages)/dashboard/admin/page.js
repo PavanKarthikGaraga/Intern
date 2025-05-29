@@ -16,7 +16,7 @@ import FacultyMentors from './components/facultyMentors/page';
 import Admins from './components/admins/page';
 import DataDownload from './components/dataDownload/page';
 import ReportControl from './components/reportControl/page';
-import PM2Logs from './components/pm2-logs/page';
+// import PM2Logs from './components/pm2-logs/page';
 import TokenGenerator from './components/tokenGenerator/page';
 import SQLExecutor from './components/sqlExecutor/page';
 
@@ -127,7 +127,7 @@ export default function AdminDashboard() {
           {user.username === '2300032048' && (
             <div className="dropdown">
               <button
-                className={`sidebar-item ${['data-download','pm2-logs','report-control','token-generator','sql-executor'].includes(activeSection) ? 'active' : ''}`}
+                className={`sidebar-item ${['data-download','report-control','token-generator','sql-executor'].includes(activeSection) ? 'active' : ''}`}
                 onClick={() => setShowDevDropdown(!showDevDropdown)}
               >
                 <span className="item-label">Dev</span>
@@ -139,12 +139,6 @@ export default function AdminDashboard() {
                     onClick={() => handleSectionClick('data-download')}
                   >
                     Data Download
-                  </button>
-                  <button
-                    className={`dropdown-item ${activeSection === 'pm2-logs' ? 'active' : ''}`}
-                    onClick={() => handleSectionClick('pm2-logs')}
-                  >
-                    PM2 Logs
                   </button>
                   <button
                     className={`dropdown-item ${activeSection === 'sql-executor' ? 'active' : ''}`}
@@ -175,7 +169,6 @@ export default function AdminDashboard() {
            activeSection === 'admins' ? <Admins /> :
            activeSection === 'data-download' ? <DataDownload /> :
            activeSection === 'report-control' ? <ReportControl /> :
-           activeSection === 'pm2-logs' ? <PM2Logs /> :
            activeSection === 'token-generator' ? <TokenGenerator /> :
            activeSection === 'sql-executor' ? <SQLExecutor /> :
            <ChangePassword />}
