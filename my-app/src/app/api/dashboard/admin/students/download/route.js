@@ -36,7 +36,7 @@ export async function GET(request) {
         r.slot,
         r.studentLeadId,
         r.facultyMentorId,
-        r.verified,
+        r.pass,
         r.branch,
         r.gender,
         r.year,
