@@ -19,6 +19,7 @@ import ReportControl from './components/reportControl/page';
 // import PM2Logs from './components/pm2-logs/page';
 import TokenGenerator from './components/tokenGenerator/page';
 import SQLExecutor from './components/sqlExecutor/page';
+import ResetPassword from './components/resetPassword/page';
 
 export default function AdminDashboard() {
   const { user, isLoading, isAuthenticated } = useAuth();
@@ -116,7 +117,13 @@ export default function AdminDashboard() {
             className={`sidebar-item ${activeSection === 'report-control' ? 'active' : ''}`}
             onClick={() => handleSectionClick('report-control')}
           >
-            Report Control
+            <span className="item-label">Report Control</span>
+          </button>
+          <button
+            className={`sidebar-item ${activeSection === 'reset-password' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('reset-password')}
+          >
+            <span className="item-label">Reset Password</span>
           </button>
           <button
             className={`sidebar-item ${activeSection === 'token-generator' ? 'active' : ''}`}
@@ -171,6 +178,7 @@ export default function AdminDashboard() {
            activeSection === 'report-control' ? <ReportControl /> :
            activeSection === 'token-generator' ? <TokenGenerator /> :
            activeSection === 'sql-executor' ? <SQLExecutor /> :
+           activeSection === 'reset-password' ? <ResetPassword /> :
            <ChangePassword />}
         </main>
       </div>

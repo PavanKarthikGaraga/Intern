@@ -210,7 +210,7 @@ export default function SQLExecutor() {
             rows="6"
           />
         </div>
-        <button type="submit" disabled={isLoading}>
+        <button type="submit" className="execute-btn" disabled={isLoading}>
           {isLoading ? 'Executing...' : 'Execute Query'}
         </button>
       </form>

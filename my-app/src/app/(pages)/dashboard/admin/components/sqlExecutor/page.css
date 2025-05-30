@@ -28,7 +28,7 @@
   resize: vertical;
 }
 
-button {
+.execute-btn {
   padding: 10px 20px;
   background-color: #0070f3;
   color: white;
@@ -38,12 +38,12 @@ button {
   font-size: 14px;
 }
 
-button:disabled {
+.execute-btn:disabled {
   background-color: #ccc;
   cursor: not-allowed;
 }
 
-button:hover:not(:disabled) {
+.execute-btn:hover:not(:disabled) {
   background-color: #0051a8;
 }
 
