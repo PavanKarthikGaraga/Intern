@@ -12,6 +12,7 @@ const FinalReportPage = () => {
   const [error, setError] = useState(null);
   const [finalReport, setFinalReport] = useState("");
   const [finalPresentation, setFinalPresentation] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
   const [status, setStatus] = useState({
     // verified: false,
     completed: false,
@@ -85,7 +86,11 @@ const FinalReportPage = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ finalReport, finalPresentation })
+        body: JSON.stringify({ 
+          finalReport, 
+          finalPresentation,
+          isUpdate: !!status.finalReport // Add flag to indicate if this is an update
+        })
       });
 
       const data = await response.json();
@@ -95,8 +100,14 @@ const FinalReportPage = () => {
       }
 
       if (data.success) {
-        setStatus(prev => ({ ...prev, finalReport, finalPresentation }));
-        toast.success('Final report submitted successfully!');
+        setStatus(prev => ({ 
+          ...prev, 
+          finalReport, 
+          finalPresentation,
+          completed: false // Reset completion status on update
+        }));
+        setIsEditing(false);
+        toast.success(status.finalReport ? 'Final report updated successfully!' : 'Final report submitted successfully!');
       } else {
         throw new Error(data.error || 'Failed to submit final report');
       }
@@ -106,6 +117,18 @@ const FinalReportPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEdit = () => {
+    setIsEditing(true);
+    setFinalReport(status.finalReport || '');
+    setFinalPresentation(status.finalPresentation || '');
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    setFinalReport(status.finalReport || '');
+    setFinalPresentation(status.finalPresentation || '');
   };
 
   if (loading) {
@@ -158,10 +181,18 @@ const FinalReportPage = () => {
         </div>
       </div>
 
-      {status.finalReport ? (
+      {status.finalReport && !isEditing ? (
         <div className="report-form">
           <div className="submitted-report">
-            <h3>Submitted Report</h3>
+            <div className="report-header">
+              <h3>Submitted Report</h3>
+              <button 
+                className="edit-btn"
+                onClick={handleEdit}
+              >
+                Edit Submission
+              </button>
+            </div>
             <a href={status.finalReport} target="_blank" rel="noopener noreferrer" className="report-link">
               View Final Report
             </a>
@@ -210,8 +241,24 @@ const FinalReportPage = () => {
             </div>
 
             <div className="form-actions">
-              <button type="submit" disabled={loading}>
-                {loading ? 'Submitting...' : 'Submit Report'}
+              {isEditing && (
+                <button 
+                  type="button" 
+                  className="cancel-btn"
+                  onClick={handleCancel}
+                  disabled={loading}
+                >
+                  Cancel
+                </button>
+              )}
+              <button 
+                type="submit" 
+                className={isEditing ? 'update-btn' : 'submit-btn'}
+                disabled={loading}
+              >
+                {loading 
+                  ? (isEditing ? 'Updating...' : 'Submitting...') 
+                  : (isEditing ? 'Update Report' : 'Submit Report')}
               </button>
             </div>
           </form>

@@ -171,29 +171,53 @@
 
 .form-actions {
   display: flex;
-  justify-content: flex-end;
+    gap: 1rem;
   margin-top: 2rem;
 }
 
-.form-actions button {
-  padding: 0.85rem 2.2rem;
-  background: #2563eb;
-  color: #fff;
+.cancel-btn {
+  padding: 0.75rem 1.5rem;
+  background-color: #6c757d;
+  color: white;
   border: none;
-  border-radius: 8px;
-  font-size: 1.1rem;
-  font-weight: 600;
+  border-radius: 4px;
+  font-size: 1rem;
   cursor: pointer;
-  transition: background 0.2s, box-shadow 0.2s;
-  box-shadow: 0 2px 8px rgba(37,99,235,0.08);
+  transition: background-color 0.2s ease;
 }
 
-.form-actions button:hover {
-  background: #1742a0;
+.cancel-btn:hover {
+  background-color: #5a6268;
 }
 
-.form-actions button:disabled {
-  background: #ccc;
+.submit-btn, .update-btn {
+  padding: 0.75rem 1.5rem;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.submit-btn {
+  background-color: rgb(151, 0, 3);
+}
+
+.submit-btn:hover {
+  background-color: rgb(120, 0, 2);
+}
+
+.update-btn {
+  background-color: #28a745;
+}
+
+.update-btn:hover {
+  background-color: #218838;
+}
+
+.submit-btn:disabled, .update-btn:disabled, .cancel-btn:disabled {
+  background-color: #cccccc;
   cursor: not-allowed;
 }
 
@@ -222,6 +246,29 @@
   color: #137333;
   border-radius: 4px;
   text-align: center;
+}
+
+.report-header {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  margin-bottom: 1rem;
+  width: 100%;
+}
+
+.edit-btn {
+  padding: 0.5rem 1rem;
+  background-color: rgb(151, 0, 3);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.edit-btn:hover {
+  background-color: rgb(120, 0, 2);
 }
 
 @media (max-width: 768px) {

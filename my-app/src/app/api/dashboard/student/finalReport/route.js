@@ -89,7 +89,7 @@ export async function GET(request) {
     }
 }
 
-export async function POST(request) {
+export async function POST(req) {
     try {
         const cookieStore = await cookies();
         const accessToken = await cookieStore.get('accessToken');
@@ -109,84 +109,102 @@ export async function POST(request) {
             }, { status: 403 });
         }
 
-        const body = await request.json();
-        const { finalReport, finalPresentation } = body;
+        const { finalReport, finalPresentation, isUpdate } = await req.json();
 
+        // Validate input
         if (!finalReport || !finalPresentation) {
             return NextResponse.json({ 
                 success: false, 
-                error: 'Both final report and presentation are required.' 
+                error: 'Both final report and presentation links are required' 
             }, { status: 400 });
         }
 
-        const db = await pool.getConnection();
-        try {
-            // First check if student exists in registrations and is verified
-            const [registration] = await db.query(
-                `SELECT facultyMentorId, slot FROM registrations WHERE username = ?`,
-                [decoded.username]
-            );
+        // Check if submission is open for the student's slot
+        const [slotResult] = await pool.query(
+            'SELECT slot FROM registrations WHERE username = ?',
+            [decoded.username]
+        );
 
-            if (!registration || registration.length === 0) {
+        if (!slotResult.length) {
+            return NextResponse.json({ 
+                success: false, 
+                error: 'Student registration not found' 
+            }, { status: 404 });
+        }
+
+        const [reportOpenResult] = await pool.query(
+            'SELECT slot1, slot2, slot3, slot4 FROM reportOpen WHERE id = 1'
+        );
+
+        if (!reportOpenResult.length) {
+            return NextResponse.json({ 
+                success: false, 
+                error: 'Report submission status not found' 
+            }, { status: 404 });
+        }
+
+        const slot = slotResult[0].slot;
+        const isOpen = reportOpenResult[0][`slot${slot}`];
+
+        if (!isOpen) {
+            return NextResponse.json({ 
+                success: false, 
+                error: 'Final report submission is not currently open for your slot.' 
+            }, { status: 403 });
+        }
+
+        // Check if report already exists
+        const [existingReport] = await pool.query(
+            'SELECT * FROM final WHERE username = ?',
+            [decoded.username]
+        );
+
+        if (existingReport.length > 0) {
+            if (!isUpdate) {
                 return NextResponse.json({ 
                     success: false, 
-                    error: 'Student registration not found.' 
+                    error: 'A final report already exists. Please use the edit option to update it.' 
+                }, { status: 400 });
+            }
+
+            // Update existing report
+            await pool.query(
+                `UPDATE final 
+                SET finalReport = ?, 
+                    finalPresentation = ?,
+                    completed = FALSE
+                WHERE username = ?`,
+                [finalReport, finalPresentation, decoded.username]
+            );
+        } else {
+            if (isUpdate) {
+                return NextResponse.json({ 
+                    success: false, 
+                    error: 'No existing report found to update' 
                 }, { status: 404 });
             }
 
-            // if (registration[0].verified !== 1) {
-            //     return NextResponse.json({ 
-            //         success: false, 
-            //         error: 'Student not verified.' 
-            //     }, { status: 403 });
-            // }
-
-            // Check if report submission is allowed for this slot
-            const isAllowed = await isReportSubmissionAllowed(registration[0].slot);
-            if (!isAllowed) {
-              console.log(isAllowed);
-                return NextResponse.json({ 
-                    success: false, 
-                    error: 'Final report submission is not currently open for your slot.' 
-                }, { status: 403 });
-            }
-
-            // Check if record exists in final table
-            const [existing] = await db.query(
-                `SELECT username FROM final WHERE username = ?`,
-                [decoded.username]
+            // Insert new report
+            await pool.query(
+                `INSERT INTO final 
+                (username, facultyMentorId, finalReport, finalPresentation, completed) 
+                SELECT ?, facultyMentorId, ?, ?, FALSE
+                FROM registrations 
+                WHERE username = ?`,
+                [decoded.username, finalReport, finalPresentation, decoded.username]
             );
-
-            if (!existing || existing.length === 0) {
-                // Insert new record
-                await db.query(
-                    `INSERT INTO final (username, facultyMentorId, finalReport, finalPresentation)
-                     VALUES (?, ?, ?, ?)`,
-                    [decoded.username, registration[0].facultyMentorId, finalReport, finalPresentation]
-                );
-            } else {
-                // Update existing record
-                await db.query(
-                    `UPDATE final SET finalReport = ?, finalPresentation = ? WHERE username = ?`,
-                    [finalReport, finalPresentation, decoded.username]
-                );
-            }   
-
-            return NextResponse.json({ 
-                success: true,
-                message: 'Final report submitted successfully.'
-            });
-        } finally {
-            db.release();
         }
+
+        return NextResponse.json({ 
+            success: true, 
+            message: isUpdate ? 'Final report updated successfully' : 'Final report submitted successfully'
+        });
+
     } catch (error) {
-        console.error('Error submitting final report:', error);
-        return NextResponse.json(
-            { 
-                success: false,
-                error: 'Internal server error' 
-            },
-            { status: 500 }
-        );
+        console.error('Error handling final report:', error);
+        return NextResponse.json({ 
+            success: false, 
+            error: 'Failed to process final report submission' 
+        }, { status: 500 });
     }
 } 
