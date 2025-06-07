@@ -152,7 +152,7 @@ CREATE TABLE verify (
 );
 
 -- Create attendance table
-CREATE TABLE attendance (5
+CREATE TABLE attendance (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(10) NOT NULL UNIQUE,
     day1 ENUM('P','S','A') DEFAULT NULL,
@@ -239,6 +239,8 @@ CREATE TABLE stats (
     slot2 INT NOT NULL DEFAULT 0,
     slot3 INT NOT NULL DEFAULT 0,
     slot4 INT NOT NULL DEFAULT 0,
+    slot5 INT NOT NULL DEFAULT 0,
+    slot6 INT NOT NULL DEFAULT 0,
     remote INT NOT NULL DEFAULT 0,
     incampus INT NOT NULL DEFAULT 0,
     invillage INT NOT NULL DEFAULT 0,
@@ -254,6 +256,10 @@ CREATE TABLE stats (
     slot4Remote INT NOT NULL DEFAULT 0,
     slot4Incamp INT NOT NULL DEFAULT 0,
     slot4Invillage INT NOT NULL DEFAULT 0,
+    slot5Remote INT NOT NULL DEFAULT 0,
+    slot5Incamp INT NOT NULL DEFAULT 0,
+    slot6Remote INT NOT NULL DEFAULT 0,
+    slot6Incamp INT NOT NULL DEFAULT 0,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -265,12 +271,14 @@ CREATE TABLE reportOpen (
     slot2 BOOLEAN DEFAULT FALSE,
     slot3 BOOLEAN DEFAULT FALSE,
     slot4 BOOLEAN DEFAULT FALSE,
+    slot5 BOOLEAN DEFAULT FALSE,
+    slot6 BOOLEAN DEFAULT FALSE,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 -- Insert initial record for reportOpen
-INSERT INTO reportOpen (slot1, slot2, slot3, slot4) VALUES (FALSE, FALSE, FALSE, FALSE);
+INSERT INTO reportOpen (slot1, slot2, slot3, slot4, slot5) VALUES (FALSE, FALSE, FALSE, FALSE, FALSE);
 
 -- Insert users (admin)
 -- INSERT INTO users (name, username, password, role)
@@ -281,3 +289,94 @@ INSERT INTO reportOpen (slot1, slot2, slot3, slot4) VALUES (FALSE, FALSE, FALSE,
 -- Insert stats record
 -- INSERT INTO stats() VALUES ();
 
+
+
+
+
+
+-- Create s specific tables
+CREATE TABLE sstudents (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(10) NOT NULL UNIQUE,
+    mode ENUM('Remote', 'Incampus') NOT NULL,
+    slot INT NOT NULL,
+    previousSlot INT NOT NULL,
+    previousSlotMarks INT NOT NULL,
+    FOREIGN KEY (username) REFERENCES registrations(username)
+);
+
+CREATE TABLE suploads (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(10) NOT NULL UNIQUE,
+    day1 VARCHAR(200) DEFAULT NULL,
+    day2 VARCHAR(200) DEFAULT NULL,
+    day3 VARCHAR(200) DEFAULT NULL,
+    day4 VARCHAR(200) DEFAULT NULL,
+    day5 VARCHAR(200) DEFAULT NULL,
+    day6 VARCHAR(200) DEFAULT NULL,
+    day7 VARCHAR(200) DEFAULT NULL,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (username) REFERENCES sstudents(username)
+);
+
+CREATE TABLE sstatus (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(10) NOT NULL UNIQUE,
+    day1 VARCHAR(20) DEFAULT NULL,
+    day2 VARCHAR(20) DEFAULT NULL,
+    day3 VARCHAR(20) DEFAULT NULL,
+    day4 VARCHAR(20) DEFAULT NULL,
+    day5 VARCHAR(20) DEFAULT NULL,
+    day6 VARCHAR(20) DEFAULT NULL,
+    day7 VARCHAR(20) DEFAULT NULL,
+    FOREIGN KEY (username) REFERENCES sstudents(username)
+);
+
+
+CREATE TABLE sattendance (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(10) NOT NULL UNIQUE,
+    day1 ENUM('P','S','A') DEFAULT NULL,
+    day2 ENUM('P','S','A') DEFAULT NULL,
+    day3 ENUM('P','S','A') DEFAULT NULL,
+    day4 ENUM('P','S','A') DEFAULT NULL,
+    day5 ENUM('P','S','A') DEFAULT NULL,
+    day6 ENUM('P','S','A') DEFAULT NULL,
+    day7 ENUM('P', 'A') DEFAULT NULL,
+    FOREIGN KEY (username) REFERENCES sstudents(username)
+);
+
+CREATE TABLE smessages (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(10) NOT NULL UNIQUE,
+    day1 TEXT DEFAULT NULL,
+    day2 TEXT DEFAULT NULL,
+    day3 TEXT DEFAULT NULL,
+    day4 TEXT DEFAULT NULL,
+    day5 TEXT DEFAULT NULL,
+    day6 TEXT DEFAULT NULL,
+    day7 TEXT DEFAULT NULL,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (username) REFERENCES sstudents(username)
+);
+
+
+CREATE TABLE sdailyMarks (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(10) NOT NULL UNIQUE,
+    day1 DECIMAL(4,2) DEFAULT 0,
+    day2 DECIMAL(4,2) DEFAULT 0,
+    day3 DECIMAL(4,2) DEFAULT 0,
+    day4 DECIMAL(4,2) DEFAULT 0,
+    day5 DECIMAL(4,2) DEFAULT 0,
+    day6 DECIMAL(4,2) DEFAULT 0,
+    day7 DECIMAL(4,2) DEFAULT 0,
+    internalMarks DECIMAL(4,2) DEFAULT 0,
+    FOREIGN KEY (username) REFERENCES sstudents(username)
+);
+
+
+-- Insert initial record for sstats
+INSERT INTO sstats() VALUES ();

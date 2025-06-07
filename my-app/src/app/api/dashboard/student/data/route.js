@@ -47,6 +47,22 @@ export async function POST(request) {
                 throw new Error("Database connection failed");
             }
 
+            // Get reportOpen status first
+            const reportOpenQuery = `
+                SELECT slot1, slot2, slot3, slot4, slot5, slot6
+                FROM reportOpen
+                WHERE id = 1;
+            `;
+            const [reportOpenRows] = await db.execute(reportOpenQuery);
+            const reportOpen = reportOpenRows[0] || {
+                slot1: false,
+                slot2: false,
+                slot3: false,
+                slot4: false,
+                slot5: false,
+                slot6: false
+            };
+
             // Query to get student data with mentor and lead information
             const query = `
                 SELECT 
@@ -108,11 +124,53 @@ export async function POST(request) {
 
             const [marksRows] = await db.execute(marksQuery, [username]);
 
+            // Check if student is registered in sstudents
+            const sstudentQuery = `
+                SELECT 
+                    s.*,
+                    sm.internalMarks as sInternalMarks,
+                    sa.day1, sa.day2, sa.day3, sa.day4, sa.day5, sa.day6, sa.day7
+                FROM sstudents s
+                LEFT JOIN sdailyMarks sm ON s.username = sm.username
+                LEFT JOIN sattendance sa ON s.username = sa.username
+                WHERE s.username = ?;
+            `;
+
+            const [sstudentRows] = await db.execute(sstudentQuery, [username]);
+            const sstudentData = sstudentRows[0] || null;
+
             // Calculate attendance stats
             const attendance = attendanceRows[0] || {};
             const attendanceValues = Object.values(attendance);
             const presentDays = attendanceValues.filter(status => status === 'P').length;
             const totalDays = attendanceValues.filter(status => status !== null).length;
+
+            // Calculate sstudent attendance if exists
+            let sstudentAttendance = null;
+            if (sstudentData) {
+                const sAttendanceValues = Object.values({
+                    day1: sstudentData.day1,
+                    day2: sstudentData.day2,
+                    day3: sstudentData.day3,
+                    day4: sstudentData.day4,
+                    day5: sstudentData.day5,
+                    day6: sstudentData.day6,
+                    day7: sstudentData.day7
+                });
+                sstudentAttendance = {
+                    totalDays: sAttendanceValues.filter(status => status !== null).length,
+                    presentDays: sAttendanceValues.filter(status => status === 'P').length,
+                    details: {
+                        day1: sstudentData.day1,
+                        day2: sstudentData.day2,
+                        day3: sstudentData.day3,
+                        day4: sstudentData.day4,
+                        day5: sstudentData.day5,
+                        day6: sstudentData.day6,
+                        day7: sstudentData.day7
+                    }
+                };
+            }
 
             // Calculate uploads stats
             const uploads = uploadsRows[0] || {};
@@ -139,7 +197,21 @@ export async function POST(request) {
                     totalMarks: 0,
                     grade: 'Not Qualified',
                     completed: null
-                }
+                },
+                reportOpen,
+                sstudentData: sstudentData ? {
+                    slot: sstudentData.slot,
+                    previousSlot: sstudentData.previousSlot,
+                    previousSlotMarks: sstudentData.previousSlotMarks,
+                    mode: sstudentData.mode,
+                    marks: {
+                        internalMarks: sstudentData.sInternalMarks || 0,
+                        totalMarks: sstudentData.sTotalMarks || 0,
+                        grade: sstudentData.sGrade || 'Not Qualified',
+                        completed: sstudentData.sCompleted
+                    },
+                    attendance: sstudentAttendance
+                } : null
             };
 
             return NextResponse.json({
