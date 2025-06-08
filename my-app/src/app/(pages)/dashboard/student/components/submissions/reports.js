@@ -14,6 +14,14 @@ export default function Reports({ user }) {
   const [reports, setReports] = useState([]);
   const [verifyStatus, setVerifyStatus] = useState({});
   const [marks, setMarks] = useState({});
+  const [isSStudent, setIsSStudent] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState('current'); // 'current' or 'previous'
+  const [regularReports, setRegularReports] = useState([]);
+  const [specialReports, setSpecialReports] = useState([]);
+  const [regularSubmissions, setRegularSubmissions] = useState(Array(7).fill(false));
+  const [specialSubmissions, setSpecialSubmissions] = useState(Array(7).fill(false));
+  const [regularLinks, setRegularLinks] = useState({});
+  const [specialLinks, setSpecialLinks] = useState({});
 
   useEffect(() => {
     const fetchStudentData = async () => {
@@ -33,18 +41,36 @@ export default function Reports({ user }) {
         const data = await response.json();
         if (data.success && data.student) {
           setStudentData(data.student);
-          // Update submissions and links based on uploads data
-          const updatedSubmissions = Array(7).fill(false);
-          const links = {};
+          setIsSStudent(!!data.student.sstudentData);
+          
+          // Update regular submissions and links
+          const updatedRegularSubmissions = Array(7).fill(false);
+          const regularLinks = {};
           for (let i = 1; i <= 7; i++) {
             const link = data.student.uploads?.details[`day${i}`];
             if (link) {
-              updatedSubmissions[i - 1] = true;
-              links[i - 1] = link;
+              updatedRegularSubmissions[i - 1] = true;
+              regularLinks[i - 1] = link;
             }
           }
-          setSubmissions(updatedSubmissions);
-          setSubmittedLinks(links);
+          setRegularSubmissions(updatedRegularSubmissions);
+          setRegularLinks(regularLinks);
+
+          // Update special submissions and links if available
+          if (data.student.sstudentData) {
+            const updatedSpecialSubmissions = Array(7).fill(false);
+            const specialLinks = {};
+            for (let i = 1; i <= 7; i++) {
+              const link = data.student.sstudentData.uploads?.details[`day${i}`];
+              if (link) {
+                updatedSpecialSubmissions[i - 1] = true;
+                specialLinks[i - 1] = link;
+              }
+            }
+            setSpecialSubmissions(updatedSpecialSubmissions);
+            setSpecialLinks(specialLinks);
+          }
+
           setVerifyStatus(data.student.verify || {});
           setMarks(data.student.marks || {});
         } else {
@@ -61,14 +87,20 @@ export default function Reports({ user }) {
 
     const fetchReports = async () => {
       try {
-        const response = await fetch(`/api/dashboard/student/reports?username=${user?.username}`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch reports');
+        // Fetch regular reports
+        const regularResponse = await fetch(`/api/dashboard/student/reports?username=${user?.username}&type=regular`);
+        if (!regularResponse.ok) {
+          throw new Error('Failed to fetch regular reports');
         }
-        const data = await response.json();
-        if (data.success && data.data) {
-          setReports(data.data);
+        const regularData = await regularResponse.json();
+        if (regularData.success && regularData.data) {
+          setRegularReports(regularData.data);
         }
+        // Remove special reports fetch from here
+        // Set initial reports based on selected slot
+        setReports(selectedSlot === 'current' ? specialReports : regularReports);
+        setSubmissions(selectedSlot === 'current' ? specialSubmissions : regularSubmissions);
+        setSubmittedLinks(selectedSlot === 'current' ? specialLinks : regularLinks);
       } catch (err) {
         console.error('Error fetching reports:', err);
         toast.error('Failed to load reports');
@@ -83,11 +115,42 @@ export default function Reports({ user }) {
     }
   }, [user]);
 
+  // Fetch special reports only after studentData is loaded
+  useEffect(() => {
+    const fetchSpecialReports = async () => {
+      if (studentData?.sstudentData) {
+        try {
+          const specialResponse = await fetch(`/api/dashboard/student/reports?username=${user?.username}&type=special`);
+          if (!specialResponse.ok) throw new Error('Failed to fetch special student reports');
+          const specialData = await specialResponse.json();
+          if (specialData.success && specialData.data) {
+            setSpecialReports(specialData.data);
+          }
+        } catch (err) {
+          toast.error('Failed to load special reports');
+        }
+      }
+    };
+    fetchSpecialReports();
+  }, [studentData, user]);
+
+  // Update reports, submissions, and links when slot or reports change
+  useEffect(() => {
+    if (selectedSlot === 'current') {
+      setReports(specialReports);
+      setSubmissions(specialSubmissions);
+      setSubmittedLinks(specialLinks);
+    } else {
+      setReports(regularReports);
+      setSubmissions(regularSubmissions);
+      setSubmittedLinks(regularLinks);
+    }
+  }, [selectedSlot, specialReports, regularReports, specialSubmissions, regularSubmissions, specialLinks, regularLinks]);
+
   const canSubmitDay = (dayIndex) => {
     if (dayIndex === 0) return true;
-    const prevDayKey = `day${dayIndex}`;
-    const prevAttendance = studentData?.attendance?.details[prevDayKey];
-    return submissions[dayIndex - 1] || prevAttendance === 'P' || prevAttendance === 'A';
+    // Check if previous day is submitted
+    return submissions[dayIndex - 1];
   };
 
   const toggleAccordion = (index) => {
@@ -96,6 +159,29 @@ export default function Reports({ user }) {
       return;
     }
     setActiveAccordion(activeAccordion === index ? null : index);
+  };
+
+  const getStatus = (dayNumber) => {
+    const report = reports.find(r => r.dayNumber === dayNumber);
+    const isSubmitted = submissions[dayNumber - 1];
+
+    if (!isSubmitted) {
+      return { text: 'Not Submitted', className: 'not-submitted' };
+    }
+
+    if (!report) {
+      return { text: 'Pending Review', className: 'pending' };
+    }
+
+    // Always use attendance for both regular and special students
+    if (report.attendance === 'P') {
+      return { text: 'Approved', className: 'approved' };
+    }
+    if (report.attendance === 'A') {
+      return { text: 'Rejected', className: 'rejected' };
+    }
+
+    return { text: 'Pending Review', className: 'pending' };
   };
 
   const handleSubmit = async (index, e) => {
@@ -115,7 +201,8 @@ export default function Reports({ user }) {
         body: JSON.stringify({
           username: user.username,
           day: index + 1,
-          link
+          link,
+          type: selectedSlot // 'current' for special tables, 'previous' for regular tables
         })
       });
 
@@ -124,20 +211,86 @@ export default function Reports({ user }) {
         toast.success(`Day ${index + 1} report submitted successfully`, {
           id: loadingToast,
         });
-        const newSubmissions = [...submissions];
-        newSubmissions[index] = true;
-        const newSubmittedLinks = { ...submittedLinks };
-        newSubmittedLinks[index] = link;
-        setSubmissions(newSubmissions);
-        setSubmittedLinks(newSubmittedLinks);
+
+        // Update the appropriate submissions and links based on selected slot
+        if (selectedSlot === 'current') {
+          const newSpecialSubmissions = [...specialSubmissions];
+          newSpecialSubmissions[index] = true;
+          const newSpecialLinks = { ...specialLinks };
+          newSpecialLinks[index] = link;
+          setSpecialSubmissions(newSpecialSubmissions);
+          setSpecialLinks(newSpecialLinks);
+          setSubmissions(newSpecialSubmissions);
+          setSubmittedLinks(newSpecialLinks);
+        } else {
+          const newRegularSubmissions = [...regularSubmissions];
+          newRegularSubmissions[index] = true;
+          const newRegularLinks = { ...regularLinks };
+          newRegularLinks[index] = link;
+          setRegularSubmissions(newRegularSubmissions);
+          setRegularLinks(newRegularLinks);
+          setSubmissions(newRegularSubmissions);
+          setSubmittedLinks(newRegularLinks);
+        }
+
         setActiveAccordion(null);
         
-        // Refresh reports
-        const reportsResponse = await fetch(`/api/dashboard/student/reports?username=${user.username}`);
+        // Refresh reports for the current slot type
+        const reportsResponse = await fetch(`/api/dashboard/student/reports?username=${user.username}&type=${selectedSlot === 'current' ? 'special' : 'regular'}`);
         if (reportsResponse.ok) {
           const reportsData = await reportsResponse.json();
           if (reportsData.success && reportsData.data) {
-            setReports(reportsData.data);
+            if (selectedSlot === 'current') {
+              setSpecialReports(reportsData.data);
+              setReports(reportsData.data);
+            } else {
+              setRegularReports(reportsData.data);
+              setReports(reportsData.data);
+            }
+          }
+        }
+
+        // Refresh student data to get updated attendance status
+        const studentDataResponse = await fetch('/api/dashboard/student/data', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: user.username })
+        });
+
+        if (studentDataResponse.ok) {
+          const studentData = await studentDataResponse.json();
+          if (studentData.success && studentData.student) {
+            setStudentData(studentData.student);
+            // Update submissions and links after refresh
+            if (selectedSlot === 'current' && studentData.student.sstudentData) {
+              const updatedSpecialSubmissions = Array(7).fill(false);
+              const specialLinks = {};
+              for (let i = 1; i <= 7; i++) {
+                const link = studentData.student.sstudentData.uploads?.details[`day${i}`];
+                if (link) {
+                  updatedSpecialSubmissions[i - 1] = true;
+                  specialLinks[i - 1] = link;
+                }
+              }
+              setSpecialSubmissions(updatedSpecialSubmissions);
+              setSpecialLinks(specialLinks);
+              setSubmissions(updatedSpecialSubmissions);
+              setSubmittedLinks(specialLinks);
+            } else {
+              const updatedRegularSubmissions = Array(7).fill(false);
+              const regularLinks = {};
+              for (let i = 1; i <= 7; i++) {
+                const link = studentData.student.uploads?.details[`day${i}`];
+                if (link) {
+                  updatedRegularSubmissions[i - 1] = true;
+                  regularLinks[i - 1] = link;
+                }
+              }
+              setRegularSubmissions(updatedRegularSubmissions);
+              setRegularLinks(regularLinks);
+              setSubmissions(updatedRegularSubmissions);
+              setSubmittedLinks(regularLinks);
+            }
           }
         }
       } else {
@@ -157,35 +310,6 @@ export default function Reports({ user }) {
     setSubmissions(newSubmissions);
     delete submittedLinks[index];
     setSubmittedLinks({...submittedLinks});
-  };
-
-  const getStatus = (dayNumber) => {
-    const report = reports.find(r => r.dayNumber === dayNumber);
-    const isSubmitted = submissions[dayNumber - 1];
-
-    if (!isSubmitted) {
-      return { text: 'Not Submitted', className: 'not-submitted' };
-    }
-
-    if (report?.attendance === 'P') {
-      return { text: 'Approved', className: 'approved' };
-    }
-    
-    if (report?.verified) {
-      return { text: 'Verified', className: 'verified' };
-    }
-
-    if (report?.attendance === 'A') {
-      return { text: 'Rejected', className: 'rejected' };
-    }
-
-
-
-    // if (report?.status === 'new') {
-    //   return { text: 'New Submission', className: 'pending' };
-    // }
-
-    return { text: 'Pending Review', className: 'pending' };
   };
 
   if (loading) {
@@ -216,6 +340,18 @@ export default function Reports({ user }) {
   return (
     <section className="submissions-section">
       <h2>Daily Reports</h2>
+      {isSStudent && (
+        <div className="slot-filter-container">
+          <select 
+            className="slot-select"
+            value={selectedSlot}
+            onChange={(e) => setSelectedSlot(e.target.value)}
+          >
+            <option value="current">Current Slot ({studentData?.sstudentData?.slot})</option>
+            <option value="previous">Previous Slot ({studentData?.sstudentData?.previousSlot})</option>
+          </select>
+        </div>
+      )}
       <div className="submissions-header">
         <div className="progress-tracker">
           <div className="progress-bar">
@@ -427,4 +563,39 @@ export default function Reports({ user }) {
       </div>
     </section>
   );
+}
+
+// Update styles
+const styles = `
+.submissions-section .slot-filter-container {
+  margin-bottom: 20px;
+}
+
+.submissions-section .slot-select {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: white;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  min-width: 200px;
+}
+
+.submissions-section .slot-select:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+}
+
+.submissions-section .slot-select option {
+  padding: 8px;
+}
+`;
+
+// Add the styles to the document
+if (typeof document !== 'undefined') {
+  const styleSheet = document.createElement("style");
+  styleSheet.innerText = styles;
+  document.head.appendChild(styleSheet);
 }

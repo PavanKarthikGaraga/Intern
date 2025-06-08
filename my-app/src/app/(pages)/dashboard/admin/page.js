@@ -20,6 +20,7 @@ import ReportControl from './components/reportControl/page';
 import TokenGenerator from './components/tokenGenerator/page';
 import SQLExecutor from './components/sqlExecutor/page';
 import ResetPassword from './components/resetPassword/page';
+import SupplyStudents from './components/supplyStudents/page';
 
 export default function AdminDashboard() {
   const { user, isLoading, isAuthenticated } = useAuth();
@@ -77,6 +78,12 @@ export default function AdminDashboard() {
           >
             <span className="item-label">Students</span>
           </button>
+          <button
+            className={`sidebar-item ${activeSection === 'supply-students' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('supply-students')}
+          >
+            <span className="item-label">Supply Students</span>
+          </button>
           <div className="dropdown">
             <button
               className={`sidebar-item ${['student-leads', 'faculty-mentors', 'admins'].includes(activeSection) ? 'active' : ''}`}
@@ -130,7 +137,7 @@ export default function AdminDashboard() {
             onClick={() => handleSectionClick('token-generator')}
           >
             Proxy Login
-                  </button>
+          </button>
           {user.username === '2300032048' && (
             <div className="dropdown">
               <button
@@ -170,6 +177,7 @@ export default function AdminDashboard() {
            activeSection === 'profile' ? <Profile /> :
            activeSection === 'stats' ? <Stats /> :
            activeSection === 'students' ? <Students /> :
+           activeSection === 'supply-students' ? <SupplyStudents /> :
            activeSection === 'completed-students' ? <CompletedStudents /> :
            activeSection === 'student-leads' ? <StudentLeads /> :
            activeSection === 'faculty-mentors' ? <FacultyMentors /> :

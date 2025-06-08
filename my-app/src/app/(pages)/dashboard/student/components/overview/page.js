@@ -71,7 +71,8 @@ export default function Overview({ user, studentData }) {
 
       message.success(`Successfully registered for Slot ${selectedSlot}!`);
       setIsModalOpen(false);
-      router.refresh(); // Refresh the page to update data
+      // Force a hard refresh of the page
+      window.location.reload();
     } catch (error) {
       message.error(error.message || 'Failed to register. Please try again.');
     } finally {
@@ -125,16 +126,6 @@ export default function Overview({ user, studentData }) {
         {studentData.sstudentData ? (
           // Show slot 5/6 stats
           <>
-            {/* <div className="stat-card slot-stats-card">
-              <div className="stat-content">
-                <div>
-                  <h3>Additional Slot {studentData.sstudentData.slot} Stats</h3>
-                  <p>Previous Marks: {studentData.sstudentData.previousSlotMarks}</p>
-                  <p>Mode: {studentData.sstudentData.mode}</p>
-                </div>
-              </div>
-            </div> */}
-
             <div className="stat-card">
               <div className="stat-content">
                 <div>

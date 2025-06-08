@@ -129,10 +129,21 @@ export async function POST(request) {
                 SELECT 
                     s.*,
                     sm.internalMarks as sInternalMarks,
-                    sa.day1, sa.day2, sa.day3, sa.day4, sa.day5, sa.day6, sa.day7
+                    sa.day1, sa.day2, sa.day3, sa.day4, sa.day5, sa.day6, sa.day7,
+                    su.day1 as upload1, su.day2 as upload2, su.day3 as upload3, 
+                    su.day4 as upload4, su.day5 as upload5, su.day6 as upload6, 
+                    su.day7 as upload7,
+                    sm.day1 as marks1, sm.day2 as marks2, sm.day3 as marks3,
+                    sm.day4 as marks4, sm.day5 as marks5, sm.day6 as marks6,
+                    sm.day7 as marks7,
+                    msg.day1 as message1, msg.day2 as message2, msg.day3 as message3,
+                    msg.day4 as message4, msg.day5 as message5, msg.day6 as message6,
+                    msg.day7 as message7
                 FROM sstudents s
                 LEFT JOIN sdailyMarks sm ON s.username = sm.username
                 LEFT JOIN sattendance sa ON s.username = sa.username
+                LEFT JOIN suploads su ON s.username = su.username
+                LEFT JOIN smessages msg ON s.username = msg.username
                 WHERE s.username = ?;
             `;
 
@@ -147,6 +158,10 @@ export async function POST(request) {
 
             // Calculate sstudent attendance if exists
             let sstudentAttendance = null;
+            let sstudentUploads = null;
+            let sstudentMarks = null;
+            let sstudentMessages = null;
+
             if (sstudentData) {
                 const sAttendanceValues = Object.values({
                     day1: sstudentData.day1,
@@ -157,6 +172,7 @@ export async function POST(request) {
                     day6: sstudentData.day6,
                     day7: sstudentData.day7
                 });
+
                 sstudentAttendance = {
                     totalDays: sAttendanceValues.filter(status => status !== null).length,
                     presentDays: sAttendanceValues.filter(status => status === 'P').length,
@@ -168,6 +184,42 @@ export async function POST(request) {
                         day5: sstudentData.day5,
                         day6: sstudentData.day6,
                         day7: sstudentData.day7
+                    }
+                };
+
+                sstudentUploads = {
+                    details: {
+                        day1: sstudentData.upload1,
+                        day2: sstudentData.upload2,
+                        day3: sstudentData.upload3,
+                        day4: sstudentData.upload4,
+                        day5: sstudentData.upload5,
+                        day6: sstudentData.upload6,
+                        day7: sstudentData.upload7
+                    }
+                };
+
+                sstudentMarks = {
+                    details: {
+                        day1: sstudentData.marks1,
+                        day2: sstudentData.marks2,
+                        day3: sstudentData.marks3,
+                        day4: sstudentData.marks4,
+                        day5: sstudentData.marks5,
+                        day6: sstudentData.marks6,
+                        day7: sstudentData.marks7
+                    }
+                };
+
+                sstudentMessages = {
+                    details: {
+                        day1: sstudentData.message1,
+                        day2: sstudentData.message2,
+                        day3: sstudentData.message3,
+                        day4: sstudentData.message4,
+                        day5: sstudentData.message5,
+                        day6: sstudentData.message6,
+                        day7: sstudentData.message7
                     }
                 };
             }
@@ -210,7 +262,10 @@ export async function POST(request) {
                         grade: sstudentData.sGrade || 'Not Qualified',
                         completed: sstudentData.sCompleted
                     },
-                    attendance: sstudentAttendance
+                    attendance: sstudentAttendance,
+                    uploads: sstudentUploads,
+                    marks: sstudentMarks,
+                    messages: sstudentMessages
                 } : null
             };
 

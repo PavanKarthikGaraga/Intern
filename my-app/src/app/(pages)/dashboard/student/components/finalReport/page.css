@@ -106,7 +106,7 @@
   font-weight: 600;
 }
 
-.report-link {
+/* .report-link {
   display: inline-block;
   padding: 0.9rem 2.2rem;
   background: #2563eb;
@@ -117,7 +117,7 @@
   font-size: 1.1rem;
   transition: background 0.2s, box-shadow 0.2s;
   box-shadow: 0 2px 8px rgba(37,99,235,0.08);
-}
+} */
 
 .report-link:hover {
   background: #1742a0;
