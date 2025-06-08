@@ -160,8 +160,24 @@ export async function GET(request) {
             }, { status: 403 });
         }
 
+        // First check if the student is a special student
+        const [studentCheck] = await connection.query(
+            `SELECT 1 FROM suploads WHERE username = ?`,
+            [username]
+        );
+
+        const isSpecialStudent = studentCheck.length > 0;
+
+        // If requesting special reports but not a special student, return error
+        if (type === 'special' && !isSpecialStudent) {
+            return NextResponse.json({ 
+                success: false, 
+                error: 'You are not authorized to view special reports.' 
+            }, { status: 403 });
+        }
+
         let reports;
-        if (type === 'special') {
+        if (type === 'special' && isSpecialStudent) {
             // Fetch reports from sstudent tables
             [reports] = await connection.query(
                 `SELECT 
@@ -290,13 +306,13 @@ export async function GET(request) {
                     msg.day6 as message6,
                     msg.day7 as message7
                 FROM uploads u
-                LEFT JOIN verify v ON u.username = v.username
+                RIGHT JOIN verify v ON u.username = v.username
                 LEFT JOIN attendance a ON u.username = a.username
                 LEFT JOIN status s ON u.username = s.username
                 LEFT JOIN dailyMarks m ON u.username = m.username
                 LEFT JOIN messages msg ON u.username = msg.username
-                WHERE u.username = ?`,
-                [username]
+                WHERE u.username = ? OR v.username = ?`,
+                [username, username]
             );
 
             // Transform the data into the required format
@@ -310,17 +326,15 @@ export async function GET(request) {
                 const marks = reports[0]?.[`marks${i}`];
                 const message = reports[0]?.[`message${i}`];
 
-                if (upload) {
-                    transformedReports.push({
-                        dayNumber,
-                        link: upload,
-                        verified,
-                        attendance,
-                        status,
-                        marks,
-                        message
-                    });
-                }
+                transformedReports.push({
+                    dayNumber,
+                    link: upload || null,
+                    verified: verified || false,
+                    attendance: attendance || null,
+                    status: status || null,
+                    marks: marks || null,
+                    message: message || null
+                });
             }
             reports = transformedReports;
         }

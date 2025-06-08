@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { FaEye, FaEyeSlash, FaVideo } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 // import Loader from '@/app/components/loader/loader';
@@ -9,8 +9,6 @@ export default function Reports({ user }) {
   const [error, setError] = useState(null);
   const [studentData, setStudentData] = useState(null);
   const [activeAccordion, setActiveAccordion] = useState(null);
-  const [submissions, setSubmissions] = useState(Array(7).fill(false));
-  const [submittedLinks, setSubmittedLinks] = useState({});
   const [reports, setReports] = useState([]);
   const [verifyStatus, setVerifyStatus] = useState({});
   const [marks, setMarks] = useState({});
@@ -18,63 +16,54 @@ export default function Reports({ user }) {
   const [selectedSlot, setSelectedSlot] = useState('current'); // 'current' or 'previous'
   const [regularReports, setRegularReports] = useState([]);
   const [specialReports, setSpecialReports] = useState([]);
-  const [regularSubmissions, setRegularSubmissions] = useState(Array(7).fill(false));
-  const [specialSubmissions, setSpecialSubmissions] = useState(Array(7).fill(false));
-  const [regularLinks, setRegularLinks] = useState({});
-  const [specialLinks, setSpecialLinks] = useState({});
 
   useEffect(() => {
-    const fetchStudentData = async () => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
       try {
-        setError(null);
-        const response = await fetch('/api/dashboard/student/data', {
+        // --- Fetch Student Data ---
+        const studentResponse = await fetch('/api/dashboard/student/data', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username: user?.username })
         });
 
-        if (!response.ok) {
-          const errorData = await response.json();
+        if (!studentResponse.ok) {
+          const errorData = await studentResponse.json();
           throw new Error(errorData.error || 'Failed to fetch student data');
         }
 
-        const data = await response.json();
-        if (data.success && data.student) {
-          setStudentData(data.student);
-          setIsSStudent(!!data.student.sstudentData);
+        const studentDataResult = await studentResponse.json();
+        if (studentDataResult.success && studentDataResult.student) {
+          setStudentData(studentDataResult.student);
+          const isSpecial = !!studentDataResult.student.sstudentData;
+          setIsSStudent(isSpecial);
           
-          // Update regular submissions and links
-          const updatedRegularSubmissions = Array(7).fill(false);
-          const regularLinks = {};
-          for (let i = 1; i <= 7; i++) {
-            const link = data.student.uploads?.details[`day${i}`];
-            if (link) {
-              updatedRegularSubmissions[i - 1] = true;
-              regularLinks[i - 1] = link;
-            }
-          }
-          setRegularSubmissions(updatedRegularSubmissions);
-          setRegularLinks(regularLinks);
+          setVerifyStatus(studentDataResult.student.verify || {});
+          setMarks(studentDataResult.student.marks || {});
 
-          // Update special submissions and links if available
-          if (data.student.sstudentData) {
-            const updatedSpecialSubmissions = Array(7).fill(false);
-            const specialLinks = {};
-            for (let i = 1; i <= 7; i++) {
-              const link = data.student.sstudentData.uploads?.details[`day${i}`];
-              if (link) {
-                updatedSpecialSubmissions[i - 1] = true;
-                specialLinks[i - 1] = link;
-              }
-            }
-            setSpecialSubmissions(updatedSpecialSubmissions);
-            setSpecialLinks(specialLinks);
+          // --- Fetch Reports ---
+          const regularReportsResponse = await fetch(`/api/dashboard/student/reports?username=${user?.username}&type=regular`);
+          if (!regularReportsResponse.ok) {
+            throw new Error('Failed to fetch regular reports');
+          }
+          const regularData = await regularReportsResponse.json();
+          if (regularData.success && regularData.data) {
+            setRegularReports(regularData.data);
           }
 
-          setVerifyStatus(data.student.verify || {});
-          setMarks(data.student.marks || {});
+          if (isSpecial) {
+            const specialReportsResponse = await fetch(`/api/dashboard/student/reports?username=${user?.username}&type=special`);
+            if (!specialReportsResponse.ok) throw new Error('Failed to fetch special student reports');
+            const specialData = await specialReportsResponse.json();
+            if (specialData.success && specialData.data) {
+              setSpecialReports(specialData.data);
+            }
+          }
+
         } else {
-          throw new Error(data.error || 'Failed to fetch student data');
+          throw new Error(studentDataResult.error || 'Failed to fetch student data');
         }
       } catch (err) {
         console.error('Error fetching data:', err);
@@ -85,85 +74,82 @@ export default function Reports({ user }) {
       }
     };
 
-    const fetchReports = async () => {
-      try {
-        // Fetch regular reports
-        const regularResponse = await fetch(`/api/dashboard/student/reports?username=${user?.username}&type=regular`);
-        if (!regularResponse.ok) {
-          throw new Error('Failed to fetch regular reports');
-        }
-        const regularData = await regularResponse.json();
-        if (regularData.success && regularData.data) {
-          setRegularReports(regularData.data);
-        }
-        // Remove special reports fetch from here
-        // Set initial reports based on selected slot
-        setReports(selectedSlot === 'current' ? specialReports : regularReports);
-        setSubmissions(selectedSlot === 'current' ? specialSubmissions : regularSubmissions);
-        setSubmittedLinks(selectedSlot === 'current' ? specialLinks : regularLinks);
-      } catch (err) {
-        console.error('Error fetching reports:', err);
-        toast.error('Failed to load reports');
-      }
-    };
-
     if (user?.username) {
-      fetchStudentData();
-      fetchReports();
+      fetchData();
     } else {
       setLoading(false);
     }
   }, [user]);
 
-  // Fetch special reports only after studentData is loaded
-  useEffect(() => {
-    const fetchSpecialReports = async () => {
-      if (studentData?.sstudentData) {
-        try {
-          const specialResponse = await fetch(`/api/dashboard/student/reports?username=${user?.username}&type=special`);
-          if (!specialResponse.ok) throw new Error('Failed to fetch special student reports');
-          const specialData = await specialResponse.json();
-          if (specialData.success && specialData.data) {
-            setSpecialReports(specialData.data);
-          }
-        } catch (err) {
-          toast.error('Failed to load special reports');
-        }
-      }
-    };
-    fetchSpecialReports();
-  }, [studentData, user]);
-
-  // Update reports, submissions, and links when slot or reports change
-  useEffect(() => {
-    if (selectedSlot === 'current') {
-      setReports(specialReports);
-      setSubmissions(specialSubmissions);
-      setSubmittedLinks(specialLinks);
+  // Derived values using useMemo
+  const currentReportsArray = useMemo(() => {
+    if (isSStudent) {
+      return selectedSlot === 'current' ? specialReports : regularReports;
     } else {
-      setReports(regularReports);
-      setSubmissions(regularSubmissions);
-      setSubmittedLinks(regularLinks);
+      return regularReports; // Always regular reports for non-special students
     }
-  }, [selectedSlot, specialReports, regularReports, specialSubmissions, regularSubmissions, specialLinks, regularLinks]);
+  }, [selectedSlot, isSStudent, regularReports, specialReports]);
+
+  const submissions = useMemo(() => {
+    const derived = Array(7).fill(false);
+    console.log("Calculating submissions:", currentReportsArray);
+    currentReportsArray.forEach((report, index) => {
+      console.log(`Report for Day ${index + 1}:`, report);
+      if (report && report.link) {
+        derived[index] = true;
+        console.log(`Day ${index + 1} has link. Setting derived[${index}] to true. derived array now:`, derived);
+      }
+    });
+    console.log("Final derived submissions before return:", derived);
+    return derived;
+  }, [currentReportsArray]);
+
+  const submittedLinks = useMemo(() => {
+    const derived = {};
+    currentReportsArray.forEach((report, index) => {
+      if (report && report.link) {
+        derived[index] = report.link;
+      }
+    });
+    return derived;
+  }, [currentReportsArray]);
+
+  // This useEffect now just sets the 'reports' state from the derived 'currentReportsArray'
+  useEffect(() => {
+    setReports(currentReportsArray);
+  }, [currentReportsArray]);
 
   const canSubmitDay = (dayIndex) => {
-    if (dayIndex === 0) return true;
-    // Check if previous day is submitted
-    return submissions[dayIndex - 1];
+    // If the current day is already submitted (has a link), it cannot be re-submitted via this path (resubmit button handles that)
+    if (currentReportsArray[dayIndex] && currentReportsArray[dayIndex].link) {
+      return false; 
+    }
+
+    // For Day 1, if it's not submitted, it can always be submitted
+    if (dayIndex === 0) {
+      return true;
+    }
+
+    // For any other day, check if the previous day has a link (meaning it was submitted)
+    return currentReportsArray[dayIndex - 1] && currentReportsArray[dayIndex - 1].link;
   };
 
   const toggleAccordion = (index) => {
-    if (!canSubmitDay(index)) {
-      toast.error('Please submit the previous day\'s report first');
-      return;
+    // Always allow viewing of any day's report.
+    // If the accordion for this day is already open, close it.
+    if (activeAccordion === index) {
+      setActiveAccordion(null);
+    } else {
+      // Otherwise, open the accordion for this day.
+      setActiveAccordion(index);
     }
-    setActiveAccordion(activeAccordion === index ? null : index);
   };
 
   const getStatus = (dayNumber) => {
     const report = reports.find(r => r.dayNumber === dayNumber);
     const isSubmitted = submissions[dayNumber - 1];
+
+    console.log(`getStatus for Day ${dayNumber}: submissions = ${submissions}, isSubmitted = ${isSubmitted}, report = `, report);
 
     if (!isSubmitted) {
       return { text: 'Not Submitted', className: 'not-submitted' };
@@ -212,87 +198,29 @@ export default function Reports({ user }) {
           id: loadingToast,
         });
 
-        // Update the appropriate submissions and links based on selected slot
+        // Update the appropriate reports array based on selected slot
+        let currentReportsArray = selectedSlot === 'current' ? [...specialReports] : [...regularReports];
+        let reportToUpdate = currentReportsArray.find(r => r.dayNumber === index + 1);
+        if (reportToUpdate) {
+          reportToUpdate.link = link;
+          // Assuming status and attendance might change to 'Pending Review' immediately after submission
+          reportToUpdate.attendance = null; 
+          reportToUpdate.status = 'new';
+          reportToUpdate.marks = null; 
+          reportToUpdate.message = null; 
+        }
+
         if (selectedSlot === 'current') {
-          const newSpecialSubmissions = [...specialSubmissions];
-          newSpecialSubmissions[index] = true;
-          const newSpecialLinks = { ...specialLinks };
-          newSpecialLinks[index] = link;
-          setSpecialSubmissions(newSpecialSubmissions);
-          setSpecialLinks(newSpecialLinks);
-          setSubmissions(newSpecialSubmissions);
-          setSubmittedLinks(newSpecialLinks);
+          setSpecialReports(currentReportsArray);
         } else {
-          const newRegularSubmissions = [...regularSubmissions];
-          newRegularSubmissions[index] = true;
-          const newRegularLinks = { ...regularLinks };
-          newRegularLinks[index] = link;
-          setRegularSubmissions(newRegularSubmissions);
-          setRegularLinks(newRegularLinks);
-          setSubmissions(newRegularSubmissions);
-          setSubmittedLinks(newRegularLinks);
+          setRegularReports(currentReportsArray);
         }
 
         setActiveAccordion(null);
         
-        // Refresh reports for the current slot type
-        const reportsResponse = await fetch(`/api/dashboard/student/reports?username=${user.username}&type=${selectedSlot === 'current' ? 'special' : 'regular'}`);
-        if (reportsResponse.ok) {
-          const reportsData = await reportsResponse.json();
-          if (reportsData.success && reportsData.data) {
-            if (selectedSlot === 'current') {
-              setSpecialReports(reportsData.data);
-              setReports(reportsData.data);
-            } else {
-              setRegularReports(reportsData.data);
-              setReports(reportsData.data);
-            }
-          }
-        }
+        // No need to fetch reports again or student data to update submissions/links
+        // The useMemo hooks will handle derivation when regularReports/specialReports update
 
-        // Refresh student data to get updated attendance status
-        const studentDataResponse = await fetch('/api/dashboard/student/data', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: user.username })
-        });
-
-        if (studentDataResponse.ok) {
-          const studentData = await studentDataResponse.json();
-          if (studentData.success && studentData.student) {
-            setStudentData(studentData.student);
-            // Update submissions and links after refresh
-            if (selectedSlot === 'current' && studentData.student.sstudentData) {
-              const updatedSpecialSubmissions = Array(7).fill(false);
-              const specialLinks = {};
-              for (let i = 1; i <= 7; i++) {
-                const link = studentData.student.sstudentData.uploads?.details[`day${i}`];
-                if (link) {
-                  updatedSpecialSubmissions[i - 1] = true;
-                  specialLinks[i - 1] = link;
-                }
-              }
-              setSpecialSubmissions(updatedSpecialSubmissions);
-              setSpecialLinks(specialLinks);
-              setSubmissions(updatedSpecialSubmissions);
-              setSubmittedLinks(specialLinks);
-            } else {
-              const updatedRegularSubmissions = Array(7).fill(false);
-              const regularLinks = {};
-              for (let i = 1; i <= 7; i++) {
-                const link = studentData.student.uploads?.details[`day${i}`];
-                if (link) {
-                  updatedRegularSubmissions[i - 1] = true;
-                  regularLinks[i - 1] = link;
-                }
-              }
-              setRegularSubmissions(updatedRegularSubmissions);
-              setRegularLinks(regularLinks);
-              setSubmissions(updatedRegularSubmissions);
-              setSubmittedLinks(regularLinks);
-            }
-          }
-        }
       } else {
         throw new Error(data.error || 'Failed to submit report');
       }
@@ -305,11 +233,23 @@ export default function Reports({ user }) {
 
   const handleResubmit = (index) => {
     setActiveAccordion(index);
-    const newSubmissions = [...submissions];
-    newSubmissions[index] = false;
-    setSubmissions(newSubmissions);
-    delete submittedLinks[index];
-    setSubmittedLinks({...submittedLinks});
+    
+    let currentReportsArrayToModify = selectedSlot === 'current' ? [...specialReports] : [...regularReports];
+    let reportToResubmit = currentReportsArrayToModify.find(r => r.dayNumber === index + 1);
+
+    if (reportToResubmit) {
+      reportToResubmit.link = null; 
+      reportToResubmit.attendance = null; 
+      reportToResubmit.status = 'new';
+      reportToResubmit.marks = null; 
+      reportToResubmit.message = null; 
+    }
+
+    if (selectedSlot === 'current') {
+      setSpecialReports(currentReportsArrayToModify);
+    } else {
+      setRegularReports(currentReportsArrayToModify);
+    }
   };
 
   if (loading) {
@@ -350,11 +290,11 @@ export default function Reports({ user }) {
             <option value="current">Current Slot ({studentData?.sstudentData?.slot})</option>
             <option value="previous">Previous Slot ({studentData?.sstudentData?.previousSlot})</option>
           </select>
-        </div>
+        </div>  
       )}
       <div className="submissions-header">
         <div className="progress-tracker">
-          <div className="progress-bar">
+          <div className="progress-bar">image.pngimage.png
             <div 
               className="progress-fill" 
               style={{ width: `${(submissions.filter(Boolean).length / 7) * 100}%` }}
@@ -371,6 +311,8 @@ export default function Reports({ user }) {
             const isSubmitted = submissions[index];
             const isLocked = !canSubmitDay(index);
             
+            console.log(`Rendering Day ${index + 1}: status = ${status.text}, isSubmitted = ${isSubmitted}, submissions state = `, submissions);
+
             return (
               <div
                 key={index}
