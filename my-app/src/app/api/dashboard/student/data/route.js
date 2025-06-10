@@ -150,6 +150,9 @@ export async function POST(request) {
             const [sstudentRows] = await db.execute(sstudentQuery, [username]);
             const sstudentData = sstudentRows[0] || null;
 
+            // Add supply field based on sstudentData
+            const supply = sstudentData ? true : false;
+
             // Calculate attendance stats
             const attendance = attendanceRows[0] || {};
             const attendanceValues = Object.values(attendance);
@@ -233,6 +236,7 @@ export async function POST(request) {
             // Combine all data
             const studentData = {
                 ...rows[0],
+                supply,
                 attendance: {
                     totalDays,
                     presentDays,

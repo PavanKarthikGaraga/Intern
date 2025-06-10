@@ -24,7 +24,7 @@ export async function POST(request) {
             }, { status: 403 });
         }
 
-        const { username, day, link, type = 'regular' } = await request.json();
+        const { username, day, link, type = 'regular', supply = false } = await request.json();
 
         if (!username || !day || !link) {
             return NextResponse.json({ 
@@ -47,11 +47,12 @@ export async function POST(request) {
             }, { status: 400 });
         }
 
-        // Check if this is a resubmission
-        const tableName = type === 'current' ? 'suploads' : 'uploads';
-        const statusTable = type === 'current' ? 'sstatus' : 'status';
-        const attendanceTable = type === 'current' ? 'sattendance' : 'attendance';
+        // Determine which tables to use based on supply flag
+        const tableName = supply ? 'suploads' : 'uploads';
+        const statusTable = supply ? 'sstatus' : 'status';
+        const attendanceTable = supply ? 'sattendance' : 'attendance';
 
+        // Check if this is a resubmission
         const [existingReport] = await connection.query(
             `SELECT 1 FROM ${tableName} WHERE username = ? AND day${day} IS NOT NULL`,
             [username]
@@ -94,11 +95,23 @@ export async function POST(request) {
                 );
             }
         
-            // Update the daily marks for the student
+            // Reset attendance and marks for resubmission
             await connection.query(
                 `UPDATE ${attendanceTable} SET day${day} = NULL WHERE username = ?`,
                 [username]
             );
+
+            if (supply) {
+                await connection.query(
+                    `UPDATE sdailyMarks SET day${day} = NULL WHERE username = ?`,
+                    [username]
+                );
+            } else {
+                await connection.query(
+                    `UPDATE dailyMarks SET day${day} = NULL WHERE username = ?`,
+                    [username]
+                );
+            }
         }
 
         return NextResponse.json({ 
@@ -144,7 +157,8 @@ export async function GET(request) {
 
         const { searchParams } = new URL(request.url);
         const username = searchParams.get('username');
-        const type = searchParams.get('type') || 'regular'; // 'regular' or 'special'
+        const type = searchParams.get('type') || 'regular';
+        const supply = searchParams.get('supply') === 'true';
 
         if (!username) {
             return NextResponse.json({ 
@@ -160,114 +174,10 @@ export async function GET(request) {
             }, { status: 403 });
         }
 
-        // First check if the student is a special student
-        const [studentCheck] = await connection.query(
-            `SELECT 1 FROM suploads WHERE username = ?`,
-            [username]
-        );
-
-        const isSpecialStudent = studentCheck.length > 0;
-
-        // If requesting special reports but not a special student, return error
-        if (type === 'special' && !isSpecialStudent) {
-            return NextResponse.json({ 
-                success: false, 
-                error: 'You are not authorized to view special reports.' 
-            }, { status: 403 });
-        }
-
         let reports;
-        if (type === 'special' && isSpecialStudent) {
-            // Fetch reports from sstudent tables
-            [reports] = await connection.query(
-                `SELECT 
-                    u.*,
-                    a.day1 as attendance1,
-                    a.day2 as attendance2,
-                    a.day3 as attendance3,
-                    a.day4 as attendance4,
-                    a.day5 as attendance5,
-                    a.day6 as attendance6,
-                    a.day7 as attendance7,
-                    s.day1 as status1,
-                    s.day2 as status2,
-                    s.day3 as status3,
-                    s.day4 as status4,
-                    s.day5 as status5,
-                    s.day6 as status6,
-                    s.day7 as status7,
-                    m.day1 as marks1,
-                    m.day2 as marks2,
-                    m.day3 as marks3,
-                    m.day4 as marks4,
-                    m.day5 as marks5,
-                    m.day6 as marks6,
-                    m.day7 as marks7,
-                    msg.day1 as message1,
-                    msg.day2 as message2,
-                    msg.day3 as message3,
-                    msg.day4 as message4,
-                    msg.day5 as message5,
-                    msg.day6 as message6,
-                    msg.day7 as message7
-                FROM suploads u
-                LEFT JOIN sattendance a ON u.username = a.username
-                LEFT JOIN sstatus s ON u.username = s.username
-                LEFT JOIN sdailyMarks m ON u.username = m.username
-                LEFT JOIN smessages msg ON u.username = msg.username
-                WHERE u.username = ?`,
-                [username]
-            );
-
-            // Fetch attendance, status, marks, and messages even if no upload exists
-            const [attendanceRows] = await connection.query(
-                `SELECT day1, day2, day3, day4, day5, day6, day7 FROM sattendance WHERE username = ?`,
-                [username]
-            );
-            const [statusRows] = await connection.query(
-                `SELECT day1, day2, day3, day4, day5, day6, day7 FROM sstatus WHERE username = ?`,
-                [username]
-            );
-            const [marksRows] = await connection.query(
-                `SELECT day1, day2, day3, day4, day5, day6, day7 FROM sdailyMarks WHERE username = ?`,
-                [username]
-            );
-            const [messagesRows] = await connection.query(
-                `SELECT day1, day2, day3, day4, day5, day6, day7 FROM smessages WHERE username = ?`,
-                [username]
-            );
-
-            const attendance = attendanceRows[0] || {};
-            const status = statusRows[0] || {};
-            const marks = marksRows[0] || {};
-            const messages = messagesRows[0] || {};
-
-            // suploads may not exist for all days, so get uploads if present
-            const uploads = reports[0] || {};
-
-            const transformedReports = [];
-            for (let i = 1; i <= 7; i++) {
-                const dayNumber = i;
-                const upload = uploads[`day${i}`] || null;
-                const attendanceVal = attendance[`day${i}`] || null;
-                const statusVal = status[`day${i}`] || null;
-                const marksVal = marks[`day${i}`] || null;
-                const messageVal = messages[`day${i}`] || null;
-
-                transformedReports.push({
-                    dayNumber,
-                    link: upload,
-                    attendance: attendanceVal,
-                    status: statusVal,
-                    marks: marksVal,
-                    message: messageVal,
-                    verified: attendanceVal === 'P'
-                });
-            }
-            reports = transformedReports;
-        } else {
-            // Fetch reports from regular tables
-            [reports] = await connection.query(
+        if (supply) {
+            // For supply students, fetch both regular and special reports
+            const [regularReports] = await connection.query(
                 `SELECT 
                     u.*,
                     v.day1 as verified1,
@@ -315,16 +225,152 @@ export async function GET(request) {
                 [username, username]
             );
 
-            // Transform the data into the required format
+            const [specialReports] = await connection.query(
+                `SELECT 
+                    u.*,
+                    a.day1 as attendance1,
+                    a.day2 as attendance2,
+                    a.day3 as attendance3,
+                    a.day4 as attendance4,
+                    a.day5 as attendance5,
+                    a.day6 as attendance6,
+                    a.day7 as attendance7,
+                    s.day1 as status1,
+                    s.day2 as status2,
+                    s.day3 as status3,
+                    s.day4 as status4,
+                    s.day5 as status5,
+                    s.day6 as status6,
+                    s.day7 as status7,
+                    m.day1 as marks1,
+                    m.day2 as marks2,
+                    m.day3 as marks3,
+                    m.day4 as marks4,
+                    m.day5 as marks5,
+                    m.day6 as marks6,
+                    m.day7 as marks7,
+                    msg.day1 as message1,
+                    msg.day2 as message2,
+                    msg.day3 as message3,
+                    msg.day4 as message4,
+                    msg.day5 as message5,
+                    msg.day6 as message6,
+                    msg.day7 as message7
+                FROM suploads u
+                LEFT JOIN sattendance a ON u.username = a.username
+                LEFT JOIN sstatus s ON u.username = s.username
+                LEFT JOIN sdailyMarks m ON u.username = m.username
+                LEFT JOIN smessages msg ON u.username = msg.username
+                WHERE u.username = ?`,
+                [username]
+            );
+
+            // Transform regular reports
+            const transformedRegularReports = [];
+            for (let i = 1; i <= 7; i++) {
+                const dayNumber = i;
+                const upload = regularReports[0]?.[`day${i}`];
+                const verified = regularReports[0]?.[`verified${i}`];
+                const attendance = regularReports[0]?.[`attendance${i}`];
+                const status = regularReports[0]?.[`status${i}`];
+                const marks = regularReports[0]?.[`marks${i}`];
+                const message = regularReports[0]?.[`message${i}`];
+
+                transformedRegularReports.push({
+                    dayNumber,
+                    link: upload || null,
+                    verified: verified || false,
+                    attendance: attendance || null,
+                    status: status || null,
+                    marks: marks || null,
+                    message: message || null
+                });
+            }
+
+            // Transform special reports
+            const transformedSpecialReports = [];
+            for (let i = 1; i <= 7; i++) {
+                const dayNumber = i;
+                const upload = specialReports[0]?.[`day${i}`];
+                const attendance = specialReports[0]?.[`attendance${i}`];
+                const status = specialReports[0]?.[`status${i}`];
+                const marks = specialReports[0]?.[`marks${i}`];
+                const message = specialReports[0]?.[`message${i}`];
+
+                transformedSpecialReports.push({
+                    dayNumber,
+                    link: upload || null,
+                    attendance: attendance || null,
+                    status: status || null,
+                    marks: marks || null,
+                    message: message || null
+                });
+            }
+
+            reports = {
+                regular: transformedRegularReports,
+                special: transformedSpecialReports
+            };
+        } else {
+            // For regular students, only fetch regular reports
+            const [regularReports] = await connection.query(
+                `SELECT 
+                    u.*,
+                    v.day1 as verified1,
+                    v.day2 as verified2,
+                    v.day3 as verified3,
+                    v.day4 as verified4,
+                    v.day5 as verified5,
+                    v.day6 as verified6,
+                    v.day7 as verified7,
+                    a.day1 as attendance1,
+                    a.day2 as attendance2,
+                    a.day3 as attendance3,
+                    a.day4 as attendance4,
+                    a.day5 as attendance5,
+                    a.day6 as attendance6,
+                    a.day7 as attendance7,
+                    s.day1 as status1,
+                    s.day2 as status2,
+                    s.day3 as status3,
+                    s.day4 as status4,
+                    s.day5 as status5,
+                    s.day6 as status6,
+                    s.day7 as status7,
+                    m.day1 as marks1,
+                    m.day2 as marks2,
+                    m.day3 as marks3,
+                    m.day4 as marks4,
+                    m.day5 as marks5,
+                    m.day6 as marks6,
+                    m.day7 as marks7,
+                    msg.day1 as message1,
+                    msg.day2 as message2,
+                    msg.day3 as message3,
+                    msg.day4 as message4,
+                    msg.day5 as message5,
+                    msg.day6 as message6,
+                    msg.day7 as message7
+                FROM uploads u
+                RIGHT JOIN verify v ON u.username = v.username
+                LEFT JOIN attendance a ON u.username = a.username
+                LEFT JOIN status s ON u.username = s.username
+                LEFT JOIN dailyMarks m ON u.username = m.username
+                LEFT JOIN messages msg ON u.username = msg.username
+                WHERE u.username = ? OR v.username = ?`,
+                [username, username]
+            );
+
+            // Transform regular reports
             const transformedReports = [];
             for (let i = 1; i <= 7; i++) {
                 const dayNumber = i;
-                const upload = reports[0]?.[`day${i}`];
-                const verified = reports[0]?.[`verified${i}`];
-                const attendance = reports[0]?.[`attendance${i}`];
-                const status = reports[0]?.[`status${i}`];
-                const marks = reports[0]?.[`marks${i}`];
-                const message = reports[0]?.[`message${i}`];
+                const upload = regularReports[0]?.[`day${i}`];
+                const verified = regularReports[0]?.[`verified${i}`];
+                const attendance = regularReports[0]?.[`attendance${i}`];
+                const status = regularReports[0]?.[`status${i}`];
+                const marks = regularReports[0]?.[`marks${i}`];
+                const message = regularReports[0]?.[`message${i}`];
 
                 transformedReports.push({
                     dayNumber,

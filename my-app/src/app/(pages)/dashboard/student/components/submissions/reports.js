@@ -16,6 +16,7 @@ export default function Reports({ user }) {
   const [selectedSlot, setSelectedSlot] = useState('current'); // 'current' or 'previous'
   const [regularReports, setRegularReports] = useState([]);
   const [specialReports, setSpecialReports] = useState([]);
+  const [supply, setSupply] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -39,29 +40,25 @@ export default function Reports({ user }) {
           setStudentData(studentDataResult.student);
           const isSpecial = !!studentDataResult.student.sstudentData;
           setIsSStudent(isSpecial);
+          setSupply(studentDataResult.student.supply);
           
           setVerifyStatus(studentDataResult.student.verify || {});
           setMarks(studentDataResult.student.marks || {});
 
           // --- Fetch Reports ---
-          const regularReportsResponse = await fetch(`/api/dashboard/student/reports?username=${user?.username}&type=regular`);
-          if (!regularReportsResponse.ok) {
-            throw new Error('Failed to fetch regular reports');
+          const reportsResponse = await fetch(`/api/dashboard/student/reports?username=${user?.username}&supply=${studentDataResult.student.supply}`);
+          if (!reportsResponse.ok) {
+            throw new Error('Failed to fetch reports');
           }
-          const regularData = await regularReportsResponse.json();
-          if (regularData.success && regularData.data) {
-            setRegularReports(regularData.data);
-          }
-
-          if (isSpecial) {
-            const specialReportsResponse = await fetch(`/api/dashboard/student/reports?username=${user?.username}&type=special`);
-            if (!specialReportsResponse.ok) throw new Error('Failed to fetch special student reports');
-            const specialData = await specialReportsResponse.json();
-            if (specialData.success && specialData.data) {
-              setSpecialReports(specialData.data);
+          const reportsData = await reportsResponse.json();
+          if (reportsData.success) {
+            if (studentDataResult.student.supply) {
+              setRegularReports(reportsData.data.regular);
+              setSpecialReports(reportsData.data.special);
+            } else {
+              setRegularReports(reportsData.data);
             }
           }
-
         } else {
           throw new Error(studentDataResult.error || 'Failed to fetch student data');
         }
@@ -83,12 +80,12 @@ export default function Reports({ user }) {
 
   // Derived values using useMemo
   const currentReportsArray = useMemo(() => {
-    if (isSStudent) {
+    if (supply) {
       return selectedSlot === 'current' ? specialReports : regularReports;
     } else {
-      return regularReports; // Always regular reports for non-special students
+      return regularReports;
     }
-  }, [selectedSlot, isSStudent, regularReports, specialReports]);
+  }, [selectedSlot, supply, regularReports, specialReports]);
 
   const submissions = useMemo(() => {
     const derived = Array(7).fill(false);
@@ -188,7 +185,8 @@ export default function Reports({ user }) {
           username: user.username,
           day: index + 1,
           link,
-          type: selectedSlot // 'current' for special tables, 'previous' for regular tables
+          type: selectedSlot,
+          supply
         })
       });
 
@@ -198,29 +196,37 @@ export default function Reports({ user }) {
           id: loadingToast,
         });
 
-        // Update the appropriate reports array based on selected slot
-        let currentReportsArray = selectedSlot === 'current' ? [...specialReports] : [...regularReports];
-        let reportToUpdate = currentReportsArray.find(r => r.dayNumber === index + 1);
-        if (reportToUpdate) {
-          reportToUpdate.link = link;
-          // Assuming status and attendance might change to 'Pending Review' immediately after submission
-          reportToUpdate.attendance = null; 
-          reportToUpdate.status = 'new';
-          reportToUpdate.marks = null; 
-          reportToUpdate.message = null; 
-        }
+        // Update the appropriate reports array based on supply and selected slot
+        if (supply) {
+          let currentReportsArray = selectedSlot === 'current' ? [...specialReports] : [...regularReports];
+          let reportToUpdate = currentReportsArray.find(r => r.dayNumber === index + 1);
+          if (reportToUpdate) {
+            reportToUpdate.link = link;
+            reportToUpdate.attendance = null;
+            reportToUpdate.status = 'new';
+            reportToUpdate.marks = null;
+            reportToUpdate.message = null;
+          }
 
-        if (selectedSlot === 'current') {
-          setSpecialReports(currentReportsArray);
+          if (selectedSlot === 'current') {
+            setSpecialReports(currentReportsArray);
+          } else {
+            setRegularReports(currentReportsArray);
+          }
         } else {
+          let currentReportsArray = [...regularReports];
+          let reportToUpdate = currentReportsArray.find(r => r.dayNumber === index + 1);
+          if (reportToUpdate) {
+            reportToUpdate.link = link;
+            reportToUpdate.attendance = null;
+            reportToUpdate.status = 'new';
+            reportToUpdate.marks = null;
+            reportToUpdate.message = null;
+          }
           setRegularReports(currentReportsArray);
         }
 
         setActiveAccordion(null);
-        
-        // No need to fetch reports again or student data to update submissions/links
-        // The useMemo hooks will handle derivation when regularReports/specialReports update
-
       } else {
         throw new Error(data.error || 'Failed to submit report');
       }
@@ -234,21 +240,35 @@ export default function Reports({ user }) {
   const handleResubmit = (index) => {
     setActiveAccordion(index);
     
-    let currentReportsArrayToModify = selectedSlot === 'current' ? [...specialReports] : [...regularReports];
-    let reportToResubmit = currentReportsArrayToModify.find(r => r.dayNumber === index + 1);
+    if (supply) {
+      let currentReportsArray = selectedSlot === 'current' ? [...specialReports] : [...regularReports];
+      let reportToResubmit = currentReportsArray.find(r => r.dayNumber === index + 1);
 
-    if (reportToResubmit) {
-      reportToResubmit.link = null; 
-      reportToResubmit.attendance = null; 
-      reportToResubmit.status = 'new';
-      reportToResubmit.marks = null; 
-      reportToResubmit.message = null; 
-    }
+      if (reportToResubmit) {
+        reportToResubmit.link = null;
+        reportToResubmit.attendance = null;
+        reportToResubmit.status = 'new';
+        reportToResubmit.marks = null;
+        reportToResubmit.message = null;
+      }
 
-    if (selectedSlot === 'current') {
-      setSpecialReports(currentReportsArrayToModify);
+      if (selectedSlot === 'current') {
+        setSpecialReports(currentReportsArray);
+      } else {
+        setRegularReports(currentReportsArray);
+      }
     } else {
-      setRegularReports(currentReportsArrayToModify);
+      let currentReportsArray = [...regularReports];
+      let reportToResubmit = currentReportsArray.find(r => r.dayNumber === index + 1);
+
+      if (reportToResubmit) {
+        reportToResubmit.link = null;
+        reportToResubmit.attendance = null;
+        reportToResubmit.status = 'new';
+        reportToResubmit.marks = null;
+        reportToResubmit.message = null;
+      }
+      setRegularReports(currentReportsArray);
     }
   };
 
@@ -292,7 +312,7 @@ export default function Reports({ user }) {
           </select>
         </div>  
       )}
-      <div className="submissions-header">
+      {/* <div className="submissions-header">
         <div className="progress-tracker">
           <div className="progress-bar">image.pngimage.png
             <div 
@@ -301,7 +321,7 @@ export default function Reports({ user }) {
             ></div>
           </div>
         </div>
-      </div>
+      </div> */}
 
       <div className="submissions-layout">
         <div className="days-grid">
