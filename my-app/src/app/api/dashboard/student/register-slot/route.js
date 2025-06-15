@@ -76,7 +76,7 @@ export async function POST(request) {
             }
 
             // Validate eligibility
-            const isEligible = (newSlot === 5 && (previousSlot === 1 || previousSlot === 2)) ||
+            const isEligible = (newSlot === 5 && (previousSlot === 1)) ||
                              (newSlot === 6 && (previousSlot === 2 || previousSlot === 3 || previousSlot === 4));
 
             if (!isEligible) {

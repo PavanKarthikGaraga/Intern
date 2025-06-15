@@ -26,13 +26,12 @@ export default function Overview({ user, studentData }) {
     if (!studentData.marks?.totalMarks || !studentData.slot || !studentData.reportOpen) return null;
     
     const totalMarks = parseFloat(studentData.marks.totalMarks);
-    const isEligible = totalMarks >= 40 && totalMarks < 60;
+    const isEligible = totalMarks < 60;
 
     if (!isEligible) return null;
 
-    // Check slot 5 eligibility
-    if ((studentData.slot === 1 || studentData.slot === 2) && 
-        studentData.reportOpen.slot5) {
+    // Check slot 5 eligibility - only for slot 1 students
+    if (studentData.slot === 1 && studentData.reportOpen.slot5) {
       return 5;
     }
 
