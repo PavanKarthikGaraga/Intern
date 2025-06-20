@@ -115,7 +115,8 @@ export async function POST(request) {
             const marksQuery = `
                 SELECT 
                     m.internalMarks,
-                    m.totalMarks,
+                    m.finalPresentation,
+                    m.finalReport,
                     m.grade,
                     m.completed
                 FROM marks m
@@ -262,7 +263,7 @@ export async function POST(request) {
                     mode: sstudentData.mode,
                     marks: {
                         internalMarks: sstudentData.sInternalMarks || 0,
-                        totalMarks: sstudentData.sTotalMarks || 0,
+                        totalMarks: sstudentData.finalPresentation + sstudentData.finalReport + sstudentData.sInternalMarks || 0,
                         grade: sstudentData.sGrade || 'Not Qualified',
                         completed: sstudentData.sCompleted
                     },
