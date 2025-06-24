@@ -28,7 +28,7 @@ export async function POST(request) {
       );
     }
 
-    const { query, page = 1, limit = 50 } = await request.json();
+    const { query, page = 1, limit = 50, downloadAll = false } = await request.json();
 
     if (!query) {
       return NextResponse.json(
@@ -51,21 +51,23 @@ export async function POST(request) {
       const isSelectQuery = cleanQuery.toLowerCase().startsWith('select');
       
       if (isSelectQuery) {
-        // For SELECT queries, implement pagination
-        const offset = (page - 1) * limit;
-        
+        // For SELECT queries, implement pagination unless downloadAll is true
         // Get total count for pagination
-        // Handle complex SELECT queries by wrapping in a subquery
         const countQuery = `SELECT COUNT(*) as total FROM (${cleanQuery}) as count_table`;
         const [countResult] = await connection.query(countQuery);
         const total = countResult[0].total;
 
-        // Add LIMIT and OFFSET to the original query
-        const paginatedQuery = `${cleanQuery} LIMIT ${limit} OFFSET ${offset}`;
-        const [results] = await connection.query(paginatedQuery);
-        
+        let results;
+        if (downloadAll) {
+          // Fetch all results without LIMIT/OFFSET
+          [results] = await connection.query(cleanQuery);
+        } else {
+          // Add LIMIT and OFFSET to the original query
+          const offset = (page - 1) * limit;
+          const paginatedQuery = `${cleanQuery} LIMIT ${limit} OFFSET ${offset}`;
+          [results] = await connection.query(paginatedQuery);
+        }
         await connection.commit();
-        
         return NextResponse.json({
           message: 'Query executed successfully',
           results: results,

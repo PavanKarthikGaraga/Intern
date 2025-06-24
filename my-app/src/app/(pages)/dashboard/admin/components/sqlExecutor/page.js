@@ -69,27 +69,57 @@ export default function SQLExecutor() {
   };
 
   // Download as CSV
-  const handleDownloadCSV = () => {
-    if (!Array.isArray(results) || results.length === 0) return;
-    const csv = convertToCSV(results);
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'query_results.csv';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  const handleDownloadCSV = async () => {
+    if (!query.trim().toLowerCase().startsWith('select')) return;
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/dashboard/admin/execute-sql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, downloadAll: true }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to download CSV');
+      if (!Array.isArray(data.results) || data.results.length === 0) return;
+      const csv = convertToCSV(data.results);
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'query_results.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Download as Excel
-  const handleDownloadExcel = () => {
-    if (!Array.isArray(results) || results.length === 0) return;
-    const worksheet = XLSX.utils.json_to_sheet(results);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Results');
-    XLSX.writeFile(workbook, 'query_results.xlsx');
+  const handleDownloadExcel = async () => {
+    if (!query.trim().toLowerCase().startsWith('select')) return;
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/dashboard/admin/execute-sql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, downloadAll: true }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to download Excel');
+      if (!Array.isArray(data.results) || data.results.length === 0) return;
+      const worksheet = XLSX.utils.json_to_sheet(data.results);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Results');
+      XLSX.writeFile(workbook, 'query_results.xlsx');
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const renderPagination = () => {
