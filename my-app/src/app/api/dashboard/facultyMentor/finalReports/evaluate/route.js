@@ -65,30 +65,28 @@ export async function POST(request) {
           `SELECT internalMarks FROM dailyMarks WHERE username = ?`,
           [username]
         );
-        const internal = daily.length > 0 ? daily[0].internalMarks : 0;
+        const internal = daily.length > 0 ? Number(daily[0].internalMarks) || 0 : 0;
         await db.query(
           `INSERT INTO marks (username, facultyMentorId, internalMarks) VALUES (?, ?, ?)`,
           [username, decoded.username, internal]
         );
       }
 
+      // Always sync internalMarks in marks table from dailyMarks before calculation
+      const [daily] = await db.query(
+        `SELECT internalMarks FROM dailyMarks WHERE username = ?`,
+        [username]
+      );
+      const internal = daily.length > 0 ? Number(daily[0].internalMarks) || 0 : 0;
+      await db.query(
+        `UPDATE marks SET internalMarks = ? WHERE username = ? AND facultyMentorId = ?`,
+        [internal, username, decoded.username]
+      );
+
       // If marks are provided, update them along with completed status
       if (finalReportMarks !== undefined && finalPresentationMarks !== undefined) {
-        // Get current marks to calculate total
-        const [currentMarks] = await db.query(
-          `SELECT internalMarks FROM dailyMarks WHERE username = ?`,
-          [username]
-        );
-
-        if (!currentMarks.length) {
-          return NextResponse.json({ 
-            success: false, 
-            error: 'No marks found for this student.' 
-          }, { status: 404 });
-        }
-
-        const internalMarks = Number(currentMarks[0].internalMarks) || 0;
-        const totalMarks = internalMarks + finalReportMarks + finalPresentationMarks;
+        // Use the just-updated internalMarks for calculation
+        const totalMarks = internal + finalReportMarks + finalPresentationMarks;
 
         // Determine grade based on total marks
         let grade = 'Not Qualified';
