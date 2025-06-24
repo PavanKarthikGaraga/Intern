@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import './page.css';
+import * as XLSX from 'xlsx';
 
 export default function SQLExecutor() {
   const [query, setQuery] = useState('');
@@ -56,6 +57,39 @@ export default function SQLExecutor() {
   const handlePageChange = (newPage) => {
     if (newPage < 1 || newPage > pagination.totalPages) return;
     handleExecuteQuery(new Event('submit'), newPage);
+  };
+
+  // Utility to convert results to CSV
+  const convertToCSV = (data) => {
+    if (!Array.isArray(data) || data.length === 0) return '';
+    const columns = Object.keys(data[0]);
+    const header = columns.join(',');
+    const rows = data.map(row => columns.map(col => JSON.stringify(row[col] ?? '')).join(','));
+    return [header, ...rows].join('\n');
+  };
+
+  // Download as CSV
+  const handleDownloadCSV = () => {
+    if (!Array.isArray(results) || results.length === 0) return;
+    const csv = convertToCSV(results);
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'query_results.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  // Download as Excel
+  const handleDownloadExcel = () => {
+    if (!Array.isArray(results) || results.length === 0) return;
+    const worksheet = XLSX.utils.json_to_sheet(results);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Results');
+    XLSX.writeFile(workbook, 'query_results.xlsx');
   };
 
   const renderPagination = () => {
@@ -147,6 +181,10 @@ export default function SQLExecutor() {
       
       return (
         <div className="results-container">
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
+            <button className="download-btn" onClick={handleDownloadCSV}>Download CSV</button>
+            <button className="download-btn" onClick={handleDownloadExcel}>Download Excel</button>
+          </div>
           <table className="results-table">
             <thead>
               <tr>

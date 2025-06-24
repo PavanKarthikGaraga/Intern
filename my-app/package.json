@@ -10,8 +10,8 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "antd": "^5.8.6",
     "@ant-design/icons": "^6.0.0",
+    "antd": "^5.8.6",
     "axios": "^1.8.3",
     "bcryptjs": "^3.0.2",
     "bull": "^4.16.5",
