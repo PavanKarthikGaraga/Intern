@@ -249,7 +249,15 @@ export async function POST(request) {
                     lastUpload,
                     details: uploads
                 },
-                marks: marksRows[0] || {
+                marks: {
+                    ...marksRows[0],
+                    totalMarks: (marksRows[0]?.internalMarks || 0) + 
+                               (marksRows[0]?.finalReport || 0) + 
+                               (marksRows[0]?.finalPresentation || 0),
+                    internalMarks: marksRows[0]?.internalMarks || 0,
+                    grade: marksRows[0]?.grade || 'Not Qualified',
+                    completed: marksRows[0]?.completed || null
+                } || {
                     internalMarks: 0,
                     totalMarks: 0,
                     grade: 'Not Qualified',

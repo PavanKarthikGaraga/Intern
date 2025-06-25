@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 
 export default function Overview({ user, studentData }) {
 
-  console.log("test",studentData,user)
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState(null);
