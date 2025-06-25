@@ -215,7 +215,7 @@ export default function Overview({ user, studentData }) {
                   <div className="stat-content">
                     <div>
                       <h3>Total Marks</h3>
-                      <p>{studentData.marks?.totalMarks || '0'}/100</p>
+                      <p>{Math.round(studentData.marks?.totalMarks || 0)}/100</p>
                     </div>
                     <TrophyOutlined className="stat-icon" />
                   </div>

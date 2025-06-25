@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import './page.css';
-import * as XLSX from 'xlsx';
+import * as ExcelJS from 'exceljs';
 
 export default function SQLExecutor() {
   const [query, setQuery] = useState('');
@@ -111,10 +111,34 @@ export default function SQLExecutor() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Failed to download Excel');
       if (!Array.isArray(data.results) || data.results.length === 0) return;
-      const worksheet = XLSX.utils.json_to_sheet(data.results);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Results');
-      XLSX.writeFile(workbook, 'query_results.xlsx');
+      
+      // Create workbook and worksheet using ExcelJS
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('Results');
+      
+      // Add headers
+      if (data.results.length > 0) {
+        const headers = Object.keys(data.results[0]);
+        worksheet.addRow(headers);
+        
+        // Add data rows
+        data.results.forEach(row => {
+          const rowData = headers.map(header => row[header]);
+          worksheet.addRow(rowData);
+        });
+      }
+      
+      // Generate and download file
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'query_results.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     } catch (error) {
       toast.error(error.message);
     } finally {
