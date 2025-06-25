@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { verifyAccessToken } from '@/lib/jwt';
 import { cookies } from 'next/headers';
-import * as XLSX from 'xlsx';
+import * as ExcelJS from 'exceljs';
 
 export async function GET(request) {
   try {
@@ -79,45 +79,60 @@ export async function GET(request) {
     });
 
     // Create workbook and worksheet
-    const workbook = XLSX.utils.book_new();
-    const worksheet = XLSX.utils.json_to_sheet(processedData);
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Students');
 
-    // Set column widths for all columns
-    const columnWidths = [
-      { wch: 15 },  // username
-      { wch: 30 },  // name
-      { wch: 35 },  // email
-      { wch: 15 },  // phoneNumber
-      { wch: 20 },  // selectedDomain
-      { wch: 12 },  // mode
-      { wch: 8 },   // slot
-      { wch: 15 },  // studentLeadId
-      { wch: 15 },  // facultyMentorId
-      { wch: 10 },  // verified
-      { wch: 15 },  // branch
-      { wch: 10 },  // gender
-      { wch: 8 },   // year
-      { wch: 15 },  // residenceType
-      { wch: 20 },  // hostelName
-      { wch: 20 },  // busRoute
-      { wch: 15 },  // country
-      { wch: 20 },  // state
-      { wch: 20 },  // district
-      { wch: 10 },  // pincode
-      { wch: 20 },  // createdAt
-      { wch: 20 },  // updatedAt
-      { wch: 10 },  // status
-      { wch: 30 },  // studentLead
-      { wch: 30 },  // facultyMentor
-      { wch: 10 }   // isCompleted
-    ];
-    worksheet['!cols'] = columnWidths;
+    // Add headers
+    if (processedData.length > 0) {
+      const headers = Object.keys(processedData[0]);
+      worksheet.addRow(headers);
+      
+      // Add data rows
+      processedData.forEach(student => {
+        const rowData = headers.map(header => student[header]);
+        worksheet.addRow(rowData);
+      });
 
-    // Add the worksheet to the workbook
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Students');
+      // Set column widths
+      const columnWidths = [
+        15,  // username
+        30,  // name
+        35,  // email
+        15,  // phoneNumber
+        20,  // selectedDomain
+        12,  // mode
+        8,   // slot
+        15,  // studentLeadId
+        15,  // facultyMentorId
+        10,  // verified
+        15,  // branch
+        10,  // gender
+        8,   // year
+        15,  // residenceType
+        20,  // hostelName
+        20,  // busRoute
+        15,  // country
+        20,  // state
+        20,  // district
+        10,  // pincode
+        20,  // createdAt
+        20,  // updatedAt
+        10,  // status
+        30,  // studentLead
+        30,  // facultyMentor
+        10   // isCompleted
+      ];
+
+      // Apply column widths
+      worksheet.columns.forEach((column, index) => {
+        if (columnWidths[index]) {
+          column.width = columnWidths[index];
+        }
+      });
+    }
 
     // Generate buffer
-    const excelBuffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+    const excelBuffer = await workbook.xlsx.writeBuffer();
 
     // Create response with appropriate headers
     return new NextResponse(excelBuffer, {
