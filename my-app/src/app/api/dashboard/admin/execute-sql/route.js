@@ -62,9 +62,9 @@ export async function POST(request) {
           // Fetch all results without LIMIT/OFFSET
           [results] = await connection.query(cleanQuery);
         } else {
-          // Add LIMIT and OFFSET to the original query
+        // Add LIMIT and OFFSET to the original query
           const offset = (page - 1) * limit;
-          const paginatedQuery = `${cleanQuery} LIMIT ${limit} OFFSET ${offset}`;
+        const paginatedQuery = `${cleanQuery} LIMIT ${limit} OFFSET ${offset}`;
           [results] = await connection.query(paginatedQuery);
         }
         await connection.commit();
