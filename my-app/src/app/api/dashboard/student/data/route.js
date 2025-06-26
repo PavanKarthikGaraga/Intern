@@ -234,6 +234,10 @@ export async function POST(request) {
             const totalUploads = uploadValues.filter(link => link !== null).length;
             const lastUpload = uploadValues.filter(link => link !== null).pop() || null;
 
+            // Fetch student's problem statement
+            const [problemStatementRows] = await db.query('SELECT * FROM problemStatements WHERE username = ?', [username]);
+            const problemStatementData = problemStatementRows[0] || null;
+
             // Combine all data
             const studentData = {
                 ...rows[0],
@@ -264,6 +268,7 @@ export async function POST(request) {
                     completed: null
                 },
                 reportOpen,
+                problemStatementData,
                 sstudentData: sstudentData ? {
                     slot: sstudentData.slot,
                     previousSlot: sstudentData.previousSlot,

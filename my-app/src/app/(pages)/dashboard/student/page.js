@@ -12,7 +12,7 @@ import ChangePassword from './components/changePassword/page';
 import Lead from './components/Lead/page';
 import Reports from './components/submissions/reports';
 import FinalReport from './components/finalReport/page';
-import ProblemStatement from './components/problemStatement/ProblemStatement';
+import ProblemStatement from './components/problemStatment/page';
 
 export default function StudentDashboard() {
   const { user } = useAuth();
@@ -117,12 +117,14 @@ export default function StudentDashboard() {
           >
             <span className="item-label">Change Password</span>
           </button>
-          <button
-            className={`sidebar-item ${activeSection === 'problem-statement' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('problem-statement')}
-          >
-            <span className="item-label">Problem Statement</span>
-          </button>
+          {studentData?.marks?.totalMarks >= 60 && (
+            <button
+              className={`sidebar-item ${activeSection === 'problem-statement' ? 'active' : ''}`}
+              onClick={() => handleSectionClick('problem-statement')}
+            >
+              <span className="item-label">Problem Statement</span>
+            </button>
+          )}
         </nav>
 
         <main className="dashboard-main">
@@ -131,7 +133,7 @@ export default function StudentDashboard() {
            activeSection === 'mentor' ? <Lead user={user} studentData={studentData} /> :
            activeSection === 'submissions' ? <Reports user={user} studentData={studentData} /> : 
            activeSection === 'final-report' ? <FinalReport user={user} studentData={studentData} /> :
-           activeSection === 'problem-statement' ? <ProblemStatement user={user} /> :
+           (activeSection === 'problem-statement' && studentData?.marks?.totalMarks >= 60) ? <ProblemStatement user={user} studentData={studentData} /> :
            <ChangePassword user={user} />}
         </main>
       </div>

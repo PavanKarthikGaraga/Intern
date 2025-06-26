@@ -1,0 +1,108 @@
+.problem-statement-box {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  padding: 2.5rem;
+  margin: 2rem auto;
+  max-width: 600px;
+}
+
+.problem-statement-box h2 {
+  margin-bottom: 1.5rem;
+  color: #8B0000; /* dark red */
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.form-group {
+  margin-bottom: 1.2rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #8B0000;
+}
+
+.form-group input,
+.form-group select,
+.problem-statement-textarea {
+  width: 100%;
+  padding: 0.7rem;
+  border: 1.5px solid #8B0000;
+  border-radius: 6px;
+  font-size: 1rem;
+  background: #fafbfc;
+  margin-top: 0.2rem;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.problem-statement-textarea:focus {
+  outline: none;
+  border-color: #b71c1c;
+}
+
+.note-box {
+  background: #fff0f0;
+  border-left: 5px solid #8B0000;
+  padding: 1rem;
+  margin-bottom: 1.2rem;
+  color: #8B0000;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.error-message {
+  color: #b71c1c;
+  background: #ffebee;
+  border-left: 5px solid #b71c1c;
+  padding: 0.7rem 1rem;
+  margin-top: 1rem;
+  border-radius: 6px;
+}
+
+.success-message {
+  color: #388e3c;
+  background: #e8f5e9;
+  border-left: 5px solid #388e3c;
+  padding: 0.7rem 1rem;
+  margin-top: 1rem;
+  border-radius: 6px;
+}
+
+.problem-statement-box button[type="submit"] {
+  background: #8B0000;
+  color: #fff;
+  border: none;
+  padding: 0.8rem 2rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.problem-statement-box button[type="submit"]:hover {
+  background: #b71c1c;
+}
+
+.submitted-problem-statement {
+  background: #fff0f0;
+  border: 1.5px solid #8B0000;
+  border-radius: 8px;
+  padding: 1.2rem 1.5rem;
+  margin-bottom: 1.2rem;
+}
+
+.submitted-problem-statement p {
+  margin: 0.5rem 0;
+  font-size: 1.08rem;
+  color: #222;
+}
+
+.submitted-problem-statement strong {
+  color: #8B0000;
+} 

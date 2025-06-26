@@ -1,10 +1,11 @@
+'use client'
 import { useState, useEffect } from 'react';
 import { DOMAINS } from '@/app/Data/domains';
 import { stateNames } from '@/app/Data/states';
 import { districtNames } from '@/app/Data/districts';
 import './ProblemStatement.css';
 
-export default function ProblemStatement({ user }) {
+export default function ProblemStatement({ user, studentData }) {
   const [domain, setDomain] = useState('');
   const [showNote, setShowNote] = useState(false);
   const [timer, setTimer] = useState(5);
@@ -86,6 +87,24 @@ export default function ProblemStatement({ user }) {
       setLoading(false);
     }
   };
+
+  // If already submitted, show message and data
+  if (studentData?.problemStatementData) {
+    const ps = studentData.problemStatementData;
+    return (
+      <div className="problem-statement-box">
+        <h2>Problem Statement Already Submitted</h2>
+        <div className="submitted-problem-statement">
+          <p><strong>Domain:</strong> {ps.domain}</p>
+          <p><strong>Problem Statement:</strong> {ps.problem_statement}</p>
+          <p><strong>Location:</strong> {ps.location}</p>
+          <p><strong>State:</strong> {ps.state}</p>
+          <p><strong>District:</strong> {ps.district}</p>
+        </div>
+        <div className="success-message">You have already submitted your problem statement.</div>
+      </div>
+    );
+  }
 
   return (
     <div className="problem-statement-box">
