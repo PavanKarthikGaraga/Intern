@@ -9,10 +9,10 @@ import fontkit from '@pdf-lib/fontkit'; // ✅ Import fontkit
 
 // Helper to convert marks to grade
 function getGrade(marks) {
-    console.log(marks);
+    // console.log(marks);
   if (marks >= 90) return 'A';
-  if (marks >= 80) return 'B';
-  if (marks >= 70) return 'C';
+  if (marks >= 75) return 'B';
+  if (marks >= 60) return 'C';
   return 'F';
 }
 
@@ -95,19 +95,45 @@ export async function GET(req) {
 
     const pages = pdfDoc.getPages();
     const firstPage = pages[0];
+    
+    let time;
+    try {
+      const res = await fetch("https://timeapi.io/api/Time/current/zone?timeZone=Asia/Kolkata");
+      const data = await res.json();
+    
+      // Convert MM/DD/YYYY to DD/MM/YYYY
+      const [month, day, year] = data.date.split('/');
+      time = `${day}/${month}/${year}`;
+    } catch (err) {
+      console.error("Failed to fetch accurate time, using server time:", err);
+    
+      const date = new Date();
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed
+      const year = date.getFullYear();
+    
+      time = `${day}/${month}/${year}`;
+    }
+    
+
+    console.log(time);
+
 
     // ✍️ Draw student details at appropriate positions
-    firstPage.drawText(grade, { x: 370.09, y: 668.7, size: 14, font, color: rgb(0, 0, 0) });
-    firstPage.drawText(name, {  x: 96.04, y: 604.92, size: 14, font, color: rgb(0, 0, 0) });
+    firstPage.drawText(grade, { x: 375.09, y: 668.7, size: 16, font, color: rgb(0, 0, 0) });
+    firstPage.drawText(name, {  x: 96.04, y: 604.92, size: 12, font, color: rgb(0, 0, 0) });
     firstPage.drawText(branch, { x: 62.03, y: 589.91, size: 12, font, color: rgb(0, 0, 0) });
-    firstPage.drawText(idNumber, { x: 250.17, y: 589.91, size: 12, font, color: rgb(0, 0, 0) });
-    firstPage.drawText(start, {x: 229.78, y: 529.89, size: 12, font, color: rgb(0, 0, 0) });
-    firstPage.drawText(end, { x: 316.53, y: 529.89, size: 12, font, color: rgb(0, 0, 0) });
-    firstPage.drawText(`${slot}`, {  x: 188.41, y: 514.89, size: 14, font, color: rgb(0, 0, 0) });
-    firstPage.drawText(`${mode}`, { x: 91.43, y: 499.88 , size: 14, font, color: rgb(0, 0, 0) });
-    firstPage.drawText(domain, { x: 146.33, y: 484.88 , size: 14, font, color: rgb(0, 0, 0) });
-    firstPage.drawText(`${totalMarks}`, {  x: 128.51, y: 229.78, size: 14, font, color: rgb(0, 0, 0) });
-    firstPage.drawText(grade, {  x: 82.12, y: 214.77 , size: 14, font, color: rgb(0, 0, 0) });
+    firstPage.drawText(`${idNumber},`, { x: 250.17, y: 589.91, size: 12, font, color: rgb(0, 0, 0) });
+    firstPage.drawText(start, {x: 237.78, y: 529.89, size: 10, font, color: rgb(0, 0, 0) });
+    firstPage.drawText(`${end},`, { x: 320.53, y: 529.89, size: 10, font, color: rgb(0, 0, 0) });
+    firstPage.drawText(`Slot ${slot},`, {  x: 188.41, y: 514.89, size: 12, font, color: rgb(0, 0, 0) });
+    firstPage.drawText(`${mode}`, { x: 91.43, y: 499.88 , size: 12, font, color: rgb(0, 0, 0) });
+    firstPage.drawText(`${domain}.`, { x: 146.33, y: 484.88 , size: 12, font, color: rgb(0, 0, 0) });
+    firstPage.drawText(`${totalMarks}`, {  x: 133.51, y: 229.78, size: 12, font, color: rgb(0, 0, 0) });
+    firstPage.drawText(grade, {  x: 87.12, y: 214.77 , size: 12, font, color: rgb(0, 0, 0) });
+    firstPage.drawText(time, {  x: 467.22, y: 80.47 , size: 12, font, color: rgb(0, 0, 0) });
+    firstPage.drawText(`SI25${username}`, {  x: 493.76, y: 65.47 , size: 10, font, color: rgb(0, 0, 0) });
+
 
     const pdfBytes = await pdfDoc.save();
 
