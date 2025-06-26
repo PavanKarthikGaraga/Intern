@@ -299,3 +299,17 @@ image.png
 
 -- Insert initial record for sstats
 INSERT INTO sstats() VALUES ();
+
+-- Create table for student problem statements
+CREATE TABLE problemStatements (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(10) NOT NULL,
+    domain VARCHAR(255) NOT NULL,
+    problem_statement VARCHAR(50) NOT NULL,
+    location VARCHAR(255) NOT NULL,
+    district VARCHAR(100) NOT NULL,
+    state VARCHAR(100) NOT NULL,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (username) REFERENCES registrations(username)
+);

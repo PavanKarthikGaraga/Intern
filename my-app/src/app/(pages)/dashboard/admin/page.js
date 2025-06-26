@@ -21,6 +21,7 @@ import TokenGenerator from './components/tokenGenerator/page';
 import SQLExecutor from './components/sqlExecutor/page';
 import ResetPassword from './components/resetPassword/page';
 import SupplyStudents from './components/supplyStudents/page';
+import CertificateDownload from './components/certificate/page';
 
 export default function AdminDashboard() {
   const { user, isLoading, isAuthenticated } = useAuth();
@@ -160,6 +161,12 @@ export default function AdminDashboard() {
                   >
                     SQL Executor
                   </button>
+                  <button
+                    className={`dropdown-item ${activeSection === 'certificate-download' ? 'active' : ''}`}
+                    onClick={() => handleSectionClick('certificate-download')}
+                  >
+                    Certificate Download
+                  </button>
                 </div>
               )}
             </div>
@@ -187,6 +194,7 @@ export default function AdminDashboard() {
            activeSection === 'token-generator' ? <TokenGenerator /> :
            activeSection === 'sql-executor' ? <SQLExecutor /> :
            activeSection === 'reset-password' ? <ResetPassword /> :
+           activeSection === 'certificate-download' ? <CertificateDownload /> :
            <ChangePassword />}
         </main>
       </div>
