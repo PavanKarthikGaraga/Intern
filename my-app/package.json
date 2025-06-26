@@ -32,7 +32,7 @@
     "nodemailer": "^6.10.1",
     "npm": "^11.3.0",
     "pdf-lib": "^1.17.1",
-    "pdfjs-dist": "3.4.120",
+    "pdfjs-dist": "^4.8.69",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hot-toast": "^2.5.2",

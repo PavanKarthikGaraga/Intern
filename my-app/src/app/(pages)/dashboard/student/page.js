@@ -111,12 +111,6 @@ export default function StudentDashboard() {
           >
             <span className="item-label">Final Report</span>
           </button>
-          <button
-            className={`sidebar-item ${activeSection === 'change-password' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('change-password')}
-          >
-            <span className="item-label">Change Password</span>
-          </button>
           {studentData?.marks?.totalMarks >= 60 && (
             <button
               className={`sidebar-item ${activeSection === 'problem-statement' ? 'active' : ''}`}
@@ -125,6 +119,12 @@ export default function StudentDashboard() {
               <span className="item-label">Problem Statement</span>
             </button>
           )}
+          <button
+            className={`sidebar-item ${activeSection === 'change-password' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('change-password')}
+          >
+            <span className="item-label">Change Password</span>
+          </button>
         </nav>
 
         <main className="dashboard-main">
