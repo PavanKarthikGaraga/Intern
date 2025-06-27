@@ -6,7 +6,7 @@ const pdfPath = './public/certificate.pdf';
 const data = new Uint8Array(fs.readFileSync(pdfPath));
 
 (async () => {
-  const loadingTask = getDocument({ data });
+  const loadingTask = getDocument({ data, isEvalSupported: false });
   const pdf = await loadingTask.promise;
   const page = await pdf.getPage(1);
   const content = await page.getTextContent();
