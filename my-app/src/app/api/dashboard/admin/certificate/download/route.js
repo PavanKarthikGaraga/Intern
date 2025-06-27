@@ -16,15 +16,17 @@ export async function GET(request) {
     }
 
     const decoded = await verifyAccessToken(accessToken.value);
-    if (!decoded || decoded.role !== 'admin') {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Access denied. Only administrators can download certificates.' 
-      }, { status: 403 });
-    }
 
     const { searchParams } = new URL(request.url);
     const username = searchParams.get('username');
+
+    // Allow admin or the student themselves to download
+    if (!decoded || (decoded.role !== 'admin' && !(decoded.role === 'student' && decoded.username === username))) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Access denied. Only administrators or the student can download this certificate.' 
+      }, { status: 403 });
+    }
 
     if (!username) {
       return NextResponse.json({ 

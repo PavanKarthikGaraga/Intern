@@ -13,34 +13,7 @@ const CertificateDownload = () => {
   const [certificates, setCertificates] = useState([]);
   const [loadingCertificates, setLoadingCertificates] = useState(false);
 
-  useEffect(() => {
-    fetchCertificates();
-  }, []);
 
-  const fetchCertificates = async () => {
-    setLoadingCertificates(true);
-    try {
-      const response = await fetch('/api/dashboard/admin/certificate/list', {
-        credentials: 'include'
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch certificates');
-      }
-
-      const data = await response.json();
-      if (data.success) {
-        setCertificates(data.data);
-      } else {
-        throw new Error(data.error || 'Failed to fetch certificates');
-      }
-    } catch (err) {
-      console.error('Error fetching certificates:', err);
-      toast.error(err.message);
-    } finally {
-      setLoadingCertificates(false);
-    }
-  };
 
   const handleDownload = async () => {
     setError('');
@@ -95,12 +68,7 @@ const CertificateDownload = () => {
       }
 
       const data = await response.json();
-      if (data.success) {
-        toast.success(data.message);
-        fetchCertificates(); // Refresh the list
-      } else {
-        throw new Error(data.error || 'Failed to generate certificates');
-      }
+      
     } catch (err) {
       console.error('Error generating certificates:', err);
       toast.error(err.message);
@@ -135,25 +103,6 @@ const CertificateDownload = () => {
     }
   };
 
-  const handleViewCertificate = async (username) => {
-    try {
-      const response = await fetch(`/api/dashboard/admin/certificate/download?username=${encodeURIComponent(username)}`, {
-        credentials: 'include'
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to view certificate');
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      window.open(url, '_blank');
-    } catch (err) {
-      console.error('Error viewing certificate:', err);
-      toast.error(err.message);
-    }
-  };
 
   return (
     <div className="certificate-download-container">
@@ -201,70 +150,7 @@ const CertificateDownload = () => {
         </p>
       </div>
 
-      <div className="certificate-section">
-        <div className="section-header">
-          <h2>Generated Certificates</h2>
-          <button onClick={fetchCertificates} disabled={loadingCertificates} className="refresh-btn">
-            <FaSync /> Refresh
-          </button>
-        </div>
-        
-        {loadingCertificates ? (
-          <div className="loading">Loading certificates...</div>
-        ) : certificates.length === 0 ? (
-          <div className="no-certificates">No certificates generated yet</div>
-        ) : (
-          <div className="certificates-table">
-            <table>
-              <thead>
-                <tr>
-                  <th>Student ID</th>
-                  <th>Name</th>
-                  <th>Branch</th>
-                  <th>Year</th>
-                  <th>Slot</th>
-                  <th>Total Marks</th>
-                  <th>Certificate ID</th>
-                  <th>Generated On</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {certificates.map((cert) => (
-                  <tr key={cert.uid}>
-                    <td>{cert.username}</td>
-                    <td>{cert.name}</td>
-                    <td>{cert.branch}</td>
-                    <td>{cert.year}</td>
-                    <td>{cert.slot}</td>
-                    <td>{cert.totalMarks}</td>
-                    <td>{cert.uid}</td>
-                    <td>{new Date(cert.generatedAt).toLocaleDateString()}</td>
-                    <td>
-                      <div className="action-buttons">
-                        <button 
-                          className="view-btn"
-                          onClick={() => handleViewCertificate(cert.username)}
-                          title="View Certificate"
-                        >
-                          <FaEye />
-                        </button>
-                        <button 
-                          className="download-btn"
-                          onClick={() => handleDownloadCertificate(cert.username)}
-                          title="Download Certificate"
-                        >
-                          <FaDownload />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      
     </div>
   );
 };

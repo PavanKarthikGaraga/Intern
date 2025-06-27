@@ -14,7 +14,7 @@ export default function Overview({ user, studentData }) {
   if (!studentData) {
     return <div className="loading">Loading Data .......</div>;
   }
-  // console.log(studentData)
+  console.log(studentData)
 
   // Calculate completed days from attendance
   const completedDays = Object.values(studentData.attendance?.details || {}).filter(status => status === 'P').length;
@@ -90,6 +90,14 @@ export default function Overview({ user, studentData }) {
     setSelectedSlot(null);
   };
 
+  // Helper to calculate grade from marks
+  const getGrade = (marks) => {
+    if (marks >= 90) return 'A';
+    if (marks >= 75) return 'B';
+    if (marks >= 60) return 'C';
+    return 'Not Qualified';
+  };
+
   const getSlotRules = (slot) => {
     const baseRules = [
       `Slot ${slot} is specifically designed for students who scored between 40-60 marks in their previous slot.`,
@@ -105,6 +113,29 @@ export default function Overview({ user, studentData }) {
     ];
 
     return baseRules;
+  };
+
+  const handleDownloadCertificate = async () => {
+    try {
+      const response = await fetch(`/api/dashboard/admin/certificate/download?username=${user.username}`, {
+        credentials: 'include'
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to download certificate');
+      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${user.username}_certificate.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      message.error(err.message || 'Failed to download certificate.');
+    }
   };
 
   return (
@@ -214,6 +245,26 @@ export default function Overview({ user, studentData }) {
                 <div className="stat-card">
                   <div className="stat-content">
                     <div>
+                      <h3>Internal Marks</h3>
+                      <p>{Number(studentData.marks?.finalReport) || '0'}/25</p>
+                    </div>
+                    <TrophyOutlined className="stat-icon" />
+                  </div>
+                </div>
+
+                <div className="stat-card">
+                  <div className="stat-content">
+                    <div>
+                      <h3>Internal Marks</h3>
+                      <p>{Number(studentData.marks?.finalPresentation) || '0'}/10</p>
+                    </div>
+                    <TrophyOutlined className="stat-icon" />
+                  </div>
+                </div>
+
+                <div className="stat-card">
+                  <div className="stat-content">
+                    <div>
                       <h3>Total Marks</h3>
                       <p>{Math.round(studentData.marks?.totalMarks || 0)}/100</p>
                     </div>
@@ -225,7 +276,7 @@ export default function Overview({ user, studentData }) {
                   <div className="stat-content">
                     <div>
                       <h3>Grade</h3>
-                      <p>{studentData.marks?.grade || 'Not Qualified'}</p>
+                      <p>{studentData.marks?.grade || 'Not Qualified'} ({getGrade(studentData.marks?.totalMarks)})</p>
                     </div>
                     <TrophyOutlined className="stat-icon" />
                   </div>
@@ -251,6 +302,35 @@ export default function Overview({ user, studentData }) {
               </>
             )}
           </>
+        )}
+
+        {studentData.certificate?.exists && (
+          <div className="stat-card certificate-download-card">
+            <div className="stat-content">
+              <div >
+                <h3>Download Certificate</h3>
+                <p style={{ fontSize: '1rem' }}>Your certificate is ready! Please download and print a <span style={{color:'#d4380d', fontWeight:'bold'}}>color copy</span>, get it signed by the Director SAC, and store it safely.</p>
+                <button
+                  type="button"
+                  onClick={handleDownloadCertificate}
+                  style={{
+                    marginTop: '10px',
+                    backgroundColor: '#594af7',
+                    color: '#fff',
+                    border: 'none',
+                    outline:'none',
+                    padding: '8px 16px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                    fontSize: '1rem',
+                  }}
+                >
+                  Download Certificate
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
        
@@ -310,6 +390,20 @@ export default function Overview({ user, studentData }) {
           color: #ff4d4f;
           font-weight: bold;
         }
+        // .certificate-download-card {
+        //   background-color: #fffbe6;
+        //   border: 1px solid #ffe58f;
+        // }
+        // .certificate-download-button {
+        //   margin-top: 10px;
+        //   background-color: #faad14;
+        //   color: #222;
+        //   border: none;
+        // }
+        // .certificate-download-button:hover {
+        //   background-color: #d48806;
+        //   color: #fff;
+        // }
       `}</style>
 
       <p className="beta-note">

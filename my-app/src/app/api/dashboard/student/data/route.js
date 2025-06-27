@@ -238,6 +238,10 @@ export async function POST(request) {
             const [problemStatementRows] = await db.query('SELECT * FROM problemStatements WHERE username = ?', [username]);
             const problemStatementData = problemStatementRows[0] || null;
 
+            // Fetch student's certificate (if exists)
+            const [certificateRows] = await db.query('SELECT uid FROM certificates WHERE username = ?', [username]);
+            const certificate = certificateRows[0] || null;
+
             // Combine all data
             const studentData = {
                 ...rows[0],
@@ -284,7 +288,8 @@ export async function POST(request) {
                     uploads: sstudentUploads,
                     marks: sstudentMarks,
                     messages: sstudentMessages
-                } : null
+                } : null,
+                certificate: certificate ? { exists: true, uid: certificate.uid } : { exists: false }
             };
 
             return NextResponse.json({

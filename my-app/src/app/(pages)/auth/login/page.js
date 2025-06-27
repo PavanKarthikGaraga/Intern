@@ -36,7 +36,7 @@ const Login = () => {
 
         if (captchaInput.toLowerCase() !== captcha.toLowerCase()) {
             toast.error('Incorrect captcha');
-            generateCaptcha();
+            // generateCaptcha();
             return;
         }
 
@@ -64,12 +64,12 @@ const Login = () => {
             } else {
                 console.log('Login error:', data);
                 toast.error(data.error || 'Login failed');
-                generateCaptcha();
+                // generateCaptcha();
             }
         } catch (error) {
             console.log('Login error:', error);
             toast.error('Login failed');
-            generateCaptcha();
+            // generateCaptcha();
         } finally {
             setIsSubmitting(false);
         }
