@@ -100,3 +100,105 @@ export async function GET(request) {
         connection.release();
     }
 }
+
+export async function DELETE(request) {
+    const connection = await pool.getConnection();
+    try {
+        const cookieStore = await cookies();
+        const accessToken = await cookieStore.get('accessToken');
+
+        if (!accessToken?.value) {
+            return NextResponse.json({ 
+                success: false, 
+                error: 'Authentication required. Please login again.' 
+            }, { status: 401 });
+        }
+
+        const decoded = await verifyAccessToken(accessToken.value);
+        if (!decoded || decoded.role !== 'admin') {
+            return NextResponse.json({ 
+                success: false, 
+                error: 'Access denied. Only administrators can delete supply students.' 
+            }, { status: 403 });
+        }
+
+        const { username } = await request.json();
+
+        if (!username) {
+            return NextResponse.json(
+                { success: false, error: 'Username is required' },
+                { status: 400 }
+            );
+        }
+
+        // Start transaction
+        await connection.beginTransaction();
+
+        try {
+            // Get student info for stats update
+            const [studentInfo] = await connection.query(
+                'SELECT slot, mode FROM sstudents WHERE username = ?',
+                [username]
+            );
+
+            if (studentInfo.length === 0) {
+                await connection.rollback();
+                return NextResponse.json(
+                    { success: false, error: 'Student not found' },
+                    { status: 404 }
+                );
+            }
+
+            const student = studentInfo[0];
+
+            // Delete from all s-tables (child tables first, then parent)
+            const tables = [
+                'suploads',
+                'sstatus', 
+                'sattendance',
+                'smessages',
+                'sdailyMarks',
+                'sstudents'  // Delete from parent table last
+            ];
+
+            for (const table of tables) {
+                await connection.query(`DELETE FROM ${table} WHERE username = ?`, [username]);
+            }
+
+            // Update stats table
+            const modeColumn = student.mode.toLowerCase() === 'remote' ? 'Remote' : 'Incamp';
+            const statsUpdateQuery = `
+                UPDATE stats 
+                SET slot${student.slot} = slot${student.slot} - 1,
+                    slot${student.slot}${modeColumn} = slot${student.slot}${modeColumn} - 1,
+                    ${student.mode.toLowerCase()} = ${student.mode.toLowerCase()} - 1,
+                    totalStudents = totalStudents - 1
+                WHERE id = 1;
+            `;
+            await connection.query(statsUpdateQuery);
+
+            await connection.commit();
+
+            return NextResponse.json({
+                success: true,
+                message: 'Supply student deleted successfully'
+            });
+
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        }
+
+    } catch (error) {
+        console.error('Error in supplyStudents DELETE:', error);
+        return NextResponse.json(
+            { 
+                success: false, 
+                error: 'Internal server error' 
+            },
+            { status: 500 }
+        );
+    } finally {
+        connection.release();
+    }
+}

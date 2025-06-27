@@ -132,6 +132,39 @@ export default function SupplyStudents() {
     }
   };
 
+  const handleDeleteStudent = async (username, name) => {
+    if (!confirm(`Are you sure you want to delete ${name} (${username})? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/dashboard/admin/supplyStudents', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ username })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete student');
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        toast.success('Student deleted successfully');
+        fetchStudents(); // Refresh the list
+      } else {
+        throw new Error(data.error || 'Failed to delete student');
+      }
+    } catch (err) {
+      console.error('Error deleting student:', err);
+      toast.error(err.message);
+    }
+  };
+
   if (loading) {
     return <div className="loading">Loading supply students...</div>;
   }
@@ -236,6 +269,13 @@ export default function SupplyStudents() {
                       onClick={() => setSelectedStudent(student)}
                     >
                       Evaluate
+                    </button>
+                    <button 
+                      className="delete-btn"
+                      onClick={() => handleDeleteStudent(student.username, student.name)}
+                      title="Delete student"
+                    >
+                      <FaTrash />
                     </button>
                   </div>
                 </td>
