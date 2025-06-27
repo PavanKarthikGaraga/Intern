@@ -113,11 +113,17 @@ export async function GET(req) {
     const pages = pdfDoc.getPages();
     const firstPage = pages[0];
     
-    // Always use server time for the certificate
+    // Always use IST (Asia/Kolkata) time for the certificate
     const date = new Date();
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
+    const options = {
+      timeZone: 'Asia/Kolkata',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    };
+    const [day, month, year] = new Intl.DateTimeFormat('en-GB', options)
+      .format(date)
+      .split('/');
     const time = `${day}/${month}/${year}`;
 
     // console.log(time);
@@ -251,11 +257,17 @@ export async function POST(request) {
         const pages = pdfDoc.getPages();
         const firstPage = pages[0];
         
-        // Always use server time for the certificate
+        // Always use IST (Asia/Kolkata) time for the certificate
         const date = new Date();
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
+        const options = {
+          timeZone: 'Asia/Kolkata',
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        };
+        const [day, month, year] = new Intl.DateTimeFormat('en-GB', options)
+          .format(date)
+          .split('/');
         const time = `${day}/${month}/${year}`;
 
         // Draw student details at appropriate positions
