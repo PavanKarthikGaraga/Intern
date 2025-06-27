@@ -42,9 +42,9 @@ export async function POST(request) {
             }
             // Upsert: if already exists for this username, update, else insert
             const [existing] = await db.query('SELECT id FROM problemStatements WHERE username = ?', [username]);
-            console.log('Existing problem statement:', existing);
+            // console.log('Existing problem statement:', existing);
             if (existing.length > 0) {
-                console.log('Updating existing problem statement');
+                // console.log('Updating existing problem statement');
                 await db.query(
                     'UPDATE problemStatements SET domain=?, problem_statement=?, location=?, district=?, state=?, updatedAt=NOW() WHERE username=?',
                     [domain, problem_statement, location, district, state, username]

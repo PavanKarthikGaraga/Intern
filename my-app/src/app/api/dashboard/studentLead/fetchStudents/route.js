@@ -82,9 +82,9 @@ export async function POST(req) {
                         if (i < 30) clearQuery += ', ';
                     }
                     clearQuery += ', slot = ?, updatedAt = CURRENT_TIMESTAMP WHERE username = ?';
-                    console.log('Clear Query:', clearQuery);
-                    console.log('Target Slot:', targetSlot);
-                    console.log('Username:', username);
+                    // console.log('Clear Query:', clearQuery);
+                    // console.log('Target Slot:', targetSlot);
+                    // console.log('Username:', username);
                     await connection.query(clearQuery, [targetSlot, username]);
                 }
             }
@@ -106,7 +106,7 @@ export async function POST(req) {
                     'UPDATE registrations SET studentLeadId = ?, facultyMentorId = ?, updatedAt = CURRENT_TIMESTAMP WHERE username IN (?)',
                     [username, facultyMentorId, usernames]
                 );
-                console.log('usernames', username, facultyMentorId, usernames);
+                // console.log('usernames', username, facultyMentorId, usernames);
 
                 // Update studentLeads table with new students
                 let updateFields = {};
@@ -133,8 +133,8 @@ export async function POST(req) {
                     updateQuery += ' WHERE username = ?';
                     updateValues.push(username);
 
-                    console.log('Update Query:', updateQuery);
-                    console.log('Update Values:', updateValues);
+                    // console.log('Update Query:', updateQuery);
+                    // console.log('Update Values:', updateValues);
 
                     await connection.query(updateQuery, updateValues);
                 }

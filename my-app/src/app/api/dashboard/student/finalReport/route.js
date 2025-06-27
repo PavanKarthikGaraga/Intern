@@ -13,7 +13,7 @@ async function isReportSubmissionAllowed(slot) {
         if (rows.length === 0) {
             return false;
         }
-        console.log(rows[0]);
+        // console.log(rows[0]);
         const reportStatus = rows[0];
         return reportStatus[`slot${slot}`] === 1;
     } catch (error) {

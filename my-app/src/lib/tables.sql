@@ -313,3 +313,15 @@ CREATE TABLE problemStatements (
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (username) REFERENCES registrations(username)
 );
+
+-- Create certificates table for storing generated PDFs
+CREATE TABLE certificates (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(10) NOT NULL UNIQUE,
+    uid VARCHAR(50) NOT NULL UNIQUE,
+    pdf_data LONGBLOB NOT NULL,
+    slot INT NOT NULL,
+    totalMarks DECIMAL(4,2) NOT NULL,
+    generatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (username) REFERENCES registrations(username)
+);

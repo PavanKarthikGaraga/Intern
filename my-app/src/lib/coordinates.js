@@ -1,5 +1,5 @@
 import fs from 'fs';
-import pkg from 'pdfjs-dist/legacy/build/pdf.js';
+import pkg from 'pdfjs-dist';
 const { getDocument } = pkg;
 
 const pdfPath = './public/certificate.pdf';
@@ -12,8 +12,7 @@ const data = new Uint8Array(fs.readFileSync(pdfPath));
   const content = await page.getTextContent();
 
   content.items.forEach(item => {
-    const words = item.str.split(/\s+/); // split by spaces
-    const wordCount = words.length;
+    const words = item.str.split(/\s+/);
     const totalWidth = item.width;
     const avgWidth = totalWidth / item.str.length;
 
@@ -30,7 +29,7 @@ const data = new Uint8Array(fs.readFileSync(pdfPath));
         y: parseFloat(wordY.toFixed(2))
       });
 
-      offset += wordWidth + avgWidth; // move to next word with spacing
+      offset += wordWidth + avgWidth;
     });
   });
 })();

@@ -63,7 +63,7 @@ export default function VerifyModal({ student, onClose }) {
       const res = await fetch(`/api/dashboard/admin/supplyStudents/submissions?username=${student.username}`, { credentials: 'include' });
       if (!res.ok) throw new Error('Failed to fetch data');
       const { data } = await res.json();
-      console.log(data);
+      // console.log(data);
       setDaysData(data);
     } catch (err) {
       setError(err.message);

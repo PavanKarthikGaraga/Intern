@@ -14,7 +14,7 @@ export default function Overview({ user, studentData }) {
   if (!studentData) {
     return <div className="loading">Loading Data .......</div>;
   }
-  console.log(studentData)
+  // console.log(studentData)
 
   // Calculate completed days from attendance
   const completedDays = Object.values(studentData.attendance?.details || {}).filter(status => status === 'P').length;

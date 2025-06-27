@@ -41,14 +41,14 @@ export default function VerifyModal({ student, onClose }) {
         marksResponse.json()
       ]);
       
-      console.log("submissions",submissionsData.submissions);
+      // console.log("submissions",submissionsData.submissions);
 
       if (submissionsData.submissions) {
         const studentReports = submissionsData.submissions.filter(
           sub => sub.username === student.username
         );
         setReports(studentReports);
-        console.log("submis", studentReports);
+        // console.log("submis", studentReports);
 
         // Initialize verification status from submissions data
         if (studentReports.length > 0) {

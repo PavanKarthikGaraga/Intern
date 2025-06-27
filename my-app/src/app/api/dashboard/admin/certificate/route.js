@@ -32,6 +32,23 @@ function getSlotDates(slot) {
   }
 }
 
+// Helper to draw certificate fields at the correct positions
+function drawCertificateFields(page, { grade, name, branch, idNumber, start, end, slot, mode, domain, totalMarks, time, uid }, font) {
+  page.drawText(grade, { x: 376.29, y: 709.36, size: 16, font, color: rgb(0, 0, 0) });
+  page.drawText(name, {  x: 90.35, y: 645.58, size: 11, font, color: rgb(0, 0, 0) });
+  page.drawText(branch, { x: 103.27, y: 630.58, size: 11, font, color: rgb(0, 0, 0) });
+  page.drawText(`${idNumber},`, { x: 282.2, y: 630.58, size: 11, font, color: rgb(0, 0, 0) });
+  page.drawText(start, {x: 239.66, y: 570.56, size: 10, font, color: rgb(0, 0, 0) });
+  page.drawText(`${end},`, { x: 316.73, y: 570.56, size: 10, font, color: rgb(0, 0, 0) });
+  page.drawText(`${slot} ,`, { x: 228.94, y: 555.55, size: 11, font, color: rgb(0, 0, 0) });
+  page.drawText(`${mode}`, { x: 92.82, y: 540.55  , size: 11, font, color: rgb(0, 0, 0) });
+  page.drawText(`${domain}.`, { x: 144.93, y: 525.54 , size: 11, font, color: rgb(0, 0, 0) });
+  page.drawText(`${totalMarks}`, {  x: 134.71, y: 270.44, size: 11, font, color: rgb(0, 0, 0) });
+  page.drawText(grade, {  x: 88.32, y: 255.44 , size: 11, font, color: rgb(0, 0, 0) });
+  page.drawText(time, {  x: 438.18, y: 106.13 , size: 10, font, color: rgb(0, 0, 0) });
+  page.drawText(uid, {  x: 431.13, y: 91.13 , size: 10, font, color: rgb(0, 0, 0) });
+}
+
 export async function GET(req) {
   const cookieStore = await cookies();
   const accessToken = await cookieStore.get('accessToken');
@@ -96,44 +113,30 @@ export async function GET(req) {
     const pages = pdfDoc.getPages();
     const firstPage = pages[0];
     
-    let time;
-    try {
-      const res = await fetch("https://timeapi.io/api/Time/current/zone?timeZone=Asia/Kolkata");
-      const data = await res.json();
-    
-      // Convert MM/DD/YYYY to DD/MM/YYYY
-      const [month, day, year] = data.date.split('/');
-      time = `${day}/${month}/${year}`;
-    } catch (err) {
-      console.error("Failed to fetch accurate time, using server time:", err);
-    
-      const date = new Date();
-      const day = String(date.getDate()).padStart(2, '0');
-      const month = String(date.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed
-      const year = date.getFullYear();
-    
-      time = `${day}/${month}/${year}`;
-    }
-    
+    // Always use server time for the certificate
+    const date = new Date();
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const time = `${day}/${month}/${year}`;
 
-    console.log(time);
-
+    // console.log(time);
 
     // ✍️ Draw student details at appropriate positions
-    firstPage.drawText(grade, { x: 375.09, y: 668.7, size: 16, font, color: rgb(0, 0, 0) });
-    firstPage.drawText(name, {  x: 96.04, y: 604.92, size: 12, font, color: rgb(0, 0, 0) });
-    firstPage.drawText(branch, { x: 62.03, y: 589.91, size: 12, font, color: rgb(0, 0, 0) });
-    firstPage.drawText(`${idNumber},`, { x: 250.17, y: 589.91, size: 12, font, color: rgb(0, 0, 0) });
-    firstPage.drawText(start, {x: 237.78, y: 529.89, size: 10, font, color: rgb(0, 0, 0) });
-    firstPage.drawText(`${end},`, { x: 320.53, y: 529.89, size: 10, font, color: rgb(0, 0, 0) });
-    firstPage.drawText(`Slot ${slot},`, {  x: 188.41, y: 514.89, size: 12, font, color: rgb(0, 0, 0) });
-    firstPage.drawText(`${mode}`, { x: 91.43, y: 499.88 , size: 12, font, color: rgb(0, 0, 0) });
-    firstPage.drawText(`${domain}.`, { x: 146.33, y: 484.88 , size: 12, font, color: rgb(0, 0, 0) });
-    firstPage.drawText(`${totalMarks}`, {  x: 133.51, y: 229.78, size: 12, font, color: rgb(0, 0, 0) });
-    firstPage.drawText(grade, {  x: 87.12, y: 214.77 , size: 12, font, color: rgb(0, 0, 0) });
-    firstPage.drawText(time, {  x: 467.22, y: 80.47 , size: 12, font, color: rgb(0, 0, 0) });
-    firstPage.drawText(`SI25${username}`, {  x: 493.76, y: 65.47 , size: 10, font, color: rgb(0, 0, 0) });
-
+    drawCertificateFields(firstPage, {
+      grade,
+      name,
+      branch,
+      idNumber,
+      start,
+      end,
+      slot,
+      mode,
+      domain,
+      totalMarks,
+      time,
+      uid: `SI25${username}`
+    }, font);
 
     const pdfBytes = await pdfDoc.save();
 
@@ -147,5 +150,173 @@ export async function GET(req) {
   } catch (err) {
     console.error('Error generating certificate:', err);
     return NextResponse.json({ success: false, error: 'Error generating certificate.' }, { status: 500 });
+  }
+}
+
+export async function POST(request) {
+  const cookieStore = await cookies();
+  const accessToken = await cookieStore.get('accessToken');
+
+  if (!accessToken?.value) {
+    return NextResponse.json({
+      success: false,
+      error: 'Authentication required. Please login again.',
+    }, { status: 401 });
+  }
+
+  const decoded = await verifyAccessToken(accessToken.value);
+  if (!decoded || decoded.role !== 'admin') {
+    return NextResponse.json({
+      success: false,
+      error: 'Access denied. Only admins can generate certificates.',
+    }, { status: 403 });
+  }
+
+  try {
+    const { slot } = await request.json();
+
+    if (!slot) {
+      return NextResponse.json(
+        { success: false, error: 'Slot is required' },
+        { status: 400 }
+      );
+    }
+
+    // Get students with total marks >= 60 for the specified slot
+    const [students] = await db.query(`
+      SELECT 
+        m.username,
+        r.name,
+        r.branch,
+        r.year,
+        r.slot,
+        r.mode,
+        r.selectedDomain,
+        m.totalMarks,
+        m.grade,
+        m.completed
+      FROM marks m
+      JOIN registrations r ON m.username = r.username
+      WHERE m.totalMarks >= 60 
+      AND m.completed = 'P'
+      AND r.slot = ?
+      ORDER BY m.totalMarks DESC
+    `, [slot]);
+
+    if (students.length === 0) {
+      return NextResponse.json({
+        success: false,
+        error: `No eligible students found for Slot ${slot}`
+      }, { status: 404 });
+    }
+
+    const generatedCertificates = [];
+
+    for (const student of students) {
+      try {
+        // Check if certificate already exists
+        const [existingCert] = await db.query(
+          'SELECT * FROM certificates WHERE username = ?',
+          [student.username]
+        );
+
+        if (existingCert.length > 0) {
+          generatedCertificates.push({
+            username: student.username,
+            name: student.name,
+            status: 'Already exists'
+          });
+          continue;
+        }
+
+        // Generate unique ID for the certificate
+        const uid = `SI25${student.username}`;
+
+        // Generate certificate using existing logic
+        const { name, branch, username: idNumber, slot: studentSlot, mode, selectedDomain: domain } = student;
+        const { totalMarks } = student;
+        const grade = getGrade(totalMarks);
+        const { start, end } = getSlotDates(studentSlot);
+
+        // Load certificate template PDF
+        const certPath = path.join(process.cwd(), 'public', 'certificate.pdf');
+        const certBytes = fs.readFileSync(certPath);
+        const pdfDoc = await PDFDocument.load(certBytes);
+
+        // Register fontkit and load custom font
+        pdfDoc.registerFontkit(fontkit);
+        const fontBytes = fs.readFileSync(path.join(process.cwd(), 'public', 'fonts', 'Poppins-SemiBold.ttf'));
+        const font = await pdfDoc.embedFont(fontBytes);
+
+        const pages = pdfDoc.getPages();
+        const firstPage = pages[0];
+        
+        // Always use server time for the certificate
+        const date = new Date();
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        const time = `${day}/${month}/${year}`;
+
+        // Draw student details at appropriate positions
+        drawCertificateFields(firstPage, {
+          grade,
+          name,
+          branch,
+          idNumber,
+          start,
+          end,
+          slot: studentSlot,
+          mode,
+          domain,
+          totalMarks,
+          time,
+          uid
+        }, font);
+
+        const pdfBytes = await pdfDoc.save();
+
+        // Convert Uint8Array to Buffer for MySQL BLOB storage
+        const pdfBuffer = Buffer.from(pdfBytes);
+
+        // Save certificate info to database with PDF as BLOB
+        await db.query(`
+          INSERT INTO certificates (username, uid, pdf_data, slot, totalMarks)
+          VALUES (?, ?, ?, ?, ?)
+        `, [student.username, uid, pdfBuffer, studentSlot, totalMarks]);
+
+        generatedCertificates.push({
+          username: student.username,
+          name: student.name,
+          status: 'Generated',
+          uid: uid
+        });
+
+      } catch (error) {
+        console.error(`Error generating certificate for ${student.username}:`, error);
+        generatedCertificates.push({
+          username: student.username,
+          name: student.name,
+          status: 'Failed',
+          error: error.message
+        });
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: `Generated ${generatedCertificates.length} certificates for Slot ${slot}`,
+      certificates: generatedCertificates
+    });
+
+  } catch (error) {
+    console.error('Error generating certificates:', error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: 'Internal server error' 
+      },
+      { status: 500 }
+    );
   }
 }

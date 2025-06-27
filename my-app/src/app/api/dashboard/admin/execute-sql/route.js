@@ -92,6 +92,8 @@ export async function POST(request) {
         } else if (cleanQuery.toLowerCase().startsWith('delete')) {
           message = `Deleted ${result.affectedRows} row(s)`;
         }
+
+        // console.log(result);
         
         return NextResponse.json({
           message: message,

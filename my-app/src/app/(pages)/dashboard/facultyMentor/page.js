@@ -21,7 +21,7 @@ export default function FacultyMentorDashboard() {
   const [error, setError] = useState(null);
   const [activeSection, setActiveSection] = useState('overview');
 
-  console.log('FacultyMentorDashboard mounted with user:', user);
+  // console.log('FacultyMentorDashboard mounted with user:', user);
 
   if (!user) {
     console.log('No user found, showing loader');
@@ -37,7 +37,7 @@ export default function FacultyMentorDashboard() {
   }
 
   const handleSectionClick = (section) => {
-    console.log('Section clicked:', section);
+    // console.log('Section clicked:', section);
     setActiveSection(section);
   };
 

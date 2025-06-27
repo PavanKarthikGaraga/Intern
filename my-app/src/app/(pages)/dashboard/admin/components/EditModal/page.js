@@ -11,7 +11,7 @@ export default function EditModal({ isOpen, onClose, data, type, onSave }) {
 
     useEffect(() => {
         if (data) {
-            console.log(data);
+            // console.log(data);
             setFormData({
                 username: data.username || '',
                 name: data.name || '',

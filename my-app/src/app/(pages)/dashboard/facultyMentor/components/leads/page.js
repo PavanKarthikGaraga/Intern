@@ -27,7 +27,7 @@ export default function Leads({ user }) {
 
       const data = await response.json();
       if (data.success) {
-        console.log(data.leads);
+        // console.log(data.leads);
         setLeads(data.leads);
       }
     } catch (err) {

@@ -215,10 +215,8 @@ export default function SupplyStudents() {
               onChange={(e) => handleFilterChange('slot', e.target.value)}
             >
               <option value="">All Slots</option>
-              <option value="1">Slot 1</option>
-              <option value="2">Slot 2</option>
-              <option value="3">Slot 3</option>
-              <option value="4">Slot 4</option>
+              <option value="5">Slot 5</option>
+              <option value="6">Slot 6</option>
             </select>
           </div>
 
