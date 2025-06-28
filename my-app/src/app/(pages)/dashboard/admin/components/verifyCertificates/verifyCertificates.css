@@ -1,0 +1,402 @@
+.verify-certificates-container {
+  padding: 2rem;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  max-width: 1400px;
+  margin: 2rem auto;
+}
+
+/* Header Section */
+.header-section {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.header-section h2 {
+  font-size: 2rem;
+  color: #333;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.subtitle {
+  color: #666;
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* Search Section */
+.search-section {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.search-form {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.search-input-group {
+  position: relative;
+  flex: 1;
+  min-width: 300px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #0070f3;
+  box-shadow: 0 0 0 3px rgba(0, 112, 243, 0.1);
+}
+
+.search-btn {
+  padding: 0.75rem 1.5rem;
+  background: #0070f3;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.search-btn:hover {
+  background: #0056b3;
+}
+
+.clear-search-btn {
+  padding: 0.75rem 1.5rem;
+  background: #6c757d;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.clear-search-btn:hover {
+  background: #5a6268;
+}
+
+/* Loading Section */
+.loading-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  color: #666;
+}
+
+.loading-section .spinning {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Certificates Section */
+.certificates-section {
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.table-container {
+  overflow-x: auto;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+}
+
+.certificates-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.certificates-table th {
+  background: #f8f9fa;
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #333;
+  border-bottom: 2px solid #dee2e6;
+  white-space: nowrap;
+}
+
+.certificates-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #e9ecef;
+  vertical-align: middle;
+}
+
+.certificate-row:hover {
+  background: #f8f9fa;
+}
+
+/* Table Cell Styles */
+.username-cell {
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  color: #333;
+}
+
+.name-cell {
+  font-weight: 500;
+  color: #333;
+}
+
+.uid-cell {
+  font-family: 'Courier New', monospace;
+  color: #666;
+  font-size: 0.85rem;
+}
+
+.slot-cell {
+  text-align: center;
+  font-weight: 500;
+  color: #495057;
+}
+
+.marks-cell {
+  text-align: center;
+  font-weight: 600;
+  color: #333;
+}
+
+.grade-cell {
+  text-align: center;
+}
+
+.grade-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.grade-a {
+  background: #d4edda;
+  color: #155724;
+}
+
+.grade-b {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
+.grade-c {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.grade-f {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.actions-cell {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.action-btn {
+  padding: 0.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+}
+
+.view-btn {
+  background: #17a2b8;
+  color: #fff;
+}
+
+.view-btn:hover {
+  background: #138496;
+}
+
+.download-btn {
+  background: #28a745;
+  color: #fff;
+}
+
+.download-btn:hover {
+  background: #218838;
+}
+
+.action-btn:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.action-btn .spinning {
+  animation: spin 1s linear infinite;
+}
+
+/* Pagination Section */
+.pagination-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-top: 1px solid #e9ecef;
+}
+
+.pagination-info {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.pagination-buttons {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.pagination-btn {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #dee2e6;
+  background: #fff;
+  color: #333;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+  min-width: 40px;
+}
+
+.pagination-btn:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.pagination-btn.active {
+  background: #0070f3;
+  color: #fff;
+  border-color: #0070f3;
+}
+
+.pagination-dots {
+  color: #6c757d;
+  padding: 0.5rem;
+  font-weight: bold;
+}
+
+/* No Certificates */
+.no-certificates {
+  text-align: center;
+  padding: 3rem;
+  color: #666;
+}
+
+.no-certificates p {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .verify-certificates-container {
+    padding: 1rem;
+    margin: 1rem;
+  }
+
+  .search-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-input-group {
+    min-width: auto;
+  }
+
+  .pagination-section {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+
+  .certificates-table th,
+  .certificates-table td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .action-btn {
+    min-width: 32px;
+    height: 32px;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-section h2 {
+    font-size: 1.5rem;
+  }
+
+  .certificates-table {
+    font-size: 0.75rem;
+  }
+
+  .certificates-table th,
+  .certificates-table td {
+    padding: 0.5rem 0.25rem;
+  }
+
+  .grade-badge {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.7rem;
+  }
+} 

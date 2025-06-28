@@ -22,6 +22,7 @@ import SQLExecutor from './components/sqlExecutor/page';
 import ResetPassword from './components/resetPassword/page';
 import SupplyStudents from './components/supplyStudents/page';
 import CertificateDownload from './components/certificate/page';
+import VerifyCertificates from './components/verifyCertificates/page';
 
 export default function AdminDashboard() {
   const { user, isLoading, isAuthenticated } = useAuth();
@@ -122,6 +123,12 @@ export default function AdminDashboard() {
             <span className="item-label">Completed Students</span>
           </button>
           <button
+            className={`sidebar-item ${activeSection === 'verify-certificates' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('verify-certificates')}
+          >
+            <span className="item-label">verify certificates</span>
+          </button>
+          <button
             className={`sidebar-item ${activeSection === 'report-control' ? 'active' : ''}`}
             onClick={() => handleSectionClick('report-control')}
           >
@@ -194,6 +201,7 @@ export default function AdminDashboard() {
            activeSection === 'token-generator' ? <TokenGenerator /> :
            activeSection === 'sql-executor' ? <SQLExecutor /> :
            activeSection === 'reset-password' ? <ResetPassword /> :
+           activeSection === 'verify-certificates' ? <VerifyCertificates/> :
            activeSection === 'certificate-download' ? <CertificateDownload /> :
            <ChangePassword />}
         </main>
