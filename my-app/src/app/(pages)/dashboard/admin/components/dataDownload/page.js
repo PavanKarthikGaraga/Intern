@@ -143,6 +143,62 @@ export default function DataDownload() {
                 >
                     Download Report Open Data
                 </button>
+                <button 
+                    className="download-btn"
+                    onClick={() => handleDownload('problemStatements')}
+                    disabled={loading}
+                >
+                    Download Problem Statements Data
+                </button>
+                <button 
+                    className="download-btn"
+                    onClick={() => handleDownload('certificates')}
+                    disabled={loading}
+                >
+                    Download Certificates Data
+                </button>
+                <button 
+                    className="download-btn"
+                    onClick={() => handleDownload('sstudents')}
+                    disabled={loading}
+                >
+                    Download Supply Students Data
+                </button>
+                <button 
+                    className="download-btn"
+                    onClick={() => handleDownload('sdailyMarks')}
+                    disabled={loading}
+                >
+                    Download Supply Daily Marks Data
+                </button>
+                <button 
+                    className="download-btn"
+                    onClick={() => handleDownload('sattendance')}
+                    disabled={loading}
+                >
+                    Download Supply Attendance Data
+                </button>
+                <button 
+                    className="download-btn"
+                    onClick={() => handleDownload('suploads')}
+                    disabled={loading}
+                >
+                    Download Supply Uploads Data
+                </button>
+                <button 
+                    className="download-btn"
+                    onClick={() => handleDownload('smessages')}
+                    disabled={loading}
+                >
+                    Download Supply Messages Data
+                </button>
+                <button 
+                    className="download-btn"
+                    onClick={() => handleDownload('sstats')}
+                    disabled={loading}
+                >
+                    Download Supply Statistics Data
+                </button>
             </div>
             
             {loading && <div className="loading">Downloading data...</div>}

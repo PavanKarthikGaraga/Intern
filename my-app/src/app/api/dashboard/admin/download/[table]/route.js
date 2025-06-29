@@ -38,7 +38,15 @@ export async function GET(req, { params }) {
             'dailyMarks',
             'marks',
             'stats',
-            'reportOpen'
+            'reportOpen',
+            'problemStatements',
+            'certificates',
+            'sstudents',
+            'sdailyMarks',
+            'sattendance',
+            'suploads',
+            'smessages',
+            'sstats'
         ];
 
         if (!validTables.includes(table)) {
