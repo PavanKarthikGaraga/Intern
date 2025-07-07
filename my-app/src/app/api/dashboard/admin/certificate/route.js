@@ -414,3 +414,66 @@ export async function POST(request) {
     );
   }
 }
+
+export async function DELETE(req) {
+  try {
+    const cookieStore = await cookies();
+    const accessToken = await cookieStore.get('accessToken');
+
+    if (!accessToken?.value) {
+      return NextResponse.json({
+        success: false,
+        error: 'Authentication required. Please login again.',
+      }, { status: 401 });
+    }
+
+    const decoded = await verifyAccessToken(accessToken.value);
+    if (!decoded || decoded.role !== 'admin') {
+      return NextResponse.json({
+        success: false,
+        error: 'Access denied. Only admins can delete certificates.',
+      }, { status: 403 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const username = searchParams.get('username');
+    
+    if (!username) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Username is required.' 
+      }, { status: 400 });
+    }
+
+    // Check if certificate exists
+    const [existingCert] = await db.query(
+      'SELECT * FROM certificates WHERE username = ?',
+      [username]
+    );
+
+    if (!existingCert || existingCert.length === 0) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Certificate not found.' 
+      }, { status: 404 });
+    }
+
+    // Delete the certificate
+    await db.query(
+      'DELETE FROM certificates WHERE username = ?',
+      [username]
+    );
+
+    return NextResponse.json({
+      success: true,
+      message: `Certificate for ${username} deleted successfully.`
+    });
+
+  } catch (error) {
+    console.error('Error deleting certificate:', error);
+    return NextResponse.json({ 
+      success: false, 
+      error: 'Error deleting certificate.' 
+    }, { status: 500 });
+  }
+}

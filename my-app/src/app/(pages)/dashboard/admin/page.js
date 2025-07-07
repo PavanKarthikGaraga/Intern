@@ -24,12 +24,14 @@ import SupplyStudents from './components/supplyStudents/page';
 import CertificateDownload from './components/certificate/page';
 import VerifyCertificates from './components/verifyCertificates/page';
 import SFinalProfile from './components/sfinal/page';
+import ProblemStatements from './components/problemStatements/page';
 
 export default function AdminDashboard() {
   const { user, isLoading, isAuthenticated } = useAuth();
   const [activeSection, setActiveSection] = useState('overview');
   const [showUsersDropdown, setShowUsersDropdown] = useState(false);
   const [showDevDropdown, setShowDevDropdown] = useState(false);
+  const [showSupplyDropdown, setShowSupplyDropdown] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -49,6 +51,7 @@ export default function AdminDashboard() {
     setActiveSection(section);
     setShowUsersDropdown(false);
     setShowDevDropdown(false);
+    setShowSupplyDropdown(false);
   };
 
   return (
@@ -81,12 +84,8 @@ export default function AdminDashboard() {
           >
             <span className="item-label">Students</span>
           </button>
-          <button
-            className={`sidebar-item ${activeSection === 'supply-students' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('supply-students')}
-          >
-            <span className="item-label">Supply Students</span>
-          </button>
+
+          {/* Users Dropdown */}
           <div className="dropdown">
             <button
               className={`sidebar-item ${['student-leads', 'faculty-mentors', 'admins'].includes(activeSection) ? 'active' : ''}`}
@@ -117,46 +116,73 @@ export default function AdminDashboard() {
               </div>
             )}
           </div>
+
+          {/* Supply Students Section */}
+            <div className="dropdown">
+              <button
+                className={`sidebar-item ${['supply-students', 'supply-final'].includes(activeSection) ? 'active' : ''}`}
+                onClick={() => setShowSupplyDropdown(!showSupplyDropdown)}
+              >
+                <span className="item-label">Supply</span>
+              </button>
+              {showSupplyDropdown && (
+                <div className="dropdown-content">
+                  <button
+                    className={`dropdown-item ${activeSection === 'supply-students' ? 'active' : ''}`}
+                    onClick={() => handleSectionClick('supply-students')}
+                  >
+                    Supply Students
+                  </button>
+                  <button
+                    className={`dropdown-item ${activeSection === 'supply-final' ? 'active' : ''}`}
+                    onClick={() => handleSectionClick('supply-final')}
+                  >
+                    Supply Final
+                  </button>
+                </div>
+              )}
+            </div>
+        
           <button
             className={`sidebar-item ${activeSection === 'completed-students' ? 'active' : ''}`}
             onClick={() => handleSectionClick('completed-students')}
           >
             <span className="item-label">Completed Students</span>
           </button>
+
           <button
             className={`sidebar-item ${activeSection === 'verify-certificates' ? 'active' : ''}`}
             onClick={() => handleSectionClick('verify-certificates')}
           >
-            <span className="item-label">verify certificates</span>
+            <span className="item-label">Verify Certificates</span>
           </button>
+
           <button
-            className={`sidebar-item ${activeSection === 'report-control' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('report-control')}
+            className={`sidebar-item ${activeSection === 'problem-statements' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('problem-statements')}
           >
-            <span className="item-label">Report Control</span>
+            <span className="item-label">Problem Statements</span>
           </button>
+
           <button
             className={`sidebar-item ${activeSection === 'reset-password' ? 'active' : ''}`}
             onClick={() => handleSectionClick('reset-password')}
           >
             <span className="item-label">Reset Password</span>
           </button>
+
           <button
             className={`sidebar-item ${activeSection === 'token-generator' ? 'active' : ''}`}
             onClick={() => handleSectionClick('token-generator')}
           >
-            Proxy Login
+            <span className="item-label">Proxy Login</span>
           </button>
-          <button
-            className={`sidebar-item ${activeSection === 'supply-final' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('supply-final')}
-          >
-            <span className="item-label">Supply Final</span>
-          </button>
+
+          {/* Dev Tools Dropdown */}
           {user.username === '2300032048' && (
             <div className="dropdown">
               <button
-                className={`sidebar-item ${['data-download','report-control','token-generator','sql-executor'].includes(activeSection) ? 'active' : ''}`}
+                className={`sidebar-item ${['data-download', 'sql-executor', 'certificate-download'].includes(activeSection) ? 'active' : ''}`}
                 onClick={() => setShowDevDropdown(!showDevDropdown)}
               >
                 <span className="item-label">Dev</span>
@@ -181,10 +207,17 @@ export default function AdminDashboard() {
                   >
                     Certificate Download
                   </button>
+                  <button
+                    className={`dropdown-item ${activeSection === 'report-control' ? 'active' : ''}`}
+                    onClick={() => handleSectionClick('report-control')}
+                  >
+                    Report Control
+                  </button>
                 </div>
               )}
             </div>
           )}
+
           <button
             className={`sidebar-item ${activeSection === 'change-password' ? 'active' : ''}`}
             onClick={() => handleSectionClick('change-password')}
@@ -211,6 +244,7 @@ export default function AdminDashboard() {
            activeSection === 'verify-certificates' ? <VerifyCertificates/> :
            activeSection === 'certificate-download' ? <CertificateDownload /> :
            activeSection === 'supply-final' ? <SFinalProfile /> :
+           activeSection === 'problem-statements' ? <ProblemStatements /> :
            <ChangePassword />}
         </main>
       </div>

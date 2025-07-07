@@ -69,7 +69,7 @@ export default function ResetPassword() {
 
             <div className="reset-password-container">
                 <form onSubmit={handleSubmit}>
-                    <div className="form-group">
+                    <div className="formgr">
                         <label htmlFor="usernames">Enter Usernames (one per line)</label>
                         <textarea
                             id="usernames"

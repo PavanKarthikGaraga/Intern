@@ -23,18 +23,18 @@
     margin: 0 auto;
 }
 
-.form-group {
+.formgr {
     margin-bottom: 1.5rem;
 }
 
-.form-group label {
+.formgr label {
     display: block;
     margin-bottom: 0.5rem;
     color: #333333;
     font-weight: 500;
 }
 
-.form-group textarea {
+.formgr textarea {
     width: 100%;
     min-height: 150px;
     padding: 0.75rem;
@@ -45,7 +45,7 @@
     resize: vertical;
 }
 
-.form-group textarea:focus {
+.formgr textarea:focus {
     outline: none;
     border-color: rgb(151, 0, 3);
     box-shadow: 0 0 0 2px rgba(151, 0, 3, 0.1);

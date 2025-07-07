@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useEffect } from 'react';
-import { FaSearch, FaEye, FaDownload, FaSpinner } from 'react-icons/fa';
+import { FaSearch, FaEye, FaDownload, FaSpinner, FaTrash, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import './verifyCertificates.css';
 
@@ -14,6 +14,8 @@ const VerifyCertificates = () => {
   const [viewingCertificate, setViewingCertificate] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [downloadLoading, setDownloadLoading] = useState({});
+  const [deleteLoading, setDeleteLoading] = useState({});
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
 
   const ITEMS_PER_PAGE = 30;
 
@@ -21,7 +23,7 @@ const VerifyCertificates = () => {
   const fetchCertificates = async (page = 1, search = '') => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/dashboard/admin/certificates/list?page=${page}&limit=${ITEMS_PER_PAGE}&search=${encodeURIComponent(search)}`, {
+      const response = await fetch(`/api/dashboard/admin/certificate/list?page=${page}&limit=${ITEMS_PER_PAGE}&search=${encodeURIComponent(search)}`, {
         credentials: 'include'
       });
 
@@ -30,9 +32,11 @@ const VerifyCertificates = () => {
       }
 
       const data = await response.json();
+      // console.log('API Response:', data);
+      // console.log('Pagination Data:', data.pagination);
       setCertificates(data.certificates);
-      setTotalPages(data.totalPages);
-      setTotalCertificates(data.totalCertificates);
+      setTotalPages(data.pagination.totalPages);
+      setTotalCertificates(data.pagination.totalCertificates);
     } catch (error) {
       console.error('Error fetching certificates:', error);
       toast.error('Failed to load certificates');
@@ -122,6 +126,67 @@ const VerifyCertificates = () => {
     }
   };
 
+  // Handle certificate deletion
+  const handleDeleteCertificate = async (username) => {
+    try {
+      setDeleteLoading(prev => ({ ...prev, [username]: true }));
+      
+      const response = await fetch(`/api/dashboard/admin/certificate?username=${encodeURIComponent(username)}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete certificate');
+      }
+
+      const data = await response.json();
+      toast.success(data.message);
+      
+      // Refresh the certificates list
+      fetchCertificates(currentPage, searchTerm);
+      
+    } catch (error) {
+      console.error('Error deleting certificate:', error);
+      toast.error(`Failed to delete certificate for ${username}`);
+    } finally {
+      setDeleteLoading(prev => ({ ...prev, [username]: false }));
+      setShowDeleteConfirm(null);
+    }
+  };
+
+  // Delete confirmation modal
+  const DeleteConfirmModal = ({ username, onConfirm, onCancel }) => (
+    <div className="delete-modal-overlay">
+      <div className="delete-modal">
+        <h3>Confirm Delete</h3>
+        <p>Are you sure you want to delete the certificate for {username}?</p>
+        <p className="warning-text">This action cannot be undone.</p>
+        <div className="delete-modal-buttons">
+          <button 
+            className="delete-confirm-btn"
+            onClick={() => onConfirm(username)}
+            disabled={deleteLoading[username]}
+          >
+            {deleteLoading[username] ? (
+              <><FaSpinner className="spinning" /> Deleting...</>
+            ) : (
+              'Delete'
+            )}
+          </button>
+          <button 
+            className="delete-cancel-btn"
+            onClick={onCancel}
+            disabled={deleteLoading[username]}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   // Generate pagination buttons
   const generatePaginationButtons = () => {
     const buttons = [];
@@ -135,17 +200,16 @@ const VerifyCertificates = () => {
     }
 
     // Previous button
-    if (currentPage > 1) {
-      buttons.push(
-        <button
-          key="prev"
-          onClick={() => handlePageChange(currentPage - 1)}
-          className="pagination-btn"
-        >
-          Previous
-        </button>
-      );
-    }
+    buttons.push(
+      <button
+        key="prev"
+        onClick={() => handlePageChange(currentPage - 1)}
+        disabled={currentPage === 1}
+        className="pagination-btn"
+      >
+        <FaChevronLeft /> Previous
+      </button>
+    );
 
     // First page
     if (startPage > 1) {
@@ -153,7 +217,7 @@ const VerifyCertificates = () => {
         <button
           key="1"
           onClick={() => handlePageChange(1)}
-          className="pagination-btn"
+          className={`pagination-number ${currentPage === 1 ? 'active' : ''}`}
         >
           1
         </button>
@@ -169,7 +233,7 @@ const VerifyCertificates = () => {
         <button
           key={i}
           onClick={() => handlePageChange(i)}
-          className={`pagination-btn ${currentPage === i ? 'active' : ''}`}
+          className={`pagination-number ${currentPage === i ? 'active' : ''}`}
         >
           {i}
         </button>
@@ -185,7 +249,7 @@ const VerifyCertificates = () => {
         <button
           key={totalPages}
           onClick={() => handlePageChange(totalPages)}
-          className="pagination-btn"
+          className={`pagination-number ${currentPage === totalPages ? 'active' : ''}`}
         >
           {totalPages}
         </button>
@@ -193,17 +257,16 @@ const VerifyCertificates = () => {
     }
 
     // Next button
-    if (currentPage < totalPages) {
-      buttons.push(
-        <button
-          key="next"
-          onClick={() => handlePageChange(currentPage + 1)}
-          className="pagination-btn"
-        >
-          Next
-        </button>
-      );
-    }
+    buttons.push(
+      <button
+        key="next"
+        onClick={() => handlePageChange(currentPage + 1)}
+        disabled={currentPage === totalPages}
+        className="pagination-btn"
+      >
+        Next <FaChevronRight />
+      </button>
+    );
 
     return buttons;
   };
@@ -314,6 +377,18 @@ const VerifyCertificates = () => {
                                 <FaDownload />
                               )}
                             </button>
+                            <button
+                              onClick={() => setShowDeleteConfirm(cert.username)}
+                              disabled={deleteLoading[cert.username]}
+                              className="action-btn delete-btn"
+                              title="Delete Certificate"
+                            >
+                              {deleteLoading[cert.username] ? (
+                                <FaSpinner className="spinning" />
+                              ) : (
+                                <FaTrash />
+                              )}
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -322,13 +397,13 @@ const VerifyCertificates = () => {
                 </table>
               </div>
 
-              {/* Pagination */}
+              {/* Pagination Section */}
               {totalPages > 1 && (
                 <div className="pagination-section">
                   <div className="pagination-info">
                     Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, totalCertificates)} of {totalCertificates} certificates
                   </div>
-                  <div className="pagination-buttons">
+                  <div className="pagination-controls">
                     {generatePaginationButtons()}
                   </div>
                 </div>
@@ -352,6 +427,15 @@ const VerifyCertificates = () => {
             </div>
           )}
         </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <DeleteConfirmModal
+          username={showDeleteConfirm}
+          onConfirm={handleDeleteCertificate}
+          onCancel={() => setShowDeleteConfirm(null)}
+        />
       )}
     </div>
   );
