@@ -15,13 +15,6 @@ function getGrade(marks) {
   return 'F';
 }
 
-function getGrd(marks){
-  if(marks>=90) return 'Excellent';
-  if(marks>=75) return 'Appreciation';
-  if(marks>=60) return 'Participation';
-  return 'No Grade';
-}
-
 // Helper to get slot dates
 function getSlotDates(slot) {
   switch (Number(slot)) {
@@ -39,8 +32,8 @@ function getSlotDates(slot) {
 }
 
 // Helper to draw certificate fields at the correct positions
-function drawCertificateFields(page, { grd, name, branch, idNumber, start, end, slot, mode, domain, totalMarks, time, uid, grade }, font) {
-  page.drawText(grd, { x: 376.29, y: 709.36, size: 16, font, color: rgb(0, 0, 0) });
+function drawCertificateFields(page, { grade, name, branch, idNumber, start, end, slot, mode, domain, totalMarks, time, uid }, font) {
+  page.drawText(grade, { x: 376.29, y: 709.36, size: 16, font, color: rgb(0, 0, 0) });
   page.drawText(name, {  x: 90.35, y: 645.58, size: 11, font, color: rgb(0, 0, 0) });
   page.drawText(branch, { x: 103.27, y: 630.58, size: 11, font, color: rgb(0, 0, 0) });
   page.drawText(`${idNumber},`, { x: 282.2, y: 630.58, size: 11, font, color: rgb(0, 0, 0) });
@@ -158,11 +151,10 @@ export async function POST(request) {
       .format(date)
       .split('/');
     const time = `${day}/${month}/${year}`;
-    const grd = getGrd(totalMarks);
 
     // Draw student details at appropriate positions
     drawCertificateFields(firstPage, {
-      grd,
+      grade,
       name,
       branch,
       idNumber,
@@ -174,7 +166,6 @@ export async function POST(request) {
       totalMarks: Number(totalMarks) || 0,
       time,
       uid,
-      grade
     }, font);
 
     const pdfBytes = await pdfDoc.save();

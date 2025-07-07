@@ -154,6 +154,25 @@ const CertificateDownload = () => {
       
       setBatchProgress(prev => ({ ...prev, total: totalBatches }));
 
+      // Create EventSource for real-time updates
+      const eventSource = new EventSource(`/api/dashboard/admin/certificate/progress?slot=${selectedSlot}`);
+
+      eventSource.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.type === 'progress') {
+          setBatchProgress(prev => ({
+            ...prev,
+            current: data.currentBatch,
+            total: data.totalBatches,
+            processing: true
+          }));
+        }
+      };
+
+      eventSource.onerror = () => {
+        eventSource.close();
+      };
+
       // Now process in batches
       const response = await fetch('/api/dashboard/admin/certificate', {
         method: 'POST',
@@ -166,6 +185,9 @@ const CertificateDownload = () => {
           batchSize: batchSize
         })
       });
+
+      // Close the event source after getting the response
+      eventSource.close();
 
       const data = await response.json();
 
@@ -181,15 +203,6 @@ const CertificateDownload = () => {
           throw new Error(data.error || 'Failed to generate certificates');
         }
       } else {
-        // Update batch progress
-        if (data.currentBatch && data.totalBatches) {
-          setBatchProgress(prev => ({
-            ...prev,
-            current: data.currentBatch,
-            total: data.totalBatches
-          }));
-        }
-
         setSummary(data.summary);
         setCertificates(data.certificates || []);
         setGenerationResult({
