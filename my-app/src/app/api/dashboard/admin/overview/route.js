@@ -23,23 +23,62 @@ export async function GET(req) {
       }, { status: 403 });
     }
 
-    // Get basic counts
+    // Get slot from query params
+    const { searchParams } = new URL(req.url);
+    const slot = searchParams.get('slot');
+    const slotFilter = slot && slot !== 'all' ? `WHERE r.slot = ${parseInt(slot)}` : '';
+
+    // Get basic counts with slot filter
     const [leadsCount] = await pool.query('SELECT COUNT(*) as count FROM studentLeads');
-    const [studentsCount] = await pool.query('SELECT COUNT(*) as count FROM registrations');
+    const [studentsCount] = await pool.query(`
+      SELECT COUNT(*) as count 
+      FROM registrations r 
+      ${slotFilter}
+    `);
     const [completedCount] = await pool.query(`
-      SELECT COUNT(*) AS completedInternships
-      FROM uploads u
-      JOIN final f ON u.username = f.username
-      JOIN marks m ON u.username = m.username
-      JOIN registrations r ON u.username = r.username
-      WHERE r.slot = 1
-        AND u.day1 IS NOT NULL AND u.day2 IS NOT NULL AND u.day3 IS NOT NULL
-        AND u.day4 IS NOT NULL AND u.day5 IS NOT NULL AND u.day6 IS NOT NULL
-        AND u.day7 IS NOT NULL
-        AND f.finalReport IS NOT NULL AND f.finalPresentation IS NOT NULL
-        AND m.totalMarks > 0;
+      SELECT COUNT(*) as total 
+      FROM registrations r 
+      JOIN final f ON r.username = f.username 
+      ${slotFilter} AND f.completed = 1
     `);
     const [facultyCount] = await pool.query('SELECT COUNT(*) as count FROM facultyMentors');
+
+    // Get new statistics with slot filter
+    const [totalPassed] = await pool.query(`
+      SELECT COUNT(*) AS total_passed
+      FROM marks m
+      JOIN registrations r ON m.username = r.username
+      ${slotFilter} AND m.totalMarks >= 60
+    `);
+
+    const [totalFailed] = await pool.query(`
+      SELECT COUNT(*) AS total_failed
+      FROM marks m
+      JOIN registrations r ON m.username = r.username
+      ${slotFilter} AND m.totalMarks < 60
+    `);
+
+    const [totalParticipated] = await pool.query(`
+      SELECT COUNT(*) AS total_participated
+      FROM uploads u
+      JOIN registrations r ON u.username = r.username
+      ${slotFilter} AND u.day1 IS NOT NULL AND u.day1 != ''
+    `);
+
+    // Get marks distribution with slot filter
+    const [marksDistribution] = await pool.query(`
+      SELECT 
+        SUM(CASE WHEN m.totalMarks >= 90 THEN 1 ELSE 0 END) AS '90_and_above',
+        SUM(CASE WHEN m.totalMarks >= 80 AND m.totalMarks < 90 THEN 1 ELSE 0 END) AS '80_to_89',
+        SUM(CASE WHEN m.totalMarks >= 70 AND m.totalMarks < 80 THEN 1 ELSE 0 END) AS '70_to_79',
+        SUM(CASE WHEN m.totalMarks >= 60 AND m.totalMarks < 70 THEN 1 ELSE 0 END) AS '60_to_69',
+        SUM(CASE WHEN m.totalMarks >= 50 AND m.totalMarks < 60 THEN 1 ELSE 0 END) AS '50_to_59',
+        SUM(CASE WHEN m.totalMarks >= 40 AND m.totalMarks < 50 THEN 1 ELSE 0 END) AS '40_to_49',
+        SUM(CASE WHEN m.totalMarks < 40 THEN 1 ELSE 0 END) AS 'below_40'
+      FROM marks m
+      JOIN registrations r ON m.username = r.username
+      ${slotFilter}
+    `);
 
     // Get verification and attendance stats
     const [verificationStats] = await pool.query(`
@@ -145,8 +184,12 @@ export async function GET(req) {
       overviewData: {
         leadsCount: leadsCount[0].count,
         studentsCount: studentsCount[0].count,
-        completedCount: completedCount[0].completedInternships,
+        completedCount: completedCount[0].total,
         facultyCount: facultyCount[0].count,
+        totalPassed: totalPassed[0].total_passed,
+        totalFailed: totalFailed[0].total_failed,
+        totalParticipated: totalParticipated[0].total_participated,
+        marksDistribution: marksDistribution[0],
         verificationStats: verificationStats[0],
         attendanceStats: attendanceStats[0],
         domainStats,

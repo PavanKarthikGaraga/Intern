@@ -22,8 +22,11 @@ export default function Overview() {
     const [selectedDistrict, setSelectedDistrict] = useState('');
     const [selectedGender, setSelectedGender] = useState('all');
     const [showDistrictWise, setShowDistrictWise] = useState(false);
-    const [slotFilter, setSlotFilter] = useState('all');
+    const [geoSlotFilter, setGeoSlotFilter] = useState('all');
     const [modeFilter, setModeFilter] = useState('all');
+    const [statsSlotFilter, setStatsSlotFilter] = useState('all');
+    const [statsData, setStatsData] = useState(null);
+    const [statsLoading, setStatsLoading] = useState(false);
     const [progressStats, setProgressStats] = useState(null);
     const [selectedDay, setSelectedDay] = useState('all');
     const [selectedSlot, setSelectedSlot] = useState('all');
@@ -32,39 +35,77 @@ export default function Overview() {
     const [facultyMentors, setFacultyMentors] = useState([]);
     const [studentLeads, setStudentLeads] = useState([]);
 
-    useEffect(() => {
-        const fetchOverviewData = async () => {
-            try {
-                setError(null);
-                const response = await fetch('/api/dashboard/admin/overview', {
-                    method: 'GET',
-                    credentials: 'include'
-                });
+    const fetchOverviewData = async () => {
+        try {
+            setError(null);
+            setLoading(true);
+            const response = await fetch('/api/dashboard/admin/overview', {
+                method: 'GET',
+                credentials: 'include'
+            });
 
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'Failed to fetch overview data');
-                }
-
-                const data = await response.json();
-                if (data.success) {
-                    setOverviewData(data.overviewData);
-                } else {
-                    throw new Error(data.error || 'Failed to fetch overview data');
-                }
-            } catch (err) {
-                console.error('Error fetching data:', err);
-                setError(err.message);
-                toast.error(err.message);
-            } finally {
-                setLoading(false);
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to fetch overview data');
             }
-        };
 
+            const data = await response.json();
+            if (data.success) {
+                setOverviewData(data.overviewData);
+            } else {
+                throw new Error(data.error || 'Failed to fetch overview data');
+            }
+        } catch (err) {
+            console.error('Error fetching data:', err);
+            setError(err.message);
+            toast.error(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchStatsData = async (slot) => {
+        try {
+            setStatsLoading(true);
+            const params = new URLSearchParams();
+            if (slot !== 'all') {
+                params.append('slot', slot);
+            }
+            const response = await fetch(`/api/dashboard/admin/overview?${params.toString()}`, {
+                method: 'GET',
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to fetch statistics');
+            }
+
+            const data = await response.json();
+            if (data.success) {
+                setStatsData(data.overviewData);
+            } else {
+                throw new Error(data.error || 'Failed to fetch statistics');
+            }
+        } catch (err) {
+            console.error('Error fetching stats:', err);
+            toast.error(err.message);
+        } finally {
+            setStatsLoading(false);
+        }
+    };
+
+    useEffect(() => {
         if (user?.username) {
             fetchOverviewData();
         }
     }, [user]);
+
+    useEffect(() => {
+        if (user?.username) {
+            fetchStatsData(statsSlotFilter);
+        }
+    }, [user, statsSlotFilter]);
 
     useEffect(() => {
         const fetchProgressStats = async () => {
@@ -159,7 +200,7 @@ export default function Overview() {
         // Helper to filter by slot/mode
         const filterBySlotMode = (arr) =>
             arr.filter(stat =>
-                (slotFilter === 'all' || String(stat.slot) === String(slotFilter)) &&
+                (geoSlotFilter === 'all' || String(stat.slot) === String(geoSlotFilter)) &&
                 (modeFilter === 'all' || stat.mode === modeFilter)
             );
 
@@ -391,11 +432,11 @@ export default function Overview() {
                             </select>
                         </div>
                         <div className="filter-group">
-                            <label htmlFor="slot">Slot</label>
+                            <label htmlFor="geoSlot">Slot</label>
                             <select
-                                id="slot"
-                                value={slotFilter}
-                                onChange={e => setSlotFilter(e.target.value)}
+                                id="geoSlot"
+                                value={geoSlotFilter}
+                                onChange={e => setGeoSlotFilter(e.target.value)}
                             >
                                 <option value="all">All Slots</option>
                                 <option value="1">Slot 1</option>
@@ -563,33 +604,14 @@ export default function Overview() {
             </div> */}
 
             <div className="progress-stats-section">
-                <h2>Daily Progress Statistics</h2>
+                <h2>Course Statistics</h2>
                 <div className="progress-filters">
                     <div className="filter-group">
-                        <label htmlFor="day">Day</label>
+                        <label htmlFor="statsSlot">Slot</label>
                         <select 
-                            id="day"
-                            value={selectedDay} 
-                            onChange={(e) => setSelectedDay(e.target.value)}
-                            className="day-select"
-                        >
-                            <option value="all">All Days</option>
-                            <option value="day1">Day 1</option>
-                            <option value="day2">Day 2</option>
-                            <option value="day3">Day 3</option>
-                            <option value="day4">Day 4</option>
-                            <option value="day5">Day 5</option>
-                            <option value="day6">Day 6</option>
-                            <option value="day7">Day 7</option>
-                        </select>
-                    </div>
-
-                    <div className="filter-group">
-                        <label htmlFor="slot">Slot</label>
-                        <select 
-                            id="slot"
-                            value={selectedSlot} 
-                            onChange={(e) => setSelectedSlot(e.target.value)}
+                            id="statsSlot"
+                            value={statsSlotFilter} 
+                            onChange={(e) => setStatsSlotFilter(e.target.value)}
                             className="filter-select"
                         >
                             <option value="all">All Slots</option>
@@ -599,73 +621,70 @@ export default function Overview() {
                             <option value="4">Slot 4</option>
                         </select>
                     </div>
-
-                    <div className="filter-group">
-                        <label htmlFor="studentLead">Student Lead</label>
-                        <select 
-                            id="studentLead"
-                            value={selectedStudentLead} 
-                            onChange={(e) => {
-                                const selectedLead = e.target.value;
-                                setSelectedStudentLead(selectedLead);
-                                if (selectedLead !== 'all') {
-                                    const lead = studentLeads.find(l => l.username === selectedLead);
-                                    if (lead) {
-                                        setSelectedFacultyMentor(lead.facultyMentorId);
-                                    }
-                                } else {
-                                    setSelectedFacultyMentor('all');
-                                }
-                            }}
-                            className="filter-select"
-                        >
-                            <option value="all">All Student Leads</option>
-                            {studentLeads.map(lead => (
-                                <option key={lead.username} value={lead.username}>
-                                    {lead.name} ({lead.username})
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div className="filter-group">
-                        <label htmlFor="facultyMentor">Faculty Mentor</label>
-                        <select 
-                            id="facultyMentor"
-                            value={selectedFacultyMentor} 
-                            onChange={(e) => setSelectedFacultyMentor(e.target.value)}
-                            className="filter-select"
-                            disabled={selectedStudentLead !== 'all'}
-                        >
-                            <option value="all">All Faculty Mentors</option>
-                            {facultyMentors.map(mentor => (
-                                <option key={mentor.username} value={mentor.username}>
-                                    {mentor.name} ({mentor.username})
-                                </option>
-                            ))}
-                        </select>
-                    </div>
                 </div>
                 
-                {progressStats && (
-                    <div className="progress-stats-grid">
-                        <div className="progress-stat-card">
-                            <h3>Uploads</h3>
-                            <p>{progressStats.uploadsCount}</p>
+                {statsLoading ? (
+                    <div className="loading">Loading statistics...</div>
+                ) : error ? (
+                    <div className="error">{error}</div>
+                ) : (
+                    <>
+                        <div className="progress-stats-grid">
+                            <div className="progress-stat-card">
+                                <h3>Total Registered</h3>
+                                <p>{statsData?.studentsCount || 0}</p>
+                            </div>
+                            <div className="progress-stat-card">
+                                <h3>Total Participated</h3>
+                                <p>{statsData?.totalParticipated || 0}</p>
+                            </div>
+                            <div className="progress-stat-card">
+                                <h3>Total Completed</h3>
+                                <p>{statsData?.completedCount || 0}</p>
+                            </div>
+                            <div className="progress-stat-card">
+                                <h3>Total Passed</h3>
+                                <p>{statsData?.totalPassed || 0}</p>
+                            </div>
+                            <div className="progress-stat-card">
+                                <h3>Total Failed</h3>
+                                <p>{statsData?.totalFailed || 0}</p>
+                            </div>
                         </div>
-                        <div className="progress-stat-card">
-                            <h3>Verified</h3>
-                            <p>{progressStats.verifiedCount}</p>
+
+                        <div className="marks-distribution-section">
+                            <h2>Marks Distribution</h2>
+                            <ResponsiveContainer width="100%" height={300}>
+                                <BarChart
+                                    data={[
+                                        { range: '90-100', count: statsData?.marksDistribution?.['90_and_above'] || 0 },
+                                        { range: '80-89', count: statsData?.marksDistribution?.['80_to_89'] || 0 },
+                                        { range: '70-79', count: statsData?.marksDistribution?.['70_to_79'] || 0 },
+                                        { range: '60-69', count: statsData?.marksDistribution?.['60_to_69'] || 0 },
+                                        { range: '50-59', count: statsData?.marksDistribution?.['50_to_59'] || 0 },
+                                        { range: '40-49', count: statsData?.marksDistribution?.['40_to_49'] || 0 },
+                                        { range: 'Below 40', count: statsData?.marksDistribution?.['below_40'] || 0 }
+                                    ]}
+                                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                                >
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="range" />
+                                    <YAxis />
+                                    <Tooltip />
+                                    <Legend />
+                                    <Bar dataKey="count" fill="#8884d8" name="Students">
+                                        <Cell fill="#4CAF50" />
+                                        <Cell fill="#8BC34A" />
+                                        <Cell fill="#CDDC39" />
+                                        <Cell fill="#FFEB3B" />
+                                        <Cell fill="#FFC107" />
+                                        <Cell fill="#FF9800" />
+                                        <Cell fill="#F44336" />
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
                         </div>
-                        <div className="progress-stat-card">
-                            <h3>Present</h3>
-                            <p>{progressStats.presentCount}</p>
-                        </div>
-                        <div className="progress-stat-card">
-                            <h3>Absent</h3>
-                            <p>{progressStats.absentCount}</p>
-                        </div>
-                    </div>
+                    </>
                 )}
             </div>
 

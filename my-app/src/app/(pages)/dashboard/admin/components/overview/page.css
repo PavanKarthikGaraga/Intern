@@ -302,11 +302,11 @@
 }
 
 .progress-stats-section {
-    margin-top: 2rem;
-    padding: 1.5rem;
-    background: #fff;
+    background: white;
+    padding: 2rem;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
 }
 
 .progress-stats-section h2 {
@@ -364,30 +364,45 @@
 
 .progress-stats-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
-    margin-top: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
 }
 
 .progress-stat-card {
-    background: #fff;
-    padding: 1rem;
+    background: #f8f9fa;
+    padding: 1.5rem;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     text-align: center;
+    transition: transform 0.2s;
+}
+
+.progress-stat-card:hover {
+    transform: translateY(-5px);
 }
 
 .progress-stat-card h3 {
-    margin: 0;
     color: #666;
-    font-size: 0.9rem;
+    font-size: 1rem;
+    margin-bottom: 1rem;
 }
 
 .progress-stat-card p {
-    margin: 0.5rem 0 0;
+    color: #333;
     font-size: 1.5rem;
     font-weight: bold;
+}
+
+.marks-distribution-section {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #eee;
+}
+
+.marks-distribution-section h2 {
+    margin-bottom: 1.5rem;
     color: #333;
+    font-size: 1.5rem;
 }
 
 @media (max-width: 768px) {
