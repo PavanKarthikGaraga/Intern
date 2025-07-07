@@ -50,8 +50,8 @@ export default function ProblemStatement({ user, studentData }) {
     setLoading(true);
     setError(null);
     setSuccess(null);
-    if (problemStatement.length > 50) {
-      setError('Problem statement must be 50 characters or less.');
+    if (problemStatement.length > 100) {
+      setError('Problem statement must be 100 characters or less.');
       setLoading(false);
       return;
     }
@@ -121,18 +121,18 @@ export default function ProblemStatement({ user, studentData }) {
         </div>
         {showNote && (
           <div className="note-box">
-            <p>You have already submitted your problem statement in final Book in offline. Now make it concise to 50 letters and submit here.</p>
+            <p>You have already submitted your problem statement in final Book in offline. Now make it concise to 100 letters and submit here.</p>
             {!fieldsVisible && <p>Loading fields in {timer} seconds...</p>}
           </div>
         )}
         {fieldsVisible && (
           <>
             <div className="form-group">
-              <label>Problem Statement (max 50 chars)</label>
+              <label>Problem Statement (max 100 chars)</label>
               <textarea
                 value={problemStatement}
                 onChange={(e) => setProblemStatement(e.target.value)}
-                maxLength={50}
+                maxLength={100}
                 required
                 className="problem-statement-textarea"
                 rows={3}

@@ -155,7 +155,7 @@ export async function POST(request) {
             let sstudentMarksRow = null;
             if (sstudentData) {
                 const [sstudentMarksRows] = await db.execute(
-                    `SELECT internalMarks, finalReport, finalPresentation, totalMarks, grade, completed FROM marks WHERE username = ?`,
+                    `SELECT internalMarks, finalReport, finalPresentation, grade, completed FROM marks WHERE username = ?`,
                     [sstudentData.username]
                 );
                 sstudentMarksRow = sstudentMarksRows[0] || null;
@@ -269,9 +269,9 @@ export async function POST(request) {
                 },
                 marks: {
                     ...marksRows[0],
-                    totalMarks: (marksRows[0]?.internalMarks || 0) + 
-                               (parseFloat(marksRows[0]?.finalReport) || 0) + 
-                               (parseFloat(marksRows[0]?.finalPresentation) || 0),
+                    totalMarks: Number(marksRows[0]?.internalMarks || 0) + 
+                               Number(marksRows[0]?.finalReport || 0) + 
+                               Number(marksRows[0]?.finalPresentation || 0),
                     internalMarks: marksRows[0]?.internalMarks || 0,
                     grade: marksRows[0]?.grade || 'Not Qualified',
                     completed: marksRows[0]?.completed || null
@@ -331,5 +331,65 @@ export async function POST(request) {
             { success: false, error: error.message },
             { status: 500 }
         );
+    }
+}
+
+export async function GET() {
+    try {
+        const cookieStore = await cookies();
+        const accessToken = await cookieStore.get('accessToken');
+
+        if (!accessToken?.value) {
+            return NextResponse.json({ 
+                success: false, 
+                error: 'Authentication required. Please login again.' 
+            }, { status: 401 });
+        }
+
+        const decoded = await verifyAccessToken(accessToken.value);
+        if (!decoded) {
+            return NextResponse.json({ 
+                success: false, 
+                error: 'Invalid token. Please login again.' 
+            }, { status: 401 });
+        }
+
+        const username = decoded.username;
+
+        // Get connection from pool
+        const connection = await pool.getConnection();
+
+        try {
+            // Check certificate existence
+            const [certificateRows] = await connection.query(
+                'SELECT uid FROM certificates WHERE username = ?',
+                [username]
+            );
+
+            // Check problem statement submission
+            const [problemStatementRows] = await connection.query(
+                'SELECT id FROM problemStatements WHERE username = ?',
+                [username]
+            );
+
+            return NextResponse.json({
+                success: true,
+                data: {
+                    hasCertificate: certificateRows.length > 0,
+                    hasProblemStatement: problemStatementRows.length > 0,
+                    certificateUid: certificateRows.length > 0 ? certificateRows[0].uid : null
+                }
+            });
+
+        } finally {
+            connection.release();
+        }
+
+    } catch (error) {
+        console.error('Error in /api/dashboard/student/data:', error);
+        return NextResponse.json({ 
+            success: false, 
+            error: 'Internal server error' 
+        }, { status: 500 });
     }
 }

@@ -268,7 +268,7 @@ export async function POST(request) {
 
           // Generate certificate using existing logic
           const { name, branch, username: idNumber, slot: studentSlot, mode, selectedDomain: domain } = student;
-          const totalMarks = student.totalMarks;
+          const totalMarks = Number(student.totalMarks);
           const grade = getGrade(totalMarks);
           const { start, end } = getSlotDates(studentSlot);
 

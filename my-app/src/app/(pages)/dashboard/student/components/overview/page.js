@@ -5,16 +5,15 @@ import { Modal, Button, message } from 'antd';
 import { useRouter } from 'next/navigation';
 
 export default function Overview({ user, studentData }) {
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState(null);
-  const [isProblemStatementModalOpen, setIsProblemStatementModalOpen] = useState(false);
   const router = useRouter();
 
   if (!studentData) {
     return <div className="loading">Loading Data .......</div>;
   }
+
   console.log(studentData)
 
   // Calculate completed days from attendance
@@ -91,16 +90,12 @@ export default function Overview({ user, studentData }) {
     setSelectedSlot(null);
   };
 
-  const handleProblemStatementModalClose = () => {
-    setIsProblemStatementModalOpen(false);
-  };
-
-  const handleNavigateToProblemStatement = () => {
-    router.push('/dashboard/student/problem-statement');
-  };
+  // const handleProblemStatement = () => {
+  //   router.push('/dashboard/student/problemStatement');
+  // };
 
   const totalMarks = Number(studentData.marks?.internalMarks) + Number(studentData.marks?.finalReport) + Number(studentData.marks?.finalPresentation);
-  console.log(totalMarks)
+
   // Helper to calculate grade from marks
   const getGrade = (marks) => {
     if (marks >= 90) return 'A';
@@ -128,13 +123,15 @@ export default function Overview({ user, studentData }) {
 
   const handleDownloadCertificate = async () => {
     try {
-      const response = await fetch(`/api/dashboard/admin/certificate/download?username=${user.username}`, {
+      const response = await fetch('/api/dashboard/student/certificate/download', {
         credentials: 'include'
       });
+      
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.error || 'Failed to download certificate');
       }
+      
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -148,9 +145,6 @@ export default function Overview({ user, studentData }) {
       message.error(err.message || 'Failed to download certificate.');
     }
   };
-
-  // Check if certificate exists but problem statement is not submitted
-  const showProblemStatementDialog = studentData.certificate?.exists && !studentData.problemStatementData;
 
   return (
     <div className="overview-section">
@@ -341,7 +335,7 @@ export default function Overview({ user, studentData }) {
         {studentData.certificate?.exists && (
           <div className="stat-card certificate-download-card">
             <div className="stat-content">
-              <div >
+              <div>
                 <h3>Download Certificate</h3>
                 {!studentData.problemStatementData ? (
                   <div>
@@ -349,26 +343,43 @@ export default function Overview({ user, studentData }) {
                       ⚠️ Your certificate is ready, but you need to submit your problem statement first!
                     </p>
                     <p style={{ fontSize: '0.9rem', marginTop: '8px' }}>
-                      Please complete your problem statement submission before downloading your certificate.
+                      Please submit your problem statement to download your certificate.
                     </p>
+                    <button 
+                      type="primary"
+                      // onClick={handleProblemStatement}
+                      style={{
+                        outline:'none',
+                        border:'none',
+                        padding:'8px 16px',
+                        borderRadius:'4px',
+                        cursor:'pointer',
+                        fontWeight:'700',
+                        fontSize:'1rem',
+                        backgroundColor: '#1890ff'
+                      }}
+                    >
+                      Submit Problem Statement
+                    </button>
                   </div>
                 ) : (
                   <div>
-                    <p style={{ fontSize: '1rem' }}>Your certificate is ready! Please download and print a <span style={{color:'#d4380d', fontWeight:'bold'}}>color copy</span>, get it signed by the Director SAC, and store it safely.</p>
+                    <p style={{ fontSize: '1rem' }}>
+                      Your certificate is ready! Please download and print a <span style={{color:'#d4380d', fontWeight:'bold'}}>color copy</span>, 
+                      get it signed by the Director SAC, and store it safely.
+                    </p>
                     <button
-                      type="button"
+                      type="primary"
                       onClick={handleDownloadCertificate}
                       style={{
-                        marginTop: '10px',
-                        backgroundColor: '#594af7',
-                        color: '#fff',
-                        border: 'none',
                         outline:'none',
-                        padding: '8px 16px',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontWeight: 'bold',
-                        fontSize: '1rem',
+                        border:'none',
+                        padding:'8px 16px',
+                        borderRadius:'4px',
+                        cursor:'pointer',
+                        fontWeight:'700',
+                        fontSize:'1rem',
+                        backgroundColor: '#1890ff'
                       }}
                     >
                       Download Certificate

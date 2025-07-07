@@ -36,7 +36,7 @@ export async function POST(request) {
             // Check eligibility: totalMarks >= 60
             const [marksRows] = await db.query('SELECT internalMarks, finalReport, finalPresentation FROM marks WHERE username = ?', [username]);
             const marks = marksRows[0];
-            const totalMarks = (marks?.internalMarks || 0) + (parseFloat(marks?.finalReport) || 0) + (parseFloat(marks?.finalPresentation) || 0);
+            const totalMarks = Number(marks?.internalMarks || 0) + Number(marks?.finalReport || 0) + Number(marks?.finalPresentation || 0);
             if (totalMarks < 60) {
                 return NextResponse.json({ success: false, error: 'You are not eligible to submit a problem statement (totalMarks < 60).' }, { status: 403 });
             }

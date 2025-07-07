@@ -88,7 +88,7 @@ export async function POST(request) {
         success: false,
         error: `Certificate for ${username} already exists.`,
         uid: existingCert[0].uid,
-        totalMarks: existingCert[0].totalMarks
+        totalMarks: Number(existingCert[0].totalMarks) || 0
       }, { status: 409 });
     }
 
@@ -98,7 +98,7 @@ export async function POST(request) {
       [username]
     );
     const marksRow = marksRows[0];
-    if (!marksRow || marksRow.totalMarks < 60) {
+    if (!marksRow || Number(marksRow.totalMarks) < 60) {
       return NextResponse.json({ 
         success: false, 
         error: `Student ${username} is not qualified for certificate (marks: ${marksRow?.totalMarks || 0})` 
@@ -119,7 +119,7 @@ export async function POST(request) {
     }
 
     const { name, branch, username: idNumber, slot, mode, selectedDomain: domain } = regRow;
-    const { totalMarks } = marksRow;
+    const totalMarks = Number(marksRow.totalMarks);
     const grade = getGrade(totalMarks);
     const { start, end } = getSlotDates(slot);
 
@@ -163,7 +163,7 @@ export async function POST(request) {
       slot,
       mode,
       domain,
-      totalMarks,
+      totalMarks: Number(totalMarks) || 0,
       time,
       uid
     }, font);
