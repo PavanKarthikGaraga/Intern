@@ -15,6 +15,11 @@ const CertificateDownload = () => {
   const [summary, setSummary] = useState(null);
   const [generationResult, setGenerationResult] = useState(null);
   const [individualResults, setIndividualResults] = useState([]);
+  const [batchProgress, setBatchProgress] = useState({
+    current: 0,
+    total: 0,
+    processing: false
+  });
 
   const handleGenerateIndividual = async () => {
     setError('');
@@ -130,21 +135,41 @@ const CertificateDownload = () => {
     setSummary(null);
     setGenerationResult(null);
     setError('');
+    setBatchProgress({ current: 0, total: 0, processing: true });
     
     try {
+      // First, get the total count of eligible students
+      const countResponse = await fetch(`/api/dashboard/admin/certificate/count?slot=${selectedSlot}`, {
+        credentials: 'include'
+      });
+      
+      if (!countResponse.ok) {
+        throw new Error('Failed to get student count');
+      }
+      
+      const countData = await countResponse.json();
+      const totalStudents = countData.count;
+      const batchSize = 50;
+      const totalBatches = Math.ceil(totalStudents / batchSize);
+      
+      setBatchProgress(prev => ({ ...prev, total: totalBatches }));
+
+      // Now process in batches
       const response = await fetch('/api/dashboard/admin/certificate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ slot: selectedSlot })
+        body: JSON.stringify({ 
+          slot: selectedSlot,
+          batchSize: batchSize
+        })
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        // Handle existing certificates or other errors
         if (response.status === 409) {
           setGenerationResult({
             type: 'conflict',
@@ -156,7 +181,15 @@ const CertificateDownload = () => {
           throw new Error(data.error || 'Failed to generate certificates');
         }
       } else {
-        // Success case
+        // Update batch progress
+        if (data.currentBatch && data.totalBatches) {
+          setBatchProgress(prev => ({
+            ...prev,
+            current: data.currentBatch,
+            total: data.totalBatches
+          }));
+        }
+
         setSummary(data.summary);
         setCertificates(data.certificates || []);
         setGenerationResult({
@@ -174,6 +207,7 @@ const CertificateDownload = () => {
       toast.error(err.message);
     } finally {
       setGenerating(false);
+      setBatchProgress({ current: 0, total: 0, processing: false });
     }
   };
 
@@ -264,7 +298,16 @@ const CertificateDownload = () => {
             disabled={generating || !selectedSlot} 
             className="generate-btn"
           >
-            {generating ? 'Generating...' : 'Generate Certificates'}
+            {generating ? (
+              <>
+                <FaCog className="spinning" /> 
+                {batchProgress.processing ? 
+                  `Processing Batch ${batchProgress.current}/${batchProgress.total}...` : 
+                  'Generating...'}
+              </>
+            ) : (
+              <>Generate Certificates</>
+            )}
           </button>
           {(summary || generationResult || individualResults.length > 0) && (
             <button onClick={clearResults} className="clear-btn">
@@ -275,6 +318,17 @@ const CertificateDownload = () => {
         <p className="info-text">
           This will generate certificates for all students in the selected slot who have total marks ≥ 60
         </p>
+        {batchProgress.processing && batchProgress.total > 0 && (
+          <div className="batch-progress">
+            <div 
+              className="progress-bar" 
+              style={{ width: `${(batchProgress.current / batchProgress.total) * 100}%` }}
+            />
+            <p className="progress-text">
+              Processing batch {batchProgress.current} of {batchProgress.total}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Summary Section */}

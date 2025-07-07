@@ -179,7 +179,7 @@ export async function POST(request) {
   }
 
   try {
-    const { slot } = await request.json();
+    const { slot, batchSize = 50 } = await request.json();
 
     if (!slot) {
       return NextResponse.json(
@@ -248,14 +248,12 @@ export async function POST(request) {
     let successCount = 0;
     let failureCount = 0;
 
-    // Batch processing configuration
-    const BATCH_SIZE = 50;
-    const totalBatches = Math.ceil(studentsToGenerate.length / BATCH_SIZE);
-
     // Process certificates in batches
+    const totalBatches = Math.ceil(studentsToGenerate.length / batchSize);
+
     for (let batchIndex = 0; batchIndex < totalBatches; batchIndex++) {
-      const startIndex = batchIndex * BATCH_SIZE;
-      const endIndex = Math.min(startIndex + BATCH_SIZE, studentsToGenerate.length);
+      const startIndex = batchIndex * batchSize;
+      const endIndex = Math.min(startIndex + batchSize, studentsToGenerate.length);
       const currentBatch = studentsToGenerate.slice(startIndex, endIndex);
 
       console.log(`Processing batch ${batchIndex + 1}/${totalBatches} (${currentBatch.length} certificates)`);
@@ -368,7 +366,7 @@ export async function POST(request) {
       studentsWithExistingCertificates: studentsWithExistingCerts.length,
       batchInfo: {
         totalBatches: totalBatches,
-        batchSize: BATCH_SIZE,
+        batchSize: batchSize,
         processedBatches: totalBatches
       }
     };
@@ -389,7 +387,9 @@ export async function POST(request) {
       summary: summary,
       certificates: allCertificates,
       existingCertificates: existingCertificates,
-      newlyGeneratedCertificates: generatedCertificates
+      newlyGeneratedCertificates: generatedCertificates,
+      currentBatch: totalBatches,
+      totalBatches: totalBatches
     });
 
   } catch (error) {
