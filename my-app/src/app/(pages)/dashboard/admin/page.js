@@ -23,6 +23,7 @@ import ResetPassword from './components/resetPassword/page';
 import SupplyStudents from './components/supplyStudents/page';
 import CertificateDownload from './components/certificate/page';
 import VerifyCertificates from './components/verifyCertificates/page';
+import SFinalProfile from './components/sfinal/page';
 
 export default function AdminDashboard() {
   const { user, isLoading, isAuthenticated } = useAuth();
@@ -146,6 +147,12 @@ export default function AdminDashboard() {
           >
             Proxy Login
           </button>
+          <button
+            className={`sidebar-item ${activeSection === 'supply-final' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('supply-final')}
+          >
+            <span className="item-label">Supply Final</span>
+          </button>
           {user.username === '2300032048' && (
             <div className="dropdown">
               <button
@@ -203,6 +210,7 @@ export default function AdminDashboard() {
            activeSection === 'reset-password' ? <ResetPassword /> :
            activeSection === 'verify-certificates' ? <VerifyCertificates/> :
            activeSection === 'certificate-download' ? <CertificateDownload /> :
+           activeSection === 'supply-final' ? <SFinalProfile /> :
            <ChangePassword />}
         </main>
       </div>

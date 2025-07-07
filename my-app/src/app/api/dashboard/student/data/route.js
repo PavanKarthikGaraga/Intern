@@ -151,6 +151,16 @@ export async function POST(request) {
             const [sstudentRows] = await db.execute(sstudentQuery, [username]);
             const sstudentData = sstudentRows[0] || null;
 
+            // Fetch sstudent marks from marks table if sstudentData exists
+            let sstudentMarksRow = null;
+            if (sstudentData) {
+                const [sstudentMarksRows] = await db.execute(
+                    `SELECT internalMarks, finalReport, finalPresentation, totalMarks, grade, completed FROM marks WHERE username = ?`,
+                    [sstudentData.username]
+                );
+                sstudentMarksRow = sstudentMarksRows[0] || null;
+            }
+
             // Add supply field based on sstudentData
             const supply = sstudentData ? true : false;
 
@@ -278,11 +288,20 @@ export async function POST(request) {
                     previousSlot: sstudentData.previousSlot,
                     previousSlotMarks: sstudentData.previousSlotMarks,
                     mode: sstudentData.mode,
-                    marks: {
+                    marks: sstudentMarksRow ? {
+                        internalMarks: sstudentMarksRow.internalMarks || 0,
+                        finalReport: sstudentMarksRow.finalReport || 0,
+                        finalPresentation: sstudentMarksRow.finalPresentation || 0,
+                        totalMarks: sstudentMarksRow.totalMarks || 0,
+                        grade: sstudentMarksRow.grade || 'Not Qualified',
+                        completed: sstudentMarksRow.completed || null
+                    } : {
                         internalMarks: sstudentData.sInternalMarks || 0,
-                        totalMarks: sstudentData.finalPresentation + sstudentData.finalReport + sstudentData.sInternalMarks || 0,
-                        grade: sstudentData.sGrade || 'Not Qualified',
-                        completed: sstudentData.sCompleted
+                        finalReport: 0,
+                        finalPresentation: 0,
+                        totalMarks: sstudentData.sInternalMarks || 0,
+                        grade: 'Not Qualified',
+                        completed: null
                     },
                     attendance: sstudentAttendance,
                     uploads: sstudentUploads,

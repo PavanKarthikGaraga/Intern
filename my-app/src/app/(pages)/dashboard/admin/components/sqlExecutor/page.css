@@ -9,17 +9,17 @@
   color: #333;
 }
 
-.form-group {
+.formgroup {
   margin-bottom: 20px;
 }
 
-.form-group label {
+.formgroup label {
   display: block;
   margin-bottom: 8px;
   font-weight: 500;
 }
 
-.form-group textarea {
+.formgroup textarea {
   width: 100%;
   padding: 12px;
   border: 1px solid #ddd;

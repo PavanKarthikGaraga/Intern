@@ -160,7 +160,9 @@ export async function POST(req) {
         );
 
         if (existingReport.length > 0) {
-            if (!isUpdate) {
+            const report = existingReport[0];
+            // If both are NULL or empty, allow submission (treat as new)
+            if (!isUpdate && (report.finalReport || report.finalPresentation)) {
                 return NextResponse.json({ 
                     success: false, 
                     error: 'A final report already exists. Please use the edit option to update it.' 

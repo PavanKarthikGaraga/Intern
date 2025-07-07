@@ -99,6 +99,8 @@ export default function Overview({ user, studentData }) {
     router.push('/dashboard/student/problem-statement');
   };
 
+  const totalMarks = Number(studentData.marks?.internalMarks) + Number(studentData.marks?.finalReport) + Number(studentData.marks?.finalPresentation);
+  console.log(totalMarks)
   // Helper to calculate grade from marks
   const getGrade = (marks) => {
     if (marks >= 90) return 'A';
@@ -178,12 +180,32 @@ export default function Overview({ user, studentData }) {
                 <TrophyOutlined className="stat-icon" />
               </div>
             </div>
-            
-            {/* <div className="stat-card">
+
+            <div className="stat-card">
               <div className="stat-content">
                 <div>
                   <h3>Slot {studentData.sstudentData.slot} Internal Marks</h3>
-                  <p>{studentData.sstudentData.marks?.internalMarks || '0'}/50</p>
+                  <p>{Math.round(studentData.marks?.internalMarks) || '0'}/60</p>
+                </div>
+                <TrophyOutlined className="stat-icon" />
+              </div>
+            </div>
+
+            <div className="stat-card">
+              <div className="stat-content">
+                <div>
+                  <h3>Slot {studentData.sstudentData.slot} Final Report</h3>
+                  <p>{Math.round(studentData.marks?.finalReport) || '0'}/25</p>
+                </div>
+                <TrophyOutlined className="stat-icon" />
+              </div>
+            </div>
+
+            <div className="stat-card">
+              <div className="stat-content">
+                <div>
+                  <h3>Slot {studentData.sstudentData.slot} Final Presentation</h3>
+                  <p>{Math.round(studentData.marks?.finalPresentation) || '0'}/15</p>
                 </div>
                 <TrophyOutlined className="stat-icon" />
               </div>
@@ -193,7 +215,7 @@ export default function Overview({ user, studentData }) {
               <div className="stat-content">
                 <div>
                   <h3>Slot {studentData.sstudentData.slot} Total Marks</h3>
-                  <p>{studentData.sstudentData.marks?.totalMarks || '0'}/80</p>
+                  <p>{Math.round(totalMarks || 0)}/100</p>
                 </div>
                 <TrophyOutlined className="stat-icon" />
               </div>
@@ -203,11 +225,11 @@ export default function Overview({ user, studentData }) {
               <div className="stat-content">
                 <div>
                   <h3>Slot {studentData.sstudentData.slot} Grade</h3>
-                  <p>{studentData.sstudentData.marks?.grade || 'Not Qualified'}</p>
+                  <p>{studentData.marks?.grade || 'Not Qualified'} ({getGrade(90)})</p>
                 </div>
                 <TrophyOutlined className="stat-icon" />
               </div>
-            </div> */}
+            </div>
 
             <div className="stat-card">
               <div className="stat-content">

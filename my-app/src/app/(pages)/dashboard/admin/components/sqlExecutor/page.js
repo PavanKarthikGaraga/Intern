@@ -291,7 +291,7 @@ export default function SQLExecutor() {
     <div className="sql-executor">
       <h2>SQL Query Executor</h2>
       <form onSubmit={handleExecuteQuery}>
-        <div className="form-group">
+        <div className="formgroup">
           <label htmlFor="query">SQL Query:</label>
           <textarea
             id="query"
@@ -299,7 +299,7 @@ export default function SQLExecutor() {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Enter your SQL query here..."
             required
-            rows="6"
+            rows="10"
           />
         </div>
         <button type="submit" className="execute-btn" disabled={isLoading}>
