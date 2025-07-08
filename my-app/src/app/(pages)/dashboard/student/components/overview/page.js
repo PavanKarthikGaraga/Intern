@@ -332,7 +332,7 @@ export default function Overview({ user, studentData }) {
           </>
         )}
 
-        {studentData.certificate?.exists && (
+        {/* {studentData.certificate?.exists && (
           <div className="stat-card certificate-download-card">
             <div className="stat-content">
               <div>
@@ -389,7 +389,7 @@ export default function Overview({ user, studentData }) {
               </div>
             </div>
           </div>
-        )}
+        )} */}
       </div>
        
 
