@@ -97,11 +97,11 @@ export default function Overview({ user, studentData }) {
   const totalMarks = Number(studentData.marks?.internalMarks) + Number(studentData.marks?.finalReport) + Number(studentData.marks?.finalPresentation);
 
   // Helper to calculate grade from marks
-  const getGrade = (marks) => {
-    if (marks >= 90) return 'A';
-    if (marks >= 75) return 'B';
-    if (marks >= 60) return 'C';
-    return 'Not Qualified';
+  const getGrade = (grade) => {
+    if (grade === 'Certification of Excellence') return 'A';
+    if (grade === 'Certification of Appreciation') return 'B';
+    if (grade === 'Certification of Participation') return 'C';
+    return 'F';
   };
 
   const getSlotRules = (slot) => {
@@ -304,7 +304,7 @@ export default function Overview({ user, studentData }) {
                   <div className="stat-content">
                     <div>
                       <h3>Grade</h3>
-                      <p>{studentData.marks?.grade || 'Not Qualified'} ({getGrade(studentData.marks?.totalMarks)})</p>
+                      <p>{studentData.marks?.grade || 'Not Qualified'} ({getGrade(studentData.marks?.grade)})</p>
                     </div>
                     <TrophyOutlined className="stat-icon" />
                   </div>

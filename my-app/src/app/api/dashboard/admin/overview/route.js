@@ -30,6 +30,9 @@ export async function GET(req) {
 
     // Get basic counts with slot filter
     const [leadsCount] = await pool.query('SELECT COUNT(*) as count FROM studentLeads');
+
+    const [facultyCount] = await pool.query('SELECT COUNT(*) as count FROM facultyMentors');
+    
     const [studentsCount] = await pool.query(`
       SELECT COUNT(*) as count 
       FROM registrations r 
@@ -41,7 +44,6 @@ export async function GET(req) {
       JOIN final f ON r.username = f.username 
       ${slotFilter} AND f.completed = 1
     `);
-    const [facultyCount] = await pool.query('SELECT COUNT(*) as count FROM facultyMentors');
 
     // Get new statistics with slot filter
     const [totalPassed] = await pool.query(`
