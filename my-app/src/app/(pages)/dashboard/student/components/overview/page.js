@@ -220,7 +220,7 @@ export default function Overview({ user, studentData }) {
               <div className="stat-content">
                 <div>
                   <h3>Slot {studentData.sstudentData.slot} Grade</h3>
-                  <p>{studentData.marks?.grade || 'Not Qualified'} ({getGrade(90)})</p>
+                  <p>{studentData.marks?.grade || 'Not Qualified'} ({getGrade(studentData.marks?.totalMarks)})</p>
                 </div>
                 <TrophyOutlined className="stat-icon" />
               </div>
