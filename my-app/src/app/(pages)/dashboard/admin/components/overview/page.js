@@ -638,10 +638,10 @@ export default function Overview() {
                                 <h3>Total Participated</h3>
                                 <p>{statsData?.totalParticipated || 0}</p>
                             </div>
-                            <div className="progress-stat-card">
+                            {/* <div className="progress-stat-card">
                                 <h3>Total Completed</h3>
                                 <p>{statsData?.completedCount || 0}</p>
-                            </div>
+                            </div> */}
                             <div className="progress-stat-card">
                                 <h3>Total Passed</h3>
                                 <p>{statsData?.totalPassed || 0}</p>
@@ -657,13 +657,12 @@ export default function Overview() {
                             <ResponsiveContainer width="100%" height={300}>
                                 <BarChart
                                     data={[
-                                        { range: '90-100', count: statsData?.marksDistribution?.['90_and_above'] || 0 },
+                                        { range: '95-100', count: statsData?.marksDistribution?.['95_to_100'] || 0 },
+                                        { range: '90-95', count: statsData?.marksDistribution?.['90_to_95'] || 0 },
                                         { range: '80-89', count: statsData?.marksDistribution?.['80_to_89'] || 0 },
                                         { range: '70-79', count: statsData?.marksDistribution?.['70_to_79'] || 0 },
                                         { range: '60-69', count: statsData?.marksDistribution?.['60_to_69'] || 0 },
-                                        { range: '50-59', count: statsData?.marksDistribution?.['50_to_59'] || 0 },
-                                        { range: '40-49', count: statsData?.marksDistribution?.['40_to_49'] || 0 },
-                                        { range: 'Below 40', count: statsData?.marksDistribution?.['below_40'] || 0 }
+                                        { range: 'Below 60', count: statsData?.marksDistribution?.['below_60'] || 0 }
                                     ]}
                                     margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                                 >

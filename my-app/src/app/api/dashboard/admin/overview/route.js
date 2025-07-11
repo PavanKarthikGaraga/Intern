@@ -62,21 +62,20 @@ export async function GET(req) {
 
     const [totalParticipated] = await pool.query(`
       SELECT COUNT(*) AS total_participated
-      FROM uploads u
-      JOIN registrations r ON u.username = r.username
-      ${slotFilter} AND u.day1 IS NOT NULL AND u.day1 != ''
+      FROM marks m
+      JOIN registrations r ON m.username = r.username
+      ${slotFilter} AND m.totalMarks IS NOT NULL
     `);
 
     // Get marks distribution with slot filter
     const [marksDistribution] = await pool.query(`
       SELECT 
-        SUM(CASE WHEN m.totalMarks >= 90 THEN 1 ELSE 0 END) AS '90_and_above',
+        SUM(CASE WHEN m.totalMarks >= 95 THEN 1 ELSE 0 END) AS '95_to_100',
+        SUM(CASE WHEN m.totalMarks >= 90 AND m.totalMarks < 95 THEN 1 ELSE 0 END) AS '90_to_95',
         SUM(CASE WHEN m.totalMarks >= 80 AND m.totalMarks < 90 THEN 1 ELSE 0 END) AS '80_to_89',
         SUM(CASE WHEN m.totalMarks >= 70 AND m.totalMarks < 80 THEN 1 ELSE 0 END) AS '70_to_79',
         SUM(CASE WHEN m.totalMarks >= 60 AND m.totalMarks < 70 THEN 1 ELSE 0 END) AS '60_to_69',
-        SUM(CASE WHEN m.totalMarks >= 50 AND m.totalMarks < 60 THEN 1 ELSE 0 END) AS '50_to_59',
-        SUM(CASE WHEN m.totalMarks >= 40 AND m.totalMarks < 50 THEN 1 ELSE 0 END) AS '40_to_49',
-        SUM(CASE WHEN m.totalMarks < 40 THEN 1 ELSE 0 END) AS 'below_40'
+        SUM(CASE WHEN m.totalMarks < 60 THEN 1 ELSE 0 END) AS 'below_60'
       FROM marks m
       JOIN registrations r ON m.username = r.username
       ${slotFilter}
