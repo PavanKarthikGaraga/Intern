@@ -22,6 +22,7 @@ import SQLExecutor from './components/sqlExecutor/page';
 import ResetPassword from './components/resetPassword/page';
 import SupplyStudents from './components/supplyStudents/page';
 import CertificateDownload from './components/certificate/page';
+import GenerateCertificates from './components/generateCertificates/page';
 import VerifyCertificates from './components/verifyCertificates/page';
 import SFinalProfile from './components/sfinal/page';
 import ProblemStatements from './components/problemStatements/page';
@@ -177,6 +178,18 @@ export default function AdminDashboard() {
           >
             <span className="item-label">Proxy Login</span>
           </button>
+          <button
+            className={`sidebar-item ${activeSection === 'generate-certificates' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('generate-certificates')}
+          >
+            <span className="item-label">Generate Certificates</span>
+          </button>
+          {/* <button
+                    className={`dropdown-item ${activeSection === 'generate-certificates' ? 'active' : ''}`}
+                    onClick={() => handleSectionClick('generate-certificates')}
+                  >
+                  Generate Certificates
+                  </button> */}
 
           {/* Dev Tools Dropdown */}
           {user.username === '2300032048' && (
@@ -243,6 +256,7 @@ export default function AdminDashboard() {
            activeSection === 'reset-password' ? <ResetPassword /> :
            activeSection === 'verify-certificates' ? <VerifyCertificates/> :
            activeSection === 'certificate-download' ? <CertificateDownload /> :
+           activeSection === 'generate-certificates' ? <GenerateCertificates /> :
            activeSection === 'supply-final' ? <SFinalProfile /> :
            activeSection === 'problem-statements' ? <ProblemStatements /> :
            <ChangePassword />}
