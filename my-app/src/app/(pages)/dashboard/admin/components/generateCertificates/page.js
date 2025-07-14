@@ -36,9 +36,9 @@ const GenerateCertificates = () => {
       return;
     }
 
-    // Check 50 ID limit
-    if (usernameList.length > 50) {
-      setError('Maximum 50 IDs allowed per batch. Please reduce the number of IDs.');
+    // Check 100 ID limit
+    if (usernameList.length > 100) {
+      setError('Maximum 100 IDs allowed per batch. Please reduce the number of IDs.');
       return;
     }
 
@@ -189,7 +189,7 @@ const GenerateCertificates = () => {
       <div className="input-section">
         <div className="input-group">
           <label htmlFor="usernames" className="input-label">
-            Student IDs (Maximum 50)
+            Student IDs (Maximum 100)
           </label>
           <div className="textarea-container">
             <textarea
@@ -203,7 +203,7 @@ const GenerateCertificates = () => {
             />
             <div className="input-info">
               <FaInfoCircle className="info-icon" />
-              <span>You can enter up to 50 IDs separated by newlines, commas, or spaces</span>
+              <span>You can enter up to 100 IDs separated by newlines, commas, or spaces</span>
             </div>
           </div>
         </div>
