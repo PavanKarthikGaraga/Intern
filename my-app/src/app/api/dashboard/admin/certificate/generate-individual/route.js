@@ -94,7 +94,7 @@ export async function POST(request) {
 
     // Fetch student marks
     const [marksRows] = await db.query(
-      'SELECT totalMarks FROM marks WHERE username = ?',
+      'SELECT internalMarks, finalReport, finalPresentation, completed, (internalMarks + finalReport + finalPresentation) as totalMarks FROM marks WHERE username = ?',
       [username]
     );
     const marksRow = marksRows[0];

@@ -290,10 +290,6 @@ INSERT INTO reportOpen (slot1, slot2, slot3, slot4, slot5) VALUES (FALSE, FALSE,
 -- INSERT INTO stats() VALUES ();
 
 
-
-
-
-
 -- Create table for student problem statements
 CREATE TABLE problemStatements (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,

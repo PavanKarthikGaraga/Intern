@@ -265,7 +265,7 @@ export default function Overview({ user, studentData }) {
                   <div className="stat-content">
                     <div>
                       <h3>Internal Marks</h3>
-                      <p>{studentData.marks?.internalMarks || '0'}/60</p>
+                      <p>{Number(studentData.marks?.internalMarks) || '0'}/60</p>
                     </div>
                     <TrophyOutlined className="stat-icon" />
                   </div>
@@ -274,7 +274,7 @@ export default function Overview({ user, studentData }) {
                 <div className="stat-card">
                   <div className="stat-content">
                     <div>
-                      <h3>Internal Marks</h3>
+                      <h3>Final Report</h3>
                       <p>{Number(studentData.marks?.finalReport) || '0'}/25</p>
                     </div>
                     <TrophyOutlined className="stat-icon" />
@@ -284,7 +284,7 @@ export default function Overview({ user, studentData }) {
                 <div className="stat-card">
                   <div className="stat-content">
                     <div>
-                      <h3>Internal Marks</h3>
+                      <h3>Final Presentation</h3>
                       <p>{Number(studentData.marks?.finalPresentation) || '0'}/10</p>
                     </div>
                     <TrophyOutlined className="stat-icon" />
@@ -333,7 +333,7 @@ export default function Overview({ user, studentData }) {
           </>
         )}
 
-        {/* {studentData.certificate?.exists && (
+        {studentData.certificate?.exists && (
           <div className="stat-card certificate-download-card">
             <div className="stat-content">
               <div>
@@ -390,7 +390,7 @@ export default function Overview({ user, studentData }) {
               </div>
             </div>
           </div>
-        )} */}
+        )}
       </div>
        
 
