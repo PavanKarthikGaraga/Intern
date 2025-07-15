@@ -20,6 +20,58 @@ const CertificateDownload = () => {
     total: 0,
     processing: false
   });
+  const [individualProgress, setIndividualProgress] = useState({
+    current: 0,
+    total: 0,
+    processing: false,
+    startTime: null,
+    elapsed: 0
+  });
+  const [individualSummary, setIndividualSummary] = useState({
+    total: 0,
+    passed: 0,
+    failed: 0,
+    generated: 0
+  });
+  const [abortController, setAbortController] = useState(null);
+  const [timer, setTimer] = useState(null);
+
+  // Timer effect for individual generation
+  useEffect(() => {
+    let interval;
+    if (individualProgress.processing && individualProgress.startTime) {
+      interval = setInterval(() => {
+        const now = Date.now();
+        const elapsed = Math.floor((now - individualProgress.startTime) / 1000);
+        setIndividualProgress(prev => ({ ...prev, elapsed }));
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [individualProgress.processing, individualProgress.startTime]);
+
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  const cancelGeneration = () => {
+    if (abortController) {
+      abortController.abort();
+      setAbortController(null);
+    }
+    setIndividualProgress({
+      current: 0,
+      total: 0,
+      processing: false,
+      startTime: null,
+      elapsed: 0
+    });
+    setLoading(false);
+    toast.success('Certificate generation cancelled');
+  };
 
   const handleGenerateIndividual = async () => {
     setError('');
@@ -39,14 +91,41 @@ const CertificateDownload = () => {
       return;
     }
 
+    // Initialize progress and summary
+    const controller = new AbortController();
+    setAbortController(controller);
     setLoading(true);
     setIndividualResults([]);
+    setIndividualProgress({
+      current: 0,
+      total: usernameList.length,
+      processing: true,
+      startTime: Date.now(),
+      elapsed: 0
+    });
+    setIndividualSummary({
+      total: usernameList.length,
+      passed: 0,
+      failed: 0,
+      generated: 0
+    });
 
     const results = [];
     let successCount = 0;
     let failureCount = 0;
+    let passedCount = 0;
 
-    for (const username of usernameList) {
+    for (let i = 0; i < usernameList.length; i++) {
+      // Check if cancelled
+      if (controller.signal.aborted) {
+        break;
+      }
+
+      const username = usernameList[i];
+      
+      // Update current progress
+      setIndividualProgress(prev => ({ ...prev, current: i + 1 }));
+
       try {
         const res = await fetch('/api/dashboard/admin/certificate/generate-individual', {
           method: 'POST',
@@ -54,6 +133,7 @@ const CertificateDownload = () => {
             'Content-Type': 'application/json',
           },
           credentials: 'include',
+          signal: controller.signal,
           body: JSON.stringify({ username })
         });
 
@@ -69,6 +149,9 @@ const CertificateDownload = () => {
             grade: data.grade
           });
           successCount++;
+          if (data.totalMarks >= 60) {
+            passedCount++;
+          }
         } else {
           results.push({
             username,
@@ -79,6 +162,9 @@ const CertificateDownload = () => {
           failureCount++;
         }
       } catch (err) {
+        if (err.name === 'AbortError') {
+          break;
+        }
         results.push({
           username,
           status: 'Failed',
@@ -87,16 +173,20 @@ const CertificateDownload = () => {
         });
         failureCount++;
       }
+
+      // Update summary
+      setIndividualSummary({
+        total: usernameList.length,
+        passed: passedCount,
+        failed: failureCount,
+        generated: successCount
+      });
     }
 
     setIndividualResults(results);
     setLoading(false);
-
-    if (successCount > 0) {
-      toast.success(`Generated ${successCount} certificates successfully${failureCount > 0 ? `, ${failureCount} failed` : ''}`);
-    } else {
-      toast.error('Failed to generate any certificates');
-    }
+    setAbortController(null);
+    setIndividualProgress(prev => ({ ...prev, processing: false }));
   };
 
   const handleDownloadCertificate = async (username) => {
@@ -230,6 +320,19 @@ const CertificateDownload = () => {
     setCertificates([]);
     setError('');
     setIndividualResults([]);
+    setIndividualProgress({
+      current: 0,
+      total: 0,
+      processing: false,
+      startTime: null,
+      elapsed: 0
+    });
+    setIndividualSummary({
+      total: 0,
+      passed: 0,
+      failed: 0,
+      generated: 0
+    });
   };
 
   return (
@@ -252,18 +355,102 @@ const CertificateDownload = () => {
             You can enter multiple usernames separated by newlines, commas, or spaces.
           </p>
         </div>
-        <button onClick={handleGenerateIndividual} disabled={loading} className="certificate-generate-btn">
-          {loading ? <><FaCog className="spinning" /> Generating...</> : <><FaCog /> Generate Certificates</>}
-        </button>
+        <div className="generate-controls">
+          <button onClick={handleGenerateIndividual} disabled={loading} className="certificate-generate-btn">
+            {loading ? <><FaCog className="spinning" /> Generating...</> : <><FaCog /> Generate Certificates</>}
+          </button>
+          {loading && (
+            <button onClick={cancelGeneration} className="cancel-btn">
+              Cancel
+            </button>
+          )}
+        </div>
         {error && <div className="certificate-error">{error}</div>}
+
+        {/* Individual Progress Section */}
+        {individualProgress.processing && (
+          <div className="individual-progress-section">
+            <h3>Generation Progress</h3>
+            <div className="progress-details">
+              <div className="progress-bar-container">
+                <div 
+                  className="progress-bar" 
+                  style={{ width: `${(individualProgress.current / individualProgress.total) * 100}%` }}
+                />
+                <span className="progress-text">
+                  {individualProgress.current} / {individualProgress.total} ({Math.round((individualProgress.current / individualProgress.total) * 100)}%)
+                </span>
+              </div>
+              <div className="timer">
+                <strong>Elapsed Time:</strong> {formatTime(individualProgress.elapsed)}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Individual Summary Section */}
+        {(individualSummary.total > 0 && (individualProgress.processing || individualResults.length > 0)) && (
+          <div className="individual-summary-section">
+            <h3>Generation Summary</h3>
+            <div className="summary-stats">
+              <div className="stat-item">
+                <span className="stat-label">Total:</span>
+                <span className="stat-value">{individualSummary.total}</span>
+              </div>
+              <div className="stat-item success">
+                <span className="stat-label">Generated:</span>
+                <span className="stat-value">{individualSummary.generated}</span>
+              </div>
+              <div className="stat-item info">
+                <span className="stat-label">Passed:</span>
+                <span className="stat-value">{individualSummary.passed}</span>
+              </div>
+              <div className="stat-item failure">
+                <span className="stat-label">Failed:</span>
+                <span className="stat-value">{individualSummary.failed}</span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Individual Generation Results */}
       {individualResults.length > 0 && (
         <div className="individual-results-section">
-          <h3>Individual Generation Results</h3>
+          <div className="results-header">
+            <h3>Individual Generation Results</h3>
+            <button 
+              onClick={() => {
+                const failedUsernames = individualResults
+                  .filter(result => result.status === 'Failed')
+                  .map(result => result.username)
+                  .join('\n');
+                
+                if (failedUsernames) {
+                  navigator.clipboard.writeText(failedUsernames).then(() => {
+                    toast.success(`Copied ${individualResults.filter(r => r.status === 'Failed').length} failed usernames to clipboard`);
+                  }).catch(() => {
+                    toast.error('Failed to copy to clipboard');
+                  });
+                } else {
+                  toast.info('No failed usernames to copy');
+                }
+              }}
+              className="copy-failed-btn"
+              disabled={individualResults.filter(r => r.status === 'Failed').length === 0}
+            >
+              Copy Failed Usernames
+            </button>
+          </div>
           <div className="individual-results-grid">
-            {individualResults.map((result, index) => (
+            {individualResults
+              .sort((a, b) => {
+                // Show failed results first, then successful ones
+                if (a.status === 'Failed' && b.status !== 'Failed') return -1;
+                if (a.status !== 'Failed' && b.status === 'Failed') return 1;
+                return 0;
+              })
+              .map((result, index) => (
               <div key={index} className={`individual-result-card ${result.status.toLowerCase()}`}>
                 <div className="result-header">
                   <h4>{result.username}</h4>
@@ -290,7 +477,7 @@ const CertificateDownload = () => {
         </div>
       )}
 
-      <div className="certificate-section">
+      {/* <div className="certificate-section">
         <h2>Generate Certificates for Slot</h2>
         <div className="generate-section">
           <select
@@ -342,7 +529,7 @@ const CertificateDownload = () => {
             </p>
           </div>
         )}
-      </div>
+      </div> */}
 
       {/* Summary Section */}
       {summary && (
