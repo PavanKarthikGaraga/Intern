@@ -178,12 +178,7 @@ export default function AdminDashboard() {
           >
             <span className="item-label">Proxy Login</span>
           </button>
-          <button
-            className={`sidebar-item ${activeSection === 'generate-certificates' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('generate-certificates')}
-          >
-            <span className="item-label">Generate Certificates</span>
-          </button>
+          
           {/* <button
                     className={`dropdown-item ${activeSection === 'generate-certificates' ? 'active' : ''}`}
                     onClick={() => handleSectionClick('generate-certificates')}
@@ -195,7 +190,7 @@ export default function AdminDashboard() {
           {user.username === '2300032048' && (
             <div className="dropdown">
               <button
-                className={`sidebar-item ${['data-download', 'sql-executor', 'certificate-download'].includes(activeSection) ? 'active' : ''}`}
+                className={`sidebar-item ${['data-download', 'sql-executor', 'generate-certificates'].includes(activeSection) ? 'active' : ''}`}
                 onClick={() => setShowDevDropdown(!showDevDropdown)}
               >
                 <span className="item-label">Dev</span>
@@ -215,11 +210,17 @@ export default function AdminDashboard() {
                     SQL Executor
                   </button>
                   <button
+                    className={`sidebar-item ${activeSection === 'generate-certificates' ? 'active' : ''}`}
+                    onClick={() => handleSectionClick('generate-certificates')}
+                  >
+                    <span className="item-label">Generate Certificates</span>
+                  </button>
+                  {/* <button
                     className={`dropdown-item ${activeSection === 'certificate-download' ? 'active' : ''}`}
                     onClick={() => handleSectionClick('certificate-download')}
                   >
                     Certificate Download
-                  </button>
+                  </button> */}
                   <button
                     className={`dropdown-item ${activeSection === 'report-control' ? 'active' : ''}`}
                     onClick={() => handleSectionClick('report-control')}
