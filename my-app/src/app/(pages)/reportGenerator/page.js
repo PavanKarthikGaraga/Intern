@@ -413,10 +413,12 @@ const ReportGenerator = () => {
       return 'Image';
     }
     
-    // Remove any HTML tags and potentially dangerous characters
+    // Remove potentially dangerous characters first to prevent HTML injection
+    // This comprehensive approach removes all HTML-related characters
     return text
-      .replace(/<[^>]*>/g, '') // Remove HTML tags
-      .replace(/[<>"'&]/g, '') // Remove dangerous characters
+      .replace(/[<>"'&]/g, '') // Remove dangerous characters first
+      .replace(/[^\w\s\-_.]/g, '') // Keep only alphanumeric, whitespace, hyphens, underscores, dots
+      .replace(/\s+/g, ' ') // Normalize whitespace
       .trim() || 'Image';
   };
 
