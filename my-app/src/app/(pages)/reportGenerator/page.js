@@ -407,6 +407,10 @@ const ReportGenerator = () => {
     return imgSrc;
   };
 
+
+
+  
+
   // Add function to sanitize alt text
   const sanitizeAltText = (text) => {
     if (!text || typeof text !== 'string') {
