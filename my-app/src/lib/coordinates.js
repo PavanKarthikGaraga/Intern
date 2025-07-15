@@ -1,6 +1,7 @@
 import fs from 'fs';
-import pkg from 'pdfjs-dist';
-const { getDocument } = pkg;
+import pdfjsLib from 'pdfjs-dist/legacy/build/pdf.js';
+const { getDocument } = pdfjsLib;
+
 
 const pdfPath = './public/certificate.pdf';
 const data = new Uint8Array(fs.readFileSync(pdfPath));

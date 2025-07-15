@@ -152,6 +152,26 @@ export default function Overview({ user, studentData }) {
       <h1>Welcome {user?.name || studentData.name || 'Student'}</h1>
       <p className="role-text">Student</p>
       
+      {/* Important Notification */}
+      <div className="notification-banner">
+        <div className="notification-icon">⚠️</div>
+        <div className="notification-content">
+          <h3>Important Notice - Social Internship Closure</h3>
+          <p>
+            This is to inform you that the Social Internship process will be officially closed on <strong>19-07-2025</strong>.
+          </p>
+          <p>
+            All students (whether they have completed their Social Internship or not) are requested to visit the SAC Office for any queries or issues.
+          </p>
+          <p>
+            Kindly ensure that you resolve your concerns between <strong>16-07-2025 and 17-07-2025</strong>.
+          </p>
+          <p className="warning-notice">
+            <strong>No queries will be entertained after the mentioned dates.</strong>
+          </p>
+        </div>
+      </div>
+      
       <div className="stats-grid">
         <div className="stat-card">
           <div className="stat-content">
@@ -420,6 +440,61 @@ export default function Overview({ user, studentData }) {
     
 
       <style jsx>{`
+        .notification-banner {
+          background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+          border: 2px solid #ffc107;
+          border-radius: 12px;
+          padding: 10px;
+          margin: 5px;
+          display: flex;
+          align-items: flex-start;
+          gap: 15px;
+          box-shadow: 0 4px 12px rgba(255, 193, 7, 0.2);
+          animation: pulse 2s infinite;
+        }
+        
+        .notification-icon {
+          font-size: 1.5rem;
+          flex-shrink: 0;
+        }
+        
+        .notification-content {
+          flex: 1;
+        }
+        
+        .notification-content h3 {
+          color: #856404;
+          font-size: 1rem;
+          font-weight: 700;
+        }
+        
+        .notification-content p {
+          margin: 5px;
+          color: #6c5700;
+          font-size: 0.9rem;
+          line-height: 1.5;
+        }
+        
+        .warning-notice {
+          color: #dc3545 !important;
+          background: rgba(220, 53, 69, 0.1);
+          padding: 5px;
+          border-radius: 6px;
+          border-left: 4px solid #dc3545;
+        }
+        
+        @keyframes pulse {
+          0% {
+            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.2);
+          }
+          50% {
+            box-shadow: 0 4px 20px rgba(255, 193, 7, 0.4);
+          }
+          100% {
+            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.2);
+          }
+        }
+        
         .slot-registration-card {
           background-color: #f6ffed;
           border: 1px solid #b7eb8f;
@@ -465,20 +540,27 @@ export default function Overview({ user, studentData }) {
         .problem-statement-warning li {
           margin-bottom: 8px;
         }
-        // .certificate-download-card {
-        //   background-color: #fffbe6;
-        //   border: 1px solid #ffe58f;
-        // }
-        // .certificate-download-button {
-        //   margin-top: 10px;
-        //   background-color: #faad14;
-        //   color: #222;
-        //   border: none;
-        // }
-        // .certificate-download-button:hover {
-        //   background-color: #d48806;
-        //   color: #fff;
-        // }
+        
+        @media (max-width: 768px) {
+          .notification-banner {
+            flex-direction: column;
+            text-align: center;
+            padding: 15px;
+          }
+          
+          .notification-icon {
+            font-size: 1.5rem;
+            margin-top: 0;
+          }
+          
+          .notification-content h3 {
+            font-size: 1.1rem;
+          }
+          
+          .notification-content p {
+            font-size: 0.9rem;
+          }
+        }
       `}</style>
 
       <p className="beta-note">

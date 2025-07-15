@@ -32,21 +32,28 @@ function getSlotDates(slot) {
   }
 }
 
+function getgrd(totalMarks){
+  if(totalMarks>=90) return 'Excellence';
+  if(totalMarks>=75) return 'Appreciation';
+  if(totalMarks>=60) return 'Participation';
+  return 'Fail';
+}
+
 // Helper to draw certificate fields at the correct positions
-function drawCertificateFields(page, { grade, name, branch, idNumber, start, end, slot, mode, domain, totalMarks, time, uid }, font) {
-  page.drawText(grade, { x: 376.29, y: 709.36, size: 16, font, color: rgb(0, 0, 0) });
-  page.drawText(name, {  x: 90.35, y: 645.58, size: 11, font, color: rgb(0, 0, 0) });
-  page.drawText(branch, { x: 103.27, y: 630.58, size: 11, font, color: rgb(0, 0, 0) });
-  page.drawText(`${idNumber},`, { x: 282.2, y: 630.58, size: 11, font, color: rgb(0, 0, 0) });
-  page.drawText(start, {x: 239.66, y: 570.56, size: 10, font, color: rgb(0, 0, 0) });
-  page.drawText(`${end},`, { x: 316.73, y: 570.56, size: 10, font, color: rgb(0, 0, 0) });
-  page.drawText(`${slot} ,`, { x: 228.94, y: 555.55, size: 11, font, color: rgb(0, 0, 0) });
-  page.drawText(`${mode}`, { x: 92.82, y: 540.55  , size: 11, font, color: rgb(0, 0, 0) });
-  page.drawText(`${domain}.`, { x: 144.93, y: 525.54 , size: 11, font, color: rgb(0, 0, 0) });
-  page.drawText(`${totalMarks}`, {  x: 134.71, y: 270.44, size: 11, font, color: rgb(0, 0, 0) });
-  page.drawText(grade, {  x: 88.32, y: 255.44 , size: 11, font, color: rgb(0, 0, 0) });
-  page.drawText(time, {  x: 438.18, y: 106.13 , size: 10, font, color: rgb(0, 0, 0) });
-  page.drawText(uid, {  x: 431.13, y: 91.13 , size: 10, font, color: rgb(0, 0, 0) });
+export function drawCertificateFields(page, { grd, name, branch, idNumber, start, end, slot, mode, domain, totalMarks,grade, time, uid }, font) {
+  page.drawText(grd, { x: 340.29, y: 701.27, size: 16, font, color: rgb(0, 0, 0) });
+  page.drawText(name, {  x: 90.35, y: 637.49, size: 11, font, color: rgb(0, 0, 0) });
+  page.drawText(branch, { x: 103.27, y: 622.49, size: 11, font, color: rgb(0, 0, 0) });
+  page.drawText(`${idNumber},`, { x: 282.2, y: 622.49, size: 11, font, color: rgb(0, 0, 0) });
+  page.drawText(start, {x: 239.66, y: 562.46, size: 10, font, color: rgb(0, 0, 0) });
+  page.drawText(`${end},`, { x: 316.73, y: 562.46, size: 10, font, color: rgb(0, 0, 0) });
+  page.drawText(`${slot} ,`, { x: 228.94, y: 547.46, size: 11, font, color: rgb(0, 0, 0) });
+  page.drawText(`${mode}`, { x: 92.82, y: 532.45  , size: 11, font, color: rgb(0, 0, 0) });
+  page.drawText(`${domain}.`, { x: 144.93, y: 517.44 , size: 11, font, color: rgb(0, 0, 0) });
+  page.drawText(`${totalMarks}`, {  x: 133.51, y: 262.33, size: 11, font, color: rgb(0, 0, 0) });
+  page.drawText(grade, {  x: 88.32, y: 247.33 , size: 11, font, color: rgb(0, 0, 0) });
+  page.drawText(time, {  x: 438.18, y: 98.01 , size: 10, font, color: rgb(0, 0, 0) });
+  page.drawText(uid, {  x: 431.13, y: 83.01 , size: 10, font, color: rgb(0, 0, 0) });
 }
 
 export async function GET(req) {
@@ -126,11 +133,13 @@ export async function GET(req) {
       .split('/');
     const time = `${day}/${month}/${year}`;
 
+    const grd=getgrd(totalMarks);
+
     // console.log(time);
 
     // ✍️ Draw student details at appropriate positions
     drawCertificateFields(firstPage, {
-      grade,
+      grd,
       name,
       branch,
       idNumber,
@@ -140,6 +149,7 @@ export async function GET(req) {
       mode,
       domain,
       totalMarks,
+      grade,
       time,
       uid: `SI25${username}`,
     }, font);
