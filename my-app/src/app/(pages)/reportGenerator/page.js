@@ -220,10 +220,17 @@ const ReportGenerator = () => {
           // Convert to base64 with reduced quality
           const resizedImage = canvas.toDataURL('image/jpeg', 0.8);
 
+          // Validate the generated image before storing
+          const validImage = validateImageSrc(resizedImage);
+          if (!validImage) {
+            toast.error('Invalid image format generated. Please try again.');
+            return;
+          }
+
           setFormData(prev => {
             const updatedActivities = [...prev.activities];
             const updatedImages = [...updatedActivities[activityIdx].images];
-            updatedImages[imageIdx] = resizedImage;
+            updatedImages[imageIdx] = validImage;
             updatedActivities[activityIdx].images = updatedImages;
             return { ...prev, activities: updatedActivities };
           });
@@ -385,6 +392,34 @@ const ReportGenerator = () => {
     return text.substring(0, maxLength) + '...';
   };
 
+  // Add function to validate and sanitize image sources
+  const validateImageSrc = (imgSrc) => {
+    if (!imgSrc || typeof imgSrc !== 'string') {
+      return null;
+    }
+    
+    // Check if it's a valid data URL for images
+    const dataUrlPattern = /^data:image\/(jpeg|jpg|png|gif|webp);base64,([A-Za-z0-9+/=]+)$/;
+    if (!dataUrlPattern.test(imgSrc)) {
+      return null;
+    }
+    
+    return imgSrc;
+  };
+
+  // Add function to sanitize alt text
+  const sanitizeAltText = (text) => {
+    if (!text || typeof text !== 'string') {
+      return 'Image';
+    }
+    
+    // Remove any HTML tags and potentially dangerous characters
+    return text
+      .replace(/<[^>]*>/g, '') // Remove HTML tags
+      .replace(/[<>"'&]/g, '') // Remove dangerous characters
+      .trim() || 'Image';
+  };
+
   // Update the activity description rendering
   const renderActivityDescription = (description, maxLen) => {
     const truncatedDesc = truncateText(description, maxLen);
@@ -532,8 +567,8 @@ const ReportGenerator = () => {
                             <div className={styles.imageUploadRowTop}>
                               <label>Image ({activity.imageSlots[imgIdx]}):</label>
                               <img
-                                src={activity.images[imgIdx] ? activity.images[imgIdx] : 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='}
-                                alt={activity.images[imgIdx] ? `Preview ${activity.imageSlots[imgIdx]}` : 'No Preview'}
+                                src={validateImageSrc(activity.images[imgIdx]) || 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='}
+                                alt={activity.images[imgIdx] ? sanitizeAltText(`Preview ${activity.imageSlots[imgIdx]}`) : 'No Preview'}
                                 className={styles.activityImagePreview}
                                 style={{ visibility: activity.images[imgIdx] ? 'visible' : 'hidden' }}
                               />
@@ -557,8 +592,8 @@ const ReportGenerator = () => {
                             <div className={styles.imageUploadRowTop}>
                               <label>Image ({activity.imageSlots[imgIdx]}):</label>
                               <img
-                                src={activity.images[imgIdx] ? activity.images[imgIdx] : 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='}
-                                alt={activity.images[imgIdx] ? `Preview ${activity.imageSlots[imgIdx]}` : 'No Preview'}
+                                src={validateImageSrc(activity.images[imgIdx]) || 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='}
+                                alt={activity.images[imgIdx] ? sanitizeAltText(`Preview ${activity.imageSlots[imgIdx]}`) : 'No Preview'}
                                 className={styles.activityImagePreview}
                                 style={{ visibility: activity.images[imgIdx] ? 'visible' : 'hidden' }}
                               />
@@ -577,8 +612,8 @@ const ReportGenerator = () => {
                             <div className={styles.imageUploadRowTop}>
                               <label>Image ({slot}):</label>
                               <img
-                                src={activity.images[imgIdx] ? activity.images[imgIdx] : 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='}
-                                alt={activity.images[imgIdx] ? `Preview ${slot}` : 'No Preview'}
+                                src={validateImageSrc(activity.images[imgIdx]) || 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='}
+                                alt={activity.images[imgIdx] ? sanitizeAltText(`Preview ${slot}`) : 'No Preview'}
                                 className={styles.activityImagePreview}
                                 style={{ visibility: activity.images[imgIdx] ? 'visible' : 'hidden' }}
                               />
@@ -668,8 +703,8 @@ const ReportGenerator = () => {
                                 <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '45%' }}>
                                   {activity.images[i] ? (
                                     <img
-                                      src={activity.images[i]}
-                                      alt={`Activity ${activityIdx + 1} Image ${i + 1}`}
+                                      src={validateImageSrc(activity.images[i]) || 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='}
+                                      alt={sanitizeAltText(`Activity ${activityIdx + 1} Image ${i + 1}`)}
                                       className={styles.pdfActivityImg}
                                       style={{ width: '100%', height: 'auto', objectFit: 'cover' }}
                                     />
@@ -696,8 +731,8 @@ const ReportGenerator = () => {
                               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '45%' }}>
                                 {activity.images[2] ? (
                                   <img
-                                    src={activity.images[2]}
-                                    alt={`Activity ${activityIdx + 1} Image 3`}
+                                    src={validateImageSrc(activity.images[2]) || 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='}
+                                    alt={sanitizeAltText(`Activity ${activityIdx + 1} Image 3`)}
                                     className={styles.pdfActivityImg}
                                     style={{ width: '100%', height: 'auto', objectFit: 'cover' }}
                                   />
@@ -732,8 +767,8 @@ const ReportGenerator = () => {
                               <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '45%' }}>
                                 {img ? (
                                   <img
-                                    src={img}
-                                    alt={`Activity ${activityIdx + 1} Image ${i + 1}`}
+                                    src={validateImageSrc(img) || 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='}
+                                    alt={sanitizeAltText(`Activity ${activityIdx + 1} Image ${i + 1}`)}
                                     className={styles.pdfActivityImg}
                                     style={{ width: '100%', height: 'auto', objectFit: 'cover' }}
                                   />
