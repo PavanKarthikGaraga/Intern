@@ -3,11 +3,23 @@ name: Deploy to Ubuntu Server
 on:
   push:
     branches:
-      - main  # Triggers when code is pushed to main
+      - main
 
 jobs:
   deploy:
     runs-on: self-hosted
+
+    permissions:
+      contents: read
+      actions: none
+      checks: none
+      deployments: none
+      issues: none
+      packages: none
+      pull-requests: none
+      repository-projects: none
+      security-events: none
+      statuses: none
 
     steps:
       - name: Pull latest code from main
