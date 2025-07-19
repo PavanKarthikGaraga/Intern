@@ -35,6 +35,9 @@ const CertificateDownload = () => {
   });
   const [abortController, setAbortController] = useState(null);
   const [timer, setTimer] = useState(null);
+  const [zipUsernames, setZipUsernames] = useState('');
+  const [zipLoading, setZipLoading] = useState(false);
+  const [zipResults, setZipResults] = useState(null);
 
   // Timer effect for individual generation
   useEffect(() => {
@@ -215,6 +218,72 @@ const CertificateDownload = () => {
     }
   };
 
+  const handleDownloadZip = async () => {
+    setError('');
+    if (!zipUsernames.trim()) {
+      setError('Please enter at least one username.');
+      return;
+    }
+
+    // Parse usernames (split by newlines, commas, or spaces)
+    const usernameList = zipUsernames
+      .split(/[\n,\s]+/)
+      .map(username => username.trim())
+      .filter(username => username.length > 0);
+
+    if (usernameList.length === 0) {
+      setError('Please enter valid usernames.');
+      return;
+    }
+
+    if (usernameList.length > 100) {
+      setError('Maximum 100 certificates can be downloaded at once.');
+      return;
+    }
+
+    setZipLoading(true);
+    setZipResults(null);
+
+    try {
+      const response = await fetch('/api/dashboard/admin/certificate/download-zip', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ usernames: usernameList })
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to download certificates');
+      }
+
+      // Get results from headers
+      const resultsHeader = response.headers.get('X-Results');
+      if (resultsHeader) {
+        setZipResults(JSON.parse(resultsHeader));
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `certificates_${new Date().toISOString().split('T')[0]}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast.success(`Downloaded ${usernameList.length} certificates successfully`);
+    } catch (err) {
+      console.error('Error downloading certificates zip:', err);
+      toast.error(err.message);
+    } finally {
+      setZipLoading(false);
+    }
+  };
+
   const handleGenerateCertificates = async () => {
     if (!selectedSlot) {
       toast.error('Please select a slot');
@@ -333,6 +402,8 @@ const CertificateDownload = () => {
       failed: 0,
       generated: 0
     });
+    setZipResults(null);
+    setZipUsernames('');
   };
 
   return (
@@ -410,6 +481,76 @@ const CertificateDownload = () => {
                 <span className="stat-value">{individualSummary.failed}</span>
               </div>
             </div>
+          </div>
+        )}
+      </div>
+
+      {/* Bulk Certificate Download Section */}
+      <div className="certificate-section">
+        <h2>Download Multiple Certificates (ZIP)</h2>
+        <div className="username-input-section">
+          <label htmlFor="zip-usernames" className="input-label">
+            Enter Usernames (one per line, comma, or space separated):
+          </label>
+          <textarea
+            id="zip-usernames"
+            placeholder="2400032048&#10;24000xxxxxx&#10;24000xxxx"
+            value={zipUsernames}
+            onChange={e => setZipUsernames(e.target.value)}
+            className="certificate-textarea"
+            rows={6}
+          />
+          <p className="input-help">
+            You can enter multiple usernames separated by newlines, commas, or spaces. Maximum 100 certificates per download.
+          </p>
+        </div>
+        <div className="generate-controls">
+          <button onClick={handleDownloadZip} disabled={zipLoading} className="certificate-generate-btn">
+            {zipLoading ? <><FaCog className="spinning" /> Downloading...</> : <><FaDownload /> Download ZIP</>}
+          </button>
+        </div>
+        {error && <div className="certificate-error">{error}</div>}
+
+        {/* Zip Download Results */}
+        {zipResults && (
+          <div className="zip-results-section">
+            <h3>Download Summary</h3>
+            <div className="summary-stats">
+              <div className="stat-item">
+                <span className="stat-label">Total Requested:</span>
+                <span className="stat-value">{zipResults.total}</span>
+              </div>
+              <div className="stat-item success">
+                <span className="stat-label">Found & Downloaded:</span>
+                <span className="stat-value">{zipResults.found}</span>
+              </div>
+              <div className="stat-item failure">
+                <span className="stat-label">Missing:</span>
+                <span className="stat-value">{zipResults.missing}</span>
+              </div>
+            </div>
+            {zipResults.missingUsernames && zipResults.missingUsernames.length > 0 && (
+              <div className="missing-usernames">
+                <h4>Missing Certificates:</h4>
+                <div className="missing-list">
+                  {zipResults.missingUsernames.map((username, index) => (
+                    <span key={index} className="missing-item">{username}</span>
+                  ))}
+                </div>
+                <button 
+                  onClick={() => {
+                    navigator.clipboard.writeText(zipResults.missingUsernames.join('\n')).then(() => {
+                      toast.success(`Copied ${zipResults.missingUsernames.length} missing usernames to clipboard`);
+                    }).catch(() => {
+                      toast.error('Failed to copy to clipboard');
+                    });
+                  }}
+                  className="copy-missing-btn"
+                >
+                  Copy Missing Usernames
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -509,7 +650,7 @@ const CertificateDownload = () => {
               <>Generate Certificates</>
             )}
           </button>
-          {(summary || generationResult || individualResults.length > 0) && (
+          {(summary || generationResult || individualResults.length > 0 || zipResults) && (
             <button onClick={clearResults} className="clear-btn">
               Clear Results
             </button>

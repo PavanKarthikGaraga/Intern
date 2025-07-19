@@ -850,6 +850,72 @@
   transform: translateY(0);
 }
 
+/* Zip Download Section Styles */
+.zip-results-section {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.zip-results-section h3 {
+  margin-bottom: 1rem;
+  color: #333;
+  font-size: 1.2rem;
+  border-bottom: 2px solid #0070f3;
+  padding-bottom: 0.5rem;
+}
+
+.missing-usernames {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 6px;
+}
+
+.missing-usernames h4 {
+  margin-bottom: 0.5rem;
+  color: #856404;
+  font-size: 1rem;
+}
+
+.missing-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.missing-item {
+  background: #fff;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  color: #856404;
+  border: 1px solid #ffeaa7;
+}
+
+.copy-missing-btn {
+  background: #ffc107;
+  color: #212529;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+
+.copy-missing-btn:hover {
+  background: #e0a800;
+}
+
+.copy-missing-btn:active {
+  transform: translateY(1px);
+}
+
 @media (max-width: 768px) {
   .generate-controls {
     flex-direction: column;
