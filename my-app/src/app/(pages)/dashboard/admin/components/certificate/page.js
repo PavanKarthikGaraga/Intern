@@ -38,6 +38,12 @@ const CertificateDownload = () => {
   const [zipUsernames, setZipUsernames] = useState('');
   const [zipLoading, setZipLoading] = useState(false);
   const [zipResults, setZipResults] = useState(null);
+  const [zipProgressId, setZipProgressId] = useState(null);
+  const [zipProgress, setZipProgress] = useState(null);
+  const [zipPolling, setZipPolling] = useState(false);
+  const [zipDownloadUrl, setZipDownloadUrl] = useState(null);
+  const zipPollInterval = 2000;
+  let zipPollTimer = null;
 
   // Timer effect for individual generation
   useEffect(() => {
@@ -53,6 +59,37 @@ const CertificateDownload = () => {
       if (interval) clearInterval(interval);
     };
   }, [individualProgress.processing, individualProgress.startTime]);
+
+  // Polling effect for zip progress
+  useEffect(() => {
+    if (zipPolling && zipProgressId) {
+      const poll = async () => {
+        try {
+          const res = await fetch(`/api/dashboard/admin/certificate/download-zip/progress?id=${zipProgressId}`);
+          const data = await res.json();
+          if (data.success) {
+            setZipProgress(data.progress);
+            if (data.progress.ready) {
+              setZipPolling(false);
+              setZipDownloadUrl(`/api/dashboard/admin/certificate/download-zip/file?id=${zipProgressId}`);
+            } else if (data.progress.error) {
+              setZipPolling(false);
+              setError(data.progress.error);
+            }
+          } else {
+            setZipPolling(false);
+            setError(data.error || 'Failed to get progress');
+          }
+        } catch (err) {
+          setZipPolling(false);
+          setError('Error polling progress');
+        }
+      };
+      poll();
+      zipPollTimer = setInterval(poll, zipPollInterval);
+      return () => clearInterval(zipPollTimer);
+    }
+  }, [zipPolling, zipProgressId]);
 
   const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
@@ -220,51 +257,51 @@ const CertificateDownload = () => {
 
   const handleDownloadZip = async () => {
     setError('');
+    setZipProgressId(null);
+    setZipProgress(null);
+    setZipDownloadUrl(null);
     if (!zipUsernames.trim()) {
       setError('Please enter at least one username.');
       return;
     }
-
-    // Parse usernames (split by newlines, commas, or spaces)
     const usernameList = zipUsernames
       .split(/[\n,\s]+/)
       .map(username => username.trim())
       .filter(username => username.length > 0);
-
     if (usernameList.length === 0) {
       setError('Please enter valid usernames.');
       return;
     }
-
-    if (usernameList.length > 100) {
-      setError('Maximum 100 certificates can be downloaded at once.');
-      return;
-    }
-
     setZipLoading(true);
-    setZipResults(null);
-
     try {
       const response = await fetch('/api/dashboard/admin/certificate/download-zip', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ usernames: usernameList })
       });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to start zip download');
+      }
+      setZipProgressId(data.progressId);
+      setZipPolling(true);
+      setZipLoading(false);
+      toast.success('Started preparing ZIP. Progress will be shown below.');
+    } catch (err) {
+      setZipLoading(false);
+      setError(err.message);
+    }
+  };
 
+  const handleDownloadZipFile = async () => {
+    if (!zipDownloadUrl) return;
+    try {
+      const response = await fetch(zipDownloadUrl);
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || 'Failed to download certificates');
+        throw new Error(data.error || 'Failed to download zip');
       }
-
-      // Get results from headers
-      const resultsHeader = response.headers.get('X-Results');
-      if (resultsHeader) {
-        setZipResults(JSON.parse(resultsHeader));
-      }
-
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -274,13 +311,10 @@ const CertificateDownload = () => {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-
-      toast.success(`Downloaded ${usernameList.length} certificates successfully`);
+      toast.success('ZIP downloaded!');
     } catch (err) {
-      console.error('Error downloading certificates zip:', err);
+      setError(err.message);
       toast.error(err.message);
-    } finally {
-      setZipLoading(false);
     }
   };
 
@@ -499,48 +533,65 @@ const CertificateDownload = () => {
             onChange={e => setZipUsernames(e.target.value)}
             className="certificate-textarea"
             rows={6}
+            disabled={zipPolling || zipLoading}
           />
           <p className="input-help">
-            You can enter multiple usernames separated by newlines, commas, or spaces. Maximum 100 certificates per download.
+            You can enter any number of usernames separated by newlines, commas, or spaces. No limit.
           </p>
         </div>
         <div className="generate-controls">
-          <button onClick={handleDownloadZip} disabled={zipLoading} className="certificate-generate-btn">
-            {zipLoading ? <><FaCog className="spinning" /> Downloading...</> : <><FaDownload /> Download ZIP</>}
+          <button onClick={handleDownloadZip} disabled={zipLoading || zipPolling} className="certificate-generate-btn">
+            {zipLoading ? <><FaCog className="spinning" /> Starting...</> : <><FaDownload /> Start ZIP</>}
           </button>
+          {zipPolling && (
+            <button onClick={() => { setZipPolling(false); }} className="cancel-btn">Cancel</button>
+          )}
         </div>
         {error && <div className="certificate-error">{error}</div>}
 
-        {/* Zip Download Results */}
-        {zipResults && (
+        {/* Zip Download Progress */}
+        {zipProgress && (
           <div className="zip-results-section">
-            <h3>Download Summary</h3>
+            <h3>ZIP Progress</h3>
             <div className="summary-stats">
               <div className="stat-item">
                 <span className="stat-label">Total Requested:</span>
-                <span className="stat-value">{zipResults.total}</span>
+                <span className="stat-value">{zipProgress.total}</span>
               </div>
               <div className="stat-item success">
-                <span className="stat-label">Found & Downloaded:</span>
-                <span className="stat-value">{zipResults.found}</span>
+                <span className="stat-label">Found:</span>
+                <span className="stat-value">{zipProgress.found}</span>
               </div>
               <div className="stat-item failure">
                 <span className="stat-label">Missing:</span>
-                <span className="stat-value">{zipResults.missing}</span>
+                <span className="stat-value">{zipProgress.missingUsernames?.length || 0}</span>
+              </div>
+              <div className="stat-item info">
+                <span className="stat-label">Progress:</span>
+                <span className="stat-value">{zipProgress.current} / {zipProgress.total} ({Math.round((zipProgress.current / zipProgress.total) * 100)}%)</span>
               </div>
             </div>
-            {zipResults.missingUsernames && zipResults.missingUsernames.length > 0 && (
+            <div className="progress-bar-container" style={{ marginTop: '1rem' }}>
+              <div
+                className="progress-bar"
+                style={{ width: `${(zipProgress.current / zipProgress.total) * 100}%` }}
+              />
+              <span className="progress-text">
+                {zipProgress.current} / {zipProgress.total} ({Math.round((zipProgress.current / zipProgress.total) * 100)}%)
+              </span>
+            </div>
+            {zipProgress.missingUsernames && zipProgress.missingUsernames.length > 0 && (
               <div className="missing-usernames">
                 <h4>Missing Certificates:</h4>
                 <div className="missing-list">
-                  {zipResults.missingUsernames.map((username, index) => (
+                  {zipProgress.missingUsernames.map((username, index) => (
                     <span key={index} className="missing-item">{username}</span>
                   ))}
                 </div>
-                <button 
+                <button
                   onClick={() => {
-                    navigator.clipboard.writeText(zipResults.missingUsernames.join('\n')).then(() => {
-                      toast.success(`Copied ${zipResults.missingUsernames.length} missing usernames to clipboard`);
+                    navigator.clipboard.writeText(zipProgress.missingUsernames.join('\n')).then(() => {
+                      toast.success(`Copied ${zipProgress.missingUsernames.length} missing usernames to clipboard`);
                     }).catch(() => {
                       toast.error('Failed to copy to clipboard');
                     });
@@ -550,6 +601,11 @@ const CertificateDownload = () => {
                   Copy Missing Usernames
                 </button>
               </div>
+            )}
+            {zipDownloadUrl && (
+              <button onClick={handleDownloadZipFile} className="certificate-generate-btn" style={{ marginTop: '1rem' }}>
+                <FaDownload /> Download ZIP
+              </button>
             )}
           </div>
         )}
