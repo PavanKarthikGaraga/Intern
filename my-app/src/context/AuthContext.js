@@ -18,8 +18,12 @@ export const AuthProvider = ({ children }) => {
   const checkInitialAuth = async () => {
     if (!mountedRef.current || authCheckedRef.current) return;
 
-    // Skip auth check for reportGenerator route
-    if (window.location.pathname.startsWith('/reportGenerator')) {
+    // Skip auth check for public routes
+    const publicRoutes = ['/auth/', '/register', '/reportGenerator'];
+    const currentPath = window.location.pathname;
+    
+    // Allow homepage access without auth check
+    if (currentPath === '/' || publicRoutes.some(route => currentPath.startsWith(route))) {
       setIsLoading(false);
       authCheckedRef.current = true;
       return;
@@ -42,7 +46,10 @@ export const AuthProvider = ({ children }) => {
       if (res.status === 401 || !data.user) {
         setUser(null);
         setIsAuthenticated(false);
-        router.push('/auth/login');
+        // Only redirect to login if we're on a protected route
+        if (currentPath.startsWith('/dashboard')) {
+          router.push('/auth/login');
+        }
       } else {
         setUser(data.user);
         setIsAuthenticated(true);
@@ -53,7 +60,11 @@ export const AuthProvider = ({ children }) => {
       console.log('[AuthContext] Auth check failed:', error);
       setUser(null);
       setIsAuthenticated(false);
-      router.push('/auth/login');
+      // Only redirect to login if we're on a protected route
+      const currentPath = window.location.pathname;
+      if (currentPath.startsWith('/dashboard')) {
+        router.push('/auth/login');
+      }
       authCheckedRef.current = true;
     } finally {
       setIsLoading(false);

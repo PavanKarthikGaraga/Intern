@@ -4,6 +4,24 @@ import { verifyAccessToken } from "./lib/jwt";
 export async function middleware(req) {
   const pathname = req.nextUrl.pathname;
 
+  // Allow access to public routes (homepage, register, etc.)
+  if (pathname === '/' || pathname.startsWith('/register') || pathname.startsWith('/auth')) {
+    // If user is already logged in and accessing login page, redirect to dashboard
+    if (pathname === "/auth/login" || pathname === "/auth/forgot-password") {
+      const token = req.cookies.get("accessToken")?.value;
+      if (token) {
+        try {
+          const decoded = await verifyAccessToken(token, true);
+          const userRole = decoded.role;
+          return NextResponse.redirect(new URL(`/dashboard/${userRole}`, req.url));
+        } catch (err) {
+          // Token invalid, allow access to login
+        }
+      }
+    }
+    return NextResponse.next();
+  }
+
   // Explicitly allow access to reportGenerator
   if (pathname.startsWith('/reportGenerator')) {
     return NextResponse.next();

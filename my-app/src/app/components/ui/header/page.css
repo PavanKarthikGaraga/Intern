@@ -1,0 +1,135 @@
+/* Header */
+.header {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  position: fixed;
+  top: -200px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  border-radius: 25px;
+  width: calc(100% - 4rem);
+  max-width: 800px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0;
+  visibility: hidden;
+  box-sizing: border-box;
+}
+
+.header.visible {
+  top: 1rem;
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+.header-content {
+  max-width: none;
+  margin: 0;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo-section h1 {
+  color: #1e293b;
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.logo-section .university {
+  color: #666;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.nav-links {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.nav-link {
+  color: #334155;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 0.6rem 1.2rem;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+  background: rgba(37, 99, 235, 0.05);
+  border: 1px solid transparent;
+}
+
+.nav-link:hover {
+  color: white;
+  background: #2563eb;
+  border-color: #2563eb;
+  transform: translateY(-1px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .header {
+    width: calc(100% - 2rem);
+    border-radius: 20px;
+    max-width: none;
+    top: -200px;
+  }
+  
+  .header.visible {
+    top: 0.5rem;
+  }
+
+  .header-content {
+    padding: 0.8rem 1.5rem;
+    flex-direction: row;
+    gap: 1rem;
+  }
+
+  .logo-section h1 {
+    font-size: 1.4rem;
+  }
+  
+  .logo-section .university {
+    font-size: 0.8rem;
+  }
+
+  .nav-links {
+    gap: 0.5rem;
+  }
+  
+  .nav-link {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    border-radius: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    width: calc(100% - 1rem);
+    top: -200px;
+  }
+  
+  .header.visible {
+    top: 0.25rem;
+  }
+  
+  .header-content {
+    padding: 0.6rem 1rem;
+  }
+  
+  .logo-section h1 {
+    font-size: 1.2rem;
+  }
+  
+  .nav-link {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+  }
+}
