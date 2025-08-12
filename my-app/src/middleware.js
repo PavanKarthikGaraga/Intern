@@ -4,8 +4,8 @@ import { verifyAccessToken } from "./lib/jwt";
 export async function middleware(req) {
   const pathname = req.nextUrl.pathname;
 
-  // Explicitly allow access to reportGenerator
-  if (pathname.startsWith('/reportGenerator')) {
+  // Explicitly allow access to reportGenerator and external APIs
+  if (pathname.startsWith('/reportGenerator') || pathname.startsWith('/api/external')) {
     return NextResponse.next();
   }
 
