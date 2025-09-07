@@ -19,7 +19,7 @@ export default function SocialImpactLoader() {
     // Start fade out animation before component unmounts
     const timer = setTimeout(() => {
       setFadeOut(true);
-    }, 6800); // Start fade out 700ms before the parent component hides it
+    }, 2500); // Start fade out 500ms before the parent component hides it
 
     return () => clearTimeout(timer);
   }, []);

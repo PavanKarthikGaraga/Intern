@@ -14,13 +14,13 @@ import SocialImpactLoader from './components/animation/animation';
 import './page.css';
 
 export default function Home() {
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Hide loader after animation completes (7.5 seconds)
+    // Hide loader after animation completes (3 seconds)
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 7500);
+    }, 3000);
 
     return () => clearTimeout(timer);
   }, []);
@@ -32,14 +32,26 @@ export default function Home() {
   return (
     <div className="homepage">
       <Header />
-      <Hero />
+      <section id="hero">
+        <Hero />
+      </section>
       <ImpactStats />
-      <ProgramOverview />
-      <DomainAreas />
-      <ProgramStructure />
-      <ParticipationModes />
-      <Timeline />
-      <CTASection />
+      {/* <ProgramOverview /> */}
+      <section id="domain-areas">
+        <DomainAreas />
+      </section>
+      <section id="program-structure">
+        <ProgramStructure />
+      </section>
+      <section id="participation-modes">
+        <ParticipationModes />
+      </section>
+      <section id="timeline">
+        <Timeline />
+      </section>
+      <section id="cta-section">
+        <CTASection />
+      </section>
       <Footer />
     </div>
   );

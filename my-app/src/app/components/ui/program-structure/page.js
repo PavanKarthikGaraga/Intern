@@ -1,53 +1,80 @@
 'use client';
-import { 
-  ClipboardList,
-  BarChart3,
-  Target
+import {
+  CheckCircle,
+  TrendingUp,
+  Award
 } from 'lucide-react';
 import './page.css';
 
 export default function ProgramStructure() {
+  const achievements = [
+    {
+      icon: CheckCircle,
+      title: "Activities Completed",
+      stat: "100%",
+      label: "Completion Rate",
+      color: "#10b981"
+    },
+    {
+      icon: TrendingUp,
+      title: "Assessment Results",
+      stat: "95%",
+      label: "Engagement",
+      color: "#f59e0b"
+    },
+    {
+      icon: Award,
+      title: "Learning Outcomes",
+      stat: "4,800+",
+      label: "Certificates",
+      color: "#8b5cf6"
+    }
+  ];
+
+  const highlights = [
+    "Domain-specific field work (1.5-3 hours)",
+    "Cultural heritage tasks (LIPI)",
+    "10,000+ community surveys",
+    "Daily progress tracking",
+    "Faculty mentor guidance",
+    "Peer leadership development"
+  ];
+
   return (
     <section className="program-structure">
       <div className="container">
         <div className="section-header">
-          <h2>Program Achievements & Outcomes</h2>
-          <p>Documented results from our comprehensive 7-day program implementation</p>
+          <h2>Program Achievements</h2>
+          <p>Measurable impact from our comprehensive 7-day implementation</p>
         </div>
-        
-        <div className="structure-content">
-          <div className="structure-info">
-            <div className="info-card">
-              <h3><ClipboardList size={24} /> Daily Activities Completed</h3>
-              <ul>
-                <li>Domain-specific field work (1.5-3 hours) - 100% completion rate</li>
-                <li>Cultural heritage tasks (LIPI) - Successfully documented</li>
-                <li>Community surveys and interviews - 10,000+ responses collected</li>
-                <li>Field visits and documentation - Comprehensive reports generated</li>
-                <li>Reflection and report writing - Quality submissions achieved</li>
-              </ul>
-            </div>
-            
-            <div className="info-card">
-              <h3><BarChart3 size={24} /> Assessment & Support Results</h3>
-              <ul>
-                <li>Daily progress tracking - 95% student engagement</li>
-                <li>Faculty mentor guidance - Continuous support provided</li>
-                <li>Student lead supervision - Effective peer leadership</li>
-                <li>Final report evaluation - 90% quality submissions</li>
-                <li>Certificate upon completion - 4,800+ certificates awarded</li>
-              </ul>
-            </div>
-            
-            <div className="info-card">
-              <h3><Target size={24} /> Learning Outcomes Achieved</h3>
-              <ul>
-                <li>Real-world problem solving - Practical solutions implemented</li>
-                <li>Community engagement skills - Strong relationships built</li>
-                <li>Leadership development - 80% showed improvement</li>
-                <li>Social impact awareness - Measurable change documented</li>
-                <li>Professional documentation - Industry-standard reports</li>
-              </ul>
+
+        <div className="achievements-compact">
+          <div className="stats-grid">
+            {achievements.map((achievement, index) => (
+              <div key={index} className="stat-card">
+                <div className="stat-icon">
+                  <achievement.icon size={24} />
+                </div>
+                <div className="stat-content">
+                  <div className="stat-number" style={{ color: achievement.color }}>
+                    {achievement.stat}
+                  </div>
+                  <div className="stat-label">{achievement.label}</div>
+                  <div className="stat-title">{achievement.title}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="highlights-section">
+            <h3>Key Highlights</h3>
+            <div className="highlights-grid">
+              {highlights.map((highlight, index) => (
+                <div key={index} className="highlight-item">
+                  <CheckCircle size={16} />
+                  <span>{highlight}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>

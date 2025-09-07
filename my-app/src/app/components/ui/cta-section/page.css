@@ -5,32 +5,13 @@
   padding: 0 2rem;
 }
 
-/* CTA Section - Split Design */
+/* CTA Section - White Background */
 .cta-section {
-  background: linear-gradient(135deg, rgb(151, 0, 3) 0%, #b8002b 100%);
-  color: white;
+  background: white;
+  color: rgb(151, 0, 3);
   padding: 5rem 0;
   text-align: center;
   position: relative;
-  overflow: hidden;
-}
-
-.cta-section::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: 
-    repeating-linear-gradient(
-      45deg,
-      transparent,
-      transparent 20px,
-      rgba(255,255,255,0.03) 20px,
-      rgba(255,255,255,0.03) 40px
-    );
-  animation: slide 20s linear infinite;
 }
 
 @keyframes slide {
@@ -51,7 +32,7 @@
   font-size: 3rem;
   font-weight: 700;
   margin-bottom: 1rem;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  color: rgb(151, 0, 3);
 }
 
 .cta-content p {
@@ -60,7 +41,7 @@
   max-width: 600px;
   margin-left: auto;
   margin-right: auto;
-  opacity: 0.95;
+  color: #555;
 }
 
 .cta-buttons {
@@ -107,29 +88,27 @@
 }
 
 .cta-section .cta-primary {
-  background: white;
-  color: rgb(151, 0, 3);
-  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  background: rgb(151, 0, 3);
+  color: white;
+  box-shadow: 0 4px 15px rgba(151, 0, 3, 0.3);
 }
 
 .cta-section .cta-primary:hover {
-  background: #f8f9fa;
+  background: rgb(120, 0, 2);
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+  box-shadow: 0 8px 25px rgba(151, 0, 3, 0.4);
 }
 
 .cta-section .cta-secondary {
   background: transparent;
-  color: white;
-  border: 2px solid white;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  color: rgb(151, 0, 3);
+  border: 2px solid rgb(151, 0, 3);
 }
 
 .cta-section .cta-secondary:hover {
-  background: white;
-  color: rgb(151, 0, 3);
+  background: rgb(151, 0, 3);
+  color: white;
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.3);
 }
 
 /* Social Embeds Section */
@@ -148,20 +127,35 @@
 .linkedin-posts,
 .youtube-videos {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(550px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
   justify-items: center;
   margin-bottom: 3rem;
 }
 
-.linkedin-posts iframe,
-.youtube-videos iframe {
+.linkedin-posts iframe {
+  width: 100%;
+  height: 400px;
+  max-width: 280px;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.linkedin-posts iframe:hover,
+.youtube-videos iframe {
+  width: 100%;
+  height: 200px;
+  max-width: 280px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.linkedin-posts iframe:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
 .youtube-videos iframe:hover {
   transform: translateY(-5px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
@@ -180,8 +174,14 @@
 
   .linkedin-posts,
   .youtube-videos {
-    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .linkedin-posts iframe,
+  .youtube-videos iframe {
+    height: 300px;
+    max-width: 100%;
   }
 
   .social-embeds h3 {
@@ -193,18 +193,24 @@
   .linkedin-posts,
   .youtube-videos {
     grid-template-columns: 1fr;
-    gap: 1.5rem;
+    gap: 1rem;
   }
 
   .linkedin-posts iframe {
     width: 100%;
-    max-width: 500px;
-    height: 600px;
+    max-width: 100%;
+    height: 350px;
   }
 
   .youtube-videos iframe {
     width: 100%;
-    max-width: 400px;
-    height: 225px;
+    max-width: 100%;
+    height: 250px;
   }
+}
+
+
+
+iframe{
+  overflow: hidden;
 }

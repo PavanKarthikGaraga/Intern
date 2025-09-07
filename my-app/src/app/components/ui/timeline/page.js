@@ -3,62 +3,58 @@ import { CheckCircle } from 'lucide-react';
 import './page.css';
 
 export default function Timeline() {
+  const timelineData = [
+    {
+      slot: "Slot 1",
+      date: "May 11-17, 2024",
+      students: "1,200 students",
+      satisfaction: "95% satisfaction"
+    },
+    {
+      slot: "Slot 2",
+      date: "July 15-21, 2024",
+      students: "1,200 students",
+      satisfaction: "97% satisfaction"
+    },
+    {
+      slot: "Slot 3",
+      date: "September 10-16, 2024",
+      students: "1,200 students",
+      satisfaction: "96% satisfaction"
+    },
+    {
+      slot: "Slot 4",
+      date: "November 12-18, 2024",
+      students: "1,200 students",
+      satisfaction: "98% satisfaction"
+    }
+  ];
+
   return (
     <section id="timeline" className="timeline-section">
       <div className="container">
         <div className="section-header">
-          <h2>Program Completion Timeline 2024-2025</h2>
-          <p>Successfully completed four program slots with outstanding results</p>
+          <h2>Program Timeline</h2>
+          <p>Four successful program slots completed in 2024-2025</p>
         </div>
-        
-        <div className="timeline">
-          <div className="timeline-item">
-            <div className="timeline-marker completed">
-              <CheckCircle size={24} />
+
+        <div className="timeline-horizontal">
+          {timelineData.map((item, index) => (
+            <div key={index} className="timeline-step">
+              <div className="timeline-card">
+                <div className="timeline-marker">
+                  <CheckCircle size={24} />
+                </div>
+                <div className="timeline-content">
+                  <h3>{item.slot}</h3>
+                  <p className="timeline-date">{item.date}</p>
+                  <p className="timeline-stats">{item.students}</p>
+                  <p className="timeline-satisfaction">{item.satisfaction}</p>
+                </div>
+              </div>
+              {index < timelineData.length - 1 && <div className="timeline-connector"></div>}
             </div>
-            <div className="timeline-content">
-              <h3>Slot 1 - Completed</h3>
-              <p className="timeline-date">May 11-17, 2024</p>
-              <p className="completion-status">1,200 students completed successfully</p>
-              <p className="impact-metric">95% satisfaction rate</p>
-            </div>
-          </div>
-          
-          <div className="timeline-item">
-            <div className="timeline-marker completed">
-              <CheckCircle size={24} />
-            </div>
-            <div className="timeline-content">
-              <h3>Slot 2 - Completed</h3>
-              <p className="timeline-date">July 15-21, 2024</p>
-              <p className="completion-status">1,200 students completed successfully</p>
-              <p className="impact-metric">97% satisfaction rate</p>
-            </div>
-          </div>
-          
-          <div className="timeline-item">
-            <div className="timeline-marker completed">
-              <CheckCircle size={24} />
-            </div>
-            <div className="timeline-content">
-              <h3>Slot 3 - Completed</h3>
-              <p className="timeline-date">September 10-16, 2024</p>
-              <p className="completion-status">1,200 students completed successfully</p>
-              <p className="impact-metric">96% satisfaction rate</p>
-            </div>
-          </div>
-          
-          <div className="timeline-item">
-            <div className="timeline-marker completed">
-              <CheckCircle size={24} />
-            </div>
-            <div className="timeline-content">
-              <h3>Slot 4 - Completed</h3>
-              <p className="timeline-date">November 12-18, 2024</p>
-              <p className="completion-status">1,200 students completed successfully</p>
-              <p className="impact-metric">98% satisfaction rate</p>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
     </section>

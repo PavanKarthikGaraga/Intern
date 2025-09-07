@@ -1,87 +1,61 @@
 'use client';
-import Link from 'next/link';
-import { 
-  Heart, 
-  Monitor, 
-  UserCheck, 
-  Wheat, 
-  Droplets, 
-  BookOpen,
-  TreePine,
-  Recycle
-} from 'lucide-react';
+import Image from 'next/image';
 import './page.css';
+import { useState } from 'react';
 
 export default function DomainAreas() {
+  const [showMore, setShowMore] = useState(false);
   const domains = [
-    {
-      name: "Health and Hygiene",
-      description: "Community wellness and sanitation practices promoted",
-      icon: Heart
-    },
-    {
-      name: "Digital Literacy & ICT",
-      description: "Digital divide bridged in rural communities",
-      icon: Monitor
-    },
-    {
-      name: "Women Empowerment",
-      description: "Gender equality and women's participation fostered",
-      icon: UserCheck
-    },
-    {
-      name: "Agriculture",
-      description: "Sustainable and resilient farming practices promoted",
-      icon: Wheat
-    },
-    {
-      name: "Water Conservation",
-      description: "Water harvesting methods awareness created",
-      icon: Droplets
-    },
-    {
-      name: "Education",
-      description: "Quality education access supported in rural areas",
-      icon: BookOpen
-    },
-    {
-      name: "Environment",
-      description: "Environmental conservation and sustainability initiatives",
-      icon: TreePine
-    },
-    {
-      name: "Waste Management",
-      description: "Sustainable waste disposal and recycling programs",
-      icon: Recycle
-    }
+    { name: "Health and Hygiene", image: "/image.png" },
+    { name: "Village Infrastructure", image: "/image.png" },
+    { name: "Water Conservation", image: "/image.png" },
+    { name: "Energy Utilization & Efficiency", image: "/image.png" },
+    { name: "Community Actions", image: "/image.png" },
+    { name: "Agriculture", image: "/image.png" },
+    { name: "Water and Sanitation", image: "/image.png" },
+    { name: "Waste Management", image: "/image.png" },
+    { name: "Digital Literacy & ICT", image: "/image.png" },
+    { name: "Women Empowerment & Gender Equality", image: "/image.png" },
+    { name: "Renewable Energy & Sustainability", image: "/image.png" },
+    { name: "Nutrition & Food Security", image: "/image.png" },
+    { name: "Disaster Preparedness & Resilience", image: "/image.png" },
+    { name: "Cultural Heritage & Narratives", image: "/image.png" },
+    { name: "Green Innovations & Tree Plantation", image: "/image.png" },
+    { name: "Livelihood & Entrepreneurship", image: "/image.png" },
+    { name: "Rural/Urban Education", image: "/image.png" },
+    { name: "Sports & Wellness Engagement", image: "/image.png" },
+    { name: "Skill Identification & Development", image: "/image.png" },
+    { name: "Mental Health & Well-Being", image: "/image.png" }
   ];
+  
 
   return (
     <section className="domain-areas">
       <div className="container">
         <div className="section-header">
-          <h2>Impact Domains - Proven Results</h2>
-          <p>20+ specialized areas where our graduates have created lasting change</p>
+          <h2>Ares of Work</h2>
+          <p>Specialized areas where our graduates create lasting change</p>
         </div>
-        
+
         <div className="domains-grid">
-          {domains.map((domain, index) => (
+          {domains.slice(0, showMore ? domains.length : 10).map((domain, index) => (
             <div key={index} className="domain-card">
-              <div className="domain-icon">
-                <domain.icon size={32} />
+              <div className="domain-image">
+                <Image
+                  src={domain.image}
+                  alt={domain.name}
+                  width={300}
+                  height={300}
+                  className="domain-img"
+                />
               </div>
               <h3>{domain.name}</h3>
-              <p>{domain.description}</p>
             </div>
           ))}
         </div>
-        
-        <div className="domains-footer">
-          <p>And 14+ more specialized domains with documented success stories...</p>
-          <Link href="/auth/login" className="view-all-domains">
-            View All Success Stories
-          </Link>
-        </div>
+          <div className='showmore-container'>
+            <button className='showmore' onClick={() => setShowMore(!showMore)}>{showMore ? "Show Less" : "Show More"}</button>
+          </div>
       </div>
     </section>
   );

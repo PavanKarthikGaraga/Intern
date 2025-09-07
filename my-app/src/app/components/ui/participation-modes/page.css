@@ -27,7 +27,7 @@
 
 /* Participation Modes - Overlapping Cards Design */
 .participation-modes {
-  background: linear-gradient(to bottom, #f8f9fa 0%, white 50%, #f8f9fa 100%);
+  background: white;
   padding: 5rem 0;
   position: relative;
 }

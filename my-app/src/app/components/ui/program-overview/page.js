@@ -35,7 +35,7 @@ export default function ProgramOverview() {
     <section className="program-overview">
       <div className="container">
         <div className="section-header">
-          <h2>Program Success & Impact</h2>
+          <h2>Program Achievements</h2>
           <p>A proven program that has created measurable social change and developed future leaders</p>
         </div>
         

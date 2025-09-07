@@ -15,8 +15,8 @@ export default function Footer() {
           <div className="footer-section">
             <h4>Quick Links</h4>
             <ul>
-              <li><Link href="/auth/login">View Dashboard</Link></li>
-              <li><Link href="#impact-stats">Program Impact</Link></li>
+              <li><Link href="#domain-areas">Impact Domains</Link></li>
+              <li><Link href="#program-structure">Achievements</Link></li>
               <li><Link href="#timeline">Program Timeline</Link></li>
             </ul>
           </div>

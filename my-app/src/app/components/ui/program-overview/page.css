@@ -27,7 +27,7 @@
 
 /* Program Overview - Zigzag Card Layout */
 .program-overview {
-  background: linear-gradient(180deg, white 0%, #f8f9fa 100%);
+  background: white;
   padding: 5rem 0;
   position: relative;
 }
@@ -39,9 +39,9 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: 
-    radial-gradient(circle at 20% 20%, rgba(151,0,3,0.05) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(151,0,3,0.05) 0%, transparent 50%);
+  /* background:
+    radial-gradient(circle at 20% 20%, rgba(151,0,3,0.03) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(151,0,3,0.03) 0%, transparent 50%); */
   pointer-events: none;
 }
 
