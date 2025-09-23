@@ -25,7 +25,7 @@
     "install": "^0.13.0",
     "jose": "^6.0.10",
     "jsonwebtoken": "^9.0.2",
-    "jspdf": "^3.0.1",
+    "jspdf": "^3.0.3",
     "jszip": "^3.10.1",
     "jwt-decode": "^4.0.0",
     "mysql2": "^3.13.0",
