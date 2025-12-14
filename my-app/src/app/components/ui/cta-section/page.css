@@ -1,0 +1,216 @@
+/* Container */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+/* CTA Section - White Background */
+.cta-section {
+  background: white;
+  color: rgb(151, 0, 3);
+  padding: 5rem 0;
+  text-align: center;
+  position: relative;
+}
+
+@keyframes slide {
+  0% {
+    transform: translateX(-50px) translateY(-50px);
+  }
+  100% {
+    transform: translateX(50px) translateY(50px);
+  }
+}
+
+.cta-content {
+  position: relative;
+  z-index: 2;
+}
+
+.cta-content h2 {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: rgb(151, 0, 3);
+}
+
+.cta-content p {
+  font-size: 1.3rem;
+  margin-bottom: 2.5rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  color: #555;
+}
+
+.cta-buttons {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 2;
+}
+
+.cta-primary, .cta-secondary {
+  padding: 1.2rem 2.5rem;
+  border-radius: 50px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1.1rem;
+  transition: all 0.4s ease;
+  display: inline-block;
+  position: relative;
+  overflow: hidden;
+}
+
+.cta-primary::before,
+.cta-secondary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.6s ease;
+}
+
+.cta-primary:hover::before,
+.cta-secondary:hover::before {
+  left: 100%;
+}
+
+.large {
+  padding: 1.4rem 3rem;
+  font-size: 1.2rem;
+}
+
+.cta-section .cta-primary {
+  background: rgb(151, 0, 3);
+  color: white;
+  box-shadow: 0 4px 15px rgba(151, 0, 3, 0.3);
+}
+
+.cta-section .cta-primary:hover {
+  background: rgb(120, 0, 2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(151, 0, 3, 0.4);
+}
+
+.cta-section .cta-secondary {
+  background: transparent;
+  color: rgb(151, 0, 3);
+  border: 2px solid rgb(151, 0, 3);
+}
+
+.cta-section .cta-secondary:hover {
+  background: rgb(151, 0, 3);
+  color: white;
+  transform: translateY(-2px);
+}
+
+/* Social Embeds Section */
+.social-embeds {
+  margin-top: 3rem;
+}
+
+.social-embeds h3 {
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 2rem;
+  color: rgb(151, 0, 3);
+
+}
+
+.linkedin-posts,
+.youtube-videos {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  justify-items: center;
+  margin-bottom: 3rem;
+}
+
+.linkedin-posts iframe {
+  width: 100%;
+  height: 400px;
+  max-width: 280px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.youtube-videos iframe {
+  width: 100%;
+  height: 200px;
+  max-width: 280px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.linkedin-posts iframe:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.youtube-videos iframe:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 1rem;
+  }
+
+  .cta-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .linkedin-posts,
+  .youtube-videos {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .linkedin-posts iframe,
+  .youtube-videos iframe {
+    height: 300px;
+    max-width: 100%;
+  }
+
+  .social-embeds h3 {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .linkedin-posts,
+  .youtube-videos {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .linkedin-posts iframe {
+    width: 100%;
+    max-width: 100%;
+    height: 350px;
+  }
+
+  .youtube-videos iframe {
+    width: 100%;
+    max-width: 100%;
+    height: 250px;
+  }
+}
+
+
+
+iframe{
+  overflow: hidden;
+}

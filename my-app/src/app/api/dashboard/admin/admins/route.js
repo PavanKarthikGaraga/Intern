@@ -7,7 +7,7 @@ import bcrypt from 'bcryptjs';
 export async function GET(req) {
     try {
         const cookieStore = await cookies();
-        const accessToken = await cookieStore.get('accessToken');
+        const   accessToken = await cookieStore.get('accessToken');
 
         if (!accessToken?.value) {
             return NextResponse.json({ 

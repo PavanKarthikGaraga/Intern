@@ -31,3 +31,6 @@ use this auth pattern in routes or anywhere
 
 
 don't ever ever modify AuthContext.js
+
+
+don't ever use emojis only use icons 
