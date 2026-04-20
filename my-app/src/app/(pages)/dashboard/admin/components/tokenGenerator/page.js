@@ -39,26 +39,20 @@ export default function TokenGenerator() {
       setIsRedirecting(true);
       
       // Wait for 2 seconds to ensure cookies are set
-      
-      let wait = await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 2000));
       // Redirect based on role
       const role = data.user.role;
       switch(role) {
-
         case 'student':
-            wait;
           router.push('/dashboard/student');
           break;
         case 'studentLead':
-          wait;
           router.push('/dashboard/studentLead');
           break;
         case 'facultyMentor':
-          wait;
           router.push('/dashboard/facultyMentor');
           break;
         case 'admin':
-          wait;
           router.push('/dashboard/admin');
           break;
         default:

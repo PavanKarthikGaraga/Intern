@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { verifyAccessToken } from '@/lib/jwt';
 import pool from '@/lib/db';
 import { cookies } from 'next/headers';
+import { logActivity } from '@/lib/activityLog';
 
 export async function POST(request) {
   const connection = await pool.getConnection();
@@ -113,6 +114,15 @@ export async function POST(request) {
       );
     }
 
+    logActivity({
+      action: verified ? 'MENTOR_VERIFY_REPORT' : 'MENTOR_REJECT_REPORT',
+      actorUsername: decoded.username,
+      actorName: decoded.name,
+      actorRole: 'facultyMentor',
+      targetUsername: username,
+      details: { day, verified }
+    }).catch(() => {});
+
     return NextResponse.json({
       success: true,
       message: `Report has been ${verified ? 'verified' : 'rejected'}.`
@@ -136,8 +146,8 @@ export async function POST(request) {
 export async function GET(request) {
   const connection = await pool.getConnection();
   try {
-    const cookieStore = cookies();
-    const accessToken = cookieStore.get('accessToken');
+    const cookieStore = await cookies();
+    const accessToken = await cookieStore.get('accessToken');
 
     if (!accessToken?.value) {
       return NextResponse.json({ 

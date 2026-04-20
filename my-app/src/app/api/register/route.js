@@ -1,6 +1,7 @@
 import pool from "../../../lib/db.js";
 import bcrypt from 'bcryptjs';
 import { sendEmail } from '../../../lib/email.js';
+import { logActivity } from '../../../lib/activityLog.js';
 
 const yearMap = {
   '1': '1st',
@@ -38,7 +39,6 @@ export async function POST(request) {
   try {
     db = await pool.getConnection();
     const formData = await request.json();
-    console.log(formData);
 
     // Set transaction isolation level before starting the transaction
     await db.query('SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED');
@@ -78,32 +78,21 @@ export async function POST(request) {
       }
 
       const currentStats = stats[0];
+      const slotNum = parseInt(formData.slot);
+
+      // Validate slot range 1-9
+      if (slotNum < 1 || slotNum > 9) {
+        throw new Error('Invalid slot selected');
+      }
+
       const slotField = `slot${formData.slot}`;
       const modeField = formData.mode.toLowerCase();
       const slotModeField = formData.mode === 'Remote' ? `slot${formData.slot}Remote` : 
                           formData.mode === 'Incampus' ? `slot${formData.slot}Incamp` : 
                           `slot${formData.slot}Invillage`;
 
-      // Check if slot is full (max 1200)
-      if (currentStats[slotField] >= 1200) {
-        throw new Error(`Slot ${formData.slot} is full (maximum 1200 students)`);
-      }
-
-      // Check if mode in slot is full
-      if (formData.mode === 'Remote') {
-        if (currentStats[slotModeField] >= 1000) {
-          throw new Error(`Remote mode in Slot ${formData.slot} is full (maximum 1000 students)`);
-        }
-      } else if (formData.mode === 'Incampus') {
-        if (currentStats[slotModeField] >= 150) {
-          throw new Error(`In-Campus mode in Slot ${formData.slot} is full (maximum 150 students)`);
-        }
-      } else if (formData.mode === 'InVillage') {
-        if (currentStats[slotModeField] >= 50) {
-          throw new Error(`In-Village mode in Slot ${formData.slot} is full (maximum 50 students)`);
-        }
-      }
-
+      // Registration limits have been removed as per request
+      
       // Generate username from ID number
       const username = formData.studentInfo.idNumber;
 
@@ -111,11 +100,14 @@ export async function POST(request) {
       const queries = [
         {
           query: `INSERT INTO registrations 
-            (selectedDomain, mode, slot, username, name, email, branch, gender, year, phoneNumber, 
-            residenceType, hostelName, busRoute, country, state, district, pincode)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            (selectedDomain, fieldOfInterest, careerChoice, batch, mode, slot, username, name, email, branch, gender, year, phoneNumber, 
+            residenceType, hostelName, busRoute, country, state, district, pincode, season)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           values: [
             formData.selectedDomain,
+            formData.fieldOfInterest || null,
+            formData.careerChoice || null,
+            formData.batch || null,
             formData.mode,
             formData.slot,
             username,
@@ -132,6 +124,7 @@ export async function POST(request) {
             formData.residence.state,
             formData.residence.district,
             formData.residence.pincode,
+            '2026',
           ]
         },
         {
@@ -176,6 +169,15 @@ export async function POST(request) {
 
       // Commit transaction
       await db.commit();
+
+      // Log registration
+      logActivity({
+        action: 'STUDENT_REGISTER',
+        actorUsername: username,
+        actorName: formData.studentInfo.name,
+        actorRole: 'student',
+        details: { domain: formData.selectedDomain, mode: formData.mode, slot: formData.slot }
+      }).catch(() => {});
 
       // Send email asynchronously without waiting
       const emailData = {

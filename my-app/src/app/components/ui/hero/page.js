@@ -8,22 +8,30 @@ export default function Hero() {
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const slides = [
-    {
-      image: "/image.png"
-    },
-    {
-      image: "/image.png"
-    },
-    {
-      image: "/image.png"
-    }
+    { image: "https://i.imghippo.com/files/ifQ9317VE.jpg" },
+    { image: "https://i.imghippo.com/files/dKfd9907aQ.jpg" },
+    { image: "https://i.imghippo.com/files/vyg4759qcg.jpg" },
+    { image: "https://i.imghippo.com/files/LVeb1941l.jpg" }
   ];
 
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 5000);
-    return () => clearInterval(timer);
+    }, 4000); // 4 secs delay
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowLeft') {
+        setCurrentSlide(prev => (prev === 0 ? slides.length - 1 : prev - 1));
+      } else if (e.key === 'ArrowRight') {
+        setCurrentSlide(prev => (prev + 1) % slides.length);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [slides.length]);
 
   return (
@@ -39,14 +47,29 @@ export default function Hero() {
                 <Image
                   src={slide.image}
                   alt="Social Internship"
-                  width={800}
-                  height={600}
+                  width={900}
+                  height={520}
                   className="slide-image"
+                  style={{ width: '100%', height: '520px' }}
+                  unoptimized={true}
                 />
               </div>
             </div>
           </div>
         ))}
+        
+        <button 
+          className="slide-nav-btn prev-btn" 
+          onClick={() => setCurrentSlide(prev => (prev === 0 ? slides.length - 1 : prev - 1))}
+        >
+          &#10094;
+        </button>
+        <button 
+          className="slide-nav-btn next-btn" 
+          onClick={() => setCurrentSlide(prev => (prev + 1) % slides.length)}
+        >
+          &#10095;
+        </button>
       </div>
       
       <div className="hero-indicators">

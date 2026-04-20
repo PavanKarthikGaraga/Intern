@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { generateAuthTokens, verifyAccessToken } from '@/lib/jwt';
 import pool from '@/lib/db';
 import { cookies } from 'next/headers';
+import { logActivity } from '@/lib/activityLog';
 
 export async function POST(request) {
   try {
@@ -71,7 +72,8 @@ export async function POST(request) {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 10 * 60 
+        maxAge: 10 * 60,
+        path: '/'
     });
 
     // Set refresh token cookie
@@ -79,8 +81,18 @@ export async function POST(request) {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 40 * 60 
+        maxAge: 40 * 60,
+        path: '/'
     });
+
+    logActivity({
+        action: 'ADMIN_PROXY_LOGIN',
+        actorUsername: decoded.username,
+        actorName: decoded.name,
+        actorRole: 'admin',
+        targetUsername: user.username,
+        details: { targetRole: user.role }
+    }).catch(() => {});
 
     return Response.json({
         message: "Token Generated Successfully",

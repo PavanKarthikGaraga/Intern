@@ -158,7 +158,7 @@ export default function SFinalReports() {
                     <td>{student.name}</td>
                     <td>{student.username}</td>
                     <td>
-                      <span className={`mode-badge ${student.mode.toLowerCase()}`}>{student.mode}</span>
+                      <span className={`mode-badge ${student.mode?.toLowerCase()}`}>{student.mode}</span>
                     </td>
                     <td>
                       <span className="slot-badge">{student.slot}</span>
@@ -260,7 +260,7 @@ export default function SFinalReports() {
                     <td>{student.name}</td>
                     <td>{student.username}</td>
                     <td>
-                      <span className={`mode-badge ${student.mode.toLowerCase()}`}>{student.mode}</span>
+                      <span className={`mode-badge ${student.mode?.toLowerCase()}`}>{student.mode}</span>
                     </td>
                     <td>
                       <span className="slot-badge">{student.slot}</span>

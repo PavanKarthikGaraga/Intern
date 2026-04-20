@@ -58,6 +58,11 @@ export const boyHostels = [
       "S.No": "9",
       "hostelName": "Malabar",
       "Location of the Hostel": "Outside campus"
+  },
+  {
+      "S.No": "10",
+      "hostelName": "Lotus",
+      "Location of the Hostel": "In Campus"
   }
 ]
 

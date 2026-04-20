@@ -23,7 +23,7 @@
 /* Timeline - Horizontal Design */
 .timeline-section {
   background: white;
-  padding: 5rem 0;
+  padding: var(--section-padding) 0;
   position: relative;
 }
 
@@ -134,30 +134,52 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   .container {
-    padding: 0 1rem;
+    padding: 0 1.25rem;
+  }
+
+  .timeline-horizontal {
+    flex-direction: column;
+    gap: 2.5rem;
+    padding: 1rem 0;
+  }
+
+  .timeline-step {
+    width: 100%;
+  }
+
+  .timeline-connector {
+    width: 3px;
+    height: 30px;
+    position: absolute;
+    left: 50%;
+    bottom: -32px;
+    transform: translateX(-50%);
+    background: linear-gradient(180deg, rgb(151, 0, 3), rgba(151, 0, 3, 0.2));
+  }
+
+  .timeline-connector::after {
+    right: auto;
+    bottom: -4px;
+    top: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 6px solid rgb(151, 0, 3);
+    border-bottom: none;
+  }
+
+  .timeline-step:last-child .timeline-connector {
+    display: none;
+  }
+
+  .timeline-card {
+    width: 100%;
+    min-width: 0;
+    padding: 1.25rem;
   }
 
   .section-header h2 {
-    font-size: 2rem;
-  }
-
-  .section-header p {
-    font-size: 1rem;
-  }
-
-  .timeline::before {
-    left: 20px;
-  }
-
-  .timeline-item {
-    flex-direction: row !important;
-  }
-
-  .timeline-marker {
-    margin: 0 1rem 0 0;
-  }
-
-  .timeline-content {
-    max-width: none;
+    font-size: 1.85rem;
   }
 }

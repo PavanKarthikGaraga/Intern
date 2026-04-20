@@ -291,9 +291,9 @@ export default function Students({ user }) {
             
               {students.length === 0 
                 ? (<p>You currently have no students. This will fetch students for slot 1.</p>
-            ):(<>`You currently have students in slot {students[0].slot}. This will move you to slot {students[0].slot + 1} and fetch new students.`
+            ):(<><p>You currently have students in slot {students[0].slot}. This will move you to slot {students[0].slot + 1} and fetch new students.</p>
               <p className="warning-text">
-              ⚠️ Important: This action cannot be undone. Once you move to the next slot, you won't be able to:
+              Warning: This action cannot be undone. Once you move to the next slot, you won't be able to:
             </p>
             <ul className="warning-list">
               <li>Return to the previous slot</li>

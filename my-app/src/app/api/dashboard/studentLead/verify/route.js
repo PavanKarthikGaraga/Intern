@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { verifyAccessToken } from '@/lib/jwt';
 import pool from '@/lib/db';
 import { cookies } from 'next/headers';
+import { logActivity } from '@/lib/activityLog';
 
 export async function POST(request) {
   const connection = await pool.getConnection();
@@ -153,6 +154,15 @@ export async function POST(request) {
       }
 
       await connection.commit();
+
+      logActivity({
+        action: status ? 'LEAD_VERIFY_REPORT' : 'LEAD_REJECT_REPORT',
+        actorUsername: decoded.username,
+        actorName: decoded.name,
+        actorRole: 'studentLead',
+        targetUsername: username,
+        details: { day, status, marks: marks || null }
+      }).catch(() => {});
 
       return NextResponse.json({
         success: true,

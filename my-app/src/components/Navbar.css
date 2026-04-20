@@ -11,10 +11,36 @@
   height: 50px;
 }
 
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 .header-left h1 {
   margin: 0;
   font-size: 1.2rem;
   color: #ffffff;
+}
+
+.sidebar-toggle-btn {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 24px;
+  height: 18px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.sidebar-toggle-btn span {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background-color: white;
+  border-radius: 2px;
 }
 
 .header-right {
@@ -54,23 +80,42 @@
 @media (max-width: 768px) {
   .dashboard-header {
     padding: 0.5rem 1rem;
-    height: auto;
+    height: 50px; /* Keep height fixed for better alignment */
+    position: fixed; /* Stick to top on mobile */
+    left: 0;
+    right: 0;
+  }
+  
+  .sidebar-toggle-btn {
+    display: flex;
   }
   
   .header-left h1 {
     font-size: 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
   }
   
   .user-info {
-    font-size: 0.8rem;
-  }
-  
-  .user-id {
-    font-size: 0.7rem;
+    display: none; /* Hide detailed user info on small mobile to save space */
   }
   
   .logout-btn {
     padding: 0.25rem 0.5rem;
     font-size: 0.8rem;
   }
+} 
+
+/* Handle landscape mobile specific header tweaks */
+@media screen and (max-height: 500px) and (orientation: landscape) {
+    .dashboard-header {
+        height: 40px;
+    }
+    
+    .sidebar-toggle-btn {
+        width: 20px;
+        height: 14px;
+    }
 } 

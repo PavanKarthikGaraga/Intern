@@ -5,8 +5,8 @@ export async function POST(request) {
         const cookieStore = await cookies();
         
         // Clear both tokens
-        await cookieStore.delete('accessToken');
-        await cookieStore.delete('refreshToken');
+        cookieStore.delete({ name: 'accessToken', path: '/' });
+        cookieStore.delete({ name: 'refreshToken', path: '/' });
 
         return Response.json({ 
             message: 'Logged out successfully' 

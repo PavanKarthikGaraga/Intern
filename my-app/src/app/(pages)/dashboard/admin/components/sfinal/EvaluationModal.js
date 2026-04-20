@@ -13,7 +13,7 @@ const EvaluationModal = ({ isOpen, onClose, onSubmit, student }) => {
 
   // Internal marks from dailyMarks
   // Ensure internalMarks is a number
-const internalMarks = Number(student.internalMarks) || 0;
+const internalMarks = Number(student?.internalMarks) || 0;
 
 
   useEffect(() => {

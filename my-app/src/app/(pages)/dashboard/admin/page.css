@@ -158,17 +158,105 @@
 @media (max-width: 768px) {
     .dashboard-content {
         flex-direction: column;
+        padding: 0;
     }
 
     .dashboard-sidebar {
-        width: 100%;
-        height: auto;
+        position: fixed;
+        left: -100%;
+        top: 0;
+        bottom: 0;
+        width: 280px;
+        z-index: 2000;
+        background: #1a1a1a;
+        transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        max-height: 100vh;
+        overflow-y: auto;
+        padding-top: 4rem; /* For the close button/logo space */
+        box-shadow: 10px 0 30px rgba(0,0,0,0.5);
     }
 
-    .dropdown-content {
-        position: static;
-        box-shadow: none;
+    .dashboard-sidebar.open {
+        left: 0;
     }
+
+    .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+        z-index: 1999;
+        animation: fadeIn 0.3s ease;
+    }
+
+    .sidebar-item {
+        padding: 0.8rem 1.5rem;
+        border-radius: 0;
+    }
+
+    .dashboard-main {
+        padding: 1.25rem 1rem;
+        height: auto;
+        overflow: visible;
+        margin-top: 0;
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Legacy DB Warning Banner */
+.legacy-warning-banner {
+    background: linear-gradient(90deg, #ff9800, #f44336);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    z-index: 1001;
+    animation: slideDown 0.4s ease-out;
+}
+
+.banner-switch-btn {
+    background: white;
+    color: #f44336;
+    border: none;
+    padding: 0.4rem 1rem;
+    border-radius: 4px;
+    font-weight: 800;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+    margin-left: 1rem;
+}
+
+.banner-switch-btn:hover {
+    background: #f1f5f9;
+    transform: scale(1.05);
+}
+
+.db-toggle-btn.legacy-active {
+    background: #fff3e0;
+    border-left: 4px solid #ff9800;
+}
+
+.db-toggle-btn.legacy-active .item-label {
+    color: #ff9800;
+    font-weight: 700;
+}
+
+@keyframes slideDown {
+    from { transform: translateY(-100%); }
+    to { transform: translateY(0); }
 }
 
 /* overview page */

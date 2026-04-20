@@ -2,7 +2,7 @@ import "./Navbar.css";
 import { useRouter } from "next/navigation";
 import toast  from "react-hot-toast";
 
-export default function Navbar({ title, user }) {
+export default function Navbar({ title, user, onToggleSidebar }) {
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -28,6 +28,15 @@ export default function Navbar({ title, user }) {
   return (
     <header className="dashboard-header">
       <div className="header-left">
+        <button 
+          className="sidebar-toggle-btn" 
+          onClick={onToggleSidebar}
+          aria-label="Toggle Sidebar"
+        >
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
         <h1>{title}</h1>
       </div>
       <div className="header-right">

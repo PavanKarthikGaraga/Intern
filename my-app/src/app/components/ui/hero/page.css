@@ -1,7 +1,6 @@
 /* Hero Section */
 .hero-section {
   background: white;
-  min-height: 100vh;
   position: relative;
   overflow: visible;
 }
@@ -18,8 +17,8 @@
 }
 
 .hero-slider {
-  height: 100%;
   position: relative;
+  height: 540px;
 }
 
 .hero-slide {
@@ -30,7 +29,7 @@
   height: 100%;
   opacity: 0;
   transition: opacity 0.8s ease-in-out;
-  padding: 4rem 0;
+  padding: 0;
 }
 
 .hero-slide.active {
@@ -40,11 +39,10 @@
 .hero-content {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 2rem;
+  padding: 1rem 2rem;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
   animation: fadeInUp 1s ease-out;
 }
 
@@ -57,13 +55,13 @@
 }
 
 .slide-image {
-  max-width: 100%;
-  max-height: 80vh;
-  width: auto;
-  height: auto;
+  width: 100%;
+  max-width: 900px;
+  height: 520px;
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  object-fit: contain;
+  object-fit: cover;
+  object-position: center;
 }
 
 .hero-indicators {
@@ -93,12 +91,15 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   .hero-content {
-    padding: 2rem 1rem;
-    height: 100vh;
+    padding: 1rem;
+  }
+
+  .hero-slider {
+    height: 400px;
   }
 
   .slide-image {
-    max-height: 70vh;
+    height: 380px;
   }
 }
 
@@ -107,7 +108,52 @@
     padding: 1rem;
   }
 
+  .hero-slider {
+    height: 280px;
+  }
+
   .slide-image {
-    max-height: 60vh;
+    height: 260px;
+  }
+}
+.slide-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.7);
+  color: #333;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.slide-nav-btn:hover {
+  background: white;
+  transform: translateY(-50%) scale(1.1);
+  color: rgb(151, 0, 3);
+}
+
+.prev-btn {
+  left: 20px;
+}
+
+.next-btn {
+  right: 20px;
+}
+
+@media (max-width: 768px) {
+  .slide-nav-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
   }
 }

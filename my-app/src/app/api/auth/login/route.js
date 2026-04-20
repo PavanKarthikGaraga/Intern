@@ -2,6 +2,7 @@ import pool from '../../../../lib/db';
 import { generateAuthTokens } from '../../../../lib/jwt';
 import bcrypt from 'bcryptjs';
 import { cookies } from 'next/headers';
+import { logActivity } from '../../../../lib/activityLog';
 
 export async function POST(request) {
     let db;
@@ -31,6 +32,13 @@ export async function POST(request) {
         const hashPassword = await bcrypt.compare(password, user.password);
 
         if (!hashPassword) {
+            logActivity({
+                action: 'AUTH_LOGIN_FAILED',
+                actorUsername: username,
+                actorName: user.name,
+                actorRole: user.role,
+                details: { reason: 'invalid_password' }
+            }).catch(() => {});
             return Response.json({
                 error: 'Invalid Password'
             }, { status: 400 });
@@ -50,7 +58,8 @@ export async function POST(request) {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
-            maxAge: 10 * 60 
+            maxAge: 10 * 60,
+            path: '/'
         });
 
         // Set refresh token cookie
@@ -58,8 +67,18 @@ export async function POST(request) {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
-            maxAge: 40 * 60 
+            maxAge: 40 * 60,
+            path: '/'
         });
+
+        // Log successful login
+        logActivity({
+            action: 'AUTH_LOGIN',
+            actorUsername: user.username,
+            actorName: user.name,
+            actorRole: user.role,
+            details: { role: user.role }
+        }).catch(() => {});
 
         return Response.json({
             message: "User Successfully Logged In",

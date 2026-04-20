@@ -1,31 +1,34 @@
 'use client';
-import Image from 'next/image';
+import { 
+  HeartPulse, Sprout, Droplet, Building2, Zap, 
+  Users, Waves, Trash2, Monitor, Venus,
+  Sun, Apple, ShieldAlert, Landmark, TreePine,
+  Briefcase, GraduationCap, Trophy, Lightbulb, Brain
+} from 'lucide-react';
 import './page.css';
-import { useState } from 'react';
 
 export default function DomainAreas() {
-  const [showMore, setShowMore] = useState(false);
   const domains = [
-    { name: "Health and Hygiene", image: "/image.png" },
-    { name: "Village Infrastructure", image: "/image.png" },
-    { name: "Water Conservation", image: "/image.png" },
-    { name: "Energy Utilization & Efficiency", image: "/image.png" },
-    { name: "Community Actions", image: "/image.png" },
-    { name: "Agriculture", image: "/image.png" },
-    { name: "Water and Sanitation", image: "/image.png" },
-    { name: "Waste Management", image: "/image.png" },
-    { name: "Digital Literacy & ICT", image: "/image.png" },
-    { name: "Women Empowerment & Gender Equality", image: "/image.png" },
-    { name: "Renewable Energy & Sustainability", image: "/image.png" },
-    { name: "Nutrition & Food Security", image: "/image.png" },
-    { name: "Disaster Preparedness & Resilience", image: "/image.png" },
-    { name: "Cultural Heritage & Narratives", image: "/image.png" },
-    { name: "Green Innovations & Tree Plantation", image: "/image.png" },
-    { name: "Livelihood & Entrepreneurship", image: "/image.png" },
-    { name: "Rural/Urban Education", image: "/image.png" },
-    { name: "Sports & Wellness Engagement", image: "/image.png" },
-    { name: "Skill Identification & Development", image: "/image.png" },
-    { name: "Mental Health & Well-Being", image: "/image.png" }
+    { name: "Health and Hygiene", icon: <HeartPulse className="domain-icon" size={24} /> },
+    { name: "Agriculture", icon: <Sprout className="domain-icon" size={24} /> },
+    { name: "Water Conservation", icon: <Droplet className="domain-icon" size={24} /> },
+    { name: "Village Infrastructure", icon: <Building2 className="domain-icon" size={24} /> },
+    { name: "Energy Utilization & Efficiency", icon: <Zap className="domain-icon" size={24} /> },
+    { name: "Community Actions", icon: <Users className="domain-icon" size={24} /> },
+    { name: "Water and Sanitation", icon: <Waves className="domain-icon" size={24} /> },
+    { name: "Waste Management", icon: <Trash2 className="domain-icon" size={24} /> },
+    { name: "Digital Literacy & ICT", icon: <Monitor className="domain-icon" size={24} /> },
+    { name: "Women Empowerment & Gender Equality", icon: <Venus className="domain-icon" size={24} /> },
+    { name: "Renewable Energy & Sustainability", icon: <Sun className="domain-icon" size={24} /> },
+    { name: "Nutrition & Food Security", icon: <Apple className="domain-icon" size={24} /> },
+    { name: "Disaster Preparedness & Resilience", icon: <ShieldAlert className="domain-icon" size={24} /> },
+    { name: "Cultural Heritage & Narratives", icon: <Landmark className="domain-icon" size={24} /> },
+    { name: "Green Innovations & Tree Plantation", icon: <TreePine className="domain-icon" size={24} /> },
+    { name: "Livelihood & Entrepreneurship", icon: <Briefcase className="domain-icon" size={24} /> },
+    { name: "Rural/Urban Education", icon: <GraduationCap className="domain-icon" size={24} /> },
+    { name: "Sports & Wellness Engagement", icon: <Trophy className="domain-icon" size={24} /> },
+    { name: "Skill Identification & Development", icon: <Lightbulb className="domain-icon" size={24} /> },
+    { name: "Mental Health & Well-Being", icon: <Brain className="domain-icon" size={24} /> }
   ];
   
 
@@ -33,29 +36,20 @@ export default function DomainAreas() {
     <section className="domain-areas">
       <div className="container">
         <div className="section-header">
-          <h2>Ares of Work</h2>
+          <h2>Areas of Work</h2>
           <p>Specialized areas where our graduates create lasting change</p>
         </div>
 
         <div className="domains-grid">
-          {domains.slice(0, showMore ? domains.length : 10).map((domain, index) => (
-            <div key={index} className="domain-card">
-              <div className="domain-image">
-                <Image
-                  src={domain.image}
-                  alt={domain.name}
-                  width={300}
-                  height={300}
-                  className="domain-img"
-                />
+          {domains.map((domain, index) => (
+            <div key={index} className="domain-card horizontal-card">
+              <div className="domain-icon-wrapper">
+                {domain.icon}
               </div>
               <h3>{domain.name}</h3>
             </div>
           ))}
         </div>
-          <div className='showmore-container'>
-            <button className='showmore' onClick={() => setShowMore(!showMore)}>{showMore ? "Show Less" : "Show More"}</button>
-          </div>
       </div>
     </section>
   );

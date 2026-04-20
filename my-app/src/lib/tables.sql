@@ -1,7 +1,7 @@
 -- Create the database
-CREATE DATABASE IF NOT EXISTS `Social`;
+CREATE DATABASE IF NOT EXISTS `Social_2026`;
 
-USE `Social`;
+USE `Social_2026`;
 
 -- Create users table first
 CREATE TABLE users (
@@ -81,8 +81,12 @@ CREATE TABLE registrations (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(10) NOT NULL UNIQUE,
     selectedDomain VARCHAR(255) NOT NULL,
+    fieldOfInterest VARCHAR(100) DEFAULT NULL,
+    careerChoice VARCHAR(100) DEFAULT NULL,
+    batch VARCHAR(10) DEFAULT NULL,
     mode ENUM('Remote', 'Incampus', 'InVillage') NOT NULL,
     slot INT NOT NULL,
+    season VARCHAR(10) DEFAULT '2026',
     studentLeadId VARCHAR(10),
     facultyMentorId VARCHAR(10),
     pass ENUM('P','F') DEFAULT NULL,
@@ -398,4 +402,20 @@ CREATE TABLE sdailyMarks (
     day7 DECIMAL(4,2) DEFAULT 0,
     internalMarks DECIMAL(4,2) DEFAULT 0,
     FOREIGN KEY (username) REFERENCES sstudents(username)
+);
+
+-- Create activity logs table for audit trail
+CREATE TABLE activityLogs (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    action VARCHAR(100) NOT NULL,
+    actorUsername VARCHAR(10) DEFAULT NULL,
+    actorName VARCHAR(100) DEFAULT NULL,
+    actorRole ENUM('student', 'studentLead', 'facultyMentor', 'admin') DEFAULT NULL,
+    targetUsername VARCHAR(10) DEFAULT NULL,
+    details TEXT DEFAULT NULL,
+    ipAddress VARCHAR(45) DEFAULT NULL,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_action (action),
+    INDEX idx_actorUsername (actorUsername),
+    INDEX idx_createdAt (createdAt)
 );

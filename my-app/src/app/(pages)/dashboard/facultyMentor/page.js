@@ -1,9 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import toast from 'react-hot-toast';
 import './page.css';
-// import Loader from '@/components/loader/loader';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Overview from './components/overview/page';
@@ -13,27 +11,17 @@ import Students from './components/students/page';
 import Leads from './components/leads/page';
 import CompletedStudents from './components/completedStudents/page';
 import FinalReports from './components/finalReports/page';
-import { FaCheckCircle, FaCalendarAlt, FaClock } from 'react-icons/fa';
 
 export default function FacultyMentorDashboard() {
-  const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const { user, isLoading, isAuthenticated } = useAuth();
   const [activeSection, setActiveSection] = useState('overview');
 
-  // console.log('FacultyMentorDashboard mounted with user:', user);
-
-  if (!user) {
-    console.log('No user found, showing loader');
-    // return <Loader />;
+  if (isLoading) {
+    return <div className="loading">Loading...</div>;
   }
 
-  if (loading) {
-    // return <Loader />;
-  }
-
-  if (error) {
-    return <div className="error">{error}</div>;
+  if (!isAuthenticated || !user) {
+    return null;
   }
 
   const handleSectionClick = (section) => {

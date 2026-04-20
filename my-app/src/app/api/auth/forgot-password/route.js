@@ -23,10 +23,10 @@ export async function POST(request) {
         );
 
         if (!users || users.length === 0) {
-            // Return success even if email doesn't exist for security
+            // Return same message for security - don't reveal email existence
             return Response.json({
                 success: true,
-                message: "No Account found."
+                message: "If an account exists with this email, a reset link has been sent."
             });
         }
 
@@ -47,7 +47,7 @@ export async function POST(request) {
 
         return Response.json({
             success: true,
-            message: "Mail sent"
+            message: "If an account exists with this email, a reset link has been sent."
         });
 
     } catch (error) {

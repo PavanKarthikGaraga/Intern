@@ -9,7 +9,7 @@
 .cta-section {
   background: white;
   color: rgb(151, 0, 3);
-  padding: 5rem 0;
+  padding: var(--section-padding) 0;
   text-align: center;
   position: relative;
 }
@@ -164,12 +164,28 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   .container {
-    padding: 0 1rem;
+    padding: 0 1.25rem;
+  }
+
+  .cta-content h2 {
+    font-size: 2.2rem;
+  }
+
+  .cta-content p {
+    font-size: 1.1rem;
+    padding: 0 0.5rem;
   }
 
   .cta-buttons {
     flex-direction: column;
-    align-items: center;
+    align-items: stretch;
+    padding: 0 1.5rem;
+    gap: 1rem;
+  }
+
+  .cta-primary, .cta-secondary {
+    width: 100%;
+    padding: 1rem 2rem;
   }
 
   .linkedin-posts,
@@ -185,27 +201,28 @@
   }
 
   .social-embeds h3 {
-    font-size: 1.5rem;
+    font-size: 1.6rem;
+    margin-bottom: 1.5rem;
   }
 }
 
 @media (max-width: 480px) {
+  .cta-content h2 {
+    font-size: 1.8rem;
+  }
+
   .linkedin-posts,
   .youtube-videos {
     grid-template-columns: 1fr;
-    gap: 1rem;
+    gap: 1.25rem;
   }
 
   .linkedin-posts iframe {
-    width: 100%;
-    max-width: 100%;
-    height: 350px;
+    height: 380px;
   }
 
   .youtube-videos iframe {
-    width: 100%;
-    max-width: 100%;
-    height: 250px;
+    height: 220px;
   }
 }
 

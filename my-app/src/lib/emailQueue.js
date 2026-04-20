@@ -4,6 +4,22 @@ class EmailQueue {
   constructor() {
     this.queue = [];
     this.isProcessing = false;
+    this.transporter = null;
+  }
+
+  getTransporter() {
+    if (!this.transporter) {
+      this.transporter = nodemailer.createTransport({
+        host: 'smtp.office365.com',
+        port: 587,
+        secure: false,
+        auth: {
+          user: process.env.USER_EMAIL,
+          pass: process.env.USER_PASSWORD,
+        },
+      });
+    }
+    return this.transporter;
   }
 
   async add(job) {
@@ -24,7 +40,6 @@ class EmailQueue {
 
     try {
       await this.sendEmail(job);
-      console.log(`Email sent to ${job.email}`);
     } catch (error) {
       console.error(`Error sending email to ${job.email}:`, error);
       // Retry logic
@@ -39,15 +54,7 @@ class EmailQueue {
   }
 
   async sendEmail(job) {
-    const transporter = nodemailer.createTransport({
-      host: 'smtp.office365.com',
-      port: 587,
-      secure: false,
-      auth: {
-        user: process.env.USER_EMAIL,
-        pass: process.env.USER_PASSWORD,
-      },
-    });
+    const transporter = this.getTransporter();
 
     const mailOptions = {
       from: process.env.USER_EMAIL,
@@ -57,11 +64,7 @@ class EmailQueue {
       attachments: job.attachments || []
     };
 
-    console.log("sending mail to ", job.email);
-
     await transporter.sendMail(mailOptions);
-
-    console.log("mail sent to ", job.email);
   }
 }
 

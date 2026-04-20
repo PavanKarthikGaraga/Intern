@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { verifyAccessToken } from "@/lib/jwt";
 import { cookies } from 'next/headers';
+import { logActivity } from '@/lib/activityLog';
 
 // GET endpoint to fetch current report submission status
 export async function GET(req) {
@@ -65,6 +66,14 @@ export async function PUT(req) {
             "UPDATE reportOpen SET slot1 = ?, slot2 = ?, slot3 = ?, slot4 = ? WHERE id = 1",
             [slot1, slot2, slot3, slot4]
         );
+
+        logActivity({
+            action: 'ADMIN_REPORT_CONTROL',
+            actorUsername: decoded.username,
+            actorName: decoded.name,
+            actorRole: 'admin',
+            details: { slot1, slot2, slot3, slot4 }
+        }).catch(() => {});
 
         return NextResponse.json({ 
             success: true,

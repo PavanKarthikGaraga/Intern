@@ -25,11 +25,9 @@ export const AuthProvider = ({ children }) => {
     // Allow homepage access without auth check
     if (currentPath === '/' || publicRoutes.some(route => currentPath.startsWith(route))) {
       setIsLoading(false);
-      authCheckedRef.current = true;
       return;
     }
 
-    console.log('[AuthContext] checkInitialAuth called');
     setIsLoading(true);
 
     try {
@@ -41,7 +39,6 @@ export const AuthProvider = ({ children }) => {
       });
 
       const data = await res.json();
-      console.log('[AuthContext] checkData', data);
 
       if (res.status === 401 || !data.user) {
         setUser(null);
@@ -57,7 +54,6 @@ export const AuthProvider = ({ children }) => {
 
       authCheckedRef.current = true;
     } catch (error) {
-      console.log('[AuthContext] Auth check failed:', error);
       setUser(null);
       setIsAuthenticated(false);
       // Only redirect to login if we're on a protected route
@@ -74,8 +70,6 @@ export const AuthProvider = ({ children }) => {
   const refreshToken = async () => {
     if (!mountedRef.current || !isAuthenticated) return;
 
-    console.log('[AuthContext] Refreshing token...');
-
     try {
       const res = await fetch('/api/auth/refresh', {
         method: 'POST',
@@ -86,16 +80,13 @@ export const AuthProvider = ({ children }) => {
       if (!res.ok) throw new Error('Token refresh failed');
 
       const data = await res.json();
-      console.log('[AuthContext] refreshToken data', data);
 
       if (data.user) {
-        setUser(data.user); // Optional: update user if new data returned
-        console.log('[AuthContext] Token refreshed successfully');
+        setUser(data.user);
       } else {
         throw new Error('No user returned');
       }
     } catch (error) {
-      console.log('[AuthContext] Token refresh error:', error);
       toast.error('Session expired. Please login again.');
       setIsAuthenticated(false);
       setUser(null);
@@ -104,21 +95,10 @@ export const AuthProvider = ({ children }) => {
   };
 
   const startTokenRefreshInterval = () => {
-    console.log('[AuthContext] Starting refresh interval');
     if (intervalIdRef.current) clearInterval(intervalIdRef.current);
 
-    let refreshCount = 0;
-
     intervalIdRef.current = setInterval(async () => {
-      if (refreshCount >= 3) {
-        console.log('[AuthContext] Max refresh count reached. Clearing interval.');
-        clearInterval(intervalIdRef.current);
-        return;
-      }
-
       await refreshToken();
-      refreshCount++;
-      console.log(`[AuthContext] Token refreshed. Count: ${refreshCount}`);
     }, 9 * 60 * 1000); // 9 minutes
   };
 
@@ -128,7 +108,6 @@ export const AuthProvider = ({ children }) => {
     checkInitialAuth();
 
     return () => {
-      console.log('[AuthContext] Cleanup on unmount');
       mountedRef.current = false;
       if (intervalIdRef.current) clearInterval(intervalIdRef.current);
     };
@@ -137,7 +116,6 @@ export const AuthProvider = ({ children }) => {
   // Start refresh interval when authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      console.log('[AuthContext] Authenticated: setting interval');
       startTokenRefreshInterval();
     }
   }, [isAuthenticated]);

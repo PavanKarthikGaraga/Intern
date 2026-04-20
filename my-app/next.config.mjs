@@ -1,15 +1,28 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     images: {
-        domains: ['socialinternship.kluniversity.in'],
+        remotePatterns: [
+            {
+                protocol: 'https',
+                hostname: 'socialinternship.kluniversity.in',
+            },
+            {
+                protocol: 'https',
+                hostname: 'i.imghippo.com',
+            },
+            {
+                protocol: 'https',
+                hostname: 'www.imghippo.com',
+            },
+            {
+                protocol: 'https',
+                hostname: 'loremflickr.com',
+            },
+        ],
     },
     allowedDevOrigins: [
         'socialinternship.kluniversity.in',
-        'https://socialinternship.kluniversity.in',
         '192.168.2.49',
-        'http://192.168.2.49',
-        'http://192.168.2.49:3000',
-        'http://192.168.2.49:3002'
     ],
     async headers() {
         return [
@@ -18,7 +31,9 @@ const nextConfig = {
                 headers: [
                     {
                         key: 'Access-Control-Allow-Origin',
-                        value: '*',  // Allow all origins in development
+                        value: process.env.NODE_ENV === 'production' 
+                            ? 'https://socialinternship.kluniversity.in' 
+                            : '*',
                     },
                     {
                         key: 'Access-Control-Allow-Methods',

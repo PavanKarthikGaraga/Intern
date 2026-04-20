@@ -12,7 +12,7 @@ export async function GET(req, { params }) {
             return NextResponse.json({ 
                 success: false, 
                 error: 'Authentication required. Please login again.' 
-            }, { status: 402 });
+            }, { status: 401 });
         }
 
         const decoded = await verifyAccessToken(accessToken.value);

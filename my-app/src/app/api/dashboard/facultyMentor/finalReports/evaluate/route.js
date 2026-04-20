@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { verifyAccessToken } from '@/lib/jwt';
 import pool from '@/lib/db';
 import { cookies } from 'next/headers';
+import { logActivity } from '@/lib/activityLog';
 
 export async function POST(request) {
   try {
@@ -130,6 +131,14 @@ export async function POST(request) {
           [username]
         );
         
+        logActivity({
+          action: 'MENTOR_EVALUATE_REPORT',
+          actorUsername: decoded.username,
+          actorName: decoded.name,
+          actorRole: 'facultyMentor',
+          targetUsername: username,
+          details: { finalReportMarks, finalPresentationMarks, totalMarks, grade }
+        }).catch(() => {});
 
         return NextResponse.json({
           success: true,
@@ -148,6 +157,15 @@ export async function POST(request) {
           "UPDATE registrations SET pass = 'P' WHERE username = ?",
           [username]
         );
+
+        logActivity({
+          action: 'MENTOR_EVALUATE_REPORT',
+          actorUsername: decoded.username,
+          actorName: decoded.name,
+          actorRole: 'facultyMentor',
+          targetUsername: username,
+          details: { action: 'accepted_marks' }
+        }).catch(() => {});
         
         return NextResponse.json({
           success: true,

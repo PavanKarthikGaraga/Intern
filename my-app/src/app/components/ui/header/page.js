@@ -1,11 +1,13 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import './page.css';
 
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -52,12 +54,11 @@ export default function Header() {
   const navItems = [
     { name: 'Home', id: 'hero' },
     { name: 'Impact Stats', id: 'impact-stats' },
-    // { name: 'Program Overview', id: 'program-overview' },
     { name: 'Domains', id: 'domain-areas' },
     { name: 'Achievements', id: 'program-structure' },
-    { name: 'Participation', id: 'participation-modes' },
     { name: 'Timeline', id: 'timeline' },
-    { name: 'Contact', id: 'cta-section' }
+    { name: 'Login', url: '/auth/login', isLoginButton: true },
+    { name: 'Register', url: '/register', isButton: true }
   ];
 
   return (
@@ -69,17 +70,21 @@ export default function Header() {
             alt="KLU Logo"
             className="logo-image"
           />
-        </div>
-        <div className="logo-section">
           <h4>Social Internship</h4>
         </div>
 
-        <nav className={`nav-links ${isMenuOpen ? 'open' : ''} visible`} data-visible="true">
-          {navItems.map((item) => (
+        <nav className={`nav-links ${isMenuOpen ? 'open' : ''}`}>
+          {navItems.map((item, index) => (
             <button
-              key={item.id}
-              className="nav-link"
-              onClick={() => scrollToSection(item.id)}
+              key={item.id || index}
+              className={`nav-link ${item.isButton ? 'register-btn' : ''} ${item.isLoginButton ? 'login-btn' : ''}`}
+              onClick={() => {
+                if (item.url) {
+                  window.location.href = item.url;
+                } else {
+                  scrollToSection(item.id);
+                }
+              }}
             >
               {item.name}
             </button>
@@ -87,7 +92,7 @@ export default function Header() {
         </nav>
 
         <button
-          className={`mobile-menu-toggle ${isScrolled ? 'visible' : ''}`}
+          className="mobile-menu-toggle"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
           aria-label="Toggle menu"
         >

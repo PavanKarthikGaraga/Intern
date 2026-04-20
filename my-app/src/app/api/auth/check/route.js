@@ -14,7 +14,7 @@ export async function GET() {
             const decoded = await verifyAccessToken(accessToken.value);
             if (!decoded) {
                 // Delete invalid token
-                cookieStore.set("accessToken", "", { maxAge: 0 });
+                cookieStore.set("accessToken", "", { maxAge: 0, path: "/" });
                 return Response.json({ error: "Invalid token" }, { status: 401 });
             }
 
@@ -30,7 +30,7 @@ export async function GET() {
             );
         } catch (tokenError) {
             if (tokenError.name === "TokenExpiredError") {
-                cookieStore.set("accessToken", "", { maxAge: 0 });
+                cookieStore.set("accessToken", "", { maxAge: 0, path: "/" });
                 return Response.json(
                     {
                         error: "Token expired",
@@ -41,7 +41,7 @@ export async function GET() {
             }
 
             if (tokenError.name === "JsonWebTokenError") {
-                cookieStore.set("accessToken", "", { maxAge: 0 });
+                cookieStore.set("accessToken", "", { maxAge: 0, path: "/" });
                 return Response.json(
                     {
                         error: "Invalid token",

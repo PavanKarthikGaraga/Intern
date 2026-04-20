@@ -1,9 +1,8 @@
 'use client';
 import { useState, useEffect } from 'react';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import axios from "axios";
-import './page.css';
 
 import { DOMAINS } from '../../Data/domains';
 import { RULES, UNDERTAKING_POINTS } from '../../Data/rules';
@@ -20,45 +19,13 @@ const uniqueCountryCodes = countryCodes
   )
   .sort((a, b) => a.name.localeCompare(b.name));
 
-const PhoneInput = ({ value, onChange, countryCode }) => {
-  const getCountryCode = (code) => {
-    const country = countryCodes.find(c => c.code === code);
-    return country ? country.dial_code : '+91';
-  };
-
-  return (
-    <div className="phone-input-group">
-      <select
-        value={countryCode}
-        onChange={(e) => onChange(e.target.value)}
-        className="country-code-select"
-      >
-        {uniqueCountryCodes.map(country => (
-          <option key={country.code} value={country.code}>
-            {country.code} ({country.dial_code})
-          </option>
-        ))}
-      </select>
-      <input
-        type="tel"
-        placeholder="Phone Number"
-        // value={formData.studentInfo.phoneNumber}
-        onChange={(e) => {
-          const onlyNums = e.target.value.replace(/[^\d]/g, '');
-          onChange(onlyNums);
-        }}
-        maxLength={10}
-      />
-    </div>
-  );
-};
-
-
-
 export default function Register() {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     selectedDomain: '',
+    fieldOfInterest: '',
+    careerChoice: '',
+    batch: '',
     agreedToRules: false,
     mode: '',
     slot: '',
@@ -83,10 +50,20 @@ export default function Register() {
   });
 
   const SLOT_DATES = {
-    1: "11th May - 17th May",
-    2: "18th May - 24th May",
-    3: "25th May - 31st May",
-    4: "1st June - 7th June"
+    1: "May 11 – May 17",
+    2: "May 18 – May 24",
+    3: "May 25 – May 31",
+    4: "Jun 1 – Jun 7",
+    5: "Jun 8 – Jun 14",
+    6: "Jun 15 – Jun 21",
+    7: "Jun 22 – Jun 28",
+    8: "Jun 29 – Jul 5",
+    9: "Jul 6 – Jul 12"
+  };
+
+  const SLOT_BATCH = {
+    1: 'Y-25', 2: 'Y-25', 3: 'Y-25', 4: 'Y-25', 5: 'Y-25', 6: 'Y-25',
+    7: 'Y-24', 8: 'Y-24', 9: 'Y-24'
   };
 
   const [selectedDomainInfo, setSelectedDomainInfo] = useState('');
@@ -246,7 +223,7 @@ export default function Register() {
         toast.success('Student information saved successfully!');
         setCurrentStep(prev => prev + 1);
         break;
-      }th
+      }
       
       case 6: {
         // Residence validation
@@ -385,25 +362,7 @@ export default function Register() {
                               formData.mode === 'Incampus' ? `slot${formData.slot}Incamp` : 
                               `slot${formData.slot}Invillage`;
           
-          // Check total slot capacity (1200)
-          if (currentStats[slotField] >= 1200) {
-            setAvailabilityMessage('Not Available - Slot is full');
-            setIsAvailable(false);
-            return;
-          }
-
-          // Check mode-specific capacity
-          const maxCapacity = {
-            Remote: 1000,
-            Incampus: 150,
-            InVillage: 50
-          }[formData.mode] || 0;
-
-          if (currentStats[slotModeField] >= maxCapacity) {
-            setAvailabilityMessage(`Not Available - ${formData.mode} mode is full`);
-            setIsAvailable(false);
-            return;
-          }
+          // Capacity limits removed
 
           // If both checks pass, show available message
           setAvailabilityMessage('Available');
@@ -429,21 +388,7 @@ export default function Register() {
     const slotField = `slot${slot}`;
     const slotModeField = `slot${slot}${mode}`;
     
-    // Check total slot capacity (1200)
-    if (stats[slotField] >= 1200) {
-      return 'Not Available';
-    }
-
-    // Check mode-specific capacity
-    const maxCapacity = {
-      Remote: 1000,
-      Incampus: 150,
-      InVillage: 50
-    }[mode] || 0;
-
-    if (stats[slotModeField] >= maxCapacity) {
-      return 'Not Available';
-    }
+    // Capacity limits removed
 
     return 'Available';
   };
@@ -460,19 +405,27 @@ export default function Register() {
             {/* <h2>Social Internship Details</h2> */}
             <div className="program-content">
               <div className="program-header">
-                <h3>Social Internship Program </h3>
+                <h3>Social Internship Program — 2026</h3>
                 <div className="program-highlights">
                   <div className="highlight-item">
                     <span className="highlight-label">Duration</span>
-                    <span className="highlight-value">7 Days</span>
+                    <span className="highlight-value">7 Days / Slot</span>
                   </div>
                   <div className="highlight-item">
-                    <span className="highlight-label">Credits</span>
-                    <span className="highlight-value">1</span>
+                    <span className="highlight-label">Min Hours</span>
+                    <span className="highlight-value">80 hrs</span>
+                  </div>
+                  <div className="highlight-item">
+                    <span className="highlight-label">Max Hours</span>
+                    <span className="highlight-value">120 hrs</span>
                   </div>
                   <div className="highlight-item">
                     <span className="highlight-label">Start Date</span>
-                    <span className="highlight-value">May 11, 2025</span>
+                    <span className="highlight-value">May 11, 2026</span>
+                  </div>
+                  <div className="highlight-item">
+                    <span className="highlight-label">End Date</span>
+                    <span className="highlight-value">Jul 11, 2026</span>
                   </div>
                 </div>
               </div>
@@ -480,40 +433,65 @@ export default function Register() {
               <div className="program-sections">
                 <div className="program-section">
                   <h4>Program Overview</h4>
-                  <p>The Social Internship Program is a transformative initiative aimed at providing students with real-world exposure to community service. The program is structured across four internship slots, accommodating a total of 1200 students per slot — comprising 900 remote and 300 in-campus students.</p>
+                  <p>The Social Internship (Smart Village Revolution) is a mandatory part of the Summer Academic Curriculum for Y-25 students (Vijayawada &amp; Hyderabad Off-Campus). Students must complete <strong>80–120 hours</strong> within their selected 7-day slot.</p>
                 </div>
                 <div className="slots-table">
                   <table>
                     <thead>
                       <tr>
                         <th>Slot</th>
-                        <th>Duration</th>
-                        <th>Status</th>
-                        <th>Remote(Home town)</th>
-                        <th>In-Campus(Campus to adopted Villages)</th>
-                        <th>In-Village(Only KLU Adopted Villages)</th>
+                        <th>Batch</th>
+                        <th>Dates</th>
+                        <th>Remote (Home Town)</th>
+                        <th>In-Campus (Campus → Villages)</th>
+                        <th>In-Village (KLU Adopted Villages)</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {[1, 2, 3, 4].map((slot) => (
+                      {/* Y-25 Slots */}
+                      <tr><td colSpan={6} style={{background:'linear-gradient(135deg, #014a01 0%, #006400 50%, #008a00 100%)',color:'#fff',fontWeight:700,textAlign:'center',padding:'10px 16px',fontSize:'0.92rem',letterSpacing:'0.06em',textShadow:'0 1px 4px rgba(0,0,0,0.3)',borderRadius:'4px 4px 0 0'}}>Y-25 Batch — Vijayawada &amp; Hyderabad Off-Campus</td></tr>
+                      {[1, 2, 3, 4, 5, 6].map((slot) => (
                         <tr 
                           key={slot}
                           className={formData.slot === slot.toString() ? 'selected-row' : ''}
                           onClick={() => handleSlotChange(slot)}
+                          style={{cursor:'pointer'}}
                         >
                           <td>Slot {slot}</td>
+                          <td><span className="batch-tag y25">Y-25</span></td>
                           <td>{SLOT_DATES[slot]}</td>
                           <td data-status={checkSlotAvailability(slot, 'Remote').toLowerCase().replace(' ', '-')}>
-                            {checkSlotAvailability(slot, 'Remote')}
-                          </td>
-                          <td data-status={checkSlotAvailability(slot, 'Remote').toLowerCase().replace(' ', '-')}>
-                            {stats ? stats[`slot${slot}Remote`] || 0 : 'Loading...'} / 1000
+                            {stats ? stats[`slot${slot}Remote`] || 0 : 0} Registered
                           </td>
                           <td data-status={checkSlotAvailability(slot, 'Incampus').toLowerCase().replace(' ', '-')}>
-                            {stats ? stats[`slot${slot}Incamp`] || 0 : 'Loading...'} / 150
+                            {stats ? stats[`slot${slot}Incamp`] || 0 : 0} Registered
                           </td>
                           <td data-status={checkSlotAvailability(slot, 'InVillage').toLowerCase().replace(' ', '-')}>
-                            {stats ? stats[`slot${slot}Invillage`] || 0 : 'Loading...'} / 50
+                            {stats ? stats[`slot${slot}Invillage`] || 0 : 0} Registered
+                          </td>
+                        </tr>
+                      ))}
+                      
+                      {/* Y-24 Slots */}
+                      <tr><td colSpan={6} style={{background:'linear-gradient(135deg, #7a0002 0%, #970003 50%, #c00004 100%)',color:'#fff',fontWeight:700,textAlign:'center',padding:'10px 16px',fontSize:'0.92rem',letterSpacing:'0.06em',textShadow:'0 1px 4px rgba(0,0,0,0.3)'}}>Y-24 Batch (Detained) / Supply Students</td></tr>
+                      {[7, 8, 9].map((slot) => (
+                        <tr 
+                          key={slot}
+                          className={formData.slot === slot.toString() ? 'selected-row' : ''}
+                          onClick={() => handleSlotChange(slot)}
+                          style={{cursor:'pointer'}}
+                        >
+                          <td>Slot {slot}</td>
+                          <td><span className="batch-tag y24">Y-24</span></td>
+                          <td>{SLOT_DATES[slot]}</td>
+                          <td data-status={checkSlotAvailability(slot, 'Remote').toLowerCase().replace(' ', '-')}>
+                            {stats ? stats[`slot${slot}Remote`] || 0 : 0} Registered
+                          </td>
+                          <td data-status={checkSlotAvailability(slot, 'Incampus').toLowerCase().replace(' ', '-')}>
+                            {stats ? stats[`slot${slot}Incamp`] || 0 : 0} Registered
+                          </td>
+                          <td data-status={checkSlotAvailability(slot, 'InVillage').toLowerCase().replace(' ', '-')}>
+                            {stats ? stats[`slot${slot}Invillage`] || 0 : 0} Registered
                           </td>
                         </tr>
                       ))}
@@ -596,13 +574,27 @@ export default function Register() {
       case 4:
         return (
           <section className="section">
-            <div className="selection-row">
-              <div className="internship-mode-container">
-                <h2>Select Internship Mode</h2>
+            <div className="form-grid">
+              <div className="input-row">
+                <label>Select Your Batch *</label>
+                <select
+                  value={formData.batch}
+                  onChange={(e) => {
+                    // Reset slot when batch changes
+                    setFormData(prev => ({...prev, batch: e.target.value, slot: ''}));
+                  }}
+                >
+                  <option value="">Select Batch</option>
+                  <option value="Y-25">Y-25 (Vijayawada &amp; Hyderabad Off-Campus)</option>
+                  <option value="Y-24">Y-24 (Detained) / Supply</option>
+                </select>
+              </div>
+
+              <div className="input-row">
+                <label>Select Internship Mode *</label>
                 <select
                   value={formData.mode}
                   onChange={(e) => setFormData(prev => ({...prev, mode: e.target.value}))}
-                  className="internship-mode-select"
                 >
                   <option value="">Select Mode</option>
                   <option value="Remote">Remote</option>
@@ -611,55 +603,120 @@ export default function Register() {
                 </select>
               </div>   
 
-              <div className="slot-container">
-                <h2>Select Your Slot</h2>
+              <div className="input-row">
+                <label>Select Your Slot *</label>
                 <select
                   value={formData.slot}
                   onChange={(e) => setFormData(prev => ({...prev, slot: e.target.value}))}
-                  className="slot-select"
+                  disabled={!formData.batch}
                 >
-                  <option value="">Select Slot</option>
-                  <option value="1">Slot 1</option>
-                  <option value="2">Slot 2</option>
-                  <option value="3">Slot 3</option>
-                  <option value="4">Slot 4</option>
+                  <option value="">{formData.batch ? 'Select Slot' : 'Select Batch first'}</option>
+                  {formData.batch === 'Y-25' && (
+                    <>
+                      <option value="1">Slot 1 — May 11–17</option>
+                      <option value="2">Slot 2 — May 18–24</option>
+                      <option value="3">Slot 3 — May 25–31</option>
+                      <option value="4">Slot 4 — Jun 1–7</option>
+                      <option value="5">Slot 5 — Jun 8–14</option>
+                      <option value="6">Slot 6 — Jun 15–21</option>
+                    </>
+                  )}
+                  {formData.batch === 'Y-24' && (
+                    <>
+                      <option value="7">Slot 7 — Jun 22–28</option>
+                      <option value="8">Slot 8 — Jun 29–Jul 5</option>
+                      <option value="9">Slot 9 — Jul 6–12</option>
+                    </>
+                  )}
                 </select>
-                {availabilityMessage && (
-                  <div className={`availability-message ${isAvailable ? 'available' : 'not-available'}`}>
-                    {availabilityMessage}
-                  </div>
-                )}
+              </div>
+
+              <div className="input-row">
+                <label>Select Your Domain *</label>
+                <select
+                  value={formData.selectedDomain}
+                  onChange={(e) => {
+                    const selectedDomain = DOMAINS.find(d => d.name === e.target.value);
+                    setSelectedDomainInfo(selectedDomain ? selectedDomain.description : '');
+                    setFormData(prev => ({...prev, selectedDomain: e.target.value}));
+                  }}
+                >
+                  <option value="">Select Domain</option>
+                  {DOMAINS.map(domain => (
+                    <option key={domain.id} value={domain.name}>{domain.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="input-row">
+                <label>Field of Interest *</label>
+                <select
+                  value={formData.fieldOfInterest}
+                  onChange={(e) => setFormData(prev => ({...prev, fieldOfInterest: e.target.value}))}
+                >
+                  <option value="">Select Field of Interest</option>
+                  <option>Awareness Campaigns</option>
+                  <option>Content Creation (YouTube / Reels)</option>
+                  <option>Cover Song Production</option>
+                  <option>Dance</option>
+                  <option>Documentary Making</option>
+                  <option>Dramatics</option>
+                  <option>Environmental Activities</option>
+                  <option>Leadership Activities</option>
+                  <option>Literature</option>
+                  <option>Painting</option>
+                  <option>Photography</option>
+                  <option>Public Speaking</option>
+                  <option>Rural Development</option>
+                  <option>Short Film Making</option>
+                  <option>Singing</option>
+                  <option>Social Service / Volunteering</option>
+                  <option>Spirituality</option>
+                  <option>Story Telling</option>
+                  <option>Technical (Hardware)</option>
+                  <option>Technical (Software)</option>
+                  <option>Video Editing</option>
+                  <option>Yoga &amp; Meditation</option>
+                </select>
+              </div>
+
+              <div className="input-row">
+                <label>Career Choice *</label>
+                <select
+                  value={formData.careerChoice}
+                  onChange={(e) => setFormData(prev => ({...prev, careerChoice: e.target.value}))}
+                >
+                  <option value="">Select Career Choice</option>
+                  <option>Placement</option>
+                  <option>Entrepreneurship</option>
+                  <option>Higher Education</option>
+                  <option>Social Service</option>
+                  <option>Research &amp; Development</option>
+                  <option>Others</option>
+                </select>
               </div>
             </div>
 
-            <div className="domain-container">
-              <h2>Select Your Domain</h2>
-              <select
-                value={formData.selectedDomain}
-                onChange={(e) => {
-                  const selectedDomain = DOMAINS.find(d => d.name === e.target.value);
-                  setSelectedDomainInfo(selectedDomain ? selectedDomain.description : '');
-                  setFormData(prev => ({...prev, selectedDomain: e.target.value}));
-                }}
-                className="domain-select"
-              >
-                <option value="">Select Domain</option>
-                {DOMAINS.map(domain => (
-                  <option key={domain.id} value={domain.name}>{domain.name}</option>
-                ))}
-              </select>
-            </div>
-            <div className="domain-details">
+            <div className="domain-details" style={{ marginTop: '2rem' }}>
               {selectedDomainInfo ? (
                 <>
                   <h3>About this Domain</h3>
                   <p className="domain-description">{selectedDomainInfo}</p>
-                  <h4>Key Activities:</h4>
-                  <ul className="domain-activities">
-                    {DOMAINS.find(d => d.name === formData.selectedDomain)?.details.map((detail, index) => (
-                      <li key={index}>{detail}</li>
-                    ))}
-                  </ul>
+
+                  <div className="execution-framework" style={{ marginTop: '1.5rem', background: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                    <h4 style={{ color: 'var(--primary-color)', marginBottom: '0.75rem', fontWeight: '700', fontSize: '1rem', textTransform: 'uppercase' }}>7-Day Execution Framework</h4>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+                      <tbody>
+                        <tr style={{ borderBottom: '1px solid #e2e8f0' }}><td style={{ padding: '0.5rem 0', fontWeight: '700', color: '#333', width: '70px' }}>Day 1</td><td style={{ padding: '0.5rem 0', color: '#444' }}>Village entry, rapport building, basic survey</td></tr>
+                        <tr style={{ borderBottom: '1px solid #e2e8f0' }}><td style={{ padding: '0.5rem 0', fontWeight: '700', color: '#333' }}>Day 2</td><td style={{ padding: '0.5rem 0', color: '#444' }}>Problem identification &amp; team allocation</td></tr>
+                        <tr style={{ borderBottom: '1px solid #e2e8f0' }}><td style={{ padding: '0.5rem 0', fontWeight: '700', color: '#333' }}>Day 3</td><td style={{ padding: '0.5rem 0', color: '#444' }}>Planning &amp; solution design</td></tr>
+                        <tr style={{ borderBottom: '1px solid #e2e8f0' }}><td style={{ padding: '0.5rem 0', fontWeight: '700', color: '#333' }}>Day 4</td><td style={{ padding: '0.5rem 0', color: '#444' }}>Execution Phase 1</td></tr>
+                        <tr style={{ borderBottom: '1px solid #e2e8f0' }}><td style={{ padding: '0.5rem 0', fontWeight: '700', color: '#333' }}>Day 5</td><td style={{ padding: '0.5rem 0', color: '#444' }}>Execution Phase 2</td></tr>
+                        <tr style={{ borderBottom: '1px solid #e2e8f0' }}><td style={{ padding: '0.5rem 0', fontWeight: '700', color: '#333' }}>Day 6</td><td style={{ padding: '0.5rem 0', color: '#444' }}>Impact measurement &amp; refinement</td></tr>
+                        <tr><td style={{ padding: '0.5rem 0', fontWeight: '700', color: '#333' }}>Day 7</td><td style={{ padding: '0.5rem 0', color: '#444' }}>Final presentation &amp; exit strategy</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </>
               ) : (
                 <div className="select-prompt">
@@ -672,7 +729,7 @@ export default function Register() {
               <button 
                 className="next-button" 
                 onClick={handleNext}
-                disabled={!formData.selectedDomain || !formData.mode || !formData.slot}
+                disabled={!formData.batch || !formData.selectedDomain || !formData.fieldOfInterest || !formData.careerChoice || !formData.mode || !formData.slot}
               >
                 Next
               </button>
@@ -684,21 +741,22 @@ export default function Register() {
         return (
           <section className="section">
             <h2>Student Information</h2>
-            <div className="form-section">
-              <div className="input-row">
+            <div className="form-grid">
+              <div className="input-row" style={{ gridColumn: '1 / -1' }}>
+                <label>Full Name *</label>
                 <input
                   type="text"
-                  placeholder="Full Name"
+                  placeholder="Enter your full name"
                   value={formData.studentInfo.name}
                   onChange={(e) => handleInputChange('studentInfo', 'name', e.target.value)}
-                  className="full-width"
                 />
               </div>
 
-              <div className="input-row two-columns">
+              <div className="input-row">
+                <label>ID Number *</label>
                 <input
                   type="text"
-                  placeholder="ID Number"
+                  placeholder="Enter 10-digit ID"
                   value={formData.studentInfo.idNumber}
                   onChange={(e) => {
                     const value = e.target.value.replace(/\D/g, ''); // Remove non-digits
@@ -707,31 +765,35 @@ export default function Register() {
                     }
                   }}
                   pattern="[0-9]{10}"
-                  title="Please enter exactly 10 digits"
-                  required
-                />
-                <input
-                  type="email"
-                  placeholder="Email"
-                  value={formData.studentInfo.email}
-                  onChange={(e) => handleInputChange('studentInfo', 'email', e.target.value)}
-                  readOnly
                 />
               </div>
 
-              <div className="input-row three-columns">
+              <div className="input-row">
+                <label>Email *</label>
+                <input
+                  type="email"
+                  placeholder="Auto-generated email"
+                  value={formData.studentInfo.email}
+                  readOnly
+                  style={{ background: '#f8fafc', color: '#64748b' }}
+                />
+              </div>
+
+              <div className="input-row">
+                <label>Select Branch *</label>
                 <select
                   value={formData.studentInfo.branch}
                   onChange={(e) => handleInputChange('studentInfo', 'branch', e.target.value)}
                 >
                   <option value="">Select Branch</option>
                   {branchNames.map(branch => (
-                    <option key={branch.id} value={branch.name}>
-                      {branch.name}
-                    </option>
+                    <option key={branch.id} value={branch.name}>{branch.name}</option>
                   ))}
                 </select>
+              </div>
 
+              <div className="input-row">
+                <label>Select Gender *</label>
                 <select
                   value={formData.studentInfo.gender}
                   onChange={(e) => handleInputChange('studentInfo', 'gender', e.target.value)}
@@ -740,7 +802,10 @@ export default function Register() {
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
                 </select>
+              </div>
 
+              <div className="input-row">
+                <label>Select Year *</label>
                 <select
                   value={formData.studentInfo.year}
                   onChange={(e) => handleInputChange('studentInfo', 'year', e.target.value)}
@@ -753,40 +818,43 @@ export default function Register() {
                 </select>
               </div>
 
-              <div className="input-row phone-row">
-                <select
-                  value={formData.residence.country}
-                  onChange={(e) => {
-                    handleInputChange('residence', 'country', e.target.value);
-                    const country = countryCodes.find(c => c.code === e.target.value);
-                    setFormData(prev => ({
-                      ...prev,
-                      studentInfo: {
-                        ...prev.studentInfo,
-                        countryCode: country ? country.dial_code : '+91'
-                      }
-                    }));
-                  }}
-                  className="country-code-select"
-                >
-                  {uniqueCountryCodes.map(country => (
-                    <option key={country.code} value={country.code}>
-                      {country.dial_code} ({country.name})
-                    </option>
-                  ))}
-                </select>
+              <div className="input-row" style={{ gridColumn: '1 / -1' }}>
+                <label>Phone Number *</label>
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                  <select
+                    value={formData.residence.country}
+                    onChange={(e) => {
+                      handleInputChange('residence', 'country', e.target.value);
+                      const country = countryCodes.find(c => c.code === e.target.value);
+                      setFormData(prev => ({
+                        ...prev,
+                        studentInfo: {
+                          ...prev.studentInfo,
+                          countryCode: country ? country.dial_code : '+91'
+                        }
+                      }));
+                    }}
+                    style={{ width: '130px' }}
+                  >
+                    {uniqueCountryCodes.map(country => (
+                      <option key={country.code} value={country.code}>
+                        {country.dial_code} ({country.name})
+                      </option>
+                    ))}
+                  </select>
 
-                <input
-                  type="tel"
-                  placeholder="Phone Number"
-                  value={formData.studentInfo.phoneNumber}
-                  onChange={(e) => {
-                    const onlyNums = e.target.value.replace(/[^\d]/g, '');
-                    handleInputChange('studentInfo', 'phoneNumber', onlyNums);
-                  }}
-                  maxLength={10}
-                  className="phone-input"
-                />
+                  <input
+                    type="tel"
+                    placeholder="Enter mobile number"
+                    value={formData.studentInfo.phoneNumber}
+                    onChange={(e) => {
+                      const onlyNums = e.target.value.replace(/[^\d]/g, '');
+                      handleInputChange('studentInfo', 'phoneNumber', onlyNums);
+                    }}
+                    maxLength={10}
+                    style={{ flex: 1 }}
+                  />
+                </div>
               </div>
             </div>
             <div className="button-group">
@@ -809,97 +877,112 @@ export default function Register() {
           <section className="section">
             <h2>Residence Information</h2>
             <div className="residence-content">
-              <div className="residence-form">
-                <select
-                  value={formData.residence.type}
-                  onChange={(e) => handleInputChange('residence', 'type', e.target.value)}
-                >
-                  <option value="" disabled>Select Residence Type</option>
-                  <option value="hostel">Hostel</option>
-                  <option value="dayscholar">Day Scholar</option>
-                </select>
+              <div className="form-grid">
+                <div className="input-row">
+                  <label>Select Residence Type *</label>
+                  <select
+                    value={formData.residence.type}
+                    onChange={(e) => handleInputChange('residence', 'type', e.target.value)}
+                  >
+                    <option value="" disabled>Select Residence Type</option>
+                    <option value="hostel">Hostel</option>
+                    <option value="dayscholar">Day Scholar</option>
+                  </select>
+                </div>
 
                 {formData.residence.type === 'hostel' && (
-                  <select
-                    value={formData.residence.hostelName}
-                    onChange={(e) => handleInputChange('residence', 'hostelName', e.target.value)}
-                  >
-                    <option value="">Select Hostel</option>
-                    {formData.studentInfo.gender === 'Male' 
-                      ? boyHostels.map(hostel => (
-                          <option key={hostel.hostelName} value={hostel.hostelName}>
-                            {hostel.hostelName}
-                          </option>
-                        ))
-                      : girlHostels.map(hostel => (
-                          <option key={hostel.hostelName} value={hostel.hostelName}>
-                            {hostel.hostelName}
-                          </option>
-                        ))
-                    }
-                  </select>
+                  <div className="input-row">
+                    <label>Select Hostel *</label>
+                    <select
+                      value={formData.residence.hostelName}
+                      onChange={(e) => handleInputChange('residence', 'hostelName', e.target.value)}
+                    >
+                      <option value="">Select Hostel</option>
+                      {formData.studentInfo.gender === 'Male' 
+                        ? boyHostels.map(hostel => (
+                            <option key={hostel.hostelName} value={hostel.hostelName}>{hostel.hostelName}</option>
+                          ))
+                        : girlHostels.map(hostel => (
+                            <option key={hostel.hostelName} value={hostel.hostelName}>{hostel.hostelName}</option>
+                          ))
+                      }
+                    </select>
+                  </div>
                 )}
 
                 {formData.residence.type === 'dayscholar' && (
-                  <select
-                    value={formData.residence.busRoute}
-                    onChange={(e) => handleInputChange('residence', 'busRoute', e.target.value)}
-                  >
-                    <option value="">Select Transport Mode</option>
-                    <option value="own">Own Transport</option>
-                    <optgroup label="Bus Routes">
-                      {busRoutes.map((route, index) => (
-                        <option key={`${route["Route ID"]}-${index}`} value={`${route["Route ID"]} - ${route.Route}`}>
-                          {route["Route ID"]} - {route.Route} ({route.Location})
-                        </option>
-                      ))}
-                    </optgroup>
-                  </select>
+                  <div className="input-row">
+                    <label>Select Transport Mode *</label>
+                    <select
+                      value={formData.residence.busRoute}
+                      onChange={(e) => handleInputChange('residence', 'busRoute', e.target.value)}
+                    >
+                      <option value="">Select Transport Mode</option>
+                      <option value="own">Own Transport</option>
+                      <optgroup label="Bus Routes">
+                        {busRoutes.map((route, index) => (
+                          <option key={`${route["Route ID"]}-${index}`} value={`${route["Route ID"]} - ${route.Route}`}>
+                            {route["Route ID"]} - {route.Route} ({route.Location})
+                          </option>
+                        ))}
+                      </optgroup>
+                    </select>
+                  </div>
                 )}
 
-                <select
-                  value={formData.residence.country}
-                  onChange={(e) => handleInputChange('residence', 'country', e.target.value)}
-                >
-                  <option value="">Select Country</option>
-                  {uniqueCountryCodes.map(country => (
-                    <option key={country.code} value={country.code}>
-                      {country.name}
-                    </option>
-                  ))}
-                </select>
+                <div className="input-row">
+                  <label>Select Country *</label>
+                  <select
+                    value={formData.residence.country}
+                    onChange={(e) => handleInputChange('residence', 'country', e.target.value)}
+                  >
+                    <option value="">Select Country</option>
+                    {uniqueCountryCodes.map(country => (
+                      <option key={country.code} value={country.code}>{country.name}</option>
+                    ))}
+                  </select>
+                </div>
 
                 {formData.residence.country === 'IN' && (
-                  <div className="residence-section">
-                    <select
-                      value={formData.residence.state}
-                      onChange={(e) => handleInputChange('residence', 'state', e.target.value)}
-                    >
-                      <option value="">Select State</option>
-                      {stateNames.map(state => (
-                        <option key={state} value={state}>{state}</option>
-                      ))}
-                    </select>
-
-                    {formData.residence.state && (
+                  <>
+                    <div className="input-row">
+                      <label>Select State *</label>
                       <select
-                        value={formData.residence.district}
-                        onChange={(e) => handleInputChange('residence', 'district', e.target.value)}
+                        value={formData.residence.state}
+                        onChange={(e) => handleInputChange('residence', 'state', e.target.value)}
                       >
-                        <option value="">Select District</option>
-                        {districtNames[formData.residence.state]?.map(district => (
-                          <option key={district} value={district}>{district}</option>
+                        <option value="">Select State</option>
+                        {stateNames.map(state => (
+                          <option key={state} value={state}>{state}</option>
                         ))}
                       </select>
+                    </div>
+
+                    {formData.residence.state && (
+                      <div className="input-row">
+                        <label>Select District *</label>
+                        <select
+                          value={formData.residence.district}
+                          onChange={(e) => handleInputChange('residence', 'district', e.target.value)}
+                        >
+                          <option value="">Select District</option>
+                          {districtNames[formData.residence.state]?.map(district => (
+                            <option key={district} value={district}>{district}</option>
+                          ))}
+                        </select>
+                      </div>
                     )}
 
-                    <input
-                      type="text"
-                      placeholder="PIN Code"
-                      value={formData.residence.pincode}
-                      onChange={(e) => handleInputChange('residence', 'pincode', e.target.value)}
-                    />
-                  </div>
+                    <div className="input-row">
+                      <label>PIN Code *</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. 522502"
+                        value={formData.residence.pincode}
+                        onChange={(e) => handleInputChange('residence', 'pincode', e.target.value)}
+                      />
+                    </div>
+                  </>
                 )}
               </div>
             </div>
@@ -928,11 +1011,23 @@ export default function Register() {
 
             <div className="confirmation-content">
               <div className="confirm-section">
-                  <h3>Social Intership Details</h3>
+                  <h3>Social Internship Details</h3>
                 <div className="confirm-grid">
                   <div className="confirm-item">
-                    <span>Select Domain</span>
+                    <span>Batch</span>
+                    <span><span className={`batch-tag ${formData.batch === 'Y-25' ? 'y25' : 'y24'}`}>{formData.batch}</span></span>
+                  </div>
+                  <div className="confirm-item">
+                    <span>Selected Domain</span>
                     <span>{formData.selectedDomain}</span>
+                  </div>
+                  <div className="confirm-item">
+                    <span>Field of Interest</span>
+                    <span>{formData.fieldOfInterest}</span>
+                  </div>
+                  <div className="confirm-item">
+                    <span>Career Choice</span>
+                    <span>{formData.careerChoice}</span>
                   </div>
                   <div className="confirm-item">
                     <span>Internship Mode</span>
@@ -940,7 +1035,7 @@ export default function Register() {
                   </div>
                   <div className="confirm-item">
                     <span>Slot</span>
-                    <span>{formData.slot}</span>
+                    <span>Slot {formData.slot} — {SLOT_DATES[parseInt(formData.slot)]}</span>
                   </div>
                 </div>
               </div>
@@ -966,7 +1061,7 @@ export default function Register() {
                   </div>
                   <div className="confirm-item">
                     <span>Year:</span>
-                    <span>{formData.studentInfo.year}st Year</span>
+                    <span>{formData.studentInfo.year}{formData.studentInfo.year === '1' ? 'st' : formData.studentInfo.year === '2' ? 'nd' : formData.studentInfo.year === '3' ? 'rd' : 'th'} Year</span>
                   </div>
                   <div className="confirm-item">
                     <span>Phone:</span>
@@ -1040,34 +1135,23 @@ export default function Register() {
       <div className="register-component-in">
         {/* Progress indicator */}
         <div className="progress-bar">
-          <div className="progress-step">
-            <div className={`step-number ${currentStep >= 1 ? 'active' : ''}`}>1</div>
-            <span>Program Details</span>
-          </div>
-          <div className="progress-step">
-            <div className={`step-number ${currentStep >= 2 ? 'active' : ''}`}>2</div>
-            <span>Rules</span>
-          </div>
-          <div className="progress-step">
-            <div className={`step-number ${currentStep >= 3 ? 'active' : ''}`}>3</div>
-            <span>Undertaking</span>
-          </div>
-          <div className="progress-step">
-            <div className={`step-number ${currentStep >= 4 ? 'active' : ''}`}>4</div>
-            <span>Domain Selection</span>
-          </div>
-          <div className="progress-step">
-            <div className={`step-number ${currentStep >= 5 ? 'active' : ''}`}>5</div>
-            <span>Student Info</span>
-          </div>
-          <div className="progress-step">
-            <div className={`step-number ${currentStep >= 6 ? 'active' : ''}`}>6</div>
-            <span>Residence</span>
-          </div>
-          <div className="progress-step">
-            <div className={`step-number ${currentStep >= 7 ? 'active' : ''}`}>7</div>
-            <span>Confirm</span>
-          </div>
+          {[
+            { n: 1, label: 'Program Details' },
+            { n: 2, label: 'Rules' },
+            { n: 3, label: 'Undertaking' },
+            { n: 4, label: 'Domain' },
+            { n: 5, label: 'Student Info' },
+            { n: 6, label: 'Residence' },
+            { n: 7, label: 'Confirm' }
+          ].map(({ n, label }) => (
+            <div
+              key={n}
+              className={`progress-step${currentStep > n ? ' done' : ''}`}
+            >
+              <div className={`step-number${currentStep >= n ? ' active' : ''}`}>{n}</div>
+              <span className={currentStep === n ? 'active-label' : ''}>{label}</span>
+            </div>
+          ))}
         </div>
 
         {/* Current step content */}

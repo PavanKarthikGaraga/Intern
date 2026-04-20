@@ -1,0 +1,298 @@
+.activity-logs-section {
+  padding: 20px;
+}
+
+.activity-logs-section .section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.activity-logs-section .section-header h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1a202c;
+}
+
+.activity-logs-section .total-count {
+  font-size: 0.9rem;
+  color: #718096;
+  font-weight: 500;
+}
+
+.activity-logs-section .filters-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.activity-logs-section .filter-select,
+.activity-logs-section .filter-input,
+.activity-logs-section .filter-date {
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  background: #fff;
+  color: #2d3748;
+}
+
+.activity-logs-section .filter-select {
+  min-width: 160px;
+}
+
+.activity-logs-section .filter-input {
+  min-width: 200px;
+  flex: 1;
+}
+
+.activity-logs-section .filter-date {
+  width: 140px;
+}
+
+.activity-logs-section .date-separator {
+  font-size: 0.85rem;
+  color: #718096;
+}
+
+.activity-logs-section .search-btn,
+.activity-logs-section .clear-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.activity-logs-section .search-btn {
+  background: rgb(151, 0, 3);
+  color: #fff;
+}
+
+.activity-logs-section .search-btn:hover {
+  background: rgb(120, 0, 2);
+}
+
+.activity-logs-section .clear-btn {
+  background: #e2e8f0;
+  color: #4a5568;
+}
+
+.activity-logs-section .clear-btn:hover {
+  background: #cbd5e0;
+}
+
+.activity-logs-section .table-container {
+  overflow-x: auto;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.activity-logs-section .logs-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.activity-logs-section .logs-table th {
+  background: #f7f9fc;
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #4a5568;
+  border-bottom: 2px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.activity-logs-section .logs-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #edf2f7;
+  color: #2d3748;
+}
+
+.activity-logs-section .logs-table tbody tr:hover {
+  background: #f7fafc;
+}
+
+.activity-logs-section .date-cell {
+  white-space: nowrap;
+  font-size: 0.8rem;
+  color: #718096;
+}
+
+.activity-logs-section .actor-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.activity-logs-section .actor-name {
+  font-weight: 500;
+}
+
+.activity-logs-section .actor-id {
+  color: #a0aec0;
+  font-size: 0.75rem;
+}
+
+.activity-logs-section .role-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.activity-logs-section .role-badge.admin {
+  background: #fed7e2;
+  color: #97266d;
+}
+
+.activity-logs-section .role-badge.studentLead {
+  background: #c6f6d5;
+  color: #276749;
+}
+
+.activity-logs-section .role-badge.facultyMentor {
+  background: #bee3f8;
+  color: #2a4365;
+}
+
+.activity-logs-section .role-badge.student {
+  background: #fefcbf;
+  color: #975a16;
+}
+
+/* Action badge colors */
+.activity-logs-section .action-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.activity-logs-section .action-badge.red {
+  background: #fff5f5;
+  color: #c53030;
+  border: 1px solid #feb2b2;
+}
+
+.activity-logs-section .action-badge.green {
+  background: #f0fff4;
+  color: #276749;
+  border: 1px solid #9ae6b4;
+}
+
+.activity-logs-section .action-badge.blue {
+  background: #ebf8ff;
+  color: #2b6cb0;
+  border: 1px solid #90cdf4;
+}
+
+.activity-logs-section .action-badge.orange {
+  background: #fffaf0;
+  color: #c05621;
+  border: 1px solid #fbd38d;
+}
+
+.activity-logs-section .action-badge.yellow {
+  background: #fffff0;
+  color: #975a16;
+  border: 1px solid #fefcbf;
+}
+
+.activity-logs-section .action-badge.default {
+  background: #f7fafc;
+  color: #4a5568;
+  border: 1px solid #e2e8f0;
+}
+
+.activity-logs-section .details-cell {
+  max-width: 250px;
+}
+
+.activity-logs-section .details-text {
+  cursor: pointer;
+  color: #4a5568;
+  font-size: 0.8rem;
+  word-break: break-word;
+}
+
+.activity-logs-section .details-text:hover {
+  color: rgb(151, 0, 3);
+}
+
+.activity-logs-section .no-data {
+  text-align: center;
+  padding: 40px !important;
+  color: #a0aec0;
+  font-size: 0.9rem;
+}
+
+.activity-logs-section .pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 20px;
+  padding: 12px 0;
+}
+
+.activity-logs-section .page-btn {
+  padding: 8px 18px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #fff;
+  color: #4a5568;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.activity-logs-section .page-btn:hover:not(:disabled) {
+  background: rgb(151, 0, 3);
+  color: #fff;
+  border-color: rgb(151, 0, 3);
+}
+
+.activity-logs-section .page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.activity-logs-section .page-info {
+  font-size: 0.85rem;
+  color: #718096;
+}
+
+.activity-logs-section .loading {
+  text-align: center;
+  padding: 40px;
+  color: #718096;
+}
+
+@media (max-width: 768px) {
+  .activity-logs-section .filters-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .activity-logs-section .filter-select,
+  .activity-logs-section .filter-input,
+  .activity-logs-section .filter-date {
+    width: 100%;
+    min-width: unset;
+  }
+
+  .activity-logs-section .date-separator {
+    text-align: center;
+  }
+}

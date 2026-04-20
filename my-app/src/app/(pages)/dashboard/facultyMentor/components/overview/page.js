@@ -16,9 +16,7 @@ export default function Overview({ user }) {
             try {
                 setError(null);
                 const response = await fetch('/api/dashboard/facultyMentor/overview', {
-                    headers: { 
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
+                    credentials: 'include'
                 });
 
                 if (!response.ok) {

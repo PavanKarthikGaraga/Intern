@@ -2,8 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import "./page.css";
-import axios from "axios";
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../../../context/AuthContext"
 

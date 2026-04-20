@@ -49,7 +49,7 @@ export default function Overview({ user }) {
     }, [user]);
 
     if (loading) {
-        // return <Loader /   >;
+        return <div className="loading">Loading...</div>;
     }
 
     if (error) {

@@ -43,19 +43,19 @@
 
 .stat-content h3 {
     color: #666;
-    font-size: 1rem;
+    font-size: 0.9rem;
     margin-bottom: 0.5rem;
 }
 
 .stat-content p {
     color: #333;
-    font-size: 0.5rem;
+    font-size: 1.5rem;
     font-weight: bold;
 }
 
 .stat-icon {
-    font-size: 0.5rem;
-    color: #1890ff;
+    font-size: 1.5rem;
+    color: #970003;
 }
 
 .charts-section {
@@ -132,13 +132,14 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    min-width: 200px;
+    flex: 1;
+    min-width: 140px;
 }
 
 .filter-group label {
-    font-weight: 500;
+    font-weight: 600;
     color: #495057;
-    font-size: 14px;
+    font-size: 0.8rem;
 }
 
 .filter-group select {
@@ -301,116 +302,47 @@
     margin-bottom: 1rem;
 }
 
-.progress-stats-section {
-    background: white;
-    padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    margin-bottom: 2rem;
-}
-
-.progress-stats-section h2 {
-    margin-bottom: 1.5rem;
-    color: #333;
-    font-size: 1.5rem;
-}
-
-.progress-filters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-    padding: 1rem;
-    background: #f8f9fa;
-    border-radius: 8px;
-}
-
-.progress-filters .filter-group {
-    flex: 1;
-    min-width: 200px;
-}
-
-.progress-filters label {
-    display: block;
-    margin-bottom: 0.5rem;
-    color: #495057;
-    font-weight: 500;
-    font-size: 0.9rem;
-}
-
-.progress-filters .filter-select,
-.progress-filters .day-select {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ced4da;
-    border-radius: 4px;
-    font-size: 0.9rem;
-    color: #495057;
-    background-color: white;
-    transition: all 0.2s ease;
-}
-
-.progress-filters .filter-select:hover,
-.progress-filters .day-select:hover {
-    border-color: #8884d8;
-}
-
-.progress-filters .filter-select:focus,
-.progress-filters .day-select:focus {
-    outline: none;
-    border-color: #8884d8;
-    box-shadow: 0 0 0 2px rgba(136, 132, 216, 0.2);
-}
-
-.progress-stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
-    margin: 2rem 0;
-}
-
-.progress-stat-card {
-    background: #f8f9fa;
-    padding: 1.5rem;
-    border-radius: 8px;
-    text-align: center;
-    transition: transform 0.2s;
-}
-
-.progress-stat-card:hover {
-    transform: translateY(-5px);
-}
-
-.progress-stat-card h3 {
-    color: #666;
-    font-size: 1rem;
-    margin-bottom: 1rem;
-}
-
-.progress-stat-card p {
-    color: #333;
-    font-size: 1.5rem;
-    font-weight: bold;
-}
-
-.marks-distribution-section {
-    margin-top: 2rem;
-    padding-top: 2rem;
-    border-top: 1px solid #eee;
-}
-
-.marks-distribution-section h2 {
-    margin-bottom: 1.5rem;
-    color: #333;
-    font-size: 1.5rem;
-}
-
 @media (max-width: 768px) {
-    .progress-filters {
-        flex-direction: column;
+    .overview-section {
+        padding: 0.75rem;
+    }
+
+    .overview-section h1 {
+        font-size: 1.5rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+    }
+
+    .stat-card {
+        padding: 1rem;
+    }
+
+    .stat-content p {
+        font-size: 1.25rem;
+    }
+
+    .chart-container {
+        padding: 15px;
+    }
+
+    .filters {
+        gap: 10px;
+    }
+
+    .filter-group {
+        min-width: calc(50% - 5px);
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
     }
     
-    .progress-filters .filter-group {
-        width: 100%;
+    .filter-group {
+        min-width: 100%;
     }
 }

@@ -1,7 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import toast from 'react-hot-toast';
 import './page.css';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -25,6 +24,8 @@ import CertificateDownload from './components/certificate/page';
 import VerifyCertificates from './components/verifyCertificates/page';
 import SFinalProfile from './components/sfinal/page';
 import ProblemStatements from './components/problemStatements/page';
+import ActivityLogs from './components/activityLogs/page';
+import OldDB from './components/oldDB/page';
 
 export default function AdminDashboard() {
   const { user, isLoading, isAuthenticated } = useAuth();
@@ -32,11 +33,29 @@ export default function AdminDashboard() {
   const [showUsersDropdown, setShowUsersDropdown] = useState(false);
   const [showDevDropdown, setShowDevDropdown] = useState(false);
   const [showSupplyDropdown, setShowSupplyDropdown] = useState(false);
+  const [isLegacy, setIsLegacy] = useState(false);
+  const [isTogglingDB, setIsTogglingDB] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       window.location.replace('/auth/login');
     }
+    
+    // Check current DB state
+    const checkDBState = async () => {
+      try {
+        const res = await fetch('/api/dashboard/admin/toggle-db');
+        const data = await res.json();
+        if (data.success) {
+          setIsLegacy(data.isLegacy);
+        }
+      } catch (err) {
+        console.error('Failed to fetch DB state');
+      }
+    };
+    
+    if (isAuthenticated) checkDBState();
   }, [isLoading, isAuthenticated]);
 
   if (isLoading) {
@@ -52,14 +71,61 @@ export default function AdminDashboard() {
     setShowUsersDropdown(false);
     setShowDevDropdown(false);
     setShowSupplyDropdown(false);
+    setIsSidebarOpen(false); // Close sidebar on mobile after clicking a link
+  };
+
+  const handleToggleDB = async () => {
+    if (isTogglingDB) return;
+    
+    const confirmMsg = isLegacy 
+      ? "Switch back to Current (2026) Database?"
+      : "WARNING: Switch to Legacy (2025) Database? \n\nAll data shown will be from last year. Use with caution.";
+      
+    if (!window.confirm(confirmMsg)) return;
+
+    setIsTogglingDB(true);
+    try {
+      const res = await fetch('/api/dashboard/admin/toggle-db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ useLegacy: !isLegacy })
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        setIsLegacy(data.isLegacy);
+        // Reload the page to ensure all components fetch from the new DB
+        window.location.reload();
+      } else {
+        alert(data.error || 'Failed to switch database');
+      }
+    } catch (err) {
+      alert('Error connecting to server');
+    } finally {
+      setIsTogglingDB(false);
+    }
   };
 
   return (
-    <div className="student-dashboard">
-      <Navbar title="Admin Dashboard" user={user} />
+    <div className={`student-dashboard ${isSidebarOpen ? 'sidebar-mobile-open' : ''}`}>
+      <Navbar 
+        title={isLegacy ? "Legacy Dashboard (2025)" : "Admin Dashboard"} 
+        user={user} 
+        onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+      />
+
+      {/* Mobile Sidebar Overlay */}
+      {isSidebarOpen && (
+        <div className="sidebar-overlay" onClick={() => setIsSidebarOpen(false)}></div>
+      )}
+        <div className="legacy-warning-banner">
+          ⚠️ YOU ARE VIEWING THE LEGACY (2025) DATABASE. CHANGES MADE HERE WILL NOT AFFECT THE 2026 PROGRAM.
+          <button onClick={handleToggleDB} className="banner-switch-btn">Switch Back to 2026</button>
+        </div>
+      )}
 
       <div className="dashboard-content">
-        <nav className="dashboard-sidebar">
+        <nav className={`dashboard-sidebar ${isSidebarOpen ? 'open' : ''}`}>
           <button
             className={`sidebar-item ${activeSection === 'overview' ? 'active' : ''}`}
             onClick={() => handleSectionClick('overview')}
@@ -165,6 +231,13 @@ export default function AdminDashboard() {
           </button>
 
           <button
+            className={`sidebar-item ${activeSection === 'activity-logs' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('activity-logs')}
+          >
+            <span className="item-label">Activity Log</span>
+          </button>
+
+          <button
             className={`sidebar-item ${activeSection === 'reset-password' ? 'active' : ''}`}
             onClick={() => handleSectionClick('reset-password')}
           >
@@ -219,6 +292,16 @@ export default function AdminDashboard() {
           )}
 
           <button
+            className={`sidebar-item db-toggle-btn ${isLegacy ? 'legacy-active' : ''}`}
+            onClick={handleToggleDB}
+            disabled={isTogglingDB}
+          >
+            <span className="item-label">
+              {isTogglingDB ? 'Switching...' : isLegacy ? 'Switch to 2026 DB' : 'Switch to 2025 DB'}
+            </span>
+          </button>
+
+          <button
             className={`sidebar-item ${activeSection === 'change-password' ? 'active' : ''}`}
             onClick={() => handleSectionClick('change-password')}
           >
@@ -245,6 +328,7 @@ export default function AdminDashboard() {
            activeSection === 'certificate-download' ? <CertificateDownload /> :
            activeSection === 'supply-final' ? <SFinalProfile /> :
            activeSection === 'problem-statements' ? <ProblemStatements /> :
+           activeSection === 'activity-logs' ? <ActivityLogs /> :
            <ChangePassword />}
         </main>
       </div>

@@ -26,7 +26,9 @@ export async function GET(req) {
     // Get slot from query params
     const { searchParams } = new URL(req.url);
     const slot = searchParams.get('slot');
-    const slotFilter = slot && slot !== 'all' ? `WHERE r.slot = ${parseInt(slot)}` : '';
+    const slotFilter = slot && slot !== 'all' ? 'WHERE r.slot = ?' : '';
+    const slotFilterAnd = slot && slot !== 'all' ? 'AND r.slot = ?' : '';
+    const slotParams = slot && slot !== 'all' ? [parseInt(slot)] : [];
 
     // Get basic counts with slot filter
     const [leadsCount] = await pool.query('SELECT COUNT(*) as count FROM studentLeads');
@@ -37,35 +39,35 @@ export async function GET(req) {
       SELECT COUNT(*) as count 
       FROM registrations r 
       ${slotFilter}
-    `);
+    `, slotParams);
     const [completedCount] = await pool.query(`
       SELECT COUNT(*) as total 
       FROM registrations r 
       JOIN final f ON r.username = f.username 
-      ${slotFilter} AND f.completed = 1
-    `);
+      WHERE f.completed = 1 ${slotFilterAnd}
+    `, slotParams);
 
     // Get new statistics with slot filter
     const [totalPassed] = await pool.query(`
       SELECT COUNT(*) AS total_passed
       FROM marks m
       JOIN registrations r ON m.username = r.username
-      ${slotFilter} AND m.totalMarks >= 60
-    `);
+      WHERE m.totalMarks >= 60 ${slotFilterAnd}
+    `, slotParams);
 
     const [totalFailed] = await pool.query(`
       SELECT COUNT(*) AS total_failed
       FROM marks m
       JOIN registrations r ON m.username = r.username
-      ${slotFilter} AND m.totalMarks < 60
-    `);
+      WHERE m.totalMarks < 60 ${slotFilterAnd}
+    `, slotParams);
 
     const [totalParticipated] = await pool.query(`
       SELECT COUNT(*) AS total_participated
       FROM marks m
       JOIN registrations r ON m.username = r.username
-      ${slotFilter} AND m.totalMarks IS NOT NULL
-    `);
+      WHERE m.totalMarks IS NOT NULL ${slotFilterAnd}
+    `, slotParams);
 
     // Get marks distribution with slot filter
     const [marksDistribution] = await pool.query(`
@@ -79,7 +81,7 @@ export async function GET(req) {
       FROM marks m
       JOIN registrations r ON m.username = r.username
       ${slotFilter}
-    `);
+    `, slotParams);
 
     // Get verification and attendance stats
     const [verificationStats] = await pool.query(`

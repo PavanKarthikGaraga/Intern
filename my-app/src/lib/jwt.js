@@ -26,13 +26,13 @@ export const generateRefreshToken = async (payload) => {
 };
 
 export const verifyAccessToken = async (token, isMiddleware = false) => {
-  if (isMiddleware) {
-    return jose.decodeJwt(token);
-  }
   try {
     const { payload } = await jose.jwtVerify(token, accessSecret);
     return payload;
   } catch (error) {
+    if (isMiddleware) {
+      throw error;
+    }
     throw new Error('Invalid access token');
   }
 };

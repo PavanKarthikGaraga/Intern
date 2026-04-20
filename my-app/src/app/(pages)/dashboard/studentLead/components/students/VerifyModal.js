@@ -13,14 +13,17 @@ export default function VerifyModal({ username, onClose, onVerify }) {
   const fetchStudentData = async (username) => {
     try {
       const res = await fetch(`/api/dashboard/studentLead/student?username=${username}`);
-      if (!res.ok) throw new Error(res.error);
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Failed to fetch student data');
+      }
       const data = await res.json();
       if (data.success) {
         setStudentData(data.student);
         setReports(data.student.uploads?.details || []);
       }
     } catch (err) {
-      console.log(err);
+      console.error('Error fetching student data:', err);
       if(err.status === 401){
         toast.error('Session expired. Please login again.');
       }
@@ -38,7 +41,7 @@ export default function VerifyModal({ username, onClose, onVerify }) {
     // eslint-disable-next-line
   }, [username]);
 
-  const handleVerify = async (day, status) => {
+  const handleVerify = async (day, status, event) => {
     if (status) {
       // Open MarksModal in a new window
       const width = 500;
@@ -82,6 +85,7 @@ export default function VerifyModal({ username, onClose, onVerify }) {
         }
         const verifyResponse = await fetch('/api/dashboard/studentLead/verify', {
           method: 'POST',
+          credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             username,
@@ -91,7 +95,8 @@ export default function VerifyModal({ username, onClose, onVerify }) {
           })
         });
         if (!verifyResponse.ok) {
-          toast.error(verifyResponse.error || 'Failed to update verification status', { id: loadingToastId });
+          const errData = await verifyResponse.json();
+          toast.error(errData.error || 'Failed to update verification status', { id: loadingToastId });
         }
         await fetchStudentData(username);
         setVerificationStatus(prev => ({
@@ -137,12 +142,12 @@ export default function VerifyModal({ username, onClose, onVerify }) {
     const handleMarksMessage = async (event) => {
       if (event.data.type === 'MARKS_SAVED') {
         const { marks, day: currentDay, message } = event.data;
-        console.log('VerifyModal - Received day value:', currentDay, typeof currentDay); // Debug log
         let loadingToastId;
         try {
           loadingToastId = toast.loading('Verifying report...');
           const verifyResponse = await fetch('/api/dashboard/studentLead/verify', {
             method: 'POST',
+            credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               username,
@@ -153,7 +158,8 @@ export default function VerifyModal({ username, onClose, onVerify }) {
             })
           });
           if (!verifyResponse.ok) {
-            toast.error(verifyResponse.error || 'Failed to update verification status', { id: loadingToastId });
+            const errData = await verifyResponse.json();
+            toast.error(errData.error || 'Failed to update verification status', { id: loadingToastId });
           }
           await fetchStudentData(username);
           setVerificationStatus(prev => ({
@@ -350,7 +356,7 @@ export default function VerifyModal({ username, onClose, onVerify }) {
                               </button>
                               <button 
                                 className="reject-btn"
-                                onClick={() => handleVerify(day, false)}
+                                onClick={(e) => handleVerify(day, false, e)}
                               >
                                 Reject
                               </button>

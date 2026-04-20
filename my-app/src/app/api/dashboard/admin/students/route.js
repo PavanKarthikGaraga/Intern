@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { verifyAccessToken } from '@/lib/jwt';
 import { cookies } from 'next/headers';
+import { logActivity } from '@/lib/activityLog';
 
 export async function GET(req) {
   try {
@@ -215,6 +216,15 @@ export async function DELETE(request) {
       await connection.query(updateStatsQuery);
 
       await connection.commit();
+
+      logActivity({
+        action: 'ADMIN_DELETE_STUDENT',
+        actorUsername: decoded.username,
+        actorName: decoded.name,
+        actorRole: 'admin',
+        targetUsername: username,
+        details: { slot, mode }
+      }).catch(() => {});
       
       return NextResponse.json({
         success: true,

@@ -4,37 +4,38 @@ import './page.css';
 
 const linkedInPosts = [
   {
-    src: "https://www.linkedin.com/embed/feed/update/urn:li:share:7330542494692106242?collapsed=1",
-
+    src: "https://www.linkedin.com/embed/feed/update/urn:li:ugcPost:7332273260828479488?collapsed=1",
+    postUrl: "https://www.linkedin.com/feed/update/urn:li:ugcPost:7332273260828479488",
     height: 650,
     width: 550,
-    title: "Embedded LinkedIn post 1"
+    title: "Shanmukha Ganesh Potlapalli - Social Impact Internship"
   },
   {
-    src: "https://www.linkedin.com/embed/feed/update/urn:li:share:7330542494692106242?collapsed=1",
-    height: 650,
-    width: 500,
-    title: "Embedded LinkedIn post 2"
-  },
-  {
-    src: "https://www.linkedin.com/embed/feed/update/urn:li:share:7330542494692106242?collapsed=1",
-    
-    height: 650,
-    width: 500,
-    title: "Embedded LinkedIn post 3"
-  },
-  {
-    src: "https://www.linkedin.com/embed/feed/update/urn:li:share:7330542494692106242?collapsed=1",
-    
+    src: "https://www.linkedin.com/embed/feed/update/urn:li:ugcPost:7334753454768177152?collapsed=1",
+    postUrl: "https://www.linkedin.com/feed/update/urn:li:ugcPost:7334753454768177152",
     height: 650,
     width: 550,
-    title: "Embedded LinkedIn post 4"
+    title: "Deepak Kumar - Social Internship KLU"
+  },
+  {
+    src: "https://www.linkedin.com/embed/feed/update/urn:li:share:7335001791379492865?collapsed=1",
+    postUrl: "https://www.linkedin.com/feed/update/urn:li:share:7335001791379492865",
+    height: 650,
+    width: 550,
+    title: "Nikhil Karthik Mothukuri - KLU Social Internship Agriculture"
+  },
+  {
+    src: "https://www.linkedin.com/embed/feed/update/urn:li:share:7334998206042308608?collapsed=1",
+    postUrl: "https://www.linkedin.com/feed/update/urn:li:share:7334998206042308608",
+    height: 650,
+    width: 550,
+    title: "Jaya Sravya Kilarapu - KLU Social Internship Agriculture"
   }
 ];
 
 const youtubeVideos = [
   {
-    src: "https://www.youtube.com/embed/DbiR0MJ1cJ4?si=qaMuyUHdqcissbE7",
+    src: "https://www.youtube.com/embed/dBRNF5JyXag",
     width: 450,
     height: 253,
     title: "YouTube video player 1"
@@ -52,7 +53,7 @@ const youtubeVideos = [
     title: "YouTube video player 3"
   },
   {
-    src: "https://www.youtube.com/embed/Sy35g9yTMvs?si=5viTd3vV_KZcI2sz",
+    src: "https://www.youtube.com/embed/J-qy1RcS8eA",
     width: 450,
     height: 253,
     title: "YouTube video player 4"
@@ -72,16 +73,30 @@ export default function CTASection() {
             <h3>LinkedIn Updates</h3>
             <div className="linkedin-posts">
               {linkedInPosts.map((post, idx) => (
-                <iframe
+                <a 
                   key={idx}
-                  src={post.src}
-                  height={post.height}
-                  width={post.width}
-                  frameBorder="0"
-                  allowFullScreen=""
-                  scrolling="no"
-                  title={post.title}
-                ></iframe>
+                  href={post.postUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="linkedin-post-wrapper"
+                  style={{ position: 'relative', display: 'inline-block', transition: 'transform 0.2s ease' }}
+                  onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                >
+                  {/* Invisible Overlay to catch clicks and redirect */}
+                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 10, cursor: 'pointer' }}></div>
+                  
+                  <iframe
+                    src={post.src}
+                    height={post.height}
+                    width={post.width}
+                    frameBorder="0"
+                    allowFullScreen=""
+                    scrolling="no"
+                    title={post.title}
+                    style={{ position: 'relative', zIndex: 1, borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                  ></iframe>
+                </a>
               ))}
             </div>
             

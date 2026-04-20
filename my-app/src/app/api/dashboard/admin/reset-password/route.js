@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { verifyAccessToken } from "@/lib/jwt";
 import { cookies } from 'next/headers';
+import { logActivity } from '@/lib/activityLog';
 
 // POST endpoint to reset passwords
 export async function POST(req) {
@@ -85,6 +86,14 @@ export async function POST(req) {
         `;
 
         const [result] = await pool.query(updateQuery);
+
+        logActivity({
+            action: 'ADMIN_RESET_PASSWORD',
+            actorUsername: decoded.username,
+            actorName: decoded.name,
+            actorRole: 'admin',
+            details: { targetUsernames: usernames, count: result.affectedRows }
+        }).catch(() => {});
 
         return NextResponse.json({ 
             success: true, 

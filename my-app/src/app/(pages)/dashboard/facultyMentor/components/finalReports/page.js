@@ -200,7 +200,7 @@ export default function FinalReports() {
                     <td>{student.name}</td>
                     <td>{student.username}</td>
                     <td>
-                      <span className={`mode-badge ${student.mode.toLowerCase()}`}>
+                      <span className={`mode-badge ${student.mode?.toLowerCase()}`}>
                         {student.mode}
                       </span>
                     </td>
@@ -279,7 +279,7 @@ export default function FinalReports() {
                     </td>
                     <td>
                     <div className="action-buttons">
-                      {student.completed === 'P' ? (
+                      {student.completed ? (
                         <button
                           className="edit-btn"
                           onClick={() => handleEditClick(student)}
@@ -350,7 +350,7 @@ export default function FinalReports() {
                     <td>{student.name}</td>
                     <td>{student.username}</td>
                     <td>
-                      <span className={`mode-badge ${student.mode.toLowerCase()}`}>
+                      <span className={`mode-badge ${student.mode?.toLowerCase()}`}>
                         {student.mode}
                       </span>
                     </td>

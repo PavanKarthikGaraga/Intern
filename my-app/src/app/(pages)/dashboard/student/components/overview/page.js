@@ -98,7 +98,6 @@ export default function Overview({ user, studentData }) {
 
   // Helper to calculate grade from marks
   const getGrade = (marks) => {
-    console.log(marks);
     if (marks >= 90) return 'A';
     if (marks >= 75) return 'B';
     if (marks >= 60) return 'C';
@@ -279,7 +278,7 @@ export default function Overview({ user, studentData }) {
               </div>
             </div>
 
-            {studentData.marks.completed !== null && (
+            {studentData.marks?.completed !== null && (
               <>
                 <div className="stat-card">
                   <div className="stat-content">
