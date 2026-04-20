@@ -118,6 +118,7 @@ export default function AdminDashboard() {
       {isSidebarOpen && (
         <div className="sidebar-overlay" onClick={() => setIsSidebarOpen(false)}></div>
       )}
+      {isLegacy && (
         <div className="legacy-warning-banner">
           ⚠️ YOU ARE VIEWING THE LEGACY (2025) DATABASE. CHANGES MADE HERE WILL NOT AFFECT THE 2026 PROGRAM.
           <button onClick={handleToggleDB} className="banner-switch-btn">Switch Back to 2026</button>
