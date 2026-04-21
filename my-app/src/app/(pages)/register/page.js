@@ -64,9 +64,13 @@ export default function Register() {
   };
 
   const SLOT_BATCH = {
-    1: 'Y-25', 2: 'Y-25', 3: 'Y-25', 4: 'Y-25', 5: 'Y-25', 6: 'Y-25',
+    1: 'Y-25-VJA', 2: 'Y-25-VJA', 3: 'Y-25-VJA', 4: 'Y-25-VJA', 5: 'Y-25-VJA', 6: 'Y-25-VJA',
     7: 'Y-24', 8: 'Y-24', 9: 'Y-24'
   };
+
+  // Batches that only support Remote mode
+  const REMOTE_ONLY_BATCHES = ['Y-25-HYD', 'Y-24'];
+  const isRemoteOnly = (batch) => REMOTE_ONLY_BATCHES.includes(batch);
 
   const [selectedDomainInfo, setSelectedDomainInfo] = useState('');
   const [stats, setStats] = useState(null);
@@ -590,36 +594,56 @@ export default function Register() {
                 <select
                   value={formData.batch}
                   onChange={(e) => {
-                    // Reset slot when batch changes
-                    setFormData(prev => ({...prev, batch: e.target.value, slot: ''}));
-                  }}
-                >
-                  <option value="">Select Batch</option>
-                  <option value="Y-25">Y-25 (Vijayawada &amp; Hyderabad Off-Campus)</option>
-                  <option value="Y-24">Y-24 (Detained) / Supply</option>
-                </select>
-              </div>
-
-              <div className="input-row">
-                <label>Select Internship Mode *</label>
-                <select
-                  value={formData.mode}
-                  onChange={(e) => {
-                    const newMode = e.target.value;
+                    const newBatch = e.target.value;
+                    const remoteOnly = REMOTE_ONLY_BATCHES.includes(newBatch);
                     setFormData(prev => ({
-                      ...prev, 
-                      mode: newMode,
+                      ...prev,
+                      batch: newBatch,
+                      slot: '',
+                      // If switching to a remote-only batch, force mode to Remote
+                      mode: remoteOnly ? 'Remote' : prev.mode === 'Remote' ? prev.mode : '',
                       accommodationRequired: '',
                       transportationRequired: ''
                     }));
                   }}
                 >
-                  <option value="">Select Mode</option>
-                  <option value="Remote">Remote (HomeTown)</option>
-                  <option value="Incampus">In Campus</option>
-                  <option value="InVillage">In Village</option>
+                  <option value="">Select Batch</option>
+                  <option value="Y-25-VJA">Y-25 (Vijayawada Campus)</option>
+                  <option value="Y-25-HYD">Y-25 (Hyderabad Campus)</option>
+                  <option value="Y-24">Y-24 (Detained) / Supply (Both Campuses)</option>
                 </select>
-              </div>   
+              </div>
+
+              <div className="input-row">
+                <label>Select Internship Mode *</label>
+                {isRemoteOnly(formData.batch) ? (
+                  <>
+                    <select value="Remote" disabled style={{ background: '#f0f0f0', color: '#555' }}>
+                      <option value="Remote">Remote (HomeTown)</option>
+                    </select>
+                    <span style={{ fontSize: '0.82rem', color: '#555', marginTop: '4px', display: 'block' }}>Only Remote mode is available for this batch.</span>
+                  </>
+                ) : (
+                  <select
+                    value={formData.mode}
+                    onChange={(e) => {
+                      const newMode = e.target.value;
+                      setFormData(prev => ({
+                        ...prev, 
+                        mode: newMode,
+                        accommodationRequired: '',
+                        transportationRequired: ''
+                      }));
+                    }}
+                    disabled={!formData.batch}
+                  >
+                    <option value="">{formData.batch ? 'Select Mode' : 'Select Batch first'}</option>
+                    <option value="Remote">Remote (HomeTown)</option>
+                    <option value="Incampus">In Campus</option>
+                    <option value="InVillage">In Village</option>
+                  </select>
+                )}
+              </div>
 
               {formData.mode === 'Incampus' && (
                 <>
@@ -654,7 +678,6 @@ export default function Register() {
                       >
                         <option value="">Select Option</option>
                         <option value="Yes">Yes</option>
-                        <option value="No">No</option>
                         <option value="Own Transport">Own Transport</option>
                       </select>
                       {formData.transportationRequired === 'Yes' && (
@@ -679,7 +702,7 @@ export default function Register() {
                   disabled={!formData.batch}
                 >
                   <option value="">{formData.batch ? 'Select Slot' : 'Select Batch first'}</option>
-                  {formData.batch === 'Y-25' && (
+                  {(formData.batch === 'Y-25-VJA' || formData.batch === 'Y-25-HYD') && (
                     <>
                       <option value="1">Slot 1 — May 11–17</option>
                       <option value="2">Slot 2 — May 18–24</option>
@@ -796,7 +819,11 @@ export default function Register() {
               <button 
                 className="next-button" 
                 onClick={handleNext}
-                disabled={!formData.batch || !formData.selectedDomain || !formData.fieldOfInterest || !formData.careerChoice || !formData.mode || !formData.slot || (formData.mode === 'Incampus' && (!formData.accommodationRequired || (formData.accommodationRequired === 'No' && !formData.transportationRequired)))}
+                disabled={(() => {
+                  const effectiveMode = isRemoteOnly(formData.batch) ? 'Remote' : formData.mode;
+                  return !formData.batch || !formData.selectedDomain || !formData.fieldOfInterest || !formData.careerChoice || !effectiveMode || !formData.slot ||
+                    (effectiveMode === 'Incampus' && (!formData.accommodationRequired || (formData.accommodationRequired === 'No' && !formData.transportationRequired)));
+                })()}
               >
                 Next
               </button>
@@ -1082,7 +1109,11 @@ export default function Register() {
                 <div className="confirm-grid">
                   <div className="confirm-item">
                     <span>Batch</span>
-                    <span><span className={`batch-tag ${formData.batch === 'Y-25' ? 'y25' : 'y24'}`}>{formData.batch}</span></span>
+                    <span><span className={`batch-tag ${formData.batch === 'Y-24' ? 'y24' : 'y25'}`}>
+                      {formData.batch === 'Y-25-VJA' ? 'Y-25 (Vijayawada Campus)' :
+                       formData.batch === 'Y-25-HYD' ? 'Y-25 (Hyderabad Campus)' :
+                       'Y-24 (Detained) / Supply'}
+                    </span></span>
                   </div>
                   <div className="confirm-item">
                     <span>Selected Domain</span>
