@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import axios from "axios";
@@ -285,7 +285,7 @@ export default function Register() {
           }
         }
 
-        toast.success('Residence information saved successfully!');
+        toast.success('Current Residence information saved successfully!');
         setCurrentStep(prev => prev + 1);
         break;
       }
@@ -362,7 +362,7 @@ export default function Register() {
   };
   
 
-  const checkAvailability = async () => {
+  const checkAvailability = useCallback(async () => {
     if (formData.mode && formData.slot) {
       try {
         const response = await axios.get('/api/register/stats');
@@ -390,11 +390,11 @@ export default function Register() {
     } else {
       setAvailabilityMessage('');
     }
-  };
+  }, [formData.mode, formData.slot]);
 
   useEffect(() => {
     checkAvailability();
-  }, [formData.mode, formData.slot]);
+  }, [checkAvailability]);
 
   const checkSlotAvailability = (slot, mode) => {
     if (!stats) return 'Loading...';
@@ -569,7 +569,7 @@ export default function Register() {
                   checked={formData.agreedToRules}
                   onChange={(e) => setFormData(prev => ({...prev, agreedToRules: e.target.checked}))}
                 />
-                By clicking "Proceed," I confirm my acceptance of this undertaking and agree to abide by the rules set forth during my internship.
+                By clicking &quot;Proceed,&quot; I confirm my acceptance of this undertaking and agree to abide by the rules set forth during my internship.
               </label>
             </div>
             <div className="button-group">
@@ -969,7 +969,7 @@ export default function Register() {
       case 6:
         return (
           <section className="section">
-            <h2>Residence Information</h2>
+            <h2>Current Residence Information</h2>
             <div className="residence-content">
               <div className="form-grid">
                 <div className="input-row">
@@ -1181,7 +1181,7 @@ export default function Register() {
               </div>
 
               <div className="confirm-section">
-                <h3>Residence Information</h3>
+                <h3>Current Residence Information</h3>
                 <div className="confirm-grid">
                   <div className="confirm-item">
                     <span>Type:</span>
@@ -1278,7 +1278,7 @@ export default function Register() {
               <p style={{ margin: '0 0 10px 0', fontWeight: 'bold', color: '#333' }}>Please proceed to login using the following credentials:</p>
               <ul style={{ paddingLeft: '20px', margin: '10px 0', color: '#444' }}>
                 <li style={{ marginBottom: '5px' }}><strong>Username:</strong> Your ID Number</li>
-                <li><strong>Password:</strong> Your ID Number followed by your Phone Number</li>
+                <li><strong>Password:</strong> Your ID Number followed by last 4 digits of your Phone Number</li>
               </ul>
               <div style={{ marginTop: '15px', padding: '10px', background: '#e0f2fe', borderRadius: '6px', fontSize: '0.9rem', color: '#0369a1' }}>
                 <strong>Example:</strong><br/>
