@@ -11,25 +11,25 @@ export default function ImpactStats() {
   const impactStats = [
     {
       number: "4,800+",
-      label: "Students Completed",
+      label: "STUDENTS COMPLETED",
       description: "Successfully finished program",
       icon: CheckCircle
     },
     {
       number: "20+",
-      label: "Domain Areas",
+      label: "DOMAIN AREAS",
       description: "Impact sectors covered",
       icon: Target
     },
     {
       number: "150+",
-      label: "Faculty Mentors",
+      label: "FACULTY MENTORS",
       description: "Expert guidance provided",
       icon: Users
     },
     {
       number: "100+",
-      label: "Villages Impacted",
+      label: "VILLAGES IMPACTED",
       description: "Communities transformed",
       icon: Award
     }

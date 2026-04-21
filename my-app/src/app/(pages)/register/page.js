@@ -597,7 +597,7 @@ export default function Register() {
                   onChange={(e) => setFormData(prev => ({...prev, mode: e.target.value}))}
                 >
                   <option value="">Select Mode</option>
-                  <option value="Remote">Remote</option>
+                  <option value="Remote">Remote (HomeTown)</option>
                   <option value="Incampus">In Campus</option>
                   <option value="InVillage">In Village</option>
                 </select>
@@ -692,7 +692,6 @@ export default function Register() {
                   <option>Higher Education</option>
                   <option>Social Service</option>
                   <option>Research &amp; Development</option>
-                  <option>Others</option>
                 </select>
               </div>
             </div>

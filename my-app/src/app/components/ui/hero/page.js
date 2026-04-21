@@ -50,7 +50,6 @@ export default function Hero() {
                   width={900}
                   height={520}
                   className="slide-image"
-                  style={{ width: '100%', height: '520px' }}
                   unoptimized={true}
                 />
               </div>
