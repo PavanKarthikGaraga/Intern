@@ -20,10 +20,7 @@ const nextConfig = {
             },
         ],
     },
-    allowedDevOrigins: [
-        'socialinternship.kluniversity.in',
-        '192.168.2.49',
-    ],
+
     async headers() {
         return [
             {

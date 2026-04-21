@@ -25,7 +25,7 @@ import VerifyCertificates from './components/verifyCertificates/page';
 import SFinalProfile from './components/sfinal/page';
 import ProblemStatements from './components/problemStatements/page';
 import ActivityLogs from './components/activityLogs/page';
-import OldDB from './components/oldDB/page';
+
 
 export default function AdminDashboard() {
   const { user, isLoading, isAuthenticated } = useAuth();
