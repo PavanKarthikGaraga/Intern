@@ -62,6 +62,21 @@ export async function GET() {
 
         const stats = statsResult[0];
 
+        // Build slots object dynamically — only include slots whose columns exist in the stats row.
+        // This makes the API safe for both the old DB (4 slots) and new DB (9 slots).
+        const buildSlot = (n) => ({
+            total: stats[`slot${n}`] ?? 0,
+            remote: stats[`slot${n}Remote`] ?? 0,
+            incampus: stats[`slot${n}Incamp`] ?? 0,
+            invillage: stats[`slot${n}Invillage`] ?? 0
+        });
+
+        // Detect max slot number from columns present in the row
+        const allPossibleSlots = [1,2,3,4,5,6,7,8,9];
+        const availableSlots = allPossibleSlots.filter(n => stats[`slot${n}`] !== undefined);
+        const slotsObj = {};
+        availableSlots.forEach(n => { slotsObj[`slot${n}`] = buildSlot(n); });
+
         // Get domain-wise statistics
         const [domainStats] = await pool.query(`
             SELECT 
@@ -90,26 +105,19 @@ export async function GET() {
             success: true,
             stats: {
                 overview: {
-                    totalStudents: stats.totalStudents,
-                    totalCompleted: stats.totalCompleted,
-                    totalActive: stats.totalActive,
-                    completionRate: ((stats.totalCompleted / stats.totalStudents) * 100).toFixed(2)
+                    totalStudents: stats.totalStudents ?? 0,
+                    totalCompleted: stats.totalCompleted ?? 0,
+                    totalActive: stats.totalActive ?? 0,
+                    completionRate: stats.totalStudents
+                        ? ((stats.totalCompleted / stats.totalStudents) * 100).toFixed(2)
+                        : "0.00"
                 },
-                slots: {
-                    slot1: { total: stats.slot1, remote: stats.slot1Remote, incampus: stats.slot1Incamp, invillage: stats.slot1Invillage },
-                    slot2: { total: stats.slot2, remote: stats.slot2Remote, incampus: stats.slot2Incamp, invillage: stats.slot2Invillage },
-                    slot3: { total: stats.slot3, remote: stats.slot3Remote, incampus: stats.slot3Incamp, invillage: stats.slot3Invillage },
-                    slot4: { total: stats.slot4, remote: stats.slot4Remote, incampus: stats.slot4Incamp, invillage: stats.slot4Invillage },
-                    slot5: { total: stats.slot5, remote: stats.slot5Remote, incampus: stats.slot5Incamp, invillage: stats.slot5Invillage },
-                    slot6: { total: stats.slot6, remote: stats.slot6Remote, incampus: stats.slot6Incamp, invillage: stats.slot6Invillage },
-                    slot7: { total: stats.slot7, remote: stats.slot7Remote, incampus: stats.slot7Incamp, invillage: stats.slot7Invillage },
-                    slot8: { total: stats.slot8, remote: stats.slot8Remote, incampus: stats.slot8Incamp, invillage: stats.slot8Invillage },
-                    slot9: { total: stats.slot9, remote: stats.slot9Remote, incampus: stats.slot9Incamp, invillage: stats.slot9Invillage },
-                },
+                slots: slotsObj,
+                availableSlots, // tell the frontend which slots to show
                 modes: {
-                    remote: stats.remote,
-                    incampus: stats.incampus,
-                    invillage: stats.invillage
+                    remote: stats.remote ?? 0,
+                    incampus: stats.incampus ?? 0,
+                    invillage: stats.invillage ?? 0
                 },
                 domainStats: domainStats || [],
                 modeStats: modeStats || []
