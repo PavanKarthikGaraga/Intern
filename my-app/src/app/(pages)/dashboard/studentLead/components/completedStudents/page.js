@@ -104,10 +104,15 @@ const CompletedStudents = () => {
         <div className="filters">
           <select value={selectedSlot} onChange={handleSlotChange}>
             <option value="all">All Slots</option>
-            <option value="1">Slot 1</option>
-            <option value="2">Slot 2</option>
-            <option value="3">Slot 3</option>
-            <option value="4">Slot 4</option>
+            <option value="1">Slot 1 — May 11–17</option>
+            <option value="2">Slot 2 — May 18–24</option>
+            <option value="3">Slot 3 — May 25–31</option>
+            <option value="4">Slot 4 — Jun 1–7</option>
+            <option value="5">Slot 5 — Jun 8–14</option>
+            <option value="6">Slot 6 — Jun 15–21</option>
+            <option value="7">Slot 7 — Jun 22–28</option>
+            <option value="8">Slot 8 — Jun 29–Jul 5</option>
+            <option value="9">Slot 9 — Jul 6–12</option>
           </select>
         </div>
       </div>

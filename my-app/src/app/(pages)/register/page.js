@@ -28,6 +28,8 @@ export default function Register() {
     batch: '',
     agreedToRules: false,
     mode: '',
+    accommodationRequired: '',
+    transportationRequired: '',
     slot: '',
     studentInfo: {
       name: '',
@@ -70,6 +72,7 @@ export default function Register() {
   const [stats, setStats] = useState(null);
   const [availabilityMessage, setAvailabilityMessage] = useState('');
   const [isAvailable, setIsAvailable] = useState(true);
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
 
   // Add new useEffect for initial stats loading
   useEffect(() => {
@@ -178,6 +181,16 @@ export default function Register() {
         if (!formData.selectedDomain) {
           toast.error('Please select a domain to continue');
           return;
+        }
+        if (formData.mode === 'Incampus') {
+          if (!formData.accommodationRequired) {
+            toast.error('Please select whether accommodation is required');
+            return;
+          }
+          if (formData.accommodationRequired === 'No' && !formData.transportationRequired) {
+            toast.error('Please select whether transportation is required');
+            return;
+          }
         }
         toast.success('Domain selected successfully!');
         setCurrentStep(prev => prev + 1);
@@ -320,11 +333,8 @@ export default function Register() {
       toast.dismiss(loadingToast);
   
       if (data.success) {
-        toast.success('Registration successful! Please check your email for confirmation.');
-        // Wait for toast to be visible before redirecting
-        setTimeout(() => {
-          window.location.href = '/';
-        }, 2000);
+        toast.dismiss();
+        setRegistrationSuccess(true);
       } else {
         console.log("Registration error:", data);
         toast.error(data.error || 'Registration failed. Please try again.'); // Display specific error message from backend
@@ -594,7 +604,15 @@ export default function Register() {
                 <label>Select Internship Mode *</label>
                 <select
                   value={formData.mode}
-                  onChange={(e) => setFormData(prev => ({...prev, mode: e.target.value}))}
+                  onChange={(e) => {
+                    const newMode = e.target.value;
+                    setFormData(prev => ({
+                      ...prev, 
+                      mode: newMode,
+                      accommodationRequired: '',
+                      transportationRequired: ''
+                    }));
+                  }}
                 >
                   <option value="">Select Mode</option>
                   <option value="Remote">Remote (HomeTown)</option>
@@ -602,6 +620,56 @@ export default function Register() {
                   <option value="InVillage">In Village</option>
                 </select>
               </div>   
+
+              {formData.mode === 'Incampus' && (
+                <>
+                  <div className="input-row">
+                    <label>Accommodation required? *</label>
+                    <select
+                      value={formData.accommodationRequired}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFormData(prev => ({
+                          ...prev,
+                          accommodationRequired: val,
+                          transportationRequired: val === 'Yes' ? 'Free' : ''
+                        }))
+                      }}
+                    >
+                      <option value="">Select Option</option>
+                      <option value="Yes">Yes</option>
+                      <option value="No">No</option>
+                    </select>
+                    {formData.accommodationRequired === 'Yes' && (
+                      <span style={{ fontSize: '0.85rem', color: '#006400', marginTop: '4px', display: 'block', fontWeight: '500' }}>Transportation is free.</span>
+                    )}
+                  </div>
+
+                  {formData.accommodationRequired === 'No' && (
+                    <div className="input-row">
+                      <label>Transportation required? *</label>
+                      <select
+                        value={formData.transportationRequired}
+                        onChange={(e) => setFormData(prev => ({...prev, transportationRequired: e.target.value}))}
+                      >
+                        <option value="">Select Option</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                        <option value="Own Transport">Own Transport</option>
+                      </select>
+                      {formData.transportationRequired === 'Yes' && (
+                        <span style={{ fontSize: '0.85rem', color: '#970003', marginTop: '4px', display: 'block', fontWeight: '500' }}>Fees will be applicable, will inform later via email.</span>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="input-row" style={{ gridColumn: '1 / -1', background: '#f0f7ff', padding: '12px', borderRadius: '6px', border: '1px solid #cce3ff' }}>
+                    <p style={{ fontSize: '0.85rem', color: '#004085', margin: 0 }}>
+                      <strong>Note:</strong> Accommodation and transportation charges will be released via email furtherly. For accommodation selected student free transportation.
+                    </p>
+                  </div>
+                </>
+              )}
 
               <div className="input-row">
                 <label>Select Your Slot *</label>
@@ -728,7 +796,7 @@ export default function Register() {
               <button 
                 className="next-button" 
                 onClick={handleNext}
-                disabled={!formData.batch || !formData.selectedDomain || !formData.fieldOfInterest || !formData.careerChoice || !formData.mode || !formData.slot}
+                disabled={!formData.batch || !formData.selectedDomain || !formData.fieldOfInterest || !formData.careerChoice || !formData.mode || !formData.slot || (formData.mode === 'Incampus' && (!formData.accommodationRequired || (formData.accommodationRequired === 'No' && !formData.transportationRequired)))}
               >
                 Next
               </button>
@@ -1032,6 +1100,18 @@ export default function Register() {
                     <span>Internship Mode</span>
                     <span>{formData.mode}</span>
                   </div>
+                  {formData.mode === 'Incampus' && (
+                    <>
+                      <div className="confirm-item">
+                        <span>Accommodation</span>
+                        <span>{formData.accommodationRequired}</span>
+                      </div>
+                      <div className="confirm-item">
+                        <span>Transportation</span>
+                        <span>{formData.transportationRequired}</span>
+                      </div>
+                    </>
+                  )}
                   <div className="confirm-item">
                     <span>Slot</span>
                     <span>Slot {formData.slot} — {SLOT_DATES[parseInt(formData.slot)]}</span>
@@ -1156,6 +1236,42 @@ export default function Register() {
         {/* Current step content */}
         {renderStep()}
       </div>
+
+      {registrationSuccess && (
+        <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
+          <div className="modal-content" style={{ background: '#fff', padding: '30px', borderRadius: '12px', maxWidth: '500px', width: '90%', textAlign: 'left', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
+            <h2 style={{ color: '#006400', marginTop: 0, marginBottom: '15px' }}>Registration Successful! 🎉</h2>
+            <p style={{ fontSize: '1.1rem', fontWeight: '500', color: '#111' }}>Welcome to Social Internship 2025–26.</p>
+            <p style={{ color: '#444' }}>You have been successfully registered.</p>
+            <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0', margin: '20px 0' }}>
+              <p style={{ margin: '0 0 10px 0', fontWeight: 'bold', color: '#333' }}>Please proceed to login using the following credentials:</p>
+              <ul style={{ paddingLeft: '20px', margin: '10px 0', color: '#444' }}>
+                <li style={{ marginBottom: '5px' }}><strong>Username:</strong> Your ID Number</li>
+                <li><strong>Password:</strong> Your ID Number followed by your Phone Number</li>
+              </ul>
+              <div style={{ marginTop: '15px', padding: '10px', background: '#e0f2fe', borderRadius: '6px', fontSize: '0.9rem', color: '#0369a1' }}>
+                <strong>Example:</strong><br/>
+                If your ID is <strong style={{ color: '#000' }}>2400030188</strong> and your phone number is XXXXXX<strong style={{ color: '#000' }}>9508</strong>,<br/>
+                then your password will be: <strong style={{ color: '#000', fontSize: '1rem' }}>24000301889508</strong>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '15px', justifyContent: 'flex-end', marginTop: '25px' }}>
+              <button 
+                onClick={() => window.location.href = '/'}
+                style={{ padding: '10px 20px', border: '1px solid #ccc', background: '#fff', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', color: '#333' }}
+              >
+                Close
+              </button>
+              <button 
+                onClick={() => router.push('/auth/login')}
+                style={{ padding: '10px 20px', border: 'none', background: '#006400', color: '#fff', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}
+              >
+                Login to Dashboard
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

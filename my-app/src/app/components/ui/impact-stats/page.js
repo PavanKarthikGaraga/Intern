@@ -10,25 +10,25 @@ import './page.css';
 export default function ImpactStats() {
   const impactStats = [
     {
-      number: "4,800+",
-      label: "STUDENTS COMPLETED",
-      description: "Successfully finished program",
+      number: "17,062",
+      label: "STUDENTS",
+      description: "Successfully participated in program",
       icon: CheckCircle
     },
     {
-      number: "20+",
+      number: "20",
       label: "DOMAIN AREAS",
       description: "Impact sectors covered",
       icon: Target
     },
     {
-      number: "150+",
+      number: "576",
       label: "FACULTY MENTORS",
       description: "Expert guidance provided",
       icon: Users
     },
     {
-      number: "100+",
+      number: "45",
       label: "VILLAGES IMPACTED",
       description: "Communities transformed",
       icon: Award
@@ -52,8 +52,8 @@ export default function ImpactStats() {
               to meaningful community development projects across diverse sectors.
             </p>
             <p>
-              With over 150 dedicated faculty mentors guiding participants through 20+ domain areas,
-              our program has successfully impacted 100+ villages by fostering sustainable development
+              With 576 dedicated faculty mentors guiding participants through 20 domain areas,
+              our program has successfully impacted 45 villages by fostering sustainable development
               and empowering communities through education and innovation.
             </p>
             <p>

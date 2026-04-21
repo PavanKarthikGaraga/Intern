@@ -101,8 +101,8 @@ export async function POST(request) {
         {
           query: `INSERT INTO registrations 
             (selectedDomain, fieldOfInterest, careerChoice, batch, mode, slot, username, name, email, branch, gender, year, phoneNumber, 
-            residenceType, hostelName, busRoute, country, state, district, pincode, season)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            residenceType, hostelName, busRoute, country, state, district, pincode, season, accommodation, transportation)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           values: [
             formData.selectedDomain,
             formData.fieldOfInterest || null,
@@ -125,6 +125,8 @@ export async function POST(request) {
             formData.residence.district,
             formData.residence.pincode,
             '2026',
+            formData.accommodationRequired || null,
+            formData.transportationRequired || null,
           ]
         },
         {

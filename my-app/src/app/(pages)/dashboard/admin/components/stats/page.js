@@ -115,7 +115,7 @@ export default function AdminDashboard() {
             <section className="stats-section">
                 <h2>Slot Statistics</h2>
                 <div className="stats-grid">
-                    {[1, 2, 3, 4].map(slotNum => (
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(slotNum => (
                         <div key={slotNum} className="stat-card slot-card">
                             <h3>Slot {slotNum}</h3>
                             <div className="slot-stats">
