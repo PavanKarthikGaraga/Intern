@@ -205,11 +205,17 @@
   .impact-content {
     flex-direction: column;
     gap: 1.5rem;
+    align-items: center;
+  }
+
+  .stats-section {
+    width: 100%;
   }
 
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
+    width: 100%;
   }
 
   .program-info {
@@ -230,6 +236,7 @@
   .stats-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
+    width: 100%;
   }
 
   .stat-card {

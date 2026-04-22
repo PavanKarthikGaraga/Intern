@@ -47,10 +47,11 @@ export default function Hero() {
                 <Image
                   src={slide.image}
                   alt="Social Internship"
-                  width={900}
-                  height={520}
+                  width={1920}
+                  height={1080}
                   className="slide-image"
                   unoptimized={true}
+                  priority={index === 0}
                 />
               </div>
             </div>

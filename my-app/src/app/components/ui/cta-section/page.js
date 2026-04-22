@@ -35,7 +35,7 @@ const linkedInPosts = [
 
 const youtubeVideos = [
   {
-    src: "https://www.youtube.com/embed/dBRNF5JyXag",
+    src: "https://www.youtube.com/embed/c6xbIDqd_N4?si=pOMy-wjYky3NKxbi",
     width: 450,
     height: 253,
     title: "YouTube video player 1"
@@ -47,7 +47,7 @@ const youtubeVideos = [
     title: "YouTube video player 2"
   },
   {
-    src: "https://www.youtube.com/embed/xP4-HeZH8Vg?si=Se5tN21u1aSyIKo-",
+    src: "https://www.youtube.com/embed/dBRNF5JyXag",
     width: 450,
     height: 253,
     title: "YouTube video player 3"

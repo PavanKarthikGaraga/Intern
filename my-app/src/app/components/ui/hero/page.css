@@ -1,8 +1,8 @@
 /* Hero Section */
 .hero-section {
-  background: white;
+  background: #000;
   position: relative;
-  overflow: visible;
+  overflow: hidden;
 }
 
 @keyframes fadeInUp {
@@ -18,7 +18,9 @@
 
 .hero-slider {
   position: relative;
-  height: 540px;
+  height: 90vh;
+  min-height: 600px;
+  max-height: 900px;
 }
 
 .hero-slide {
@@ -37,12 +39,13 @@
 }
 
 .hero-content {
-  max-width: 1200px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 1rem 2rem;
+  padding: 0;
   display: flex;
   justify-content: center;
   align-items: center;
+  height: 100%;
   animation: fadeInUp 1s ease-out;
 }
 
@@ -56,10 +59,9 @@
 
 .slide-image {
   width: 100%;
-  max-width: 900px;
-  height: 520px;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  height: 100%;
+  border-radius: 0;
+  box-shadow: none;
   object-fit: cover;
   object-position: center;
 }
@@ -91,29 +93,19 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   .hero-content {
-    padding: 1rem;
+    padding: 0;
   }
 
   .hero-slider {
-    height: 400px;
-  }
-
-  .slide-image {
-    height: 380px;
+    height: 70vh;
+    min-height: 500px;
   }
 }
 
 @media (max-width: 480px) {
-  .hero-content {
-    padding: 1rem;
-  }
-
   .hero-slider {
-    height: 280px;
-  }
-
-  .slide-image {
-    height: 260px;
+    height: 60vh;
+    min-height: 400px;
   }
 }
 .slide-nav-btn {
