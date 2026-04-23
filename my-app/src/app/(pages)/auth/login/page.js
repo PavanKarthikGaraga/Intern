@@ -17,7 +17,7 @@ const Login = () => {
     const { setUser, setIsAuthenticated } = useAuth();
 
     const generateCaptcha = useCallback(() => {
-        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        const characters = 'ABCDEFGHIJKLMNPQRSTUVWXYZabcdefghijklmnpqrstuvwxyz123456789';
         let captcha = '';
         for (let i = 0; i < 6; i++) {
             captcha += characters.charAt(Math.floor(Math.random() * characters.length));
@@ -174,7 +174,7 @@ const Login = () => {
                                 <h6>Report Generator</h6>
                         </Link>
                         <Link href="/register" prefetch={true}>
-                            <p>Don't have an account? Register here</p>
+                            <p>Don&apos;t have an account? Register here</p>
                         </Link>
                     </div>
                 </form>

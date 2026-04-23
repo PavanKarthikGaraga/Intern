@@ -51,6 +51,7 @@ export async function GET(req) {
     const mode = searchParams.get('mode');
     const search = searchParams.get('search');
     const gender = searchParams.get('gender');
+    const fieldOfInterest = searchParams.get('fieldOfInterest');
     const itemsPerPage = 30;
     const offset = (page - 1) * itemsPerPage;
 
@@ -77,6 +78,10 @@ export async function GET(req) {
       conditions.push('r.gender = ?');
       params.push(gender);
     }
+    if (fieldOfInterest) {
+      conditions.push('r.fieldOfInterest = ?');
+      params.push(fieldOfInterest);
+    }
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
@@ -99,6 +104,7 @@ export async function GET(req) {
         r.slot,
         r.email,
         r.phoneNumber,
+        r.fieldOfInterest,
         f.completed,
         sl.name as leadName,
         fm.name as facultyName,

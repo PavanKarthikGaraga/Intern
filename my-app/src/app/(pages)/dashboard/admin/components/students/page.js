@@ -21,7 +21,8 @@ export default function Students() {
     mode: '',
     search: '',
     pendingSearch: '',
-    gender: ''
+    gender: '',
+    fieldOfInterest: ''
   });
   const [pagination, setPagination] = useState({
     currentPage: 1,
@@ -64,7 +65,8 @@ export default function Students() {
         ...(filters.slot && { slot: filters.slot }),
         ...(filters.mode && { mode: filters.mode }),
         ...(filters.search && { search: filters.search }),
-        ...(filters.gender && { gender: filters.gender })
+        ...(filters.gender && { gender: filters.gender }),
+        ...(filters.fieldOfInterest && { fieldOfInterest: filters.fieldOfInterest })
       });
 
       const response = await fetch(`/api/dashboard/admin/students?${queryParams}`, {
@@ -93,7 +95,7 @@ export default function Students() {
 
   useEffect(() => {
     fetchStudents();
-  }, [filters.search, filters.domain, filters.slot, filters.mode, filters.gender, pagination.currentPage, pagination.limit]);
+  }, [filters.search, filters.domain, filters.slot, filters.mode, filters.gender, filters.fieldOfInterest, pagination.currentPage, pagination.limit]);
 
   const handleFilterChange = (field, value) => {
     if (field === 'search') {
@@ -305,6 +307,39 @@ export default function Students() {
           </div>
 
           <div className="filter-group">
+            <label htmlFor="fieldOfInterest">Field of Interest</label>
+            <select
+              id="fieldOfInterest"
+              value={filters.fieldOfInterest}
+              onChange={(e) => handleFilterChange('fieldOfInterest', e.target.value)}
+            >
+              <option value="">All Fields</option>
+              <option value="Awareness Campaigns">Awareness Campaigns</option>
+              <option value="Content Creation (YouTube / Reels)">Content Creation (YouTube / Reels)</option>
+              <option value="Cover Song Production">Cover Song Production</option>
+              <option value="Dance">Dance</option>
+              <option value="Documentary Making">Documentary Making</option>
+              <option value="Dramatics">Dramatics</option>
+              <option value="Environmental Activities">Environmental Activities</option>
+              <option value="Leadership Activities">Leadership Activities</option>
+              <option value="Literature">Literature</option>
+              <option value="Painting">Painting</option>
+              <option value="Photography">Photography</option>
+              <option value="Public Speaking">Public Speaking</option>
+              <option value="Rural Development">Rural Development</option>
+              <option value="Short Film Making">Short Film Making</option>
+              <option value="Singing">Singing</option>
+              <option value="Social Service / Volunteering">Social Service / Volunteering</option>
+              <option value="Spirituality">Spirituality</option>
+              <option value="Story Telling">Story Telling</option>
+              <option value="Technical (Hardware)">Technical (Hardware)</option>
+              <option value="Technical (Software)">Technical (Software)</option>
+              <option value="Video Editing">Video Editing</option>
+              <option value="Yoga &amp; Meditation">Yoga &amp; Meditation</option>
+            </select>
+          </div>
+
+          <div className="filter-group">
             <label htmlFor="slot">Slot</label>
             <select
               id="slot"
@@ -361,6 +396,7 @@ export default function Students() {
               <th>ID</th>
               <th>Name</th>
               <th>Domain</th>
+              <th>Field of Interest</th>
               <th>Mode</th>
               <th>Slot</th>
               <th>Status</th>
@@ -374,6 +410,7 @@ export default function Students() {
                 <td>{student.username}</td>
                 <td>{student.name}</td>
                 <td>{student.selectedDomain}</td>
+                <td>{student.fieldOfInterest || 'N/A'}</td>
                 <td>{student.mode}</td>
                 <td>{student.slot}</td>
                 <td>

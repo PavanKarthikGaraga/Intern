@@ -27,13 +27,13 @@ export default function ResetPassword() {
                 .map(username => username.trim())
                 .filter(username => username !== '');
 
-            // Validate username format (must start with 24 and be exactly 10 digits)
+            // Validate username format (must start with 24 or 25 and be exactly 10 digits)
             const invalidUsernames = usernameList.filter(username => 
-                !/^24\d{8}$/.test(username)
+                !/^(24|25)\d{8}$/.test(username)
             );
 
             if (invalidUsernames.length > 0) {
-                setError(`Invalid username format: ${invalidUsernames.join(', ')}. Usernames must start with 24 and be exactly 10 digits.`);
+                setError(`Invalid username format: ${invalidUsernames.join(', ')}. Usernames must start with 24 or 25 and be exactly 10 digits.`);
                 setLoading(false);
                 return;
             }
@@ -75,11 +75,11 @@ export default function ResetPassword() {
                             id="usernames"
                             value={usernames}
                             onChange={(e) => setUsernames(e.target.value)}
-                            placeholder={`24xxxxxxxx\n24xxxxxxxx`}
+                            placeholder={`24xxxxxxxx\n25xxxxxxxx`}
                             required
                         />
                         <small className="help-text">
-                            Enter usernames in format 24XXXXXXXX (must start with 24 and be exactly 10 digits)
+                            Enter usernames in format 24XXXXXXXX or 25XXXXXXXX (must start with 24 or 25 and be exactly 10 digits)
                         </small>
                     </div>
 

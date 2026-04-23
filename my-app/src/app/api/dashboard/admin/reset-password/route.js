@@ -34,15 +34,15 @@ export async function POST(req) {
             }, { status: 400 });
         }
 
-        // Validate username format (must start with 24 and be exactly 10 digits)
+        // Validate username format (must start with 24 or 25 and be exactly 10 digits)
         const invalidUsernames = usernames.filter(username => 
-            !/^24\d{8}$/.test(username)
+            !/^(24|25)\d{8}$/.test(username)
         );
 
         if (invalidUsernames.length > 0) {
             return NextResponse.json({ 
                 success: false, 
-                error: `Invalid username format: ${invalidUsernames.join(', ')}. Usernames must start with 24 and be exactly 10 digits.` 
+                error: `Invalid username format: ${invalidUsernames.join(', ')}. Usernames must start with 24 or 25 and be exactly 10 digits.` 
             }, { status: 400 });
         }
 
