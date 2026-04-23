@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 // import Loader from '@/components/loader/loader';
 import toast from 'react-hot-toast';
@@ -13,6 +13,7 @@ import { FaSearch, FaTrash, FaDownload, FaSync, FaEye } from 'react-icons/fa';
 export default function Students() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState(null);
   const [domains, setDomains] = useState([]);
   const [searchInput, setSearchInput] = useState('');
@@ -33,6 +34,7 @@ export default function Students() {
   });
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [selectedProfile, setSelectedProfile] = useState(null);
+  const isInitialMount = useRef(true);
 
   useEffect(() => {
     const fetchDomains = async () => {
@@ -54,8 +56,10 @@ export default function Students() {
     fetchDomains();
   }, []);
 
-  const fetchStudents = useCallback(async () => {
-    setLoading(true);
+  const fetchStudents = useCallback(async (isBackground = false) => {
+    if (isBackground) setIsSearching(true);
+    else setLoading(true);
+    
     try {
       setError(null);
       const queryParams = new URLSearchParams({
@@ -90,11 +94,17 @@ export default function Students() {
       toast.error(err.message);
     } finally {
       setLoading(false);
+      setIsSearching(false);
     }
   }, [filters.search, filters.domain, filters.slot, filters.mode, filters.gender, filters.fieldOfInterest, pagination.currentPage, pagination.limit]);
 
   useEffect(() => {
-    fetchStudents();
+    if (isInitialMount.current) {
+      fetchStudents(false);
+      isInitialMount.current = false;
+    } else {
+      fetchStudents(true);
+    }
   }, [fetchStudents]);
 
   // Debounce: fire search 350 ms after the user stops typing
@@ -198,7 +208,7 @@ export default function Students() {
         setStudents(prevStudents => prevStudents.filter(student => student.username !== username));
         toast.success('Student deleted successfully');
         // Refresh the total count
-        fetchStudents();
+        fetchStudents(true);
       } else {
         throw new Error(data.error || 'Failed to delete student');
       }
@@ -240,8 +250,14 @@ export default function Students() {
   };
 
   if (loading) {
-    // return <Loader />;
-    return <div className="loading">Loading...</div>;
+    return (
+      <div className="students-section">
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>Loading students...</p>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
@@ -258,8 +274,8 @@ export default function Students() {
           </div>
         </div>
         <div className="header-buttons">
-          <button className="download-btn" onClick={fetchStudents}>
-            <FaSync /> Refresh
+          <button className="download-btn" onClick={() => fetchStudents(true)}>
+            <FaSync className={isSearching ? 'spinning' : ''} /> Refresh
           </button>
           <button className="download-btn" onClick={handleDownloadExcel}>
             <FaDownload /> Download Excel
@@ -269,14 +285,18 @@ export default function Students() {
 
       <div className="filters-container">
         <div className="search-group">
-          <FaSearch className="search-icon" />
-          <input
-            type="text"
-            id="search"
-            placeholder="Search by name, email, domain or field of interest..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-          />
+          <div className="search-input-wrapper">
+            <FaSearch className="search-icon" />
+            <input
+              type="text"
+              id="search"
+              placeholder="Search by name, email, domain or field of interest..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              autoComplete="off"
+            />
+            {isSearching && <div className="search-loader"></div>}
+          </div>
         </div>
         <div className="filters">
           <div className="filter-group">
