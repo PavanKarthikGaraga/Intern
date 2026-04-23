@@ -4,13 +4,13 @@ import { useAuth } from '@/context/AuthContext';
 import './page.css';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import Overview from './components/overview/page';
-import Profile from './components/profile/page';
-import ChangePassword from './components/changePassword/page';
-import Students from './components/students/page';
-import Leads from './components/leads/page';
-import CompletedStudents from './components/completedStudents/page';
-import FinalReports from './components/finalReports/page';
+import Overview from './_components/overview/page';
+import Profile from './_components/profile/page';
+import ChangePassword from './_components/changePassword/page';
+import Students from './_components/students/page';
+import Leads from './_components/leads/page';
+import CompletedStudents from './_components/completedStudents/page';
+import FinalReports from './_components/finalReports/page';
 
 export default function FacultyMentorDashboard() {
   const { user, isLoading, isAuthenticated } = useAuth();

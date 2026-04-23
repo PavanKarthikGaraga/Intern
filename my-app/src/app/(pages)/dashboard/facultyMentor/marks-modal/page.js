@@ -3,7 +3,7 @@ import { useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import React, { Suspense } from 'react';
 
-const MarksModal = dynamic(() => import('../components/students/MarksModal'), { ssr: false });
+const MarksModal = dynamic(() => import('../_components/students/MarksModal'), { ssr: false });
 
 function MarksModalContent() {
   const searchParams = useSearchParams();

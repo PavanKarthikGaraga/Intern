@@ -41,7 +41,7 @@ const youtubeVideos = [
     title: "YouTube video player 1"
   },
   {
-    src: "https://www.youtube.com/embed/XJga1BK6pXc?si=iEnRwlrTGxuR-Z4K",
+    src: "https://www.youtube.com/watch?v=kxaM1sEry9s",
     width: 450,
     height: 253,
     title: "YouTube video player 2"

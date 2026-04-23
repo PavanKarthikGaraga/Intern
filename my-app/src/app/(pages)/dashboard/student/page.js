@@ -6,13 +6,13 @@ import './page.css';
 import Loader from '@/app/components/loader/loader';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import Overview from './components/overview/page';
-import Profile from './components/profile/page';
-import ChangePassword from './components/changePassword/page';
-import Lead from './components/Lead/page';
-import Reports from './components/submissions/reports';
-import FinalReport from './components/finalReport/page';
-import ProblemStatement from './components/problemStatment/page';
+import Overview from './_components/overview/page';
+import Profile from './_components/profile/page';
+import ChangePassword from './_components/changePassword/page';
+import Lead from './_components/Lead/page';
+import Reports from './_components/submissions/reports';
+import FinalReport from './_components/finalReport/page';
+import ProblemStatement from './_components/problemStatment/page';
 
 export default function StudentDashboard() {
   const { user } = useAuth();
