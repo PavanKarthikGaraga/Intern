@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import './page.css';
 
 
@@ -65,10 +66,12 @@ export default function Header() {
     <header className={`header ${isScrolled ? 'scrolled' : ''}`} data-scrolled={isScrolled}>
       <div className="header-content">
         <div className="logo-section">
-          <img
+          <Image
             src="/klu.png"
             alt="KLU Logo"
             className="logo-image"
+            width={48}
+            height={48}
           />
           <h4>Social Internship</h4>
         </div>

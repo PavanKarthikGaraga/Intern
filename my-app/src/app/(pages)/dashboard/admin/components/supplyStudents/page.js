@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
 import './page.css';
@@ -25,7 +25,7 @@ export default function SupplyStudents() {
     pendingPage: null
   });
 
-  const fetchStudents = async () => {
+  const fetchStudents = useCallback(async () => {
     setLoading(true);
     try {
       setError(null);
@@ -59,11 +59,11 @@ export default function SupplyStudents() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters.search, filters.slot, filters.mode, pagination.currentPage, pagination.limit]);
 
   useEffect(() => {
     fetchStudents();
-  }, [filters.search, filters.slot, filters.mode, pagination.currentPage, pagination.limit]);
+  }, [fetchStudents]);
 
   const handleFilterChange = (field, value) => {
     if (field === 'search') {

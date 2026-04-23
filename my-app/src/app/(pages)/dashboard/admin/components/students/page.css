@@ -219,6 +219,7 @@
 
 .page-input[type=number] {
   -moz-appearance: textfield;
+  appearance: textfield;
 }
 
 .pagination button {
@@ -497,13 +498,20 @@
   margin-bottom: 1rem;
   position: relative;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
+}
+
+.search-group .search-icon {
+  position: absolute;
+  left: 12px;
+  color: #888;
+  font-size: 14px;
+  pointer-events: none;
 }
 
 .search-group input {
   width: 100%;
-  padding: 8px 12px;
-  padding-right: 40px;
+  padding: 8px 12px 8px 36px;
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 14px;
@@ -521,27 +529,6 @@
   margin-bottom: 5px;
   font-weight: 500;
   color: #333;
-}
-
-.search-button {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  background: none;
-  border: none;
-  padding: 8px 12px;
-  cursor: pointer;
-  color: #666;
-  transition: color 0.3s ease;
-}
-
-.search-button:hover {
-  color: #007bff;
-}
-
-.search-button svg {
-  width: 16px;
-  height: 16px;
 }
 
 .download-btn {

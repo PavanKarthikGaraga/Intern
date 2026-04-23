@@ -43,7 +43,7 @@ const CertificateDownload = () => {
   const [zipPolling, setZipPolling] = useState(false);
   const [zipDownloadUrl, setZipDownloadUrl] = useState(null);
   const zipPollInterval = 2000;
-  let zipPollTimer = null;
+  const zipPollTimerRef = React.useRef(null);
 
   // Timer effect for individual generation
   useEffect(() => {
@@ -86,8 +86,8 @@ const CertificateDownload = () => {
         }
       };
       poll();
-      zipPollTimer = setInterval(poll, zipPollInterval);
-      return () => clearInterval(zipPollTimer);
+      zipPollTimerRef.current = setInterval(poll, zipPollInterval);
+      return () => clearInterval(zipPollTimerRef.current);
     }
   }, [zipPolling, zipProgressId]);
 
