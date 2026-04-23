@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import "./page.css";
@@ -30,9 +30,9 @@ const CompletedStudents = () => {
   useEffect(() => {
     if (!user) return;
     fetchStudents();
-  }, [user, selectedSlot, pagination.currentPage.completed, pagination.currentPage.pending]);
+  }, [user, fetchStudents]);
 
-  const fetchStudents = async () => {
+  const fetchStudents = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch('/api/dashboard/studentLead/completedStudents', {
@@ -64,7 +64,7 @@ const CompletedStudents = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, selectedSlot, pagination.currentPage.completed, pagination.currentPage.pending]);
 
   const handleSlotChange = (e) => {
     setSelectedSlot(e.target.value);

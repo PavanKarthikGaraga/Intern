@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 // import Loader from '@/components/loader/loader';
 import toast from 'react-hot-toast';
@@ -15,12 +15,12 @@ export default function Students() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [domains, setDomains] = useState([]);
+  const [searchInput, setSearchInput] = useState('');
   const [filters, setFilters] = useState({
     domain: '',
     slot: '',
     mode: '',
     search: '',
-    pendingSearch: '',
     gender: '',
     fieldOfInterest: ''
   });
@@ -54,7 +54,7 @@ export default function Students() {
     fetchDomains();
   }, []);
 
-  const fetchStudents = async () => {
+  const fetchStudents = useCallback(async () => {
     setLoading(true);
     try {
       setError(null);
@@ -91,19 +91,24 @@ export default function Students() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters.search, filters.domain, filters.slot, filters.mode, filters.gender, filters.fieldOfInterest, pagination.currentPage, pagination.limit]);
 
   useEffect(() => {
     fetchStudents();
-  }, [filters.search, filters.domain, filters.slot, filters.mode, filters.gender, filters.fieldOfInterest, pagination.currentPage, pagination.limit]);
+  }, [fetchStudents]);
+
+  // Debounce: fire search 350 ms after the user stops typing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilters(prev => ({ ...prev, search: searchInput }));
+      setPagination(prev => ({ ...prev, currentPage: 1 }));
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   const handleFilterChange = (field, value) => {
-    if (field === 'search') {
-      setFilters(prev => ({ ...prev, pendingSearch: value }));
-    } else {
-      setFilters(prev => ({ ...prev, [field]: value }));
-      setPagination(prev => ({ ...prev, currentPage: 1 }));
-    }
+    setFilters(prev => ({ ...prev, [field]: value }));
+    setPagination(prev => ({ ...prev, currentPage: 1 }));
   };
 
   const handlePageChange = (newPage) => {
@@ -167,21 +172,7 @@ export default function Students() {
     }
   };
 
-  const handleSearch = () => {
-    if (filters.pendingSearch !== filters.search) {
-      setFilters(prev => ({ 
-        ...prev, 
-        search: prev.pendingSearch
-      }));
-      setPagination(prev => ({ ...prev, currentPage: 1 }));
-    }
-  };
 
-  const handleSearchKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
-  };
 
   const handleDeleteStudent = async (username) => {
     if (!window.confirm('Are you sure you want to delete this student?')) {
@@ -278,18 +269,14 @@ export default function Students() {
 
       <div className="filters-container">
         <div className="search-group">
-          {/* <label htmlFor="search">Search Students</label> */}
+          <FaSearch className="search-icon" />
           <input
             type="text"
             id="search"
-            placeholder="Search by name or email..."
-            value={filters.pendingSearch}
-            onChange={(e) => setFilters(prev => ({ ...prev, pendingSearch: e.target.value }))}
-            onKeyPress={handleSearchKeyPress}
+            placeholder="Search by name, email, domain or field of interest..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
           />
-          <button className="search-button" onClick={handleSearch} aria-label="Search">
-            <FaSearch />
-          </button>
         </div>
         <div className="filters">
           <div className="filter-group">

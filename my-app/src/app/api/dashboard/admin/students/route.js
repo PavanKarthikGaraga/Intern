@@ -71,8 +71,8 @@ export async function GET(req) {
       params.push(mode);
     }
     if (search) {
-      conditions.push('(r.name LIKE ? OR r.email LIKE ?)');
-      params.push(`%${search}%`, `%${search}%`);
+      conditions.push('(r.name LIKE ? OR r.email LIKE ? OR r.selectedDomain LIKE ? OR r.fieldOfInterest LIKE ?)');
+      params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
     }
     if (gender) {
       conditions.push('r.gender = ?');
