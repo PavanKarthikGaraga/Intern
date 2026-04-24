@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import pool, { defaultPool } from '@/lib/db';
 import { verifyAccessToken } from '@/lib/jwt';
 import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
@@ -24,9 +24,9 @@ export async function GET(req) {
       }, { status: 403 });
     }
 
-    // Verify that the user is an admin in database
+    // Verify that the user is an admin in database (ALWAYS USE CURRENT DB FOR AUTH)
     const userQuery = 'SELECT role FROM users WHERE username = ?';
-    const [userRows] = await pool.query(userQuery, [decoded.username]);
+    const [userRows] = await defaultPool.query(userQuery, [decoded.username]);
 
     if (!userRows || userRows.length === 0) {
       return NextResponse.json({ 
@@ -95,9 +95,9 @@ export async function PUT(req) {
       }, { status: 403 });
     }
 
-    // Verify that the user is an admin in database
+    // Verify that the user is an admin in database (ALWAYS USE CURRENT DB FOR AUTH)
     const userQuery = 'SELECT role FROM users WHERE username = ?';
-    const [userRows] = await pool.query(userQuery, [decoded.username]);
+    const [userRows] = await defaultPool.query(userQuery, [decoded.username]);
 
     if (!userRows || userRows.length === 0) {
       return NextResponse.json({ 

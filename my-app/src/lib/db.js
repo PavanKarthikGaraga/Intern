@@ -52,4 +52,5 @@ const poolProxy = new Proxy({}, {
   }
 });
 
+export { defaultPool, legacyPool };
 export default poolProxy;

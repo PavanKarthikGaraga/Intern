@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import pool, { defaultPool } from '@/lib/db';
 import { verifyAccessToken } from '@/lib/jwt';
 import { cookies } from 'next/headers';
 
@@ -20,6 +20,17 @@ export async function GET(req) {
       return NextResponse.json({ 
         success: false, 
         error: 'Access denied. Only admin members can access activity logs.' 
+      }, { status: 403 });
+    }
+
+    // Verify that the user is an admin in database (ALWAYS USE CURRENT DB FOR AUTH)
+    const userQuery = 'SELECT role FROM users WHERE username = ?';
+    const [userRows] = await defaultPool.query(userQuery, [decoded.username]);
+
+    if (!userRows || userRows.length === 0 || userRows[0].role !== 'admin') {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Access denied. Admin role required.' 
       }, { status: 403 });
     }
 
@@ -59,35 +70,53 @@ export async function GET(req) {
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
-    const [countResult] = await pool.query(
-      `SELECT COUNT(*) as total FROM activityLogs ${whereClause}`,
-      params
-    );
-    const totalItems = countResult[0].total;
-    const totalPages = Math.ceil(totalItems / limit);
+    try {
+      const [countResult] = await pool.query(
+        `SELECT COUNT(*) as total FROM activityLogs ${whereClause}`,
+        params
+      );
+      const totalItems = countResult[0].total;
+      const totalPages = Math.ceil(totalItems / limit);
 
-    const [logs] = await pool.query(
-      `SELECT * FROM activityLogs ${whereClause} ORDER BY createdAt DESC LIMIT ? OFFSET ?`,
-      [...params, limit, offset]
-    );
+      const [logs] = await pool.query(
+        `SELECT * FROM activityLogs ${whereClause} ORDER BY createdAt DESC LIMIT ? OFFSET ?`,
+        [...params, limit, offset]
+      );
 
-    const [actionTypes] = await pool.query(
-      'SELECT DISTINCT action FROM activityLogs ORDER BY action'
-    );
+      const [actionTypes] = await pool.query(
+        'SELECT DISTINCT action FROM activityLogs ORDER BY action'
+      );
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        logs,
-        actionTypes: actionTypes.map(a => a.action),
-        pagination: {
-          currentPage: page,
-          totalPages,
-          totalItems,
-          itemsPerPage: limit
+      return NextResponse.json({
+        success: true,
+        data: {
+          logs,
+          actionTypes: actionTypes.map(a => a.action),
+          pagination: {
+            currentPage: page,
+            totalPages,
+            totalItems,
+            itemsPerPage: limit
+          }
         }
-      }
-    });
+      });
+    } catch (dbError) {
+      console.error('Database error in activity logs:', dbError);
+      // If table doesn't exist or other DB error, return empty data
+      return NextResponse.json({
+        success: true,
+        data: {
+          logs: [],
+          actionTypes: [],
+          pagination: {
+            currentPage: page,
+            totalPages: 0,
+            totalItems: 0,
+            itemsPerPage: limit
+          }
+        }
+      });
+    }
 
   } catch (error) {
     console.error('Error in activity logs API:', error);
