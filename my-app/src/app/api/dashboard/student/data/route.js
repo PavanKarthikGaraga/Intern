@@ -49,7 +49,7 @@ export async function POST(request) {
 
             // Get reportOpen status first
             const reportOpenQuery = `
-                SELECT slot1, slot2, slot3, slot4, slot5, slot6
+                SELECT slot1, slot2, slot3, slot4, slot5, slot6, slot7, slot8, slot9
                 FROM reportOpen
                 WHERE id = 1;
             `;
@@ -60,7 +60,10 @@ export async function POST(request) {
                 slot3: false,
                 slot4: false,
                 slot5: false,
-                slot6: false
+                slot6: false,
+                slot7: false,
+                slot8: false,
+                slot9: false
             };
 
             // Query to get student data with mentor and lead information
