@@ -23,7 +23,6 @@ export async function GET(req) {
             }, { status: 403 });
         }
 
-        // Get query parameters for filtering and pagination
         const { searchParams } = new URL(req.url);
         const domain = searchParams.get('domain');
         const state = searchParams.get('state');
@@ -32,44 +31,26 @@ export async function GET(req) {
         const limit = parseInt(searchParams.get('limit')) || 10;
         const offset = (page - 1) * limit;
 
-        // Build the WHERE clause based on filters
+        // Build WHERE clause
         let whereClause = '';
         const params = [];
-        
         if (domain || state || district) {
             whereClause = 'WHERE ';
             const conditions = [];
-            
-            if (domain) {
-                conditions.push('p.domain = ?');
-                params.push(domain);
-            }
-            if (state) {
-                conditions.push('p.state = ?');
-                params.push(state);
-            }
-            if (district) {
-                conditions.push('p.district = ?');
-                params.push(district);
-            }
-            
+            if (domain)   { conditions.push('p.domain = ?');   params.push(domain); }
+            if (state)    { conditions.push('p.state = ?');    params.push(state); }
+            if (district) { conditions.push('p.district = ?'); params.push(district); }
             whereClause += conditions.join(' AND ');
         }
 
-        // Get total count for pagination
-        const [totalCount] = await pool.query(`
-            SELECT COUNT(*) as total
-            FROM problemStatements p
-            ${whereClause}
-        `, params);
+        // Total count (filtered)
+        const [totalCount] = await pool.query(
+            `SELECT COUNT(*) as total FROM problemStatements p ${whereClause}`, params
+        );
 
-        // Get paginated problem statements with student details
+        // Paginated table rows with student details
         const [problemStatements] = await pool.query(`
-            SELECT 
-                p.*,
-                r.name as student_name,
-                r.slot,
-                r.mode
+            SELECT p.*, r.name as student_name, r.slot, r.mode, r.batch
             FROM problemStatements p
             JOIN registrations r ON p.username = r.username
             ${whereClause}
@@ -77,12 +58,12 @@ export async function GET(req) {
             LIMIT ? OFFSET ?
         `, [...params, limit, offset]);
 
-        // Get unique domains, states, and districts for filters
-        const [domains] = await pool.query('SELECT DISTINCT domain FROM problemStatements');
-        const [states] = await pool.query('SELECT DISTINCT state FROM problemStatements');
-        const [districts] = await pool.query('SELECT DISTINCT district FROM problemStatements');
+        // Filter option lists
+        const [domains]   = await pool.query('SELECT DISTINCT domain FROM problemStatements ORDER BY domain');
+        const [states]    = await pool.query('SELECT DISTINCT state FROM problemStatements ORDER BY state');
+        const [districts] = await pool.query('SELECT DISTINCT district FROM problemStatements ORDER BY district');
 
-        // Get statistics
+        // Summary stats
         const [stats] = await pool.query(`
             SELECT 
                 COUNT(*) as total,
@@ -92,29 +73,55 @@ export async function GET(req) {
             FROM problemStatements
         `);
 
-        // Calculate pagination info
+        // Domain-wise analytics
+        const [domainAnalytics] = await pool.query(`
+            SELECT domain, COUNT(*) as count
+            FROM problemStatements
+            GROUP BY domain
+            ORDER BY count DESC
+        `);
+
+        // Problem-statement-wise analytics (grouped under each domain)
+        const [problemAnalytics] = await pool.query(`
+            SELECT domain, problem_statement, COUNT(*) as count
+            FROM problemStatements
+            GROUP BY domain, problem_statement
+            ORDER BY domain ASC, count DESC
+        `);
+
+        // Total registered students (to compute "not yet submitted" count)
+        const [totalRegistered] = await pool.query(
+            'SELECT COUNT(*) as total FROM registrations'
+        );
+
         const total = totalCount[0].total;
         const totalPages = Math.ceil(total / limit);
-        const hasNextPage = page < totalPages;
-        const hasPrevPage = page > 1;
 
         return NextResponse.json({
             success: true,
             data: {
                 problemStatements,
                 filters: {
-                    domains: domains.map(d => d.domain),
-                    states: states.map(s => s.state),
+                    domains:   domains.map(d => d.domain),
+                    states:    states.map(s => s.state),
                     districts: districts.map(d => d.district)
                 },
-                stats: stats[0],
+                stats: {
+                    ...stats[0],
+                    totalRegistered: totalRegistered[0].total,
+                    notSubmitted: totalRegistered[0].total - stats[0].total
+                },
+                analytics: {
+                    byDomain: domainAnalytics,
+                    byProblemStatement: problemAnalytics
+                },
                 pagination: {
                     currentPage: page,
                     totalPages,
                     totalItems: total,
                     itemsPerPage: limit,
-                    hasNextPage,
-                    hasPrevPage
+                    hasNextPage: page < totalPages,
+                    hasPrevPage: page > 1
                 }
             }
         });
@@ -126,4 +133,4 @@ export async function GET(req) {
             { status: 500 }
         );
     }
-} 
+}

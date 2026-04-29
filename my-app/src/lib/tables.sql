@@ -299,7 +299,7 @@ CREATE TABLE problemStatements (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(10) NOT NULL,
     domain VARCHAR(255) NOT NULL,
-    problem_statement VARCHAR(50) NOT NULL,
+    problem_statement VARCHAR(255) NOT NULL,
     location VARCHAR(255) NOT NULL,
     district VARCHAR(100) NOT NULL,
     state VARCHAR(100) NOT NULL,
