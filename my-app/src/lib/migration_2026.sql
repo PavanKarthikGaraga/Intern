@@ -1,75 +1,91 @@
 -- ============================================================
--- Social Internship 2026 — Complete Migration Script
--- Run on the live 'Social_2026' database.
--- Safe to re-run: uses IF NOT EXISTS / IF EXISTS everywhere.
--- Old 2025 data is fully preserved.
+-- Social Internship 2026 — Migration Script (MySQL 5.7 compatible)
+-- Safe to re-run. Uses INFORMATION_SCHEMA checks instead of
+-- ADD COLUMN IF NOT EXISTS (which requires MySQL 8.0.3+).
 -- ============================================================
 
 USE `Social_2026`;
 
 -- ============================================================
--- 1. registrations — add all new 2026 columns
+-- Helper: stored procedure to add a column only if it doesn't exist
 -- ============================================================
-ALTER TABLE registrations
-  ADD COLUMN IF NOT EXISTS season          VARCHAR(10)   NOT NULL DEFAULT '2025',
-  ADD COLUMN IF NOT EXISTS batch           VARCHAR(10)   DEFAULT NULL,
-  ADD COLUMN IF NOT EXISTS fieldOfInterest VARCHAR(100)  DEFAULT NULL,
-  ADD COLUMN IF NOT EXISTS careerChoice    VARCHAR(100)  DEFAULT NULL,
-  ADD COLUMN IF NOT EXISTS accommodation   VARCHAR(10)   DEFAULT NULL,
-  ADD COLUMN IF NOT EXISTS transportation  VARCHAR(10)   DEFAULT NULL,
-  ADD COLUMN IF NOT EXISTS residenceType   VARCHAR(20)   DEFAULT NULL,
-  ADD COLUMN IF NOT EXISTS hostelName      VARCHAR(100)  DEFAULT NULL,
-  ADD COLUMN IF NOT EXISTS busRoute        VARCHAR(100)  DEFAULT NULL,
-  ADD COLUMN IF NOT EXISTS country         VARCHAR(50)   DEFAULT 'IN',
-  ADD COLUMN IF NOT EXISTS state           VARCHAR(50)   DEFAULT NULL,
-  ADD COLUMN IF NOT EXISTS district        VARCHAR(50)   DEFAULT NULL,
-  ADD COLUMN IF NOT EXISTS pincode         VARCHAR(20)   DEFAULT NULL,
-  ADD COLUMN IF NOT EXISTS studentLeadId   VARCHAR(10)   DEFAULT NULL,
-  ADD COLUMN IF NOT EXISTS facultyMentorId VARCHAR(10)   DEFAULT NULL,
-  ADD COLUMN IF NOT EXISTS updatedAt       TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+DROP PROCEDURE IF EXISTS add_col;
+DELIMITER //
+CREATE PROCEDURE add_col(
+    tbl VARCHAR(64), col VARCHAR(64), col_def TEXT
+)
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME   = tbl
+          AND COLUMN_NAME  = col
+    ) THEN
+        SET @sql = CONCAT('ALTER TABLE `', tbl, '` ADD COLUMN `', col, '` ', col_def);
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+    END IF;
+END //
+DELIMITER ;
 
--- Tag existing 2025 rows
+-- ============================================================
+-- 1. registrations — add 2026 columns
+-- ============================================================
+CALL add_col('registrations', 'season',          "VARCHAR(10) NOT NULL DEFAULT '2025'");
+CALL add_col('registrations', 'batch',           "VARCHAR(10) DEFAULT NULL");
+CALL add_col('registrations', 'fieldOfInterest', "VARCHAR(100) DEFAULT NULL");
+CALL add_col('registrations', 'careerChoice',    "VARCHAR(100) DEFAULT NULL");
+CALL add_col('registrations', 'accommodation',   "VARCHAR(10) DEFAULT NULL");
+CALL add_col('registrations', 'transportation',  "VARCHAR(10) DEFAULT NULL");
+CALL add_col('registrations', 'residenceType',   "VARCHAR(20) DEFAULT NULL");
+CALL add_col('registrations', 'hostelName',      "VARCHAR(100) DEFAULT NULL");
+CALL add_col('registrations', 'busRoute',        "VARCHAR(100) DEFAULT NULL");
+CALL add_col('registrations', 'country',         "VARCHAR(50) DEFAULT 'IN'");
+CALL add_col('registrations', 'state',           "VARCHAR(50) DEFAULT NULL");
+CALL add_col('registrations', 'district',        "VARCHAR(50) DEFAULT NULL");
+CALL add_col('registrations', 'pincode',         "VARCHAR(20) DEFAULT NULL");
+CALL add_col('registrations', 'studentLeadId',   "VARCHAR(10) DEFAULT NULL");
+CALL add_col('registrations', 'facultyMentorId', "VARCHAR(10) DEFAULT NULL");
+CALL add_col('registrations', 'updatedAt',       "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP");
+
 UPDATE registrations SET season = '2025' WHERE season IS NULL OR season = '';
 
 -- ============================================================
--- 2. stats — add slot7-9 columns, mode columns, season
+-- 2. stats — add slot7-9 + invillage columns + season
 -- ============================================================
-ALTER TABLE stats
-  ADD COLUMN IF NOT EXISTS slot7           INT NOT NULL DEFAULT 0,
-  ADD COLUMN IF NOT EXISTS slot8           INT NOT NULL DEFAULT 0,
-  ADD COLUMN IF NOT EXISTS slot9           INT NOT NULL DEFAULT 0,
-  ADD COLUMN IF NOT EXISTS slot5Invillage  INT NOT NULL DEFAULT 0,
-  ADD COLUMN IF NOT EXISTS slot6Invillage  INT NOT NULL DEFAULT 0,
-  ADD COLUMN IF NOT EXISTS slot7Remote     INT NOT NULL DEFAULT 0,
-  ADD COLUMN IF NOT EXISTS slot7Incamp     INT NOT NULL DEFAULT 0,
-  ADD COLUMN IF NOT EXISTS slot7Invillage  INT NOT NULL DEFAULT 0,
-  ADD COLUMN IF NOT EXISTS slot8Remote     INT NOT NULL DEFAULT 0,
-  ADD COLUMN IF NOT EXISTS slot8Incamp     INT NOT NULL DEFAULT 0,
-  ADD COLUMN IF NOT EXISTS slot8Invillage  INT NOT NULL DEFAULT 0,
-  ADD COLUMN IF NOT EXISTS slot9Remote     INT NOT NULL DEFAULT 0,
-  ADD COLUMN IF NOT EXISTS slot9Incamp     INT NOT NULL DEFAULT 0,
-  ADD COLUMN IF NOT EXISTS slot9Invillage  INT NOT NULL DEFAULT 0,
-  ADD COLUMN IF NOT EXISTS season          VARCHAR(10) NOT NULL DEFAULT '2025';
+CALL add_col('stats', 'slot7',          "INT NOT NULL DEFAULT 0");
+CALL add_col('stats', 'slot8',          "INT NOT NULL DEFAULT 0");
+CALL add_col('stats', 'slot9',          "INT NOT NULL DEFAULT 0");
+CALL add_col('stats', 'slot5Invillage', "INT NOT NULL DEFAULT 0");
+CALL add_col('stats', 'slot6Invillage', "INT NOT NULL DEFAULT 0");
+CALL add_col('stats', 'slot7Remote',    "INT NOT NULL DEFAULT 0");
+CALL add_col('stats', 'slot7Incamp',    "INT NOT NULL DEFAULT 0");
+CALL add_col('stats', 'slot7Invillage', "INT NOT NULL DEFAULT 0");
+CALL add_col('stats', 'slot8Remote',    "INT NOT NULL DEFAULT 0");
+CALL add_col('stats', 'slot8Incamp',    "INT NOT NULL DEFAULT 0");
+CALL add_col('stats', 'slot8Invillage', "INT NOT NULL DEFAULT 0");
+CALL add_col('stats', 'slot9Remote',    "INT NOT NULL DEFAULT 0");
+CALL add_col('stats', 'slot9Incamp',    "INT NOT NULL DEFAULT 0");
+CALL add_col('stats', 'slot9Invillage', "INT NOT NULL DEFAULT 0");
+CALL add_col('stats', 'season',         "VARCHAR(10) NOT NULL DEFAULT '2025'");
 
--- Tag existing stats row as 2025
 UPDATE stats SET season = '2025' WHERE season IS NULL OR season = '';
 
--- Insert a fresh 2026 stats tracking row (only if not already there)
+-- Insert 2026 stats row only if not already there
 INSERT INTO stats (season)
 SELECT '2026' FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM stats WHERE season = '2026');
 
 -- ============================================================
--- 3. reportOpen — add slot7/8/9 columns
+-- 3. reportOpen — add slot7/8/9
 -- ============================================================
-ALTER TABLE reportOpen
-  ADD COLUMN IF NOT EXISTS slot7 BOOLEAN DEFAULT FALSE,
-  ADD COLUMN IF NOT EXISTS slot8 BOOLEAN DEFAULT FALSE,
-  ADD COLUMN IF NOT EXISTS slot9 BOOLEAN DEFAULT FALSE;
+CALL add_col('reportOpen', 'slot7', "BOOLEAN DEFAULT FALSE");
+CALL add_col('reportOpen', 'slot8', "BOOLEAN DEFAULT FALSE");
+CALL add_col('reportOpen', 'slot9', "BOOLEAN DEFAULT FALSE");
 
 -- ============================================================
--- 4. problemStatements table — CREATE if not exists
---    VARCHAR(255) for problem_statement (predefined values can be ~60 chars)
+-- 4. problemStatements — create table if not exists
 -- ============================================================
 CREATE TABLE IF NOT EXISTS problemStatements (
     id                BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -84,12 +100,11 @@ CREATE TABLE IF NOT EXISTS problemStatements (
     FOREIGN KEY (username) REFERENCES registrations(username)
 );
 
--- If the table already existed with VARCHAR(50), expand it:
-ALTER TABLE problemStatements
-  MODIFY COLUMN IF EXISTS problem_statement VARCHAR(255) NOT NULL;
+-- Expand column if it was created with VARCHAR(50) previously
+ALTER TABLE problemStatements MODIFY COLUMN problem_statement VARCHAR(255) NOT NULL;
 
 -- ============================================================
--- 5. certificates table — CREATE if not exists
+-- 5. certificates — create if not exists
 -- ============================================================
 CREATE TABLE IF NOT EXISTS certificates (
     id          BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -103,14 +118,14 @@ CREATE TABLE IF NOT EXISTS certificates (
 );
 
 -- ============================================================
--- 6. Supply / second-chance tables — CREATE IF NOT EXISTS
+-- 6. Supply tables — create if not exists
 -- ============================================================
 CREATE TABLE IF NOT EXISTS sstudents (
-    id               BIGINT AUTO_INCREMENT PRIMARY KEY,
-    username         VARCHAR(10) NOT NULL UNIQUE,
-    mode             ENUM('Remote', 'Incampus') NOT NULL,
-    slot             INT NOT NULL,
-    previousSlot     INT NOT NULL,
+    id                BIGINT AUTO_INCREMENT PRIMARY KEY,
+    username          VARCHAR(10) NOT NULL UNIQUE,
+    mode              ENUM('Remote','Incampus') NOT NULL,
+    slot              INT NOT NULL,
+    previousSlot      INT NOT NULL,
     previousSlotMarks INT NOT NULL,
     FOREIGN KEY (username) REFERENCES registrations(username)
 );
@@ -171,26 +186,25 @@ CREATE TABLE IF NOT EXISTS sdailyMarks (
 );
 
 -- ============================================================
--- 7. activityLogs table — CREATE IF NOT EXISTS
+-- 7. activityLogs — create if not exists
 -- ============================================================
 CREATE TABLE IF NOT EXISTS activityLogs (
     id            BIGINT AUTO_INCREMENT PRIMARY KEY,
     action        VARCHAR(100) NOT NULL,
     actorUsername VARCHAR(10)  DEFAULT NULL,
     actorName     VARCHAR(100) DEFAULT NULL,
-    actorRole     ENUM('student', 'studentLead', 'facultyMentor', 'admin') DEFAULT NULL,
+    actorRole     ENUM('student','studentLead','facultyMentor','admin') DEFAULT NULL,
     targetUsername VARCHAR(10) DEFAULT NULL,
     details       TEXT         DEFAULT NULL,
     ipAddress     VARCHAR(45)  DEFAULT NULL,
     createdAt     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_action       (action),
-    INDEX idx_actorUsername(actorUsername),
-    INDEX idx_createdAt    (createdAt)
+    INDEX idx_action        (action),
+    INDEX idx_actorUsername (actorUsername),
+    INDEX idx_createdAt     (createdAt)
 );
 
 -- ============================================================
--- 8. Core tables — CREATE IF NOT EXISTS (safe for fresh DBs)
---    Already exist on 2025 db, skipped automatically.
+-- 8. Core tables — create if not exists
 -- ============================================================
 CREATE TABLE IF NOT EXISTS status (
     id       BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -217,8 +231,8 @@ CREATE TABLE IF NOT EXISTS messages (
 );
 
 CREATE TABLE IF NOT EXISTS dailyMarks (
-    id       BIGINT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(10) NOT NULL UNIQUE,
+    id            BIGINT AUTO_INCREMENT PRIMARY KEY,
+    username      VARCHAR(10) NOT NULL UNIQUE,
     day1 DECIMAL(4,2) DEFAULT 0, day2 DECIMAL(4,2) DEFAULT 0,
     day3 DECIMAL(4,2) DEFAULT 0, day4 DECIMAL(4,2) DEFAULT 0,
     day5 DECIMAL(4,2) DEFAULT 0, day6 DECIMAL(4,2) DEFAULT 0,
@@ -230,13 +244,14 @@ CREATE TABLE IF NOT EXISTS dailyMarks (
 );
 
 -- ============================================================
--- VERIFY (run these after migration to confirm everything):
+-- Cleanup helper procedure
 -- ============================================================
+DROP PROCEDURE IF EXISTS add_col;
+
+-- ============================================================
+-- VERIFY (run after migration):
 -- SHOW TABLES;
 -- DESCRIBE problemStatements;
--- DESCRIBE registrations;
--- DESCRIBE stats;
--- DESCRIBE reportOpen;
 -- SELECT season, COUNT(*) FROM registrations GROUP BY season;
 -- SELECT id, season, totalStudents FROM stats;
 -- ============================================================
