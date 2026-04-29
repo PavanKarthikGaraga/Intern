@@ -512,7 +512,7 @@ export default function Overview({ user, studentData }) {
             ))}
           </ol>
           <p className="warning-text">
-            By clicking "I Agree & Register", you confirm that you understand and agree to these rules.
+            By clicking &quot;I Agree &amp; Register&quot;, you confirm that you understand and agree to these rules.
           </p>
         </div>
       </Modal>

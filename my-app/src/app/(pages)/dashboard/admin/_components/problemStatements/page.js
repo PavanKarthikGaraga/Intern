@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
 import * as XLSX from 'xlsx';
@@ -17,7 +17,9 @@ export default function ProblemStatements() {
     const [activeTab, setActiveTab] = useState('table'); // 'table' | 'analytics'
     const [expandedDomain, setExpandedDomain] = useState(null);
 
-    const fetchData = async () => {
+
+
+    const fetchData = useCallback(async () => {
         try {
             setLoading(true);
             const params = new URLSearchParams();
@@ -45,9 +47,11 @@ export default function ProblemStatements() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [filters, currentPage, itemsPerPage]);
 
-    useEffect(() => { if (user?.username) fetchData(); }, [user, filters, currentPage]);
+
+
+    useEffect(() => { if (user?.username) fetchData(); }, [user, filters, currentPage, fetchData]);
     useEffect(() => { setCurrentPage(1); }, [filters]);
 
     const handleDownloadExcel = async () => {
