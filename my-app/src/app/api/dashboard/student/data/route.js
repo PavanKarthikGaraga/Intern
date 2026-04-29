@@ -47,45 +47,62 @@ export async function POST(request) {
                 throw new Error("Database connection failed");
             }
 
-            // Get reportOpen status first
-            const reportOpenQuery = `
-                SELECT slot1, slot2, slot3, slot4, slot5, slot6, slot7, slot8, slot9
-                FROM reportOpen
-                WHERE id = 1;
-            `;
-            const [reportOpenRows] = await db.execute(reportOpenQuery);
-            const reportOpen = reportOpenRows[0] || {
-                slot1: false,
-                slot2: false,
-                slot3: false,
-                slot4: false,
-                slot5: false,
-                slot6: false,
-                slot7: false,
-                slot8: false,
-                slot9: false
+            // Get reportOpen status first with a safe fallback
+            let reportOpen = {
+                slot1: false, slot2: false, slot3: false, slot4: false, slot5: false,
+                slot6: false, slot7: false, slot8: false, slot9: false
             };
+            try {
+                const reportOpenQuery = `SELECT * FROM reportOpen WHERE id = 1;`;
+                const [reportOpenRows] = await db.execute(reportOpenQuery);
+                if (reportOpenRows.length > 0) {
+                    reportOpen = { ...reportOpen, ...reportOpenRows[0] };
+                }
+            } catch (err) {
+                // If the table doesn't have slot7/8/9, it might crash depending on the query,
+                // but SELECT * should be safe unless the table itself is missing.
+                console.warn('Warning: Could not fetch reportOpen, using defaults.');
+            }
 
             // Query to get student data with mentor and lead information
-            const query = `
-                SELECT 
-                    r.*,
-                    u.username,
-                    u.name,
-                    u.role,
-                    sl.name as leadName,
-                    sl.username,
-                    fm.name as mentorName,
-                    fm.username as mentorId,
-                    fm.email as mentorEmail
-                FROM registrations r
-                JOIN users u ON r.username = u.username
-                LEFT JOIN studentLeads sl ON r.studentLeadId = sl.username
-                LEFT JOIN facultyMentors fm ON r.facultyMentorId = fm.username
-                WHERE r.username = ?;
-            `;
-
-            const [rows] = await db.execute(query, [username]);
+            let rows = [];
+            try {
+                const query = `
+                    SELECT 
+                        r.*,
+                        u.username,
+                        u.name,
+                        u.role,
+                        sl.name as leadName,
+                        sl.username as leadUsername,
+                        fm.name as mentorName,
+                        fm.username as mentorId,
+                        fm.email as mentorEmail
+                    FROM registrations r
+                    JOIN users u ON r.username = u.username
+                    LEFT JOIN studentLeads sl ON r.studentLeadId = sl.username
+                    LEFT JOIN facultyMentors fm ON r.facultyMentorId = fm.username
+                    WHERE r.username = ?;
+                `;
+                [rows] = await db.execute(query, [username]);
+            } catch (err) {
+                // Fallback for unmigrated legacy databases (missing studentLeadId/facultyMentorId)
+                if (err.code === 'ER_BAD_FIELD_ERROR' || err.message.includes('Unknown column')) {
+                    const fallbackQuery = `
+                        SELECT 
+                            r.*,
+                            u.username,
+                            u.name,
+                            u.role
+                        FROM registrations r
+                        JOIN users u ON r.username = u.username
+                        WHERE r.username = ?;
+                    `;
+                    [rows] = await db.execute(fallbackQuery, [username]);
+                } else {
+                    throw err;
+                }
+            }
 
             if (rows.length === 0) {
                 return NextResponse.json(
