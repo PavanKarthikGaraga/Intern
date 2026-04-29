@@ -25,6 +25,8 @@ export async function GET(request) {
     }
 
     // Get all students data
+    const { searchParams } = new URL(request.url);
+    const season = searchParams.get('season') || '2026';
     const query = `
       SELECT 
         r.username,
@@ -57,10 +59,11 @@ export async function GET(request) {
       LEFT JOIN final f ON r.username = f.username
       LEFT JOIN studentLeads sl ON r.studentLeadId = sl.username
       LEFT JOIN facultyMentors fm ON r.facultyMentorId = fm.username
+      WHERE r.season = ?
       ORDER BY r.name ASC
     `;
 
-    const [students] = await pool.query(query);
+    const [students] = await pool.query(query, [season]);
 
     // Process the data to format dates and boolean values
     const processedData = students.map(student => {

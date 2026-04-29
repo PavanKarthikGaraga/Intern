@@ -54,18 +54,31 @@ export async function POST(request) {
       }
       
       const [existingUser] = await db.query(
-        'SELECT username, phoneNumber FROM registrations WHERE username = ? OR phoneNumber = ?',
+        'SELECT username, phoneNumber, season FROM registrations WHERE username = ? OR phoneNumber = ?',
         [formData.studentInfo.idNumber, formData.studentInfo.phoneNumber]
       );
 
+      let isReRegistration = false;
+
       if (existingUser && existingUser.length > 0) {
-        const error = existingUser[0].username === formData.studentInfo.idNumber
-          ? 'Username already registered'
-          : 'Phone number already registered';
-        return new Response(JSON.stringify({ success: false, message: error }), {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        });
+        const slotNum = parseInt(formData.slot);
+        const idMatch = existingUser.find(u => u.username === formData.studentInfo.idNumber);
+        const phoneMatch = existingUser.find(u => u.phoneNumber === formData.studentInfo.phoneNumber);
+
+        if (idMatch && idMatch.season === '2025' && slotNum >= 7 && slotNum <= 9) {
+          if (phoneMatch && phoneMatch.username !== formData.studentInfo.idNumber) {
+            return new Response(JSON.stringify({ success: false, message: 'Phone number already registered to another account' }), { status: 400 });
+          }
+          isReRegistration = true;
+        } else {
+          const error = idMatch
+            ? 'Username already registered'
+            : 'Phone number already registered';
+          return new Response(JSON.stringify({ success: false, message: error }), {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
       }
 
       // Check slot availability with retry
@@ -96,64 +109,137 @@ export async function POST(request) {
       // Generate username from ID number
       const username = formData.studentInfo.idNumber;
 
-      // Prepare all queries in a single batch
-      const queries = [
-        {
-          query: `INSERT INTO registrations 
-            (selectedDomain, fieldOfInterest, careerChoice, batch, mode, slot, username, name, email, branch, gender, year, phoneNumber, 
-            residenceType, hostelName, busRoute, country, state, district, pincode, season, accommodation, transportation)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          values: [
-            formData.selectedDomain,
-            formData.fieldOfInterest || null,
-            formData.careerChoice || null,
-            formData.batch || null,
-            formData.mode,
-            formData.slot,
-            username,
-            formData.studentInfo.name,
-            formData.studentInfo.email,
-            formData.studentInfo.branch,
-            formData.studentInfo.gender,
-            yearMap[formData.studentInfo.year],
-            formData.studentInfo.phoneNumber,
-            residenceTypeMap[formData.residence.type],
-            formData.residence.hostelName || 'N/A',
-            formData.residence.busRoute || null,
-            formData.residence.country,
-            formData.residence.state,
-            formData.residence.district,
-            formData.residence.pincode,
-            '2026',
-            formData.accommodationRequired || null,
-            formData.transportationRequired || null,
-          ]
-        },
-        {
-          query: `INSERT INTO users (name, username, password, role) VALUES(?, ?, ?, ?)`,
-          values: [
-            formData.studentInfo.name,
-            username,
-            await bcrypt.hash(`${username}${formData.studentInfo.phoneNumber.slice(-4)}`, 10),
-            "student"
-          ]
-        },
-        {
-          query: `INSERT INTO verify (username, day1, day2, day3, day4, day5, day6, day7)
-            VALUES(?, false, false, false, false, false, false, false)`,
-          values: [username]
-        },
-        {
-          query: `INSERT INTO attendance (username, day1, day2, day3, day4, day5, day6, day7)
-            VALUES(?, null, null, null, null, null, null, null)`,
-          values: [username]
-        },
-        {
-          query: `INSERT INTO uploads (username, day1, day2, day3, day4, day5, day6, day7)
-            VALUES(?, null, null, null, null, null, null, null)`,
-          values: [username]
-        }
-      ];
+      // Prepare queries based on new registration vs re-registration
+      let queries = [];
+
+      if (isReRegistration) {
+        queries = [
+          { query: 'DELETE FROM marks WHERE username = ?', values: [username] },
+          { query: 'DELETE FROM dailyMarks WHERE username = ?', values: [username] },
+          { query: 'DELETE FROM verify WHERE username = ?', values: [username] },
+          { query: 'DELETE FROM attendance WHERE username = ?', values: [username] },
+          { query: 'DELETE FROM uploads WHERE username = ?', values: [username] },
+          { query: 'DELETE FROM final WHERE username = ?', values: [username] },
+          { query: 'DELETE FROM problemStatements WHERE username = ?', values: [username] },
+          { query: 'DELETE FROM certificates WHERE username = ?', values: [username] },
+          { query: 'DELETE FROM sstudents WHERE username = ?', values: [username] },
+          { query: 'DELETE FROM sdailyMarks WHERE username = ?', values: [username] },
+          { query: 'DELETE FROM sattendance WHERE username = ?', values: [username] },
+          { query: 'DELETE FROM suploads WHERE username = ?', values: [username] },
+          { query: 'DELETE FROM smessages WHERE username = ?', values: [username] },
+          {
+            query: `INSERT INTO users (name, username, password, role) VALUES(?, ?, ?, ?) ON DUPLICATE KEY UPDATE name = VALUES(name), password = VALUES(password)`,
+            values: [
+              formData.studentInfo.name,
+              username,
+              await bcrypt.hash(`${username}${formData.studentInfo.phoneNumber.slice(-4)}`, 10),
+              "student"
+            ]
+          },
+          {
+            query: `UPDATE registrations SET 
+              selectedDomain = ?, fieldOfInterest = ?, careerChoice = ?, batch = ?, mode = ?, slot = ?,
+              name = ?, email = ?, branch = ?, gender = ?, year = ?, phoneNumber = ?, 
+              residenceType = ?, hostelName = ?, busRoute = ?, country = ?, state = ?, district = ?, pincode = ?, 
+              season = '2026', accommodation = ?, transportation = ?, pass = 0, studentLeadId = NULL, facultyMentorId = NULL
+              WHERE username = ?`,
+            values: [
+              formData.selectedDomain,
+              formData.fieldOfInterest || null,
+              formData.careerChoice || null,
+              formData.batch || null,
+              formData.mode,
+              formData.slot,
+              formData.studentInfo.name,
+              formData.studentInfo.email,
+              formData.studentInfo.branch,
+              formData.studentInfo.gender,
+              yearMap[formData.studentInfo.year],
+              formData.studentInfo.phoneNumber,
+              residenceTypeMap[formData.residence.type],
+              formData.residence.hostelName || 'N/A',
+              formData.residence.busRoute || null,
+              formData.residence.country,
+              formData.residence.state,
+              formData.residence.district,
+              formData.residence.pincode,
+              formData.accommodationRequired || null,
+              formData.transportationRequired || null,
+              username
+            ]
+          },
+          {
+            query: `INSERT INTO verify (username, day1, day2, day3, day4, day5, day6, day7) VALUES(?, false, false, false, false, false, false, false)`,
+            values: [username]
+          },
+          {
+            query: `INSERT INTO attendance (username, day1, day2, day3, day4, day5, day6, day7) VALUES(?, null, null, null, null, null, null, null)`,
+            values: [username]
+          },
+          {
+            query: `INSERT INTO uploads (username, day1, day2, day3, day4, day5, day6, day7) VALUES(?, null, null, null, null, null, null, null)`,
+            values: [username]
+          }
+        ];
+      } else {
+        queries = [
+          {
+            query: `INSERT INTO registrations 
+              (selectedDomain, fieldOfInterest, careerChoice, batch, mode, slot, username, name, email, branch, gender, year, phoneNumber, 
+              residenceType, hostelName, busRoute, country, state, district, pincode, season, accommodation, transportation)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            values: [
+              formData.selectedDomain,
+              formData.fieldOfInterest || null,
+              formData.careerChoice || null,
+              formData.batch || null,
+              formData.mode,
+              formData.slot,
+              username,
+              formData.studentInfo.name,
+              formData.studentInfo.email,
+              formData.studentInfo.branch,
+              formData.studentInfo.gender,
+              yearMap[formData.studentInfo.year],
+              formData.studentInfo.phoneNumber,
+              residenceTypeMap[formData.residence.type],
+              formData.residence.hostelName || 'N/A',
+              formData.residence.busRoute || null,
+              formData.residence.country,
+              formData.residence.state,
+              formData.residence.district,
+              formData.residence.pincode,
+              '2026',
+              formData.accommodationRequired || null,
+              formData.transportationRequired || null,
+            ]
+          },
+          {
+            query: `INSERT INTO users (name, username, password, role) VALUES(?, ?, ?, ?)`,
+            values: [
+              formData.studentInfo.name,
+              username,
+              await bcrypt.hash(`${username}${formData.studentInfo.phoneNumber.slice(-4)}`, 10),
+              "student"
+            ]
+          },
+          {
+            query: `INSERT INTO verify (username, day1, day2, day3, day4, day5, day6, day7)
+              VALUES(?, false, false, false, false, false, false, false)`,
+            values: [username]
+          },
+          {
+            query: `INSERT INTO attendance (username, day1, day2, day3, day4, day5, day6, day7)
+              VALUES(?, null, null, null, null, null, null, null)`,
+            values: [username]
+          },
+          {
+            query: `INSERT INTO uploads (username, day1, day2, day3, day4, day5, day6, day7)
+              VALUES(?, null, null, null, null, null, null, null)`,
+            values: [username]
+          }
+        ];
+      }
 
       // Execute all queries in parallel
       await Promise.all(queries.map(q => db.query(q.query, q.values)));

@@ -1,10 +1,10 @@
 -- ============================================================
 -- Social Internship 2026 Migration
--- Run this on the live 'Social' database.
+-- Run this on the live 'Social_2026' database.
 -- All old 2025 data is PRESERVED — only new columns are added.
 -- ============================================================
 
-USE `Social`;
+USE `Social_2026`;
 
 -- ----------------------------------------------------------------
 -- 1. Add 'season' column to registrations table
@@ -13,7 +13,20 @@ USE `Social`;
 ALTER TABLE registrations
   ADD COLUMN IF NOT EXISTS season VARCHAR(10) NOT NULL DEFAULT '2025',
   ADD COLUMN IF NOT EXISTS batch VARCHAR(10) DEFAULT NULL,
-  ADD COLUMN IF NOT EXISTS fieldOfInterest VARCHAR(100) DEFAULT NULL;
+  ADD COLUMN IF NOT EXISTS fieldOfInterest VARCHAR(100) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS careerChoice VARCHAR(100) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS accommodation VARCHAR(10) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS transportation VARCHAR(10) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS residenceType VARCHAR(20) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS hostelName VARCHAR(50) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS busRoute VARCHAR(50) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS country VARCHAR(50) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS state VARCHAR(50) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS district VARCHAR(50) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS pincode VARCHAR(20) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS studentLeadId VARCHAR(50) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS facultyMentorId VARCHAR(50) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
 
 -- Tag any existing rows explicitly as 2025
 UPDATE registrations SET season = '2025' WHERE season IS NULL OR season = '';
