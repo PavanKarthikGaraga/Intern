@@ -111,74 +111,66 @@ export async function POST(request) {
                 );
             }
 
-            // Get attendance data
-            const attendanceQuery = `
-                SELECT 
-                    day1, day2, day3, day4, day5, day6, day7
-                FROM attendance
-                WHERE username = ?;
-            `;
+            // Get attendance data (safe fallback if table missing)
+            let attendanceRows = [[]];
+            try {
+                [attendanceRows] = await db.execute(
+                    'SELECT day1, day2, day3, day4, day5, day6, day7 FROM attendance WHERE username = ?',
+                    [username]
+                );
+            } catch (e) { console.warn('attendance table missing or error:', e.message); }
 
-            const [attendanceRows] = await db.execute(attendanceQuery, [username]);
+            // Get uploads data (safe fallback if table missing)
+            let uploadsRows = [[]];
+            try {
+                [uploadsRows] = await db.execute(
+                    'SELECT day1, day2, day3, day4, day5, day6, day7 FROM uploads WHERE username = ?',
+                    [username]
+                );
+            } catch (e) { console.warn('uploads table missing or error:', e.message); }
 
-            // Get uploads data
-            const uploadsQuery = `
-                SELECT 
-                    day1, day2, day3, day4, day5, day6, day7
-                FROM uploads
-                WHERE username = ?;
-            `;
+            // Get marks data (safe fallback if table missing)
+            let marksRows = [[]];
+            try {
+                [marksRows] = await db.execute(
+                    'SELECT m.internalMarks, m.finalPresentation, m.finalReport, m.grade, m.completed FROM marks m WHERE m.username = ?',
+                    [username]
+                );
+            } catch (e) { console.warn('marks table missing or error:', e.message); }
 
-            const [uploadsRows] = await db.execute(uploadsQuery, [username]);
-
-            // Get marks data
-            const marksQuery = `
-                SELECT 
-                    m.internalMarks,
-                    m.finalPresentation,
-                    m.finalReport,
-                    m.grade,
-                    m.completed
-                FROM marks m
-                WHERE m.username = ?;
-            `;
-
-            const [marksRows] = await db.execute(marksQuery, [username]);
-
-            // Check if student is registered in sstudents
-            const sstudentQuery = `
-                SELECT 
-                    s.*,
-                    sm.internalMarks as sInternalMarks,
-                    sa.day1, sa.day2, sa.day3, sa.day4, sa.day5, sa.day6, sa.day7,
-                    su.day1 as upload1, su.day2 as upload2, su.day3 as upload3, 
-                    su.day4 as upload4, su.day5 as upload5, su.day6 as upload6, 
-                    su.day7 as upload7,
-                    sm.day1 as marks1, sm.day2 as marks2, sm.day3 as marks3,
-                    sm.day4 as marks4, sm.day5 as marks5, sm.day6 as marks6,
-                    sm.day7 as marks7,
-                    msg.day1 as message1, msg.day2 as message2, msg.day3 as message3,
-                    msg.day4 as message4, msg.day5 as message5, msg.day6 as message6,
-                    msg.day7 as message7
-                FROM sstudents s
-                LEFT JOIN sdailyMarks sm ON s.username = sm.username
-                LEFT JOIN sattendance sa ON s.username = sa.username
-                LEFT JOIN suploads su ON s.username = su.username
-                LEFT JOIN smessages msg ON s.username = msg.username
-                WHERE s.username = ?;
-            `;
-
-            const [sstudentRows] = await db.execute(sstudentQuery, [username]);
+            // Check if student is registered in sstudents (safe fallback if table missing)
+            let sstudentRows = [[]];
+            try {
+                [sstudentRows] = await db.execute(
+                    `SELECT s.*, sm.internalMarks as sInternalMarks,
+                        sa.day1, sa.day2, sa.day3, sa.day4, sa.day5, sa.day6, sa.day7,
+                        su.day1 as upload1, su.day2 as upload2, su.day3 as upload3,
+                        su.day4 as upload4, su.day5 as upload5, su.day6 as upload6, su.day7 as upload7,
+                        sm.day1 as marks1, sm.day2 as marks2, sm.day3 as marks3,
+                        sm.day4 as marks4, sm.day5 as marks5, sm.day6 as marks6, sm.day7 as marks7,
+                        msg.day1 as message1, msg.day2 as message2, msg.day3 as message3,
+                        msg.day4 as message4, msg.day5 as message5, msg.day6 as message6, msg.day7 as message7
+                    FROM sstudents s
+                    LEFT JOIN sdailyMarks sm ON s.username = sm.username
+                    LEFT JOIN sattendance sa ON s.username = sa.username
+                    LEFT JOIN suploads su ON s.username = su.username
+                    LEFT JOIN smessages msg ON s.username = msg.username
+                    WHERE s.username = ?`,
+                    [username]
+                );
+            } catch (e) { console.warn('sstudents table missing or error:', e.message); }
             const sstudentData = sstudentRows[0] || null;
 
             // Fetch sstudent marks from marks table if sstudentData exists
             let sstudentMarksRow = null;
             if (sstudentData) {
-                const [sstudentMarksRows] = await db.execute(
-                    `SELECT internalMarks, finalReport, finalPresentation, grade, completed FROM marks WHERE username = ?`,
-                    [sstudentData.username]
-                );
-                sstudentMarksRow = sstudentMarksRows[0] || null;
+                try {
+                    const [sstudentMarksRows] = await db.execute(
+                        'SELECT internalMarks, finalReport, finalPresentation, grade, completed FROM marks WHERE username = ?',
+                        [sstudentData.username]
+                    );
+                    sstudentMarksRow = sstudentMarksRows[0] || null;
+                } catch (e) { console.warn('marks lookup for sstudent failed:', e.message); }
             }
 
             // Add supply field based on sstudentData
@@ -264,13 +256,19 @@ export async function POST(request) {
             const totalUploads = uploadValues.filter(link => link !== null).length;
             const lastUpload = uploadValues.filter(link => link !== null).pop() || null;
 
-            // Fetch student's problem statement
-            const [problemStatementRows] = await db.query('SELECT * FROM problemStatements WHERE username = ?', [username]);
-            const problemStatementData = problemStatementRows[0] || null;
+            // Fetch student's problem statement (safe fallback if table missing)
+            let problemStatementData = null;
+            try {
+                const [problemStatementRows] = await db.query('SELECT * FROM problemStatements WHERE username = ?', [username]);
+                problemStatementData = problemStatementRows[0] || null;
+            } catch (e) { console.warn('problemStatements table missing or error:', e.message); }
 
-            // Fetch student's certificate (if exists)
-            const [certificateRows] = await db.query('SELECT uid FROM certificates WHERE username = ?', [username]);
-            const certificate = certificateRows[0] || null;
+            // Fetch student's certificate (safe fallback if table missing)
+            let certificate = null;
+            try {
+                const [certificateRows] = await db.query('SELECT uid FROM certificates WHERE username = ?', [username]);
+                certificate = certificateRows[0] || null;
+            } catch (e) { console.warn('certificates table missing or error:', e.message); }
 
             // Combine all data
             const studentData = {
@@ -380,25 +378,29 @@ export async function GET() {
         const connection = await pool.getConnection();
 
         try {
-            // Check certificate existence
-            const [certificateRows] = await connection.query(
-                'SELECT uid FROM certificates WHERE username = ?',
-                [username]
-            );
+            // Check certificate existence (safe fallback if table missing in legacy DB)
+            let hasCertificate = false;
+            let certificateUid = null;
+            try {
+                const [certificateRows] = await connection.query(
+                    'SELECT uid FROM certificates WHERE username = ?', [username]
+                );
+                hasCertificate = certificateRows.length > 0;
+                certificateUid = hasCertificate ? certificateRows[0].uid : null;
+            } catch (e) { console.warn('certificates table missing:', e.message); }
 
-            // Check problem statement submission
-            const [problemStatementRows] = await connection.query(
-                'SELECT id FROM problemStatements WHERE username = ?',
-                [username]
-            );
+            // Check problem statement submission (safe fallback if table missing in legacy DB)
+            let hasProblemStatement = false;
+            try {
+                const [problemStatementRows] = await connection.query(
+                    'SELECT id FROM problemStatements WHERE username = ?', [username]
+                );
+                hasProblemStatement = problemStatementRows.length > 0;
+            } catch (e) { console.warn('problemStatements table missing:', e.message); }
 
             return NextResponse.json({
                 success: true,
-                data: {
-                    hasCertificate: certificateRows.length > 0,
-                    hasProblemStatement: problemStatementRows.length > 0,
-                    certificateUid: certificateRows.length > 0 ? certificateRows[0].uid : null
-                }
+                data: { hasCertificate, hasProblemStatement, certificateUid }
             });
 
         } finally {

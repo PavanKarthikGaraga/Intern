@@ -11,6 +11,7 @@ import { stateNames } from '../../Data/states';
 import { districtNames } from '../../Data/districts';
 import { countryCodes,countryNames } from '../../Data/coutries';
 import { branchNames } from '../../Data/branches';
+import { PROBLEM_STATEMENTS } from '../../Data/problemStatements';
 
 // Remove duplicate country codes and sort alphabetically
 const uniqueCountryCodes = countryCodes
@@ -23,6 +24,7 @@ export default function Register() {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     selectedDomain: '',
+    problemStatement: '',
     fieldOfInterest: '',
     careerChoice: '',
     batch: '',
@@ -196,6 +198,10 @@ export default function Register() {
             return;
           }
         }
+        if (!formData.problemStatement) {
+          toast.error('Please select a Problem Statement to continue');
+          return;
+        }
         toast.success('Domain selected successfully!');
         setCurrentStep(prev => prev + 1);
         break;
@@ -305,7 +311,7 @@ export default function Register() {
     let loadingToast;
     try {
       // Basic validation
-      if (!formData.studentInfo.idNumber || !formData.studentInfo.name || !formData.selectedDomain) {
+      if (!formData.studentInfo.idNumber || !formData.studentInfo.name || !formData.selectedDomain || !formData.problemStatement) {
         toast.error('Please fill in all required fields');
         return;
       }
@@ -729,7 +735,7 @@ export default function Register() {
                   onChange={(e) => {
                     const selectedDomain = DOMAINS.find(d => d.name === e.target.value);
                     setSelectedDomainInfo(selectedDomain ? selectedDomain.description : '');
-                    setFormData(prev => ({...prev, selectedDomain: e.target.value}));
+                    setFormData(prev => ({...prev, selectedDomain: e.target.value, problemStatement: ''}));
                   }}
                 >
                   <option value="">Select Domain</option>
@@ -738,6 +744,22 @@ export default function Register() {
                   ))}
                 </select>
               </div>
+
+              {formData.selectedDomain && PROBLEM_STATEMENTS[formData.selectedDomain] && (
+                <div className="input-row" style={{ gridColumn: '1 / -1' }}>
+                  <label>Problem Statement *</label>
+                  <select
+                    value={formData.problemStatement}
+                    onChange={(e) => setFormData(prev => ({...prev, problemStatement: e.target.value}))}
+                    style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ddd' }}
+                  >
+                    <option value="">Select Problem Statement</option>
+                    {PROBLEM_STATEMENTS[formData.selectedDomain].map((statement, idx) => (
+                      <option key={idx} value={statement}>{statement}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div className="input-row">
                 <label>Field of Interest *</label>

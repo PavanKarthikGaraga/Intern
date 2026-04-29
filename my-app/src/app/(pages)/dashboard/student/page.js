@@ -94,32 +94,6 @@ export default function StudentDashboard() {
             <span className="item-label">Profile</span>
           </button>
           <button
-            className={`sidebar-item ${activeSection === 'mentor' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('mentor')}
-          >
-            <span className="item-label">Mentor</span>
-          </button>
-          <button
-            className={`sidebar-item ${activeSection === 'submissions' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('submissions')}
-          >
-            <span className="item-label">Daily Reports</span>
-          </button>
-          <button
-            className={`sidebar-item ${activeSection === 'final-report' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('final-report')}
-          >
-            <span className="item-label">Final Report</span>
-          </button>
-          {studentData?.marks?.totalMarks >= 60 && (
-            <button
-              className={`sidebar-item ${activeSection === 'problem-statement' ? 'active' : ''}`}
-              onClick={() => handleSectionClick('problem-statement')}
-            >
-              <span className="item-label">Problem Statement</span>
-            </button>
-          )}
-          <button
             className={`sidebar-item ${activeSection === 'change-password' ? 'active' : ''}`}
             onClick={() => handleSectionClick('change-password')}
           >
@@ -130,11 +104,18 @@ export default function StudentDashboard() {
         <main className="dashboard-main">
           {activeSection === 'overview' ? <Overview user={user} studentData={studentData} /> : 
            activeSection === 'profile' ? <Profile user={user} studentData={studentData} /> :
-           activeSection === 'mentor' ? <Lead user={user} studentData={studentData} /> :
-           activeSection === 'submissions' ? <Reports user={user} studentData={studentData} /> : 
-           activeSection === 'final-report' ? <FinalReport user={user} studentData={studentData} /> :
-           (activeSection === 'problem-statement' && studentData?.marks?.totalMarks >= 60) ? <ProblemStatement user={user} studentData={studentData} /> :
-           <ChangePassword user={user} />}
+           activeSection === 'change-password' ? <ChangePassword user={user} /> :
+           <div style={{
+             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+             padding: '60px 24px', textAlign: 'center', gap: '16px'
+           }}>
+             <div style={{ fontSize: '3rem' }}>🚧</div>
+             <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#014a01', margin: 0 }}>Coming Soon</h2>
+             <p style={{ color: '#555', fontSize: '1rem', maxWidth: '400px', lineHeight: '1.6' }}>
+               This section is under preparation and will be available soon. Please check back later.
+             </p>
+           </div>
+          }
         </main>
       </div>
 

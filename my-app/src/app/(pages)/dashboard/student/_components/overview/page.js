@@ -3,11 +3,15 @@ import { TeamOutlined, CalendarOutlined, UserOutlined, TrophyOutlined } from '@a
 import { useState } from 'react';
 import { Modal, Button, message } from 'antd';
 import { useRouter } from 'next/navigation';
+import { PROBLEM_STATEMENTS } from '@/app/Data/problemStatements';
 
 export default function Overview({ user, studentData }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState(null);
+  const [psStatement, setPsStatement] = useState('');
+  const [psSubmitting, setPsSubmitting] = useState(false);
+  const [psSuccess, setPsSuccess] = useState(false);
   const router = useRouter();
 
   if (!studentData) {
@@ -146,6 +150,36 @@ export default function Overview({ user, studentData }) {
     }
   };
 
+  const SLOT_DATES = {
+    1: 'May 11 – May 17', 2: 'May 18 – May 24', 3: 'May 25 – May 31',
+    4: 'Jun 1 – Jun 7', 5: 'Jun 8 – Jun 14', 6: 'Jun 15 – Jun 21',
+    7: 'Jun 22 – Jun 28', 8: 'Jun 29 – Jul 5', 9: 'Jul 6 – Jul 12'
+  };
+
+  const handlePsSubmit = async (e) => {
+    e.preventDefault();
+    if (!psStatement) { message.error('Please select a problem statement.'); return; }
+    setPsSubmitting(true);
+    try {
+      const res = await fetch('/api/dashboard/student/problem-statement', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: user.username,
+          domain: studentData.selectedDomain,
+          problem_statement: psStatement,
+          location: studentData.district || 'N/A',
+          district: studentData.district || 'N/A',
+          state: studentData.state || 'N/A'
+        })
+      });
+      const data = await res.json();
+      if (data.success) { setPsSuccess(true); message.success('Problem statement saved!'); setTimeout(() => window.location.reload(), 1200); }
+      else message.error(data.error || 'Failed to save.');
+    } catch { message.error('Network error. Please try again.'); }
+    finally { setPsSubmitting(false); }
+  };
+
   return (
     <div className="overview-section">
       <h1>Welcome {user?.name || studentData.name || 'Student'}</h1>
@@ -155,21 +189,68 @@ export default function Overview({ user, studentData }) {
       <div className="notification-banner">
         <div className="notification-icon">⚠️</div>
         <div className="notification-content">
-          <h3>Important Notice - Social Internship Closure</h3>
-          <p>
-            This is to inform you that the Social Internship process will be officially closed on <strong>19-07-2025</strong>.
-          </p>
-          <p>
-            All students (whether they have completed their Social Internship or not) are requested to visit the SAC Office for any queries or issues.
-          </p>
-          <p>
-            Kindly ensure that you resolve your concerns between <strong>16-07-2025 and 17-07-2025</strong>.
-          </p>
-          <p className="warning-notice">
-            <strong>No queries will be entertained after the mentioned dates.</strong>
-          </p>
+          <h3>Important Notice - Social Internship 2026</h3>
+          <p>Registration is now open. Your slot details are shown below. The full dashboard (daily reports, mentor, final report) will be activated closer to your slot dates.</p>
         </div>
       </div>
+
+      {/* Registration Details Card */}
+      <div style={{ background: '#f0f7f0', border: '2px solid #014a01', borderRadius: '12px', padding: '20px', margin: '16px 0' }}>
+        <h3 style={{ color: '#014a01', marginBottom: '14px', fontWeight: '700', fontSize: '1.1rem' }}>📋 Your Registration Details</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+          {[  
+            { label: 'Slot', value: studentData.slot ? `Slot ${studentData.slot} (${SLOT_DATES[studentData.slot] || ''})` : 'N/A' },
+            { label: 'Batch', value: studentData.batch || 'N/A' },
+            { label: 'Mode', value: studentData.mode || 'N/A' },
+            { label: 'Domain', value: studentData.selectedDomain || 'N/A' },
+            { label: 'Problem Statement', value: studentData.problemStatementData?.problem_statement || '⚠️ Not Selected Yet' },
+            { label: 'State', value: studentData.state || 'N/A' },
+            { label: 'District', value: studentData.district || 'N/A' },
+          ].map(({ label, value }) => (
+            <div key={label} style={{ background: '#fff', borderRadius: '8px', padding: '12px 14px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+              <p style={{ fontSize: '0.75rem', fontWeight: '600', color: '#666', textTransform: 'uppercase', margin: '0 0 4px' }}>{label}</p>
+              <p style={{ fontSize: '0.95rem', fontWeight: '600', color: value.startsWith('⚠️') ? '#970003' : '#014a01', margin: 0 }}>{value}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Problem Statement Picker — shown only if not yet selected */}
+      {!studentData.problemStatementData && studentData.selectedDomain && (
+        <div style={{ background: '#fff8e1', border: '2px solid #f0a500', borderRadius: '12px', padding: '20px', margin: '16px 0' }}>
+          <h3 style={{ color: '#856404', fontWeight: '700', marginBottom: '10px' }}>⚠️ Action Required: Select Your Problem Statement</h3>
+          <p style={{ color: '#6c5700', fontSize: '0.9rem', marginBottom: '14px' }}>
+            You registered before problem statements were introduced. Please select your problem statement from the list below based on your domain: <strong>{studentData.selectedDomain}</strong>.
+          </p>
+          {psSuccess ? (
+            <p style={{ color: '#014a01', fontWeight: '600' }}>✅ Problem statement saved! Refreshing...</p>
+          ) : (
+            <form onSubmit={handlePsSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '500px' }}>
+              <select
+                value={psStatement}
+                onChange={(e) => setPsStatement(e.target.value)}
+                required
+                style={{ padding: '10px', borderRadius: '6px', border: '1px solid #ccc', fontSize: '0.95rem' }}
+              >
+                <option value="">Select Problem Statement</option>
+                {(PROBLEM_STATEMENTS[studentData.selectedDomain] || []).map((stmt, idx) => (
+                  <option key={idx} value={stmt}>{stmt}</option>
+                ))}
+              </select>
+              {PROBLEM_STATEMENTS[studentData.selectedDomain]?.length === 0 && (
+                <p style={{ color: '#888', fontSize: '0.85rem' }}>No predefined statements for this domain. Contact admin.</p>
+              )}
+              <button
+                type="submit"
+                disabled={psSubmitting}
+                style={{ padding: '10px 24px', background: '#014a01', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: '700', cursor: 'pointer', alignSelf: 'flex-start' }}
+              >
+                {psSubmitting ? 'Saving...' : 'Save Problem Statement'}
+              </button>
+            </form>
+          )}
+        </div>
+      )}
       
       <div className="stats-grid">
         <div className="stat-card">

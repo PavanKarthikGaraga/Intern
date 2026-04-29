@@ -177,93 +177,52 @@ export async function GET(request) {
         let reports;
         if (supply) {
             // For supply students, fetch both regular and special reports
-            const [regularReports] = await connection.query(
-                `SELECT 
-                    u.*,
-                    v.day1 as verified1,
-                    v.day2 as verified2,
-                    v.day3 as verified3,
-                    v.day4 as verified4,
-                    v.day5 as verified5,
-                    v.day6 as verified6,
-                    v.day7 as verified7,
-                    a.day1 as attendance1,
-                    a.day2 as attendance2,
-                    a.day3 as attendance3,
-                    a.day4 as attendance4,
-                    a.day5 as attendance5,
-                    a.day6 as attendance6,
-                    a.day7 as attendance7,
-                    s.day1 as status1,
-                    s.day2 as status2,
-                    s.day3 as status3,
-                    s.day4 as status4,
-                    s.day5 as status5,
-                    s.day6 as status6,
-                    s.day7 as status7,
-                    m.day1 as marks1,
-                    m.day2 as marks2,
-                    m.day3 as marks3,
-                    m.day4 as marks4,
-                    m.day5 as marks5,
-                    m.day6 as marks6,
-                    m.day7 as marks7,
-                    msg.day1 as message1,
-                    msg.day2 as message2,
-                    msg.day3 as message3,
-                    msg.day4 as message4,
-                    msg.day5 as message5,
-                    msg.day6 as message6,
-                    msg.day7 as message7
-                FROM uploads u
-                RIGHT JOIN verify v ON u.username = v.username
-                LEFT JOIN attendance a ON u.username = a.username
-                LEFT JOIN status s ON u.username = s.username
-                LEFT JOIN dailyMarks m ON u.username = m.username
-                LEFT JOIN messages msg ON u.username = msg.username
-                WHERE u.username = ? OR v.username = ?`,
-                [username, username]
-            );
+            let regularReports = [[]];
+            try {
+                [regularReports] = await connection.query(
+                    `SELECT u.*,
+                        v.day1 as verified1, v.day2 as verified2, v.day3 as verified3, v.day4 as verified4,
+                        v.day5 as verified5, v.day6 as verified6, v.day7 as verified7,
+                        a.day1 as attendance1, a.day2 as attendance2, a.day3 as attendance3, a.day4 as attendance4,
+                        a.day5 as attendance5, a.day6 as attendance6, a.day7 as attendance7,
+                        s.day1 as status1, s.day2 as status2, s.day3 as status3, s.day4 as status4,
+                        s.day5 as status5, s.day6 as status6, s.day7 as status7,
+                        m.day1 as marks1, m.day2 as marks2, m.day3 as marks3, m.day4 as marks4,
+                        m.day5 as marks5, m.day6 as marks6, m.day7 as marks7,
+                        msg.day1 as message1, msg.day2 as message2, msg.day3 as message3, msg.day4 as message4,
+                        msg.day5 as message5, msg.day6 as message6, msg.day7 as message7
+                    FROM uploads u
+                    RIGHT JOIN verify v ON u.username = v.username
+                    LEFT JOIN attendance a ON u.username = a.username
+                    LEFT JOIN status s ON u.username = s.username
+                    LEFT JOIN dailyMarks m ON u.username = m.username
+                    LEFT JOIN messages msg ON u.username = msg.username
+                    WHERE u.username = ? OR v.username = ?`,
+                    [username, username]
+                );
+            } catch (e) { console.warn('Regular reports query failed (legacy DB):', e.message); }
 
-            const [specialReports] = await connection.query(
-                `SELECT 
-                    u.*,
-                    a.day1 as attendance1,
-                    a.day2 as attendance2,
-                    a.day3 as attendance3,
-                    a.day4 as attendance4,
-                    a.day5 as attendance5,
-                    a.day6 as attendance6,
-                    a.day7 as attendance7,
-                    s.day1 as status1,
-                    s.day2 as status2,
-                    s.day3 as status3,
-                    s.day4 as status4,
-                    s.day5 as status5,
-                    s.day6 as status6,
-                    s.day7 as status7,
-                    m.day1 as marks1,
-                    m.day2 as marks2,
-                    m.day3 as marks3,
-                    m.day4 as marks4,
-                    m.day5 as marks5,
-                    m.day6 as marks6,
-                    m.day7 as marks7,
-                    msg.day1 as message1,
-                    msg.day2 as message2,
-                    msg.day3 as message3,
-                    msg.day4 as message4,
-                    msg.day5 as message5,
-                    msg.day6 as message6,
-                    msg.day7 as message7
-                FROM suploads u
-                LEFT JOIN sattendance a ON u.username = a.username
-                LEFT JOIN sstatus s ON u.username = s.username
-                LEFT JOIN sdailyMarks m ON u.username = m.username
-                LEFT JOIN smessages msg ON u.username = msg.username
-                WHERE u.username = ?`,
-                [username]
-            );
+            let specialReports = [[]];
+            try {
+                [specialReports] = await connection.query(
+                    `SELECT u.*,
+                        a.day1 as attendance1, a.day2 as attendance2, a.day3 as attendance3, a.day4 as attendance4,
+                        a.day5 as attendance5, a.day6 as attendance6, a.day7 as attendance7,
+                        s.day1 as status1, s.day2 as status2, s.day3 as status3, s.day4 as status4,
+                        s.day5 as status5, s.day6 as status6, s.day7 as status7,
+                        m.day1 as marks1, m.day2 as marks2, m.day3 as marks3, m.day4 as marks4,
+                        m.day5 as marks5, m.day6 as marks6, m.day7 as marks7,
+                        msg.day1 as message1, msg.day2 as message2, msg.day3 as message3, msg.day4 as message4,
+                        msg.day5 as message5, msg.day6 as message6, msg.day7 as message7
+                    FROM suploads u
+                    LEFT JOIN sattendance a ON u.username = a.username
+                    LEFT JOIN sstatus s ON u.username = s.username
+                    LEFT JOIN sdailyMarks m ON u.username = m.username
+                    LEFT JOIN smessages msg ON u.username = msg.username
+                    WHERE u.username = ?`,
+                    [username]
+                );
+            } catch (e) { console.warn('Special reports query failed (legacy DB):', e.message); }
 
             // Transform regular reports
             const transformedRegularReports = [];
@@ -313,53 +272,30 @@ export async function GET(request) {
             };
         } else {
             // For regular students, only fetch regular reports
-            const [regularReports] = await connection.query(
-                `SELECT 
-                    u.*,
-                    v.day1 as verified1,
-                    v.day2 as verified2,
-                    v.day3 as verified3,
-                    v.day4 as verified4,
-                    v.day5 as verified5,
-                    v.day6 as verified6,
-                    v.day7 as verified7,
-                    a.day1 as attendance1,
-                    a.day2 as attendance2,
-                    a.day3 as attendance3,
-                    a.day4 as attendance4,
-                    a.day5 as attendance5,
-                    a.day6 as attendance6,
-                    a.day7 as attendance7,
-                    s.day1 as status1,
-                    s.day2 as status2,
-                    s.day3 as status3,
-                    s.day4 as status4,
-                    s.day5 as status5,
-                    s.day6 as status6,
-                    s.day7 as status7,
-                    m.day1 as marks1,
-                    m.day2 as marks2,
-                    m.day3 as marks3,
-                    m.day4 as marks4,
-                    m.day5 as marks5,
-                    m.day6 as marks6,
-                    m.day7 as marks7,
-                    msg.day1 as message1,
-                    msg.day2 as message2,
-                    msg.day3 as message3,
-                    msg.day4 as message4,
-                    msg.day5 as message5,
-                    msg.day6 as message6,
-                    msg.day7 as message7
-                FROM uploads u
-                RIGHT JOIN verify v ON u.username = v.username
-                LEFT JOIN attendance a ON u.username = a.username
-                LEFT JOIN status s ON u.username = s.username
-                LEFT JOIN dailyMarks m ON u.username = m.username
-                LEFT JOIN messages msg ON u.username = msg.username
-                WHERE u.username = ? OR v.username = ?`,
-                [username, username]
-            );
+            let regularReports = [[]];
+            try {
+                [regularReports] = await connection.query(
+                    `SELECT u.*,
+                        v.day1 as verified1, v.day2 as verified2, v.day3 as verified3, v.day4 as verified4,
+                        v.day5 as verified5, v.day6 as verified6, v.day7 as verified7,
+                        a.day1 as attendance1, a.day2 as attendance2, a.day3 as attendance3, a.day4 as attendance4,
+                        a.day5 as attendance5, a.day6 as attendance6, a.day7 as attendance7,
+                        s.day1 as status1, s.day2 as status2, s.day3 as status3, s.day4 as status4,
+                        s.day5 as status5, s.day6 as status6, s.day7 as status7,
+                        m.day1 as marks1, m.day2 as marks2, m.day3 as marks3, m.day4 as marks4,
+                        m.day5 as marks5, m.day6 as marks6, m.day7 as marks7,
+                        msg.day1 as message1, msg.day2 as message2, msg.day3 as message3, msg.day4 as message4,
+                        msg.day5 as message5, msg.day6 as message6, msg.day7 as message7
+                    FROM uploads u
+                    RIGHT JOIN verify v ON u.username = v.username
+                    LEFT JOIN attendance a ON u.username = a.username
+                    LEFT JOIN status s ON u.username = s.username
+                    LEFT JOIN dailyMarks m ON u.username = m.username
+                    LEFT JOIN messages msg ON u.username = msg.username
+                    WHERE u.username = ? OR v.username = ?`,
+                    [username, username]
+                );
+            } catch (e) { console.warn('Regular reports query failed (legacy DB):', e.message); }
 
             // Transform regular reports
             const transformedReports = [];

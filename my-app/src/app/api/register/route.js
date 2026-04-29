@@ -179,6 +179,17 @@ export async function POST(request) {
           {
             query: `INSERT INTO uploads (username, day1, day2, day3, day4, day5, day6, day7) VALUES(?, null, null, null, null, null, null, null)`,
             values: [username]
+          },
+          {
+            query: `INSERT INTO problemStatements (username, domain, problem_statement, location, district, state) VALUES(?, ?, ?, ?, ?, ?)`,
+            values: [
+              username,
+              formData.selectedDomain,
+              formData.problemStatement,
+              formData.residence.hostelName || 'N/A',
+              formData.residence.district,
+              formData.residence.state
+            ]
           }
         ];
       } else {
@@ -237,6 +248,17 @@ export async function POST(request) {
             query: `INSERT INTO uploads (username, day1, day2, day3, day4, day5, day6, day7)
               VALUES(?, null, null, null, null, null, null, null)`,
             values: [username]
+          },
+          {
+            query: `INSERT INTO problemStatements (username, domain, problem_statement, location, district, state) VALUES(?, ?, ?, ?, ?, ?)`,
+            values: [
+              username,
+              formData.selectedDomain,
+              formData.problemStatement,
+              formData.residence.hostelName || 'N/A',
+              formData.residence.district,
+              formData.residence.state
+            ]
           }
         ];
       }

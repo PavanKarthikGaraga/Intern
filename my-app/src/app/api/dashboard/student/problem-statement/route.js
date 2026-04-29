@@ -28,8 +28,8 @@ export async function POST(request) {
         if (!username || !domain || !problem_statement || !location || !district || !state) {
             return NextResponse.json({ success: false, error: 'All fields are required.' }, { status: 400 });
         }
-        if (problem_statement.length > 50) {
-            return NextResponse.json({ success: false, error: 'Problem statement must be 50 characters or less.' }, { status: 400 });
+        if (problem_statement.length > 255) {
+            return NextResponse.json({ success: false, error: 'Problem statement must be 255 characters or less.' }, { status: 400 });
         }
         const db = await pool.getConnection();
         try {
