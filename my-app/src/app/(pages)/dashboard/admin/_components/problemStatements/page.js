@@ -14,8 +14,9 @@ export default function ProblemStatements() {
     const [filters, setFilters] = useState({ domain: '', state: '', district: '' });
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
-    const [activeTab, setActiveTab] = useState('table'); // 'table' | 'analytics'
+    const [activeTab, setActiveTab] = useState('table'); // 'table' | 'analytics' | 'not-submitted'
     const [expandedDomain, setExpandedDomain] = useState(null);
+    const [nsSearch, setNsSearch] = useState('');
 
 
 
@@ -140,8 +141,8 @@ export default function ProblemStatements() {
             </div>
 
             {/* Tab switcher */}
-            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-                {['table', 'analytics'].map(tab => (
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
+                {['table', 'analytics', 'not-submitted'].map(tab => (
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
@@ -153,7 +154,7 @@ export default function ProblemStatements() {
                             textTransform: 'capitalize'
                         }}
                     >
-                        {tab === 'analytics' ? '📊 Analytics' : '📋 Student Table'}
+                        {tab === 'analytics' ? '📊 Analytics' : tab === 'not-submitted' ? `❌ Not Submitted (${data.stats.notSubmitted})` : '📋 Student Table'}
                     </button>
                 ))}
             </div>
@@ -308,6 +309,63 @@ export default function ProblemStatements() {
                         </div>
                     </div>
                 </>
+            )}
+            {/* ─── NOT SUBMITTED TAB ─── */}
+            {activeTab === 'not-submitted' && (
+                <div>
+                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14, flexWrap:'wrap', gap:8 }}>
+                        <h2 style={{ color:'#d4380d', fontWeight:700, margin:0 }}>❌ Students Who Have Not Selected a Problem Statement</h2>
+                        <span style={{ background:'#fff1f0', border:'1px solid #ffa39e', color:'#d4380d', padding:'4px 14px', borderRadius:20, fontWeight:700, fontSize:'0.85rem' }}>
+                            {data.notSubmittedList?.length || 0} students pending
+                        </span>
+                    </div>
+                    <input
+                        type="text"
+                        placeholder="Search by ID, name, branch or domain…"
+                        value={nsSearch}
+                        onChange={e => setNsSearch(e.target.value)}
+                        style={{ width:'100%', padding:'9px 13px', borderRadius:8, border:'1.5px solid #ccc', fontSize:'0.92rem', marginBottom:14, boxSizing:'border-box' }}
+                    />
+                    <div className="table-container">
+                        <table className="problem-statements-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Student ID</th>
+                                    <th>Name</th>
+                                    <th>Branch</th>
+                                    <th>Slot</th>
+                                    <th>Mode</th>
+                                    <th>Domain Selected</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {(data.notSubmittedList || [])
+                                    .filter(s => !nsSearch ||
+                                        s.username?.toLowerCase().includes(nsSearch.toLowerCase()) ||
+                                        s.name?.toLowerCase().includes(nsSearch.toLowerCase()) ||
+                                        s.branch?.toLowerCase().includes(nsSearch.toLowerCase()) ||
+                                        s.selectedDomain?.toLowerCase().includes(nsSearch.toLowerCase())
+                                    )
+                                    .map((s, i) => (
+                                        <tr key={s.username}>
+                                            <td style={{ color:'#999', fontSize:'0.82rem' }}>{i + 1}</td>
+                                            <td><strong>{s.username}</strong></td>
+                                            <td>{s.name}</td>
+                                            <td>{s.branch}</td>
+                                            <td>Slot {s.slot}</td>
+                                            <td>{s.mode}</td>
+                                            <td>{s.selectedDomain || '—'}</td>
+                                        </tr>
+                                    ))
+                                }
+                                {(data.notSubmittedList || []).length === 0 && (
+                                    <tr><td colSpan={7} style={{ textAlign:'center', padding:32, color:'#52c41a', fontWeight:700 }}>🎉 All students have submitted their problem statements!</td></tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             )}
         </div>
     );

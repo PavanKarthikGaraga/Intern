@@ -1,0 +1,209 @@
+.dt-wrap { padding: 24px; max-width: 860px; margin: 0 auto; }
+.dt-header { margin-bottom: 20px; }
+.dt-header h2 { font-size: 1.4rem; font-weight: 700; color: #014a01; margin: 0 0 4px; }
+.dt-header p { color: #555; font-size: 0.9rem; margin: 0; }
+
+.dt-day-select-row { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+.dt-day-select-row label { font-weight: 600; color: #014a01; font-size: 0.95rem; }
+.dt-day-select {
+  padding: 9px 16px; border-radius: 8px; border: 2px solid #014a01;
+  font-size: 0.95rem; color: #014a01; background: #fff; cursor: pointer;
+  font-weight: 600; outline: none;
+}
+.dt-day-select:focus { box-shadow: 0 0 0 3px rgba(1,74,1,0.15); }
+
+.dt-badge {
+  font-size: 0.78rem; font-weight: 700; padding: 3px 10px; border-radius: 20px;
+  background: #e6f4ea; color: #014a01; border: 1px solid #b7dfb7;
+}
+.dt-badge.saved { background: #014a01; color: #fff; border-color: #014a01; }
+
+/* Day card */
+.dt-card {
+  background: #fff; border-radius: 14px; border: 1.5px solid #d0e8d0;
+  box-shadow: 0 2px 12px rgba(1,74,1,0.07); overflow: hidden;
+}
+.dt-card-head {
+  background: linear-gradient(90deg, #014a01 0%, #1a7a1a 100%);
+  padding: 16px 22px; display: flex; align-items: center; gap: 12px;
+}
+.dt-card-head .day-icon { font-size: 1.6rem; }
+.dt-card-head h3 { color: #fff; font-size: 1.05rem; font-weight: 700; margin: 0; }
+.dt-card-head p { color: rgba(255,255,255,0.82); font-size: 0.84rem; margin: 3px 0 0; }
+.dt-card-body { padding: 22px; }
+
+/* Textarea */
+.dt-textarea-wrap { margin-bottom: 16px; }
+.dt-textarea-wrap label { display: block; font-weight: 600; color: #333; margin-bottom: 6px; font-size: 0.9rem; }
+.dt-textarea {
+  width: 100%; min-height: 160px; padding: 12px 14px;
+  border: 1.5px solid #ccc; border-radius: 8px; font-size: 0.95rem;
+  resize: vertical; font-family: inherit; line-height: 1.6; transition: border 0.2s;
+  box-sizing: border-box;
+}
+.dt-textarea:focus { border-color: #014a01; outline: none; box-shadow: 0 0 0 3px rgba(1,74,1,0.1); }
+.dt-word-count { font-size: 0.8rem; color: #888; text-align: right; margin-top: 4px; }
+.dt-word-count.warn { color: #d97706; font-weight: 600; }
+.dt-word-count.ok { color: #014a01; font-weight: 600; }
+
+/* Person tabs */
+.dt-persons-label { font-weight: 600; color: #333; font-size: 0.9rem; margin-bottom: 8px; }
+.dt-person-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+.dt-person-btn {
+  padding: 7px 16px; border-radius: 20px; border: 1.5px solid #ccc;
+  background: #f5f5f5; cursor: pointer; font-size: 0.88rem; font-weight: 600;
+  color: #555; transition: all 0.18s;
+}
+.dt-person-btn:hover { border-color: #014a01; color: #014a01; background: #e6f4ea; }
+.dt-person-btn.active { background: #014a01; color: #fff; border-color: #014a01; }
+.dt-person-btn.filled { border-color: #4caf50; color: #2e7d32; background: #f0faf0; }
+.dt-person-btn.active.filled { background: #014a01; color: #fff; }
+
+/* Name input */
+.dt-name-wrap { margin-bottom: 16px; }
+.dt-name-wrap label { display: block; font-weight: 600; color: #333; margin-bottom: 6px; font-size: 0.9rem; }
+.dt-name-input {
+  width: 100%; max-width: 360px; padding: 9px 13px;
+  border: 1.5px solid #ccc; border-radius: 8px; font-size: 0.95rem;
+  font-family: inherit; transition: border 0.2s; box-sizing: border-box;
+}
+.dt-name-input:focus { border-color: #014a01; outline: none; box-shadow: 0 0 0 3px rgba(1,74,1,0.1); }
+
+/* Stakeholder info banner */
+.dt-sh-banner {
+  background: #f0f7f0; border: 1.5px solid #b7dfb7; border-radius: 10px;
+  padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px;
+}
+.dt-sh-banner .sh-tag {
+  background: #014a01; color: #fff; font-size: 0.78rem; font-weight: 700;
+  padding: 3px 10px; border-radius: 12px; white-space: nowrap;
+}
+.dt-sh-banner p { margin: 0; font-size: 0.88rem; color: #444; }
+
+/* Questions list */
+.dt-questions { list-style: none; padding: 0; margin: 0 0 16px; display: flex; flex-direction: column; gap: 12px; }
+.dt-q-item { background: #fafafa; border: 1px solid #e8e8e8; border-radius: 10px; padding: 14px 16px; }
+.dt-q-text { font-size: 0.9rem; color: #333; margin-bottom: 10px; line-height: 1.5; font-weight: 500; }
+.dt-q-btns { display: flex; gap: 8px; }
+.dt-q-btn {
+  padding: 5px 18px; border-radius: 20px; border: 1.5px solid #ccc;
+  cursor: pointer; font-size: 0.85rem; font-weight: 600; background: #fff; transition: all 0.15s;
+}
+.dt-q-btn.yes.sel { background: #014a01; color: #fff; border-color: #014a01; }
+.dt-q-btn.no.sel  { background: #c62828; color: #fff; border-color: #c62828; }
+.dt-q-btn:hover:not(.sel) { border-color: #014a01; color: #014a01; }
+
+/* Data analysis */
+.dt-analysis-info {
+  background: #fff8e1; border: 1.5px solid #ffe082; border-radius: 10px;
+  padding: 14px 16px; margin-bottom: 18px; font-size: 0.88rem; color: #6c5700; line-height: 1.6;
+}
+.dt-analysis-info strong { color: #014a01; }
+.dt-sh-analysis { margin-bottom: 20px; }
+.dt-sh-analysis h4 { font-size: 0.95rem; font-weight: 700; color: #014a01; margin: 0 0 10px; }
+.dt-person-analysis { margin-bottom: 14px; }
+.dt-person-analysis h5 { font-size: 0.88rem; font-weight: 600; color: #333; margin: 0 0 8px; }
+.dt-q-stat { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 0.82rem; color: #555; }
+.dt-q-stat .q-label { flex: 1; line-height: 1.4; }
+.dt-bar-wrap { width: 120px; background: #eee; border-radius: 6px; height: 8px; }
+.dt-bar-yes { height: 8px; border-radius: 6px; background: #014a01; transition: width 0.4s; }
+.dt-pct { font-weight: 700; color: #014a01; min-width: 38px; text-align: right; }
+
+.dt-severity-box {
+  background: #f0f7f0; border: 1.5px solid #b7dfb7; border-radius: 10px;
+  padding: 14px 16px; margin-top: 16px;
+}
+.dt-severity-box h4 { color: #014a01; font-size: 0.95rem; font-weight: 700; margin: 0 0 10px; }
+.dt-severity-item { margin-bottom: 10px; font-size: 0.88rem; }
+.dt-severity-item strong { color: #333; }
+.dt-severity-label { display: inline-block; padding: 2px 10px; border-radius: 12px; font-weight: 700; font-size: 0.78rem; margin-left: 8px; }
+.dt-severity-label.high { background: #fdecea; color: #c62828; }
+.dt-severity-label.medium { background: #fff8e1; color: #e65100; }
+.dt-severity-label.low { background: #e8f5e9; color: #2e7d32; }
+
+/* Link input */
+.dt-link-section { margin-bottom: 18px; }
+.dt-link-section label { display: block; font-weight: 600; color: #333; margin-bottom: 6px; font-size: 0.9rem; }
+.dt-link-section p { font-size: 0.82rem; color: #888; margin: 0 0 8px; line-height: 1.5; }
+.dt-link-input {
+  width: 100%; padding: 9px 13px; border: 1.5px solid #ccc; border-radius: 8px;
+  font-size: 0.93rem; font-family: inherit; transition: border 0.2s; box-sizing: border-box;
+}
+.dt-link-input:focus { border-color: #014a01; outline: none; box-shadow: 0 0 0 3px rgba(1,74,1,0.1); }
+.dt-warning-box {
+  background: #fdecea; border: 1.5px solid #f5c6c6; border-radius: 8px;
+  padding: 10px 14px; margin-bottom: 14px; font-size: 0.84rem; color: #c62828; font-weight: 600;
+}
+
+/* ── Day timeline ── */
+.dt-timeline { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+.dt-day-pill {
+  display: flex; align-items: center; gap: 6px; padding: 7px 14px;
+  border-radius: 22px; border: 1.5px solid #ccc; background: #f5f5f5;
+  cursor: pointer; font-size: 0.85rem; font-weight: 600; color: #555;
+  transition: all 0.18s; white-space: nowrap;
+}
+.dt-day-pill:hover:not(.locked):not(.missed) { border-color: #014a01; color: #014a01; background: #e6f4ea; }
+.dt-day-pill.active { background: #014a01; color: #fff; border-color: #014a01; }
+.dt-day-pill.submitted { border-color: #4caf50; color: #2e7d32; background: #f0faf0; }
+.dt-day-pill.active.submitted { background: #014a01; color: #fff; }
+.dt-day-pill.locked { background: #f0f0f0; color: #aaa; border-color: #ddd; cursor: not-allowed; }
+.dt-day-pill.missed { background: #fdecea; color: #c62828; border-color: #f5c6c6; cursor: not-allowed; }
+.dt-day-pill.upcoming { background: #f5f5f5; color: #999; border-color: #e0e0e0; cursor: not-allowed; }
+.dt-pill-icon { font-size: 1rem; }
+
+/* ── Timer bar ── */
+.dt-timer-bar {
+  display: flex; align-items: center; gap: 10px;
+  background: #fff8e1; border: 1.5px solid #ffe082; border-radius: 10px;
+  padding: 10px 16px; margin-bottom: 18px; flex-wrap: wrap;
+}
+.dt-timer-label { font-size: 0.82rem; color: #6c5700; font-weight: 600; flex-shrink: 0; }
+.dt-timer-count { font-size: 1rem; font-weight: 800; color: #014a01; letter-spacing: 0.04em; }
+.dt-timer-count.urgent { color: #c62828; animation: timerPulse 1s infinite; }
+.dt-timer-date { font-size: 0.78rem; color: #888; margin-left: auto; }
+@keyframes timerPulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+/* ── Lock overlay ── */
+.dt-locked-overlay {
+  text-align: center; padding: 40px 20px;
+  background: #f8f8f8; border-radius: 10px;
+}
+.dt-locked-overlay .lock-icon { font-size: 3rem; margin-bottom: 12px; }
+.dt-locked-overlay h3 { color: #555; font-size: 1.1rem; margin-bottom: 8px; }
+.dt-locked-overlay p { color: #888; font-size: 0.88rem; line-height: 1.6; }
+.dt-locked-overlay.missed-lock { background: #fdecea; }
+.dt-locked-overlay.missed-lock h3 { color: #c62828; }
+
+/* ── Day date badge in header ── */
+.dt-day-date { font-size: 0.8rem; color: rgba(255,255,255,0.75); margin-top: 2px; }
+
+
+/* Info box */
+.dt-info-box {
+  background: #f0f7f0; border: 1.5px solid #b7dfb7; border-radius: 10px;
+  padding: 14px 16px; font-size: 0.88rem; color: #444; line-height: 1.7;
+}
+.dt-info-box h4 { color: #014a01; font-weight: 700; margin: 0 0 8px; font-size: 0.95rem; }
+.dt-info-box ul { margin: 6px 0 0 16px; padding: 0; }
+.dt-info-box li { margin-bottom: 4px; }
+
+/* Save button row */
+.dt-save-row { margin-top: 20px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.dt-save-btn {
+  padding: 10px 28px; background: #014a01; color: #fff; border: none;
+  border-radius: 8px; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: background 0.2s;
+}
+.dt-save-btn:hover:not(:disabled) { background: #023a01; }
+.dt-save-btn:disabled { background: #a5c8a5; cursor: not-allowed; }
+.dt-save-msg { font-size: 0.88rem; }
+.dt-save-msg.ok { color: #014a01; font-weight: 600; }
+.dt-save-msg.err { color: #c62828; font-weight: 600; }
+
+/* No PS warning */
+.dt-no-ps {
+  text-align: center; padding: 40px 20px; background: #fff8e1;
+  border: 2px solid #ffe082; border-radius: 12px;
+}
+.dt-no-ps h3 { color: #856404; margin-bottom: 8px; }
+.dt-no-ps p { color: #6c5700; font-size: 0.9rem; }

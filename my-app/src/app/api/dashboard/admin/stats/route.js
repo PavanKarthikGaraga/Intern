@@ -2,158 +2,116 @@ import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { verifyAccessToken } from '@/lib/jwt';
 import { cookies } from 'next/headers';
+import { DOMAINS } from '@/app/Data/domains';
 
 export async function GET() {
-    try {
-        // Validate admin session using JWT
-        const cookieStore = await cookies();
-        const accessToken = await cookieStore.get('accessToken');
+  try {
+    const cookieStore = await cookies();
+    const accessToken = await cookieStore.get('accessToken');
+    if (!accessToken?.value)
+      return NextResponse.json({ success: false, error: 'Authentication required.' }, { status: 401 });
 
-        if (!accessToken?.value) {
-            return NextResponse.json({ 
-                success: false, 
-                error: 'Authentication required. Please login again.' 
-            }, { status: 401 });
-        }
+    const decoded = await verifyAccessToken(accessToken.value);
+    if (!decoded || decoded.role !== 'admin')
+      return NextResponse.json({ success: false, error: 'Access denied.' }, { status: 403 });
 
-        const decoded = await verifyAccessToken(accessToken.value);
-        if (!decoded || decoded.role !== 'admin') {
-            return NextResponse.json({ 
-                success: false, 
-                error: 'Access denied. Only admin members can view statistics.' 
-            }, { status: 403 });
-        }
+    // ── Live query: per-slot counts directly from registrations ──────────────
+    const [slotRows] = await pool.query(`
+      SELECT
+        slot,
+        COUNT(*) AS total,
+        SUM(CASE WHEN LOWER(TRIM(mode)) = 'remote'   THEN 1 ELSE 0 END) AS remote,
+        SUM(CASE WHEN LOWER(TRIM(mode)) = 'incampus'  THEN 1 ELSE 0 END) AS incampus,
+        SUM(CASE WHEN LOWER(TRIM(mode)) = 'invillage' THEN 1 ELSE 0 END) AS invillage
+      FROM registrations
+      WHERE slot IS NOT NULL
+      GROUP BY slot
+      ORDER BY slot
+    `);
 
-        // Get stats from the stats table
-        const [statsResult] = await pool.query('SELECT * FROM stats ORDER BY id DESC LIMIT 1');
-        
-        // If no stats found, return empty stats
-        if (!statsResult || statsResult.length === 0) {
-            return NextResponse.json({
-                success: true,
-                stats: {
-                    overview: {
-                        totalStudents: 0,
-                        totalCompleted: 0,
-                        totalActive: 0,
-                        completionRate: "0.00"
-                    },
-                    slots: {
-                        slot1: { total: 0, remote: 0, incampus: 0, invillage: 0 },
-                        slot2: { total: 0, remote: 0, incampus: 0, invillage: 0 },
-                        slot3: { total: 0, remote: 0, incampus: 0, invillage: 0 },
-                        slot4: { total: 0, remote: 0, incampus: 0, invillage: 0 },
-                        slot5: { total: 0, remote: 0, incampus: 0, invillage: 0 },
-                        slot6: { total: 0, remote: 0, incampus: 0, invillage: 0 },
-                        slot7: { total: 0, remote: 0, incampus: 0, invillage: 0 },
-                        slot8: { total: 0, remote: 0, incampus: 0, invillage: 0 },
-                        slot9: { total: 0, remote: 0, incampus: 0, invillage: 0 }
-                    },
-                    modes: {
-                        remote: 0,
-                        incampus: 0,
-                        invillage: 0
-                    },
-                    domainStats: [],
-                    modeStats: []
-                }
-            });
-        }
+    // ── Overview totals ───────────────────────────────────────────────────────
+    const [overviewRows] = await pool.query(`
+      SELECT
+        COUNT(*) AS totalStudents,
+        SUM(CASE WHEN f.completed = 1 THEN 1 ELSE 0 END) AS totalCompleted,
+        SUM(CASE WHEN f.completed = 1 THEN 0 ELSE 1 END) AS totalActive
+      FROM registrations r
+      LEFT JOIN final f ON r.username = f.username
+    `);
+    const overview = overviewRows[0] || {};
+    const totalStudents  = Number(overview.totalStudents)  || 0;
+    const totalCompleted = Number(overview.totalCompleted) || 0;
+    const totalActive    = Number(overview.totalActive)    || 0;
 
-        const stats = statsResult[0];
+    // ── Build slots object from live data ─────────────────────────────────────
+    const slotsObj = {};
+    const availableSlots = [];
+    slotRows.forEach(row => {
+      const n = row.slot;
+      availableSlots.push(n);
+      slotsObj[`slot${n}`] = {
+        total:     Number(row.total)     || 0,
+        remote:    Number(row.remote)    || 0,
+        incampus:  Number(row.incampus)  || 0,
+        invillage: Number(row.invillage) || 0,
+      };
+    });
 
-        // Build slots object dynamically — only include slots whose columns exist in the stats row.
-        // This makes the API safe for both the old DB (4 slots) and new DB (9 slots).
-        const buildSlot = (n) => ({
-            total: stats[`slot${n}`] ?? 0,
-            remote: stats[`slot${n}Remote`] ?? 0,
-            incampus: stats[`slot${n}Incamp`] ?? 0,
-            invillage: stats[`slot${n}Invillage`] ?? 0
-        });
+    // ── Domain stats: include ALL 20 domains, even those with 0 students ──────
+    // Pull actual counts from registrations
+    const [domainRows] = await pool.query(`
+      SELECT selectedDomain, COUNT(*) AS total,
+             SUM(CASE WHEN f.completed = 1 THEN 1 ELSE 0 END) AS completed,
+             SUM(CASE WHEN f.completed = 1 THEN 0 ELSE 1 END) AS active
+      FROM registrations r
+      LEFT JOIN final f ON r.username = f.username
+      GROUP BY r.selectedDomain
+    `);
 
-        // Detect max slot number from columns present in the row
-        const allPossibleSlots = [1,2,3,4,5,6,7,8,9];
-        const availableSlots = allPossibleSlots.filter(n => stats[`slot${n}`] !== undefined);
-        const slotsObj = {};
-        availableSlots.forEach(n => { slotsObj[`slot${n}`] = buildSlot(n); });
+    // Build a map of DB results keyed by domain name
+    const dbMap = {};
+    domainRows.forEach(row => { dbMap[row.selectedDomain] = row; });
 
-        // Get domain-wise statistics
-        const [domainStats] = await pool.query(`
-            SELECT 
-                r.selectedDomain,
-                COUNT(*) as total,
-                SUM(CASE WHEN f.completed = true THEN 1 ELSE 0 END) as completed,
-                SUM(CASE WHEN f.completed = false OR f.completed IS NULL THEN 1 ELSE 0 END) as active
-            FROM registrations r
-            LEFT JOIN final f ON r.username = f.username
-            GROUP BY r.selectedDomain
-        `);
+    // Merge with full domain list so all 20 appear
+    const domainStats = DOMAINS.map(d => ({
+      selectedDomain: d.name,
+      total:     Number(dbMap[d.name]?.total     ?? 0),
+      completed: Number(dbMap[d.name]?.completed ?? 0),
+      active:    Number(dbMap[d.name]?.active    ?? 0),
+    })).sort((a, b) => b.total - a.total);
 
-        // Get mode-wise statistics
-        const [modeStats] = await pool.query(`
-            SELECT 
-                r.mode,
-                COUNT(*) as total,
-                SUM(CASE WHEN f.completed = true THEN 1 ELSE 0 END) as completed,
-                SUM(CASE WHEN f.completed = false OR f.completed IS NULL THEN 1 ELSE 0 END) as active
-            FROM registrations r
-            LEFT JOIN final f ON r.username = f.username
-            GROUP BY r.mode
-        `);
+    // ── Mode stats ────────────────────────────────────────────────────────────
+    const [modeStats] = await pool.query(`
+      SELECT
+        r.mode,
+        COUNT(*) AS total,
+        SUM(CASE WHEN f.completed = 1 THEN 1 ELSE 0 END) AS completed,
+        SUM(CASE WHEN f.completed = 1 THEN 0 ELSE 1 END) AS active
+      FROM registrations r
+      LEFT JOIN final f ON r.username = f.username
+      GROUP BY r.mode
+    `);
 
-        return NextResponse.json({
-            success: true,
-            stats: {
-                overview: {
-                    totalStudents: stats.totalStudents ?? 0,
-                    totalCompleted: stats.totalCompleted ?? 0,
-                    totalActive: stats.totalActive ?? 0,
-                    completionRate: stats.totalStudents
-                        ? ((stats.totalCompleted / stats.totalStudents) * 100).toFixed(2)
-                        : "0.00"
-                },
-                slots: slotsObj,
-                availableSlots, // tell the frontend which slots to show
-                modes: {
-                    remote: stats.remote ?? 0,
-                    incampus: stats.incampus ?? 0,
-                    invillage: stats.invillage ?? 0
-                },
-                domainStats: domainStats || [],
-                modeStats: modeStats || []
-            }
-        });
+    return NextResponse.json({
+      success: true,
+      stats: {
+        overview: {
+          totalStudents,
+          totalCompleted,
+          totalActive,
+          completionRate: totalStudents
+            ? ((totalCompleted / totalStudents) * 100).toFixed(2)
+            : '0.00',
+        },
+        slots: slotsObj,
+        availableSlots,
+        domainStats: domainStats || [],
+        modeStats:   modeStats   || [],
+      },
+    });
 
-    } catch (error) {
-        console.error('Error in admin stats endpoint:', error);
-        return NextResponse.json({
-            success: true,
-            stats: {
-                overview: {
-                    totalStudents: 0,
-                    totalCompleted: 0,
-                    totalActive: 0,
-                    completionRate: "0.00"
-                },
-                slots: {
-                    slot1: { total: 0, remote: 0, incampus: 0, invillage: 0 },
-                    slot2: { total: 0, remote: 0, incampus: 0, invillage: 0 },
-                    slot3: { total: 0, remote: 0, incampus: 0, invillage: 0 },
-                    slot4: { total: 0, remote: 0, incampus: 0, invillage: 0 },
-                    slot5: { total: 0, remote: 0, incampus: 0, invillage: 0 },
-                    slot6: { total: 0, remote: 0, incampus: 0, invillage: 0 },
-                    slot7: { total: 0, remote: 0, incampus: 0, invillage: 0 },
-                    slot8: { total: 0, remote: 0, incampus: 0, invillage: 0 },
-                    slot9: { total: 0, remote: 0, incampus: 0, invillage: 0 }
-                },
-                modes: {
-                    remote: 0,
-                    incampus: 0,
-                    invillage: 0
-                },
-                domainStats: [],
-                modeStats: []
-            }
-        });
-    }
-} 
+  } catch (error) {
+    console.error('Error in admin stats endpoint:', error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}

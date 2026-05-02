@@ -14,67 +14,66 @@ import Reports from './_components/submissions/reports';
 import FinalReport from './_components/finalReport/page';
 import ProblemStatement from './_components/problemStatment/page';
 import SurveyQuestions from './_components/survey/page';
+import DailyTasks from './_components/dailyTasks/page';
 
 export default function StudentDashboard() {
-  const { user } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { user, isLoading: authLoading } = useAuth();
+  const [loading, setLoading]       = useState(true);
+  const [error, setError]           = useState(null);
   const [activeSection, setActiveSection] = useState('overview');
-  const [studentData, setStudentData] = useState(null);
+  const [studentData, setStudentData]     = useState(null);
+  const [slotEnabled, setSlotEnabled]     = useState(false); // default locked
 
   useEffect(() => {
-    const fetchStudentData = async () => {
-      if (!user?.username) {
-        setLoading(false);
-        return;
-      }
+    const fetchAll = async () => {
+      if (authLoading) return;
+      if (!user?.username) { setLoading(false); return; }
 
       try {
+        setLoading(true);
         setError(null);
-        const response = await fetch('/api/dashboard/student/data', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: user.username })
-        });
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        // Fetch student data + slot status in parallel
+        const [studentRes, slotRes] = await Promise.all([
+          fetch('/api/dashboard/student/data', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: user.username }),
+          }),
+          fetch('/api/slot-status', { credentials: 'include' }),
+        ]);
+
+        if (!studentRes.ok) {
+          const errData = await studentRes.json().catch(() => ({}));
+          throw new Error(errData.message || `HTTP error! status: ${studentRes.status}`);
         }
 
-        const data = await response.json();
-        if (data.success && data.student) {
-          setStudentData(data.student);
-        } else {
-          throw new Error(data.error || 'Failed to fetch student data');
-        }
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        setError(error.message || 'Failed to load student data');
-        toast.error(error.message || 'Failed to load student data');
+        const [data, slotData] = await Promise.all([studentRes.json(), slotRes.json()]);
+
+        if (data.success && data.student) setStudentData(data.student);
+        else throw new Error(data.error || 'Failed to fetch student data');
+
+        setSlotEnabled(slotData.enabled === true);
+      } catch (err) {
+        console.error('Error fetching data:', err);
+        setError(err.message || 'Failed to load student data');
+        toast.error(err.message || 'Failed to load student data');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchStudentData();
-  }, [user]);
+    fetchAll();
+  }, [user, authLoading]);
 
-  if (!user) {
-    return <Loader />;
-  }
+  if (!user || authLoading) return <Loader />;
+  if (loading) return <Loader />;
+  if (error)   return <div className="error">{error}</div>;
 
-  if (loading) {
-    return <Loader />;
-  }
+  const handleSectionClick = (section) => setActiveSection(section);
 
-  if (error) {
-    return <div className="error">{error}</div>;
-  }
-
-  const handleSectionClick = (section) => {
-    setActiveSection(section);
-  };
+  // Whether this student's mentor is assigned
+  const hasMentor = Boolean(studentData?.facultyMentorId || studentData?.mentor);
 
   return (
     <div className="student-dashboard">
@@ -82,49 +81,87 @@ export default function StudentDashboard() {
 
       <div className="dashboard-content">
         <nav className="dashboard-sidebar">
-          <button
-            className={`sidebar-item ${activeSection === 'overview' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('overview')}
-          >
+          {/* ── Always visible ── */}
+          <button className={`sidebar-item ${activeSection === 'overview' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('overview')}>
             <span className="item-label">Overview</span>
           </button>
-          <button
-            className={`sidebar-item ${activeSection === 'profile' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('profile')}
-          >
+          <button className={`sidebar-item ${activeSection === 'profile' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('profile')}>
             <span className="item-label">Profile</span>
           </button>
-          <button
-            className={`sidebar-item ${activeSection === 'change-password' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('change-password')}
-          >
+          <button className={`sidebar-item ${activeSection === 'change-password' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('change-password')}>
             <span className="item-label">Change Password</span>
           </button>
-          {studentData?.problemStatementData && (
-            <button
-              className={`sidebar-item ${activeSection === 'survey' ? 'active' : ''}`}
-              onClick={() => handleSectionClick('survey')}
-            >
-              <span className="item-label">Survey Questions</span>
+
+          {/* Mentor — always visible when assigned, no slot needed */}
+          {hasMentor && (
+            <button className={`sidebar-item ${activeSection === 'lead' ? 'active' : ''}`}
+              onClick={() => handleSectionClick('lead')}>
+              <span className="item-label">My Mentor</span>
             </button>
+          )}
+
+          {/* ── Slot-gated sections ── */}
+          {slotEnabled && (
+            <>
+              <button className={`sidebar-item ${activeSection === 'daily-tasks' ? 'active' : ''}`}
+                onClick={() => handleSectionClick('daily-tasks')}>
+                <span className="item-label">Daily Tasks</span>
+              </button>
+              {studentData?.problemStatementData && (
+                <button className={`sidebar-item ${activeSection === 'survey' ? 'active' : ''}`}
+                  onClick={() => handleSectionClick('survey')}>
+                  <span className="item-label">Survey Questions</span>
+                </button>
+              )}
+            </>
+          )}
+
+          {/* Locked notice */}
+          {!slotEnabled && (
+            <div style={{
+              margin: '16px 12px 0',
+              background: '#fff8e1',
+              border: '1.5px solid #ffe082',
+              borderRadius: 10,
+              padding: '10px 12px',
+              fontSize: '0.78rem',
+              color: '#e65100',
+              lineHeight: 1.5,
+            }}>
+              🔒 Your slot is not yet active. Other sections will unlock when your slot opens.
+            </div>
           )}
         </nav>
 
         <main className="dashboard-main">
-          {activeSection === 'overview' ? <Overview user={user} studentData={studentData} /> : 
-           activeSection === 'profile' ? <Profile user={user} studentData={studentData} /> :
-           activeSection === 'change-password' ? <ChangePassword user={user} /> :
-           activeSection === 'survey' ? <SurveyQuestions studentData={studentData} /> :
-           <div style={{
-             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-             padding: '60px 24px', textAlign: 'center', gap: '16px'
-           }}>
-             <div style={{ fontSize: '3rem' }}>🚧</div>
-             <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#014a01', margin: 0 }}>Coming Soon</h2>
-             <p style={{ color: '#555', fontSize: '1rem', maxWidth: '400px', lineHeight: '1.6' }}>
-               This section is under preparation and will be available soon. Please check back later.
-             </p>
-           </div>
+          {activeSection === 'overview'         ? <Overview user={user} studentData={studentData} /> :
+           activeSection === 'profile'          ? <Profile user={user} studentData={studentData} /> :
+           activeSection === 'change-password'  ? <ChangePassword user={user} /> :
+           activeSection === 'lead'             ? <Lead studentData={studentData} /> :
+           // Slot-gated
+           activeSection === 'daily-tasks' && slotEnabled  ? <DailyTasks studentData={studentData} /> :
+           activeSection === 'survey'      && slotEnabled  ? <SurveyQuestions studentData={studentData} /> :
+           // Fallback if slot not enabled but somehow navigated here
+           !slotEnabled && (activeSection === 'daily-tasks' || activeSection === 'survey') ? (
+             <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'60px 24px', textAlign:'center', gap:16 }}>
+               <div style={{ fontSize:'3rem' }}>🔒</div>
+               <h2 style={{ fontSize:'1.4rem', fontWeight:700, color:'#014a01', margin:0 }}>Slot Not Active Yet</h2>
+               <p style={{ color:'#555', fontSize:'0.95rem', maxWidth:380, lineHeight:1.6 }}>
+                 This section will be available once your internship slot is activated by the admin. Please check back soon.
+               </p>
+             </div>
+           ) : (
+             <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'60px 24px', textAlign:'center', gap:16 }}>
+               <div style={{ fontSize:'3rem' }}>🚧</div>
+               <h2 style={{ fontSize:'1.5rem', fontWeight:'700', color:'#014a01', margin:0 }}>Coming Soon</h2>
+               <p style={{ color:'#555', fontSize:'1rem', maxWidth:'400px', lineHeight:'1.6' }}>
+                 This section is under preparation and will be available soon.
+               </p>
+             </div>
+           )
           }
         </main>
       </div>

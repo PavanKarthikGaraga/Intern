@@ -1,12 +1,13 @@
 'use client';
 import React, { createContext, useState, useEffect, useRef, useContext } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import toast from 'react-hot-toast';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const router = useRouter();
+  const pathname = usePathname();
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -112,6 +113,13 @@ export const AuthProvider = ({ children }) => {
       if (intervalIdRef.current) clearInterval(intervalIdRef.current);
     };
   }, []);
+
+  // Re-run auth check on route change (handles proxy login soft navigation)
+  useEffect(() => {
+    if (!mountedRef.current) return;
+    authCheckedRef.current = false;
+    checkInitialAuth();
+  }, [pathname]);
 
   // Start refresh interval when authenticated
   useEffect(() => {

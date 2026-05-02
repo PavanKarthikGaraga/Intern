@@ -25,6 +25,8 @@ import VerifyCertificates from './_components/verifyCertificates/page';
 import SFinalProfile from './_components/sfinal/page';
 import ProblemStatements from './_components/problemStatements/page';
 import ActivityLogs from './_components/activityLogs/page';
+import DailyTasksViewer from '../studentLead/_components/dailyTasksViewer/page';
+import SlotControl from './_components/slotControl/page';
 
 
 export default function AdminDashboard() {
@@ -239,6 +241,20 @@ export default function AdminDashboard() {
           </button>
 
           <button
+            className={`sidebar-item ${activeSection === 'slot-control' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('slot-control')}
+          >
+            <span className="item-label">Slot Control</span>
+          </button>
+
+          <button
+            className={`sidebar-item ${activeSection === 'daily-tasks' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('daily-tasks')}
+          >
+            <span className="item-label">Daily Tasks</span>
+          </button>
+
+          <button
             className={`sidebar-item ${activeSection === 'reset-password' ? 'active' : ''}`}
             onClick={() => handleSectionClick('reset-password')}
           >
@@ -330,6 +346,8 @@ export default function AdminDashboard() {
            activeSection === 'supply-final' ? <SFinalProfile /> :
            activeSection === 'problem-statements' ? <ProblemStatements /> :
            activeSection === 'activity-logs' ? <ActivityLogs /> :
+           activeSection === 'slot-control' ? <SlotControl /> :
+           activeSection === 'daily-tasks' ? <DailyTasksViewer /> :
            <ChangePassword />}
         </main>
       </div>
