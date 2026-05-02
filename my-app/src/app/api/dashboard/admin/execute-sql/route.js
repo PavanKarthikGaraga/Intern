@@ -20,8 +20,9 @@ export async function POST(request) {
     // Verify the token and get user info
     const payload = await verifyAccessToken(token);
     
-    // Check if the user is the specific admin
-    if (payload.username !== '2300032048') {
+    // Check if the user is an authorized developer admin
+    const authorizedUsers = ['2300032048', '2400030188', '2400030188@kluniversity.in'];
+    if (!authorizedUsers.includes(payload.username)) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }

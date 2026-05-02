@@ -1,0 +1,125 @@
+.survey-container {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.survey-header {
+  margin-bottom: 30px;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 20px;
+}
+
+.survey-header h2 {
+  color: #1a1a1a;
+  font-size: 1.8rem;
+  margin-bottom: 15px;
+}
+
+.survey-meta {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+
+.domain-badge {
+  background: #e3f2fd;
+  color: #1565c0;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.problem-statement-title {
+  color: #2c3e50;
+  font-size: 1.2rem;
+  margin: 0;
+}
+
+.survey-desc {
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.stakeholders-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 25px;
+}
+
+.stakeholder-card {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+  padding: 20px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stakeholder-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.stakeholder-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.stakeholder-header h4 {
+  color: #2c3e50;
+  font-size: 1.1rem;
+  margin: 0;
+  font-weight: 600;
+}
+
+.question-count {
+  background: #e8f5e9;
+  color: #2e7d32;
+  padding: 4px 10px;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.question-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.question-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.q-icon {
+  font-size: 1rem;
+  margin-top: 2px;
+}
+
+.q-text {
+  color: #495057;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.no-data {
+  color: #6c757d;
+  font-size: 1.1rem;
+  text-align: center;
+  padding: 40px 0;
+}
