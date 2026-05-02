@@ -101,8 +101,8 @@ export async function POST() {
         `INSERT INTO registrations
            (selectedDomain, fieldOfInterest, careerChoice, batch, mode, slot, username, name, email,
             branch, gender, year, phoneNumber, residenceType, hostelName, busRoute,
-            country, state, district, pincode, season)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            country, state, district, pincode, season, facultyMentorId)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
          ON DUPLICATE KEY UPDATE
            selectedDomain=VALUES(selectedDomain), mode=VALUES(mode), slot=VALUES(slot),
            name=VALUES(name), email=VALUES(email)`,
@@ -111,7 +111,7 @@ export async function POST() {
           'Incampus', 1, DEMO_ID, 'Demo Student', 'demo@kluniversity.in',
           'Computer Science & Engineering', 'Male', '3rd', DEMO_PHONE,
           'Hostel', 'KL Boys Hostel A', null,
-          'India', 'Andhra Pradesh', 'Guntur', '522502', '2026'
+          'India', 'Andhra Pradesh', 'Guntur', '522502', '2026', null
         ]
       );
 
