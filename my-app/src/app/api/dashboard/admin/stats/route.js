@@ -19,14 +19,14 @@ export async function GET() {
     const [slotRows] = await pool.query(`
       SELECT
         slot,
-        COUNT(*) AS total,
-        SUM(CASE WHEN LOWER(TRIM(mode)) = 'remote'   THEN 1 ELSE 0 END) AS remote,
-        SUM(CASE WHEN LOWER(TRIM(mode)) = 'incampus'  THEN 1 ELSE 0 END) AS incampus,
-        SUM(CASE WHEN LOWER(TRIM(mode)) = 'invillage' THEN 1 ELSE 0 END) AS invillage
+        COUNT(*)                                                                 AS total,
+        SUM(CASE WHEN LOWER(TRIM(COALESCE(mode,''))) IN ('remote','hometown') THEN 1 ELSE 0 END) AS remote,
+        SUM(CASE WHEN LOWER(TRIM(COALESCE(mode,''))) IN ('incampus','in campus','in-campus') THEN 1 ELSE 0 END) AS incampus,
+        SUM(CASE WHEN LOWER(TRIM(COALESCE(mode,''))) IN ('invillage','in village','in-village') THEN 1 ELSE 0 END) AS invillage
       FROM registrations
       WHERE slot IS NOT NULL
       GROUP BY slot
-      ORDER BY slot
+      ORDER BY CAST(slot AS UNSIGNED)
     `);
 
     // ── Overview totals ───────────────────────────────────────────────────────
@@ -49,12 +49,13 @@ export async function GET() {
     slotRows.forEach(row => {
       const n = row.slot;
       availableSlots.push(n);
-      slotsObj[`slot${n}`] = {
-        total:     Number(row.total)     || 0,
-        remote:    Number(row.remote)    || 0,
-        incampus:  Number(row.incampus)  || 0,
-        invillage: Number(row.invillage) || 0,
-      };
+      const remote    = Math.max(0, Number(row.remote)    || 0);
+      const incampus  = Math.max(0, Number(row.incampus)  || 0);
+      const invillage = Math.max(0, Number(row.invillage) || 0);
+      const total     = Math.max(0, Number(row.total)     || 0);
+      // unknown = rows whose mode didn't match any known value
+      const unknown   = Math.max(0, total - remote - incampus - invillage);
+      slotsObj[`slot${n}`] = { total, remote, incampus, invillage, unknown };
     });
 
     // ── Domain stats: include ALL 20 domains, even those with 0 students ──────

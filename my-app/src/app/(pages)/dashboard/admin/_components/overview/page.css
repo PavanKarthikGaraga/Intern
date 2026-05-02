@@ -89,9 +89,10 @@
 /* ── Total count badge ── */
 .ov-total-badge {
   display: inline-flex; align-items: center; gap: 6px;
-  background: #e6f4ea; color: #014a01; font-weight: 700;
-  font-size: 0.88rem; padding: 5px 14px; border-radius: 20px;
+  background: #e6f4ea; color: #014a01; font-weight: 600;
+  font-size: 0.85rem; padding: 5px 16px; border-radius: 20px;
   margin-bottom: 16px; border: 1px solid #b7dfb7;
+  letter-spacing: 0.01em;
 }
 
 /* ── District toggle btn ── */

@@ -38,10 +38,16 @@ function dayLabel(slot, dayNum) {
   return dl.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
 }
 
+const DEMO_ID = '2500099999';
+
 /**
  * Status: 'upcoming' | 'open' | 'submitted' | 'missed' | 'locked'
  */
-function getDayStatus(dayNum, slot, saved) {
+function getDayStatus(dayNum, slot, saved, username) {
+  // ── Demo bypass: all days open regardless of date ──
+  if (username === DEMO_ID) {
+    return saved[dayNum] ? 'submitted' : 'open';
+  }
   if (!slot || !SLOT_START[slot]) return 'upcoming';
   const dl = dayDeadline(slot, dayNum);
   const now = serverNow();   // ← server-authoritative IST time
@@ -51,7 +57,7 @@ function getDayStatus(dayNum, slot, saved) {
   if (dayNum === 1) {
     return now >= SLOT_START[slot].getTime() ? 'open' : 'upcoming';
   }
-  const prevStatus = getDayStatus(dayNum - 1, slot, saved);
+  const prevStatus = getDayStatus(dayNum - 1, slot, saved, username);
   if (prevStatus === 'missed' || prevStatus === 'locked') return 'locked';
   if (prevStatus !== 'submitted') return 'upcoming';
   return 'open';
@@ -148,9 +154,10 @@ export default function DailyTasks({ studentData }) {
   const [msg, setMsg]         = useState('');
   const [msgType, setMsgType] = useState('ok');
 
-  const ps     = studentData?.problemStatementData?.problem_statement || null;
-  const slot   = studentData?.slot || null;
-  const survey = ps ? (SURVEY[ps] || null) : null;
+  const ps       = studentData?.problemStatementData?.problem_statement || null;
+  const slot     = studentData?.slot || null;
+  const username = studentData?.username || null;
+  const survey   = ps ? (SURVEY[ps] || null) : null;
 
   useEffect(() => {
     (async () => {
@@ -166,7 +173,7 @@ export default function DailyTasks({ studentData }) {
         const tasks = (json.success && json.tasks) ? json.tasks : {};
         setSaved(tasks);
         const firstOpen = [1,2,3,4,5,6,7].find(d => {
-          const st = getDayStatus(d, slot, tasks);
+          const st = getDayStatus(d, slot, tasks, username);
           return st === 'open' || st === 'submitted';
         });
         setActiveDay(firstOpen || 1);
@@ -218,7 +225,7 @@ export default function DailyTasks({ studentData }) {
 
   if (activeDay === null) return <div className="dt-wrap"><p style={{color:'#888'}}>Loading…</p></div>;
 
-  const statuses    = Object.fromEntries([1,2,3,4,5,6,7].map(d => [d, getDayStatus(d, slot, saved)]));
+  const statuses    = Object.fromEntries([1,2,3,4,5,6,7].map(d => [d, getDayStatus(d, slot, saved, username)]));
   const meta        = DAY_META[activeDay - 1];
   const activeStatus = statuses[activeDay];
   const isSaved     = activeStatus === 'submitted' && !draft[activeDay];

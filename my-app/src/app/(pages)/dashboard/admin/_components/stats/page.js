@@ -115,29 +115,30 @@ export default function AdminDashboard() {
             <section className="stats-section">
                 <h2>Slot Statistics</h2>
                 <div className="stats-grid">
-                    {(stats?.availableSlots || Object.keys(stats?.slots || {}).map(k => parseInt(k.replace('slot','')))).map(slotNum => (
-                        <div key={slotNum} className="stat-card slot-card">
-                            <h3>Slot {slotNum}</h3>
-                            <div className="slot-stats">
-                                <div className="slot-stat">
-                                    <span>Total:</span>
-                                    <span>{stats?.slots[`slot${slotNum}`]?.total || 0}</span>
-                                </div>
-                                <div className="slot-stat">
-                                    <span>Remote:</span>
-                                    <span>{stats?.slots[`slot${slotNum}`]?.remote || 0}</span>
-                                </div>
-                                <div className="slot-stat">
-                                    <span>In Campus:</span>
-                                    <span>{stats?.slots[`slot${slotNum}`]?.incampus || 0}</span>
-                                </div>
-                                <div className="slot-stat">
-                                    <span>In Village:</span>
-                                    <span>{stats?.slots[`slot${slotNum}`]?.invillage || 0}</span>
+                    {(stats?.availableSlots || Object.keys(stats?.slots || {}).map(k => parseInt(k.replace('slot','')))).map(slotNum => {
+                        const s = stats?.slots?.[`slot${slotNum}`] || {};
+                        const total     = Math.max(0, Number(s.total)     || 0);
+                        const remote    = Math.max(0, Number(s.remote)    || 0);
+                        const incampus  = Math.max(0, Number(s.incampus)  || 0);
+                        const invillage = Math.max(0, Number(s.invillage) || 0);
+                        const unknown   = Math.max(0, Number(s.unknown)   || 0);
+                        return (
+                            <div key={slotNum} className="stat-card slot-card">
+                                <h3>Slot {slotNum}</h3>
+                                <div className="slot-stats">
+                                    <div className="slot-stat"><span>Total:</span><span>{total}</span></div>
+                                    <div className="slot-stat"><span>Remote:</span><span>{remote}</span></div>
+                                    <div className="slot-stat"><span>In Campus:</span><span>{incampus}</span></div>
+                                    <div className="slot-stat"><span>In Village:</span><span>{invillage}</span></div>
+                                    {unknown > 0 && (
+                                        <div className="slot-stat" style={{ color:'#e65100' }}>
+                                            <span>Other:</span><span>{unknown}</span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </section>
 

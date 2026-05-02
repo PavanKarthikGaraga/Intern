@@ -3,14 +3,22 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  Legend, ResponsiveContainer, Cell
+  PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
+import {
+  TeamOutlined, CheckCircleOutlined, UserOutlined, SolutionOutlined, ReloadOutlined,
+  GlobalOutlined, BarChartOutlined
+} from '@ant-design/icons';
 import './page.css';
 
-const GEO_COLORS = ['#014a01','#1b8f2d','#4caf50','#81c784','#a5d6a7','#2e7d32','#388e3c','#43a047','#66bb6a','#c8e6c9'];
-const MARKS_COLORS = { '95–100':'#014a01','90–95':'#1b8f2d','80–89':'#4caf50','70–79':'#f9a825','60–69':'#fb8c00','Below 60':'#e53935' };
-
+const GEO_COLORS = [
+  '#014a01','#1b8f2d','#2e7d32','#388e3c','#43a047',
+  '#558b2f','#689f38','#7cb342','#9ccc65','#aed581'
+];
+const MARKS_COLORS = {
+  '95–100':'#014a01','90–95':'#1b8f2d','80–89':'#4caf50',
+  '70–79':'#f9a825','60–69':'#fb8c00','Below 60':'#e53935'
+};
 const SLOT_OPTS = [
   { v:'all', l:'All Slots' },
   { v:'1', l:'Slot 1 — May 11–17' }, { v:'2', l:'Slot 2 — May 18–24' },
@@ -19,6 +27,56 @@ const SLOT_OPTS = [
   { v:'7', l:'Slot 7 — Jun 22–28' }, { v:'8', l:'Slot 8 — Jun 29–Jul 5' },
   { v:'9', l:'Slot 9 — Jul 6–12' },
 ];
+
+/* ── Custom Pie label (outer) ── */
+const RADIAN = Math.PI / 180;
+const renderCustomLabel = ({ cx, cy, midAngle, outerRadius, name, percent }) => {
+  if (percent < 0.03) return null; // hide tiny slices
+  const r = outerRadius + 28;
+  const x = cx + r * Math.cos(-midAngle * RADIAN);
+  const y = cy + r * Math.sin(-midAngle * RADIAN);
+  return (
+    <text x={x} y={y} fill="#333" textAnchor={x > cx ? 'start' : 'end'}
+      dominantBaseline="central" fontSize={11} fontWeight={600} fontFamily="Inter, sans-serif">
+      {name} ({(percent * 100).toFixed(1)}%)
+    </text>
+  );
+};
+
+/* ── Custom tooltip ── */
+const CustomTooltip = ({ active, payload, total }) => {
+  if (!active || !payload?.length) return null;
+  const { name, value } = payload[0];
+  return (
+    <div style={{
+      background:'#fff', border:'1.5px solid #d0e8d0', borderRadius:10,
+      padding:'10px 16px', boxShadow:'0 4px 20px rgba(0,0,0,0.12)',
+      fontFamily:'Inter, sans-serif'
+    }}>
+      <div style={{ fontWeight:700, color:'#014a01', marginBottom:4 }}>{name}</div>
+      <div style={{ fontSize:'0.88rem', color:'#333' }}>
+        <strong>{value}</strong> students &nbsp;
+        <span style={{ color:'#888' }}>({total ? ((value/total)*100).toFixed(1) : 0}%)</span>
+      </div>
+    </div>
+  );
+};
+
+/* ── Custom legend ── */
+const CustomLegend = ({ data, total }) => (
+  <div style={{ display:'flex', flexDirection:'column', gap:8, minWidth:180, paddingLeft:24 }}>
+    {data.map((d, i) => (
+      <div key={d.name} style={{ display:'flex', alignItems:'center', gap:10 }}>
+        <div style={{ width:12, height:12, borderRadius:3, background:GEO_COLORS[i % GEO_COLORS.length], flexShrink:0 }} />
+        <div style={{ flex:1, fontSize:'0.82rem', color:'#333', fontWeight:500 }}>{d.name}</div>
+        <div style={{ fontSize:'0.82rem', fontWeight:700, color:'#014a01', minWidth:28, textAlign:'right' }}>{d.value}</div>
+        <div style={{ fontSize:'0.75rem', color:'#aaa', minWidth:42, textAlign:'right' }}>
+          {total ? ((d.value/total)*100).toFixed(1) : 0}%
+        </div>
+      </div>
+    ))}
+  </div>
+);
 
 export default function Overview() {
   const { user } = useAuth();
@@ -29,13 +87,13 @@ export default function Overview() {
   const [statsLoading, setStatsLoading]   = useState(false);
   const [statsSlotFilter, setStatsSlotFilter] = useState('all');
 
-  // Geo filters
-  const [selectedState, setSelectedState]     = useState('');
+  const [selectedState, setSelectedState]       = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('');
-  const [selectedGender, setSelectedGender]   = useState('all');
+  const [selectedGender, setSelectedGender]     = useState('all');
   const [showDistrictWise, setShowDistrictWise] = useState(false);
-  const [geoSlotFilter, setGeoSlotFilter]     = useState('all');
-  const [modeFilter, setModeFilter]           = useState('all');
+  const [geoSlotFilter, setGeoSlotFilter]       = useState('all');
+  const [modeFilter, setModeFilter]             = useState('all');
+  const [activeIndex, setActiveIndex]           = useState(null);
 
   const fetchOverviewData = async () => {
     try {
@@ -67,15 +125,12 @@ export default function Overview() {
   if (error)   return <div className="error">{error}</div>;
   if (!overviewData) return <div className="no-data">No data available</div>;
 
-  const { leadsCount, studentsCount, completedCount, facultyCount,
-          stateStats, districtStats } = overviewData;
-
+  const { leadsCount, studentsCount, completedCount, facultyCount, stateStats, districtStats } = overviewData;
   const states = [...new Set(stateStats.map(s => s.state))];
   const districts = selectedState
     ? [...new Set(districtStats.filter(s => s.state === selectedState).map(s => s.district))]
     : [];
 
-  // ── Geo data builder ────────────────────────────────────────────────────────
   const filterBySlotMode = arr =>
     arr.filter(s =>
       (geoSlotFilter === 'all' || String(s.slot) === geoSlotFilter) &&
@@ -113,7 +168,6 @@ export default function Overview() {
         { name:'Other',  value: arr.reduce((a,s) => a + (Number(s.other)||0),  0) },
       ];
     }
-    // All states
     const filtered = filterBySlotMode(stateStats);
     const map = {};
     filtered.forEach(s => {
@@ -132,10 +186,8 @@ export default function Overview() {
     : selectedGender === 'all'
       ? geoData
       : geoData.map(r => ({ name: r.name, value: r[selectedGender.toLowerCase()] || 0 }));
-
   const totalFiltered = filteredGeoData.reduce((a, r) => a + r.value, 0);
 
-  // ── Marks data ──────────────────────────────────────────────────────────────
   const marksData = [
     { range:'95–100', count: statsData?.marksDistribution?.['95_to_100'] || 0, color: MARKS_COLORS['95–100'] },
     { range:'90–95',  count: statsData?.marksDistribution?.['90_to_95']  || 0, color: MARKS_COLORS['90–95'] },
@@ -147,10 +199,10 @@ export default function Overview() {
   const maxMarks = Math.max(...marksData.map(r => r.count), 1);
 
   const kpiCards = [
-    { label:'Total Students',    value: studentsCount,   icon:'👨‍🎓', color:'#014a01', bg:'#e6f4ea' },
-    { label:'Completed',         value: completedCount,  icon:'✅',   color:'#1565c0', bg:'#e3f2fd' },
-    { label:'Student Leads',     value: leadsCount,      icon:'🌟',   color:'#6a1b9a', bg:'#f3e5f5' },
-    { label:'Faculty Mentors',   value: facultyCount,    icon:'👩‍🏫', color:'#e65100', bg:'#fff3e0' },
+    { label:'Total Students',  value: studentsCount,  Icon: TeamOutlined,         color:'#014a01', bg:'#e6f4ea' },
+    { label:'Completed',       value: completedCount, Icon: CheckCircleOutlined,   color:'#1565c0', bg:'#e3f2fd' },
+    { label:'Student Leads',   value: leadsCount,     Icon: SolutionOutlined,      color:'#6a1b9a', bg:'#f3e5f5' },
+    { label:'Faculty Mentors', value: facultyCount,   Icon: UserOutlined,          color:'#e65100', bg:'#fff3e0' },
   ];
 
   return (
@@ -161,19 +213,22 @@ export default function Overview() {
           <h1>Admin Dashboard Overview</h1>
           <p>Real-time data · Last refreshed just now</p>
         </div>
-        <button className="ov-refresh-btn" onClick={() => { fetchOverviewData(); fetchStatsData(statsSlotFilter); }}>
-          🔄 Refresh
+        <button className="ov-refresh-btn"
+          onClick={() => { fetchOverviewData(); fetchStatsData(statsSlotFilter); }}>
+          <ReloadOutlined /> Refresh
         </button>
       </div>
 
       {/* ── KPI Cards ── */}
       <div className="ov-kpi-grid">
-        {kpiCards.map(k => (
-          <div key={k.label} className="ov-kpi-card" style={{ '--kpi-color': k.color, '--kpi-bg': k.bg }}>
-            <div className="ov-kpi-icon">{k.icon}</div>
+        {kpiCards.map(({ label, value, Icon, color, bg }) => (
+          <div key={label} className="ov-kpi-card" style={{ '--kpi-color': color, '--kpi-bg': bg }}>
+            <div className="ov-kpi-icon">
+              <Icon style={{ fontSize: '1.4rem', color }} />
+            </div>
             <div className="ov-kpi-info">
-              <h4>{k.label}</h4>
-              <p>{k.value}</p>
+              <h4>{label}</h4>
+              <p>{value}</p>
             </div>
           </div>
         ))}
@@ -181,7 +236,11 @@ export default function Overview() {
 
       {/* ── Geographical Distribution ── */}
       <div className="ov-section-card">
-        <h2 className="ov-section-title"><span>🗺️</span> Geographical Distribution</h2>
+        <h2 className="ov-section-title">
+          <GlobalOutlined style={{ fontSize:'1.1rem', color:'#014a01' }} />
+          Geographical Distribution
+        </h2>
+
         <div className="ov-filters">
           <div className="ov-filter-group">
             <label>State</label>
@@ -203,7 +262,7 @@ export default function Overview() {
                 <label style={{ opacity:0 }}>_</label>
                 <button className={`ov-toggle-btn${showDistrictWise ? ' active' : ''}`}
                   onClick={() => setShowDistrictWise(v => !v)}>
-                  {showDistrictWise ? '📍 District View ON' : '📍 Show District-Wise'}
+                  {showDistrictWise ? 'District View ON' : 'Show District-Wise'}
                 </button>
               </div>
             </>
@@ -234,26 +293,52 @@ export default function Overview() {
           </div>
         </div>
 
-        <div className="ov-total-badge">📊 Total: {totalFiltered} students</div>
+        <div className="ov-total-badge">
+          Total: <strong style={{ marginLeft:4 }}>{totalFiltered}</strong>&nbsp;students
+        </div>
 
         {filteredGeoData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={340}>
-            <BarChart data={filteredGeoData} margin={{ top: 10, right: 20, left: 0, bottom: 20 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e8f5e9" />
-              <XAxis dataKey="name" tick={{ fontSize: 11, fill:'#555', fontWeight:600 }} angle={-15} textAnchor="end" interval={0} />
-              <YAxis tick={{ fontSize: 11, fill:'#888' }} />
-              <Tooltip
-                contentStyle={{ background:'#fff', border:'1.5px solid #b7dfb7', borderRadius:10, boxShadow:'0 4px 16px rgba(0,0,0,0.1)' }}
-                labelStyle={{ fontWeight:700, color:'#014a01' }}
-              />
-              <Legend />
-              <Bar dataKey="value" name="Students" radius={[6,6,0,0]}>
-                {filteredGeoData.map((_, i) => (
-                  <Cell key={i} fill={GEO_COLORS[i % GEO_COLORS.length]} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+          <div style={{ display:'flex', alignItems:'center', gap:0, width:'100%' }}>
+            {/* Pie */}
+            <div style={{ flex:'0 0 380px', height:340 }}>
+              <ResponsiveContainer width="100%" height={340}>
+                <PieChart>
+                  <Pie
+                    data={filteredGeoData}
+                    cx="50%" cy="50%"
+                    innerRadius={72}
+                    outerRadius={130}
+                    paddingAngle={2}
+                    dataKey="value"
+                    onMouseEnter={(_, i) => setActiveIndex(i)}
+                    onMouseLeave={() => setActiveIndex(null)}
+                    stroke="none"
+                  >
+                    {filteredGeoData.map((_, i) => (
+                      <Cell
+                        key={i}
+                        fill={GEO_COLORS[i % GEO_COLORS.length]}
+                        opacity={activeIndex === null || activeIndex === i ? 1 : 0.55}
+                        style={{ cursor:'pointer', transition:'opacity 0.2s' }}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip total={totalFiltered} />} />
+                  {/* Donut centre label */}
+                  <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle"
+                    style={{ fontFamily:'Inter, sans-serif' }}>
+                    <tspan x="50%" dy="-8" fontSize={28} fontWeight={800} fill="#012a01">{totalFiltered}</tspan>
+                    <tspan x="50%" dy={22} fontSize={12} fontWeight={500} fill="#888">Students</tspan>
+                  </text>
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Custom legend */}
+            <div style={{ flex:1, overflowY:'auto', maxHeight:320 }}>
+              <CustomLegend data={filteredGeoData} total={totalFiltered} />
+            </div>
+          </div>
         ) : (
           <div className="no-data-message">No data for selected filters</div>
         )}
@@ -263,7 +348,8 @@ export default function Overview() {
       <div className="ov-section-card">
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:12 }}>
           <h2 className="ov-section-title" style={{ margin:0, borderBottom:'none', paddingBottom:0 }}>
-            <span>📈</span> Course Statistics
+            <BarChartOutlined style={{ fontSize:'1.1rem', color:'#014a01' }} />
+            Course Statistics
           </h2>
           <div className="ov-filter-group" style={{ minWidth:200, maxWidth:260 }}>
             <label>Filter by Slot</label>
@@ -297,9 +383,8 @@ export default function Overview() {
               </div>
             </div>
 
-            {/* Marks distribution — custom horizontal bars */}
-            <h3 style={{ fontWeight:700, color:'#012a01', fontSize:'0.95rem', margin:'0 0 16px', display:'flex', alignItems:'center', gap:8 }}>
-              📊 Marks Distribution
+            <h3 style={{ fontWeight:700, color:'#012a01', fontSize:'0.9rem', margin:'0 0 16px', letterSpacing:'0.04em', textTransform:'uppercase' }}>
+              Marks Distribution
             </h3>
             <div className="ov-marks-bar-row">
               {marksData.map(({ range, count, color }) => {
@@ -308,7 +393,8 @@ export default function Overview() {
                   <div key={range} className="ov-marks-row">
                     <span className="ov-marks-label">{range}</span>
                     <div className="ov-marks-bar-wrap">
-                      <div className="ov-marks-bar-fill" style={{ width: `${pct}%`, background: color, minWidth: count > 0 ? 40 : 0 }}>
+                      <div className="ov-marks-bar-fill"
+                        style={{ width:`${pct}%`, background:color, minWidth: count > 0 ? 40 : 0 }}>
                         {count > 0 && count}
                       </div>
                     </div>
