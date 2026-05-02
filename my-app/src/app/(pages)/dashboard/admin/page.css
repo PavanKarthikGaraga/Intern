@@ -1,5 +1,4 @@
 .student-dashboard {
-    min-height: 100vh;
     display: flex;
     flex-direction: column;
     height: 100vh;
@@ -11,23 +10,22 @@
     display: flex;
     flex: 1;
     overflow: hidden;
-    position: relative;
+    min-height: 0;
 }
 
 .dashboard-sidebar {
     width: 250px;
+    min-width: 250px;
     background-color: #1a1a1a;
     padding: 0;
     box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
-    position: sticky;
-    top: 64px; /* Stick to top after header */
-    height: calc(100vh - 64px); /* Adjust based on header height */
+    align-self: stretch;
     overflow-y: auto;
     overflow-x: hidden;
-    scrollbar-width: thin; /* Firefox */
-    scrollbar-color: #333333 #1a1a1a; /* Firefox */
+    scrollbar-width: thin;
+    scrollbar-color: #333333 #1a1a1a;
 }
 
 /* Webkit scrollbar styling */
