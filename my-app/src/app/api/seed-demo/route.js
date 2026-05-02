@@ -109,7 +109,7 @@ export async function POST() {
         [
           'Machine Learning & AI', 'Data Science', 'Software Engineer', '2022-2026',
           'Incampus', 1, DEMO_ID, 'Demo Student', 'demo@kluniversity.in',
-          'Computer Science & Engineering', 'Male', '3rd Year', DEMO_PHONE,
+          'Computer Science & Engineering', 'Male', '3rd', DEMO_PHONE,
           'Hostel', 'KL Boys Hostel A', null,
           'India', 'Andhra Pradesh', 'Guntur', '522502', '2026'
         ]
