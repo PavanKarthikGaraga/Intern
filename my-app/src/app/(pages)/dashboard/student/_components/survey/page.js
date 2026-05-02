@@ -2070,10 +2070,12 @@ const surveyData = {
 
 export default function SurveyQuestions({ studentData }) {
   const [answers, setAnswers] = React.useState({});
-  const [submitted, setSubmitted] = React.useState(false);
-  const [savedData, setSavedData] = React.useState(null);
+  const [isSaved, setIsSaved] = React.useState(false);      // has been saved to DB
+  const [submitted, setSubmitted] = React.useState(false);  // already submitted before
   const [loading, setLoading] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
+  const [showReview, setShowReview] = React.useState(false); // review modal
+  const [confirming, setConfirming] = React.useState(false);
   const [error, setError] = React.useState('');
   const [success, setSuccess] = React.useState('');
 
@@ -2089,9 +2091,9 @@ export default function SurveyQuestions({ studentData }) {
         const res = await fetch('/api/dashboard/student/survey');
         const json = await res.json();
         if (json.data) {
-          setSavedData(json.data);
           setAnswers(json.data.responses || {});
           setSubmitted(true);
+          setIsSaved(true);
         }
       } catch (e) {
         console.error('Failed to load survey:', e);
@@ -2117,10 +2119,24 @@ export default function SurveyQuestions({ studentData }) {
 
   const handleAnswer = (stakeholder, qIdx, value) => {
     const key = `${stakeholder}__${qIdx}`;
+    setIsSaved(false); // mark unsaved on change
+    setSuccess('');
     setAnswers(prev => ({ ...prev, [key]: value }));
   };
 
-  const handleSubmit = async () => {
+  const handleClear = (stakeholder, qIdx) => {
+    const key = `${stakeholder}__${qIdx}`;
+    setIsSaved(false);
+    setSuccess('');
+    setAnswers(prev => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  };
+
+  // SAVE — stores to DB but does not "submit"
+  const handleSave = async () => {
     setSaving(true);
     setError('');
     setSuccess('');
@@ -2131,9 +2147,10 @@ export default function SurveyQuestions({ studentData }) {
         body: JSON.stringify({ responses: answers, problem_statement: statement, domain }),
       });
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error || 'Failed to submit');
+      if (!res.ok) throw new Error(json.error || 'Failed to save');
+      setIsSaved(true);
       setSubmitted(true);
-      setSuccess('✅ Survey submitted successfully!');
+      setSuccess('💾 Responses saved! Review and confirm submission below.');
     } catch (e) {
       setError(e.message);
     } finally {
@@ -2141,22 +2158,97 @@ export default function SurveyQuestions({ studentData }) {
     }
   };
 
-  // Count answered questions
+  // CONFIRM SUBMIT — called from inside review modal
+  const handleConfirmSubmit = async () => {
+    setConfirming(true);
+    setError('');
+    try {
+      const res = await fetch('/api/dashboard/student/survey', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ responses: answers, problem_statement: statement, domain }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Failed to submit');
+      setShowReview(false);
+      setSuccess('✅ Survey submitted successfully!');
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setConfirming(false);
+    }
+  };
+
   const totalQuestions = stakeholdersData.reduce((sum, sh) => sum + sh.count, 0);
   const answeredCount = Object.keys(answers).length;
   const progressPct = Math.round((answeredCount / totalQuestions) * 100);
 
+  // Build review data grouped by stakeholder
+  const reviewGroups = stakeholdersData.map(sh => ({
+    stakeholder: sh.stakeholder,
+    questions: sh.questions.map((q, qIdx) => ({
+      q,
+      answer: answers[`${sh.stakeholder}__${qIdx}`] || null,
+    })),
+  }));
+
   return (
     <div className="survey-container">
+      {/* ── REVIEW MODAL ── */}
+      {showReview && (
+        <div className="survey-modal-overlay" onClick={() => setShowReview(false)}>
+          <div className="survey-modal" onClick={e => e.stopPropagation()}>
+            <div className="survey-modal-header">
+              <h3>📋 Review Your Responses</h3>
+              <button className="modal-close-btn" onClick={() => setShowReview(false)}>✕</button>
+            </div>
+            <div className="survey-modal-meta">
+              <span className="domain-badge">{domain}</span>
+              <span className="modal-statement">{statement}</span>
+            </div>
+            <div className="survey-modal-body">
+              {reviewGroups.map((group, gIdx) => (
+                <div key={gIdx} className="review-group">
+                  <div className="review-group-title">{group.stakeholder}</div>
+                  {group.questions.map((item, iIdx) => (
+                    <div key={iIdx} className="review-row">
+                      <span className="review-q">{iIdx + 1}. {item.q.replace(' (Yes/No)', '')}</span>
+                      <span className={`review-ans ${item.answer === 'Yes' ? 'yes' : item.answer === 'No' ? 'no' : 'unanswered'}`}>
+                        {item.answer || '—'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+            <div className="survey-modal-stats">
+              <span className="stat-yes">✓ Yes: {Object.values(answers).filter(v => v === 'Yes').length}</span>
+              <span className="stat-no">✗ No: {Object.values(answers).filter(v => v === 'No').length}</span>
+              <span className="stat-skip">— Skipped: {totalQuestions - answeredCount}</span>
+            </div>
+            <div className="survey-modal-footer">
+              <button className="modal-cancel-btn" onClick={() => setShowReview(false)}>← Edit Responses</button>
+              <button
+                className="modal-confirm-btn"
+                onClick={handleConfirmSubmit}
+                disabled={confirming}
+              >
+                {confirming ? 'Submitting...' : '✅ Confirm & Submit'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── HEADER ── */}
       <div className="survey-header">
         <h2>Survey Questions</h2>
         <div className="survey-meta">
           <span className="domain-badge">{domain}</span>
           <h3 className="problem-statement-title">{statement}</h3>
         </div>
-        <p className="survey-desc">Fill in the responses collected from each stakeholder group.</p>
+        <p className="survey-desc">Select Yes / No for each question, then <strong>Save</strong> your responses. Once saved, click <strong>Submit</strong> to review and confirm.</p>
 
-        {/* Progress bar */}
         <div className="survey-progress">
           <div className="progress-label">
             <span>{answeredCount}/{totalQuestions} answered</span>
@@ -2167,11 +2259,12 @@ export default function SurveyQuestions({ studentData }) {
           </div>
         </div>
 
-        {submitted && (
-          <div className="survey-status-badge">✅ Survey already submitted — you can update and re-submit</div>
+        {submitted && isSaved && (
+          <div className="survey-status-badge">💾 Responses saved — click Submit to review &amp; confirm</div>
         )}
       </div>
 
+      {/* ── QUESTIONS ── */}
       <div className="stakeholders-grid">
         {stakeholdersData.map((sh, idx) => (
           <div key={idx} className="stakeholder-card">
@@ -2185,8 +2278,7 @@ export default function SurveyQuestions({ studentData }) {
                 const val = answers[key];
                 return (
                   <li key={qIdx} className="question-item interactive">
-                    <span className="q-icon">📋</span>
-                    <span className="q-text">{q}</span>
+                    <span className="q-text">{qIdx + 1}. {q}</span>
                     <div className="q-options">
                       <button
                         className={`q-btn yes ${val === 'Yes' ? 'selected' : ''}`}
@@ -2196,6 +2288,13 @@ export default function SurveyQuestions({ studentData }) {
                         className={`q-btn no ${val === 'No' ? 'selected' : ''}`}
                         onClick={() => handleAnswer(sh.stakeholder, qIdx, 'No')}
                       >No</button>
+                      {val && (
+                        <button
+                          className="q-btn clear"
+                          onClick={() => handleClear(sh.stakeholder, qIdx)}
+                          title="Clear response"
+                        >✕</button>
+                      )}
                     </div>
                   </li>
                 );
@@ -2205,20 +2304,38 @@ export default function SurveyQuestions({ studentData }) {
         ))}
       </div>
 
+      {/* ── MESSAGES ── */}
       {error && <div className="survey-error">{error}</div>}
       {success && <div className="survey-success">{success}</div>}
 
-      <div className="survey-submit-row">
-        <button
-          className="survey-submit-btn"
-          onClick={handleSubmit}
-          disabled={saving || answeredCount === 0}
-        >
-          {saving ? 'Submitting...' : submitted ? 'Update Responses' : 'Submit Survey'}
-        </button>
-        <span className="submit-note">
-          {answeredCount === 0 ? 'Please answer at least one question to submit.' : `${totalQuestions - answeredCount} questions unanswered`}
-        </span>
+      {/* ── ACTION ROW ── */}
+      <div className="survey-action-row">
+        <div className="survey-action-left">
+          <span className="submit-note">
+            {answeredCount === 0
+              ? 'Answer at least one question to save.'
+              : isSaved
+              ? `All saved · ${totalQuestions - answeredCount} unanswered`
+              : `${answeredCount} answered · unsaved changes`}
+          </span>
+        </div>
+        <div className="survey-action-btns">
+          <button
+            className="survey-save-btn"
+            onClick={handleSave}
+            disabled={saving || answeredCount === 0 || isSaved}
+          >
+            {saving ? 'Saving...' : isSaved ? '✓ Saved' : '💾 Save Responses'}
+          </button>
+          <button
+            className="survey-submit-btn"
+            onClick={() => setShowReview(true)}
+            disabled={!isSaved}
+            title={!isSaved ? 'Save your responses first' : 'Review and submit'}
+          >
+            Submit →
+          </button>
+        </div>
       </div>
     </div>
   );
