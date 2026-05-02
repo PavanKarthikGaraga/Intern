@@ -15,6 +15,7 @@ import FinalReport from './_components/finalReport/page';
 import ProblemStatement from './_components/problemStatment/page';
 import SurveyQuestions from './_components/survey/page';
 import DailyTasks from './_components/dailyTasks/page';
+import EvaluationPlan from './_components/evaluationPlan/page';
 
 export default function StudentDashboard() {
   const { user, isLoading: authLoading } = useAuth();
@@ -95,6 +96,11 @@ export default function StudentDashboard() {
             <span className="item-label">Change Password</span>
           </button>
 
+          <button className={`sidebar-item ${activeSection === 'evaluation-plan' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('evaluation-plan')}>
+            <span className="item-label">Evaluation Plan</span>
+          </button>
+
           {/* Mentor — always visible when assigned, no slot needed */}
           {hasMentor && (
             <button className={`sidebar-item ${activeSection === 'lead' ? 'active' : ''}`}
@@ -140,6 +146,7 @@ export default function StudentDashboard() {
           {activeSection === 'overview'         ? <Overview user={user} studentData={studentData} /> :
            activeSection === 'profile'          ? <Profile user={user} studentData={studentData} /> :
            activeSection === 'change-password'  ? <ChangePassword user={user} /> :
+           activeSection === 'evaluation-plan'   ? <EvaluationPlan /> :
            activeSection === 'lead'             ? <Lead studentData={studentData} /> :
            // Slot-gated
            activeSection === 'daily-tasks' && slotEnabled  ? <DailyTasks studentData={studentData} /> :
