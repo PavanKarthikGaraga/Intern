@@ -11,6 +11,7 @@ import Students from './_components/students/page';
 import Leads from './_components/leads/page';
 import CompletedStudents from './_components/completedStudents/page';
 import FinalReports from './_components/finalReports/page';
+import SurveyResponses from '../studentLead/_components/surveyResponses/page';
 
 export default function FacultyMentorDashboard() {
   const { user, isLoading, isAuthenticated } = useAuth();
@@ -71,6 +72,12 @@ export default function FacultyMentorDashboard() {
             <span className="item-label">Final Reports</span>
           </button>
           <button
+            className={`sidebar-item ${activeSection === 'survey-responses' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('survey-responses')}
+          >
+            <span className="item-label">Survey Responses</span>
+          </button>
+          <button
             className={`sidebar-item ${activeSection === 'change-password' ? 'active' : ''}`}
             onClick={() => handleSectionClick('change-password')}
           >
@@ -85,6 +92,7 @@ export default function FacultyMentorDashboard() {
            activeSection === 'leads' ? <Leads user={user} /> :
            activeSection === 'completed-students' ? <CompletedStudents user={user} /> :
            activeSection === 'final-reports' ? <FinalReports user={user} /> :
+           activeSection === 'survey-responses' ? <SurveyResponses user={user} /> :
            <ChangePassword user={user} />}
         </main>
       </div>

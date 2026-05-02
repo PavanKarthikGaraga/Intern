@@ -2069,10 +2069,39 @@ const surveyData = {
 };
 
 export default function SurveyQuestions({ studentData }) {
+  const [answers, setAnswers] = React.useState({});
+  const [submitted, setSubmitted] = React.useState(false);
+  const [savedData, setSavedData] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  const [saving, setSaving] = React.useState(false);
+  const [error, setError] = React.useState('');
+  const [success, setSuccess] = React.useState('');
+
   const problemStatementObj = studentData?.problemStatementData;
   const statement = problemStatementObj?.problem_statement;
+  const domain = problemStatementObj?.domain;
   const stakeholdersData = statement ? surveyData[statement] : null;
-  
+
+  // Load existing responses on mount
+  React.useEffect(() => {
+    async function fetchSaved() {
+      try {
+        const res = await fetch('/api/dashboard/student/survey');
+        const json = await res.json();
+        if (json.data) {
+          setSavedData(json.data);
+          setAnswers(json.data.responses || {});
+          setSubmitted(true);
+        }
+      } catch (e) {
+        console.error('Failed to load survey:', e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchSaved();
+  }, []);
+
   if (!problemStatementObj || !stakeholdersData) {
     return (
       <div className="survey-container">
@@ -2082,39 +2111,115 @@ export default function SurveyQuestions({ studentData }) {
     );
   }
 
+  if (loading) {
+    return <div className="survey-container"><p className="no-data">Loading survey...</p></div>;
+  }
+
+  const handleAnswer = (stakeholder, qIdx, value) => {
+    const key = `${stakeholder}__${qIdx}`;
+    setAnswers(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleSubmit = async () => {
+    setSaving(true);
+    setError('');
+    setSuccess('');
+    try {
+      const res = await fetch('/api/dashboard/student/survey', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ responses: answers, problem_statement: statement, domain }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Failed to submit');
+      setSubmitted(true);
+      setSuccess('✅ Survey submitted successfully!');
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Count answered questions
+  const totalQuestions = stakeholdersData.reduce((sum, sh) => sum + sh.count, 0);
+  const answeredCount = Object.keys(answers).length;
+  const progressPct = Math.round((answeredCount / totalQuestions) * 100);
+
   return (
     <div className="survey-container">
       <div className="survey-header">
         <h2>Survey Questions</h2>
         <div className="survey-meta">
-          <span className="domain-badge">{problemStatementObj.domain}</span>
+          <span className="domain-badge">{domain}</span>
           <h3 className="problem-statement-title">{statement}</h3>
         </div>
-        <p className="survey-desc">Use the following questionnaires for collecting data from different stakeholders.</p>
+        <p className="survey-desc">Fill in the responses collected from each stakeholder group.</p>
+
+        {/* Progress bar */}
+        <div className="survey-progress">
+          <div className="progress-label">
+            <span>{answeredCount}/{totalQuestions} answered</span>
+            <span>{progressPct}%</span>
+          </div>
+          <div className="progress-bar-bg">
+            <div className="progress-bar-fill" style={{ width: `${progressPct}%` }} />
+          </div>
+        </div>
+
+        {submitted && (
+          <div className="survey-status-badge">✅ Survey already submitted — you can update and re-submit</div>
+        )}
       </div>
 
-      {!stakeholdersData ? (
-        <div className="no-data">No questionnaires available for this problem statement.</div>
-      ) : (
-        <div className="stakeholders-grid">
-          {stakeholdersData.map((sh, idx) => (
-            <div key={idx} className="stakeholder-card">
-              <div className="stakeholder-header">
-                <h4>{sh.stakeholder}</h4>
-                <span className="question-count">{sh.count} Questions</span>
-              </div>
-              <ul className="question-list">
-                {sh.questions.map((q, qIdx) => (
-                  <li key={qIdx} className="question-item">
+      <div className="stakeholders-grid">
+        {stakeholdersData.map((sh, idx) => (
+          <div key={idx} className="stakeholder-card">
+            <div className="stakeholder-header">
+              <h4>{sh.stakeholder}</h4>
+              <span className="question-count">{sh.count} Questions</span>
+            </div>
+            <ul className="question-list">
+              {sh.questions.map((q, qIdx) => {
+                const key = `${sh.stakeholder}__${qIdx}`;
+                const val = answers[key];
+                return (
+                  <li key={qIdx} className="question-item interactive">
                     <span className="q-icon">📋</span>
                     <span className="q-text">{q}</span>
+                    <div className="q-options">
+                      <button
+                        className={`q-btn yes ${val === 'Yes' ? 'selected' : ''}`}
+                        onClick={() => handleAnswer(sh.stakeholder, qIdx, 'Yes')}
+                      >Yes</button>
+                      <button
+                        className={`q-btn no ${val === 'No' ? 'selected' : ''}`}
+                        onClick={() => handleAnswer(sh.stakeholder, qIdx, 'No')}
+                      >No</button>
+                    </div>
                   </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      )}
+                );
+              })}
+            </ul>
+          </div>
+        ))}
+      </div>
+
+      {error && <div className="survey-error">{error}</div>}
+      {success && <div className="survey-success">{success}</div>}
+
+      <div className="survey-submit-row">
+        <button
+          className="survey-submit-btn"
+          onClick={handleSubmit}
+          disabled={saving || answeredCount === 0}
+        >
+          {saving ? 'Submitting...' : submitted ? 'Update Responses' : 'Submit Survey'}
+        </button>
+        <span className="submit-note">
+          {answeredCount === 0 ? 'Please answer at least one question to submit.' : `${totalQuestions - answeredCount} questions unanswered`}
+        </span>
+      </div>
     </div>
   );
 }

@@ -419,3 +419,15 @@ CREATE TABLE activityLogs (
     INDEX idx_actorUsername (actorUsername),
     INDEX idx_createdAt (createdAt)
 );
+
+-- Survey Responses table
+CREATE TABLE IF NOT EXISTS surveyResponses (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(10) NOT NULL UNIQUE,
+    problem_statement VARCHAR(255) NOT NULL,
+    domain VARCHAR(255) NOT NULL,
+    responses JSON NOT NULL,
+    submittedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (username) REFERENCES registrations(username)
+);
