@@ -13,6 +13,11 @@ export async function GET() {
     const decoded = await verifyAccessToken(token);
     const username = decoded.username;
 
+    // ── Demo student bypass — always fully unlocked ───────────────────────────
+    if (username === '2500099999') {
+      return NextResponse.json({ success: true, slot: 1, enabled: true });
+    }
+
     const db = await pool.getConnection();
     try {
       // Get the student's slot

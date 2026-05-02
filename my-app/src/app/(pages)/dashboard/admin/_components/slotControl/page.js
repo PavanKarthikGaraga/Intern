@@ -27,34 +27,56 @@ const S = {
   badge:   { display: 'inline-block', padding: '3px 12px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 700 },
   badgeOn: { background: '#e6f4ea', color: '#014a01' },
   badgeOff:{ background: '#f5f5f5', color: '#aaa' },
-
-  // Toggle switch
-  switchWrap: { position: 'relative', width: 52, height: 28, cursor: 'pointer', flexShrink: 0 },
-  switchTrack: (on) => ({
-    width: '100%', height: '100%', borderRadius: 14,
-    background: on ? '#014a01' : '#d0d0d0',
-    transition: 'background 0.25s',
-    border: 'none', outline: 'none', cursor: 'pointer',
-    position: 'relative', display: 'block',
-  }),
-  switchThumb: (on) => ({
-    position: 'absolute', top: 3, left: on ? 26 : 3,
-    width: 22, height: 22, borderRadius: '50%',
-    background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
-    transition: 'left 0.25s',
-    pointerEvents: 'none',
-  }),
-
-  info: { fontSize: '0.8rem', color: '#666', lineHeight: 1.5 },
-  infoOn: { color: '#2e7d32' },
-
+  info:    { fontSize: '0.8rem', color: '#666', lineHeight: 1.5 },
+  infoOn:  { color: '#2e7d32' },
   loading: { textAlign: 'center', padding: 40, color: '#888' },
 };
+
+/* ── Slim 44×24 toggle switch ── */
+function Toggle({ on, busy, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={busy}
+      title={on ? 'Click to disable' : 'Click to enable'}
+      style={{
+        position: 'relative',
+        display: 'inline-block',
+        width: 44,
+        height: 24,
+        borderRadius: 12,
+        border: 'none',
+        outline: 'none',
+        cursor: busy ? 'not-allowed' : 'pointer',
+        background: on ? '#014a01' : '#d0d0d0',
+        transition: 'background 0.25s',
+        flexShrink: 0,
+        padding: 0,
+        opacity: busy ? 0.6 : 1,
+        verticalAlign: 'middle',
+      }}
+    >
+      <span style={{
+        position: 'absolute',
+        top: 3,
+        left: on ? 23 : 3,
+        width: 18,
+        height: 18,
+        borderRadius: '50%',
+        background: '#fff',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.25)',
+        transition: 'left 0.22s cubic-bezier(.4,0,.2,1)',
+        pointerEvents: 'none',
+        display: 'block',
+      }} />
+    </button>
+  );
+}
 
 export default function SlotControl() {
   const [slots, setSlots]       = useState([]);
   const [loading, setLoading]   = useState(true);
-  const [toggling, setToggling] = useState({}); // { slotNum: true/false }
+  const [toggling, setToggling] = useState({});
 
   useEffect(() => {
     (async () => {
@@ -102,7 +124,6 @@ export default function SlotControl() {
         </p>
       </div>
 
-      {/* Summary pill row */}
       <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginBottom:24 }}>
         {slots.map(s => (
           <span key={s.slot} style={{
@@ -125,22 +146,14 @@ export default function SlotControl() {
                   <div style={S.slotNum}>Slot {slot}</div>
                   <div style={S.date}>📅 {SLOT_DATES[slot]}</div>
                 </div>
-                {/* Toggle */}
-                <button
-                  style={S.switchTrack(on)}
-                  onClick={() => !busy && toggle(slot, on)}
-                  disabled={busy}
-                  title={on ? 'Click to disable' : 'Click to enable'}
-                >
-                  <span style={S.switchThumb(on)} />
-                </button>
+                <Toggle on={on} busy={busy} onClick={() => !busy && toggle(slot, on)} />
               </div>
 
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                 <span style={{ ...S.badge, ...(on ? S.badgeOn : S.badgeOff) }}>
                   {on ? '✅ Active' : '🔒 Locked'}
                 </span>
-                {busy && <span style={{ fontSize:'0.75rem', color:'#888' }}>Updating…</span>}
+                {busy && <span style={{ fontSize:'0.72rem', color:'#888' }}>Updating…</span>}
               </div>
 
               <div style={{ ...S.info, ...(on ? S.infoOn : {}) }}>
