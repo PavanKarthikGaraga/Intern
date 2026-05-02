@@ -94,6 +94,15 @@ export async function GET(req) {
             'SELECT COUNT(*) as total FROM registrations'
         );
 
+        // List of students who have NOT submitted a problem statement
+        const [notSubmittedList] = await pool.query(`
+            SELECT r.username, r.name, r.slot, r.mode, r.selectedDomain, r.branch
+            FROM registrations r
+            LEFT JOIN problemStatements p ON r.username = p.username
+            WHERE p.username IS NULL
+            ORDER BY r.slot ASC, r.username ASC
+        `);
+
         const total = totalCount[0].total;
         const totalPages = Math.ceil(total / limit);
 
@@ -115,6 +124,7 @@ export async function GET(req) {
                     byDomain: domainAnalytics,
                     byProblemStatement: problemAnalytics
                 },
+                notSubmittedList,
                 pagination: {
                     currentPage: page,
                     totalPages,

@@ -81,31 +81,34 @@ export async function POST(request) {
         }
       }
 
-      // Check slot availability with retry
-      const [stats] = await retryOperation(async () => {
-        return await db.query('SELECT * FROM stats ORDER BY id DESC LIMIT 1 FOR UPDATE');
-      });
-
-      if (!stats || stats.length === 0) {
-        throw new Error('Stats not found');
-      }
-
-      const currentStats = stats[0];
-      const slotNum = parseInt(formData.slot);
-
       // Validate slot range 1-9
+      const slotNum = parseInt(formData.slot);
       if (slotNum < 1 || slotNum > 9) {
         throw new Error('Invalid slot selected');
       }
 
-      const slotField = `slot${formData.slot}`;
-      const modeField = formData.mode.toLowerCase();
-      const slotModeField = formData.mode === 'Remote' ? `slot${formData.slot}Remote` : 
-                          formData.mode === 'Incampus' ? `slot${formData.slot}Incamp` : 
-                          `slot${formData.slot}Invillage`;
+      // ── Slot + mode capacity check (live from registrations) ──────────────
+      const LIMITS = { incampus: 200, invillage: 30 }; // Remote has no limit
+      const modeKey = formData.mode?.toLowerCase();
 
-      // Registration limits have been removed as per request
-      
+      if (modeKey === 'incampus' || modeKey === 'invillage') {
+        const limit = LIMITS[modeKey];
+        const [[{ count }]] = await db.query(
+          `SELECT COUNT(*) AS count FROM registrations
+           WHERE slot = ? AND LOWER(TRIM(mode)) = ?`,
+          [formData.slot, modeKey]
+        );
+        if (Number(count) >= limit) {
+          await db.rollback();
+          const modeLabel = modeKey === 'incampus' ? 'In Campus' : 'In Village';
+          return new Response(JSON.stringify({
+            success: false,
+            message: `The ${modeLabel} mode for Slot ${formData.slot} is full (limit: ${limit} students). Please choose a different mode or a different slot.`
+          }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+        }
+      }
+      // Remote (hometown) mode: no limit — no check needed
+
       // Generate username from ID number
       const username = formData.studentInfo.idNumber;
 
@@ -266,16 +269,7 @@ export async function POST(request) {
       // Execute all queries in parallel
       await Promise.all(queries.map(q => db.query(q.query, q.values)));
 
-      // Update stats
-      await db.query(`
-        UPDATE stats 
-        SET 
-          ${slotField} = ${slotField} + 1,
-          ${modeField} = ${modeField} + 1,
-          ${slotModeField} = ${slotModeField} + 1,
-          totalStudents = totalStudents + 1
-        WHERE id = ?
-      `, [currentStats.id]);
+      // Stats are now computed live from registrations — no table update needed
 
       // Commit transaction
       await db.commit();
