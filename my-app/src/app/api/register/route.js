@@ -117,19 +117,23 @@ export async function POST(request) {
 
       if (isReRegistration) {
         queries = [
+          { query: 'DELETE FROM suploads WHERE username = ?', values: [username] },
+          { query: 'DELETE FROM sstatus WHERE username = ?', values: [username] },
+          { query: 'DELETE FROM sattendance WHERE username = ?', values: [username] },
+          { query: 'DELETE FROM smessages WHERE username = ?', values: [username] },
+          { query: 'DELETE FROM sdailyMarks WHERE username = ?', values: [username] },
+          { query: 'DELETE FROM sstudents WHERE username = ?', values: [username] },
+          { query: 'DELETE FROM surveyResponses WHERE username = ?', values: [username] },
+          { query: 'DELETE FROM problemStatements WHERE username = ?', values: [username] },
+          { query: 'DELETE FROM certificates WHERE username = ?', values: [username] },
+          { query: 'DELETE FROM messages WHERE username = ?', values: [username] },
+          { query: 'DELETE FROM status WHERE username = ?', values: [username] },
           { query: 'DELETE FROM marks WHERE username = ?', values: [username] },
           { query: 'DELETE FROM dailyMarks WHERE username = ?', values: [username] },
           { query: 'DELETE FROM verify WHERE username = ?', values: [username] },
           { query: 'DELETE FROM attendance WHERE username = ?', values: [username] },
           { query: 'DELETE FROM uploads WHERE username = ?', values: [username] },
           { query: 'DELETE FROM final WHERE username = ?', values: [username] },
-          { query: 'DELETE FROM problemStatements WHERE username = ?', values: [username] },
-          { query: 'DELETE FROM certificates WHERE username = ?', values: [username] },
-          { query: 'DELETE FROM sstudents WHERE username = ?', values: [username] },
-          { query: 'DELETE FROM sdailyMarks WHERE username = ?', values: [username] },
-          { query: 'DELETE FROM sattendance WHERE username = ?', values: [username] },
-          { query: 'DELETE FROM suploads WHERE username = ?', values: [username] },
-          { query: 'DELETE FROM smessages WHERE username = ?', values: [username] },
           {
             query: `INSERT INTO users (name, username, password, role) VALUES(?, ?, ?, ?) ON DUPLICATE KEY UPDATE name = VALUES(name), password = VALUES(password)`,
             values: [

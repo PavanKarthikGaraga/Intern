@@ -194,7 +194,21 @@ export async function DELETE(request) {
 
       const { slot, mode } = studentData[0];
 
-      // Delete from tables in correct order to handle foreign key constraints
+      // Delete from child tables of sstudents first
+      await connection.query('DELETE FROM suploads WHERE username = ?', [username]);
+      await connection.query('DELETE FROM sstatus WHERE username = ?', [username]);
+      await connection.query('DELETE FROM sattendance WHERE username = ?', [username]);
+      await connection.query('DELETE FROM smessages WHERE username = ?', [username]);
+      await connection.query('DELETE FROM sdailyMarks WHERE username = ?', [username]);
+      await connection.query('DELETE FROM sstudents WHERE username = ?', [username]);
+
+      // Delete from child tables of registrations
+      await connection.query('DELETE FROM surveyResponses WHERE username = ?', [username]);
+      await connection.query('DELETE FROM problemStatements WHERE username = ?', [username]);
+      await connection.query('DELETE FROM certificates WHERE username = ?', [username]);
+      await connection.query('DELETE FROM messages WHERE username = ?', [username]);
+      await connection.query('DELETE FROM status WHERE username = ?', [username]);
+      
       await connection.query('DELETE FROM marks WHERE username = ?', [username]);
       await connection.query('DELETE FROM dailyMarks WHERE username = ?', [username]);
       await connection.query('DELETE FROM verify WHERE username = ?', [username]);

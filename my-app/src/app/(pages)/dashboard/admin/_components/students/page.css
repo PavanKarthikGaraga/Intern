@@ -521,7 +521,7 @@
 
 .search-group input {
   width: 100%;
-  padding: 11px 16px 11px 38px; /* 38px left = 12px offset + 15px icon + 11px gap */
+  padding: 11px 16px 11px 40px !important;
   border: 1px solid #dee2e6;
   border-radius: 8px;
   font-size: 14px;
