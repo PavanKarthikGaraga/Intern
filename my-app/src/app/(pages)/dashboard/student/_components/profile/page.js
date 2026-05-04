@@ -4,6 +4,18 @@ import { UserOutlined, PhoneOutlined, HomeOutlined, MailOutlined, EnvironmentOut
 import Loader from '@/app/components/loader/loader';
 import toast from 'react-hot-toast';
 
+import { stateNames } from '@/app/Data/states';
+import { districtNames } from '@/app/Data/districts';
+import { countryCodes } from '@/app/Data/coutries';
+import { branchNames } from '@/app/Data/branches';
+import { girlHostels, boyHostels } from '@/app/Data/locations';
+
+const uniqueCountryCodes = countryCodes
+  .filter((country, index, self) =>
+    index === self.findIndex((c) => c.code === country.code)
+  )
+  .sort((a, b) => a.name.localeCompare(b.name));
+
 export default function Profile({ user, studentData: initialStudentData }) {
   const [activeProfileSection, setActiveProfileSection] = useState('personal');
   const [studentData, setStudentData] = useState(initialStudentData);
@@ -152,7 +164,12 @@ export default function Profile({ user, studentData: initialStudentData }) {
                 <label>Branch</label>
                 <div className="info-value">
                   {isEditing ? (
-                    <input type="text" name="branch" value={formData.branch} onChange={handleChange} style={{ width: '100%', padding: '5px' }} />
+                    <select name="branch" value={formData.branch} onChange={handleChange} style={{ width: '100%', padding: '5px' }}>
+                      <option value="">Select Branch</option>
+                      {branchNames.map(branch => (
+                        <option key={branch.id || branch.name} value={branch.name}>{branch.name}</option>
+                      ))}
+                    </select>
                   ) : (
                     <>{studentData.branch}<div className="value-underline"></div></>
                   )}
@@ -173,11 +190,8 @@ export default function Profile({ user, studentData: initialStudentData }) {
                 <label>Email</label>
                 <div className="info-value">
                   <MailOutlined className="info-icon" />
-                  {isEditing ? (
-                    <input type="email" name="email" value={formData.email} onChange={handleChange} style={{ width: '100%', padding: '5px', marginLeft: '5px' }} />
-                  ) : (
-                    <>{studentData.email}<div className="value-underline"></div></>
-                  )}
+                  {studentData.email}
+                  <div className="value-underline"></div>
                 </div>
               </div>
               <div className="info-group">
@@ -195,23 +209,44 @@ export default function Profile({ user, studentData: initialStudentData }) {
               {isEditing ? (
                 <>
                   <div className="info-group">
-                    <label>District</label>
-                    <div className="info-value">
-                      <input type="text" name="district" value={formData.district} onChange={handleChange} style={{ width: '100%', padding: '5px' }} />
-                    </div>
-                  </div>
-                  <div className="info-group">
-                    <label>State</label>
-                    <div className="info-value">
-                      <input type="text" name="state" value={formData.state} onChange={handleChange} style={{ width: '100%', padding: '5px' }} />
-                    </div>
-                  </div>
-                  <div className="info-group">
                     <label>Country</label>
                     <div className="info-value">
-                      <input type="text" name="country" value={formData.country} onChange={handleChange} style={{ width: '100%', padding: '5px' }} />
+                      <select name="country" value={formData.country} onChange={handleChange} style={{ width: '100%', padding: '5px' }}>
+                        <option value="">Select Country</option>
+                        {uniqueCountryCodes.map(country => (
+                          <option key={country.code} value={country.code}>{country.name}</option>
+                        ))}
+                      </select>
                     </div>
                   </div>
+                  {formData.country === 'IN' && (
+                    <>
+                      <div className="info-group">
+                        <label>State</label>
+                        <div className="info-value">
+                          <select name="state" value={formData.state} onChange={handleChange} style={{ width: '100%', padding: '5px' }}>
+                            <option value="">Select State</option>
+                            {stateNames.map(state => (
+                              <option key={state} value={state}>{state}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                      {formData.state && (
+                        <div className="info-group">
+                          <label>District</label>
+                          <div className="info-value">
+                            <select name="district" value={formData.district} onChange={handleChange} style={{ width: '100%', padding: '5px' }}>
+                              <option value="">Select District</option>
+                              {districtNames[formData.state]?.map(district => (
+                                <option key={district} value={district}>{district}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
                   <div className="info-group">
                     <label>Pincode</label>
                     <div className="info-value">
@@ -260,7 +295,12 @@ export default function Profile({ user, studentData: initialStudentData }) {
                   <div className="info-value">
                     <HomeOutlined className="info-icon" />
                     {isEditing ? (
-                      <input type="text" name="hostelName" value={formData.hostelName} onChange={handleChange} style={{ width: '100%', padding: '5px', marginLeft: '5px' }} />
+                      <select name="hostelName" value={formData.hostelName} onChange={handleChange} style={{ width: '100%', padding: '5px', marginLeft: '5px' }}>
+                        <option value="">Select Hostel</option>
+                        {(formData.gender === 'Male' ? boyHostels : girlHostels).map(hostel => (
+                          <option key={hostel.hostelName} value={hostel.hostelName}>{hostel.hostelName}</option>
+                        ))}
+                      </select>
                     ) : (
                       <>{studentData.hostelName}<div className="value-underline"></div></>
                     )}
