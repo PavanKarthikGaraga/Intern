@@ -129,11 +129,23 @@ export async function POST() {
         ]
       );
 
+      // ── 3.5 Dummy Faculty Mentor ─────────────────────────────────────────────
+      await db.query(
+        `INSERT INTO users (name, username, password, role)
+         VALUES ('Demo Mentor', 'DEMO_M', 'password123', 'facultyMentor')
+         ON DUPLICATE KEY UPDATE name='Demo Mentor'`
+      );
+      await db.query(
+        `INSERT INTO facultyMentors (username, name, phoneNumber, email, branch)
+         VALUES ('DEMO_M', 'Demo Mentor', '9999000002', 'mentor@kluniversity.in', 'Computer Science & Engineering')
+         ON DUPLICATE KEY UPDATE name='Demo Mentor'`
+      );
+
       // ── 4. marks ─────────────────────────────────────────────────────────────
       await db.query(
-        `INSERT INTO marks (username, internalMarks, finalReport, finalPresentation, grade, completed)
-         VALUES (?, 92, 19, 18, 'A', 'P')
-         ON DUPLICATE KEY UPDATE internalMarks=92, finalReport=19, finalPresentation=18, grade='A', completed='P'`
+        `INSERT INTO marks (username, facultyMentorId, internalMarks, finalReport, finalPresentation, grade, completed)
+         VALUES (?, 'DEMO_M', 92, 19, 18, 'A', 'P')
+         ON DUPLICATE KEY UPDATE facultyMentorId='DEMO_M', internalMarks=92, finalReport=19, finalPresentation=18, grade='A', completed='P'`
         , [DEMO_ID]
       );
 
