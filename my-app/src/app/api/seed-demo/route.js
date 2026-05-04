@@ -151,8 +151,8 @@ export async function POST() {
 
       // ── 5. final ─────────────────────────────────────────────────────────────
       await db.query(
-        `INSERT INTO final (username, completed) VALUES (?, 1)
-         ON DUPLICATE KEY UPDATE completed=1`,
+        `INSERT INTO final (username, facultyMentorId, completed) VALUES (?, 'DEMO_M', 1)
+         ON DUPLICATE KEY UPDATE facultyMentorId='DEMO_M', completed=1`,
         [DEMO_ID]
       );
 
