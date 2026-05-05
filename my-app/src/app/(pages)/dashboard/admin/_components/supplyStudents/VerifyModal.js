@@ -198,6 +198,7 @@ export default function VerifyModal({ student, onClose }) {
             onClose={() => setMarksModal({ open: false, day: null, initialMarks: 0, initialRemarks: '' })}
             initialMarks={marksModal.initialMarks}
             initialRemarks={marksModal.initialRemarks}
+            showRemarks={true}
             onSave={(marks, remarks) => handleAttendanceChange(marksModal.day, 'P', marks, remarks)}
           />
         )}

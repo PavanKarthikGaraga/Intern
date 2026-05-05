@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { FaFileUpload, FaHistory, FaSearch, FaUser, FaClipboardList, FaUsers, FaChartLine } from 'react-icons/fa';
 
 const DAY_LABELS = {
   1: 'Day 1 – Problem Statement Understanding',
@@ -159,7 +160,7 @@ function DayDetail({ dayNum, dayData }) {
       {/* Timestamp banner */}
       <div style={S.tsBanner}>
         <div style={S.tsItem}>
-          <span style={S.tsIcon}>📥</span>
+          <span style={S.tsIcon}><FaFileUpload /></span>
           <div>
             <div style={S.tsTitle}>First Submitted</div>
             <div style={S.tsVal}>{fmt(submittedAt)}</div>
@@ -167,7 +168,7 @@ function DayDetail({ dayNum, dayData }) {
         </div>
         <div style={S.tsDivider} />
         <div style={S.tsItem}>
-          <span style={S.tsIcon}>🔄</span>
+          <span style={S.tsIcon}><FaHistory /></span>
           <div>
             <div style={S.tsTitle}>Last Updated</div>
             <div style={S.tsVal}>{fmt(updatedAt)}</div>
@@ -177,7 +178,7 @@ function DayDetail({ dayNum, dayData }) {
 
       {dayNum === 1 && <Day1View data={data} />}
       {(dayNum === 2 || dayNum === 3 || dayNum === 4) && <SurveyView dayNum={dayNum} data={data} />}
-      {dayNum === 5 && <InfoView text="Day 5 is auto-generated analysis on the student&apos;s end. No separate submission required." />}
+      {dayNum === 5 && <Day5View data={data} />}
       {dayNum === 6 && <Day6View data={data} />}
       {dayNum === 7 && <Day7View data={data} />}
     </div>
@@ -243,6 +244,25 @@ function SurveyView({ dayNum, data }) {
   );
 }
 
+function Day5View({ data }) {
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+      <div>
+        <label style={S.fieldLabel}>1. Overall Analysis of Responses</label>
+        <div style={S.textBox}>{data?.analysis || <em style={{color:'#bbb'}}>No content</em>}</div>
+      </div>
+      <div>
+        <label style={S.fieldLabel}>2. Identified Root Causes</label>
+        <div style={S.textBox}>{data?.rootcause || <em style={{color:'#bbb'}}>No content</em>}</div>
+      </div>
+      <div>
+        <label style={S.fieldLabel}>3. Proposed Intervention Strategy</label>
+        <div style={S.textBox}>{data?.strategy || <em style={{color:'#bbb'}}>No content</em>}</div>
+      </div>
+    </div>
+  );
+}
+
 function Day6View({ data }) {
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
@@ -264,7 +284,7 @@ function Day7View({ data }) {
   const fields = [
     { label: 'Case Study Document', key: 'caseStudyLink' },
     { label: 'YouTube Video Link',  key: 'youtubeLink' },
-    { label: 'LinkedIn Post Link',  key: 'linkedinLink' },
+    { label: 'LinkedIn Article Link',  key: 'linkedinLink' },
   ];
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:14 }}>

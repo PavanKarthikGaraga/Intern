@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
+import Image from 'next/image';
 import { surveyData as SURVEY } from './surveyDataShared';
 import { FaCheck, FaLock, FaTimes, FaHourglassHalf, FaPlay, FaClipboardList, FaHandshake, FaChartBar, FaCamera, FaVideo, FaClock, FaCheckCircle, FaTimesCircle, FaExclamationTriangle, FaCalendarAlt } from 'react-icons/fa';
 import './dailyTasks.css';
@@ -93,7 +94,7 @@ const DAY_META = [
   { day:4, icon: <FaHandshake />, title:'Day 4 – Stakeholder 3 Survey (3 Persons)',  subtitle:'Interview 3 people from the 3rd stakeholder group' },
   { day:5, icon: <FaChartBar />, title:'Day 5 – Data Analysis',                     subtitle:'Count responses, calculate percentages & identify insights' },
   { day:6, icon: <FaCamera />, title:'Day 6 – Intervention Activity',             subtitle:'Upload photo documentation from Days 2, 3 & 4' },
-  { day:7, icon: <FaVideo />, title:'Day 7 – Documentation & Presentation',      subtitle:'Submit case study report, YouTube video & LinkedIn post' },
+  { day:7, icon: <FaVideo />, title:'Day 7 – Documentation & Presentation',      subtitle:'Submit case study report, YouTube video & LinkedIn article' },
 ];
 
 /* ── Timer bar component ── */
@@ -212,7 +213,7 @@ function LockedView({ status, dayNum, slot }) {
     <div className="dt-locked-overlay">
       <div className="lock-icon" style={{ fontSize: '2.5rem', marginBottom: '10px' }}><FaHourglassHalf /></div>
       <h3>Day {dayNum} Not Yet Available</h3>
-      <p>This day's submission window has not opened yet.</p>
+      <p>This day&apos;s submission window has not opened yet.</p>
     </div>
   );
 }
@@ -286,6 +287,12 @@ export default function DailyTasks({ studentData }) {
           setMsgType('err');
           return;
         }
+      }
+    }
+    if (activeDay === 5) {
+      if (wc(data.analysis || '') < 50 || wc(data.rootcause || '') < 50 || wc(data.strategy || '') < 50) {
+        setMsg(`Need at least 50 words for each section. (Analysis: ${wc(data.analysis||'')}, Root Causes: ${wc(data.rootcause||'')}, Strategy: ${wc(data.strategy||'')})`);
+        setMsgType('err'); return;
       }
     }
     setSaving(true);
@@ -385,11 +392,11 @@ export default function DailyTasks({ studentData }) {
                 {activeDay === 2 && <DaySurvey day={2} personCount={8} stakeholderIdx={0} survey={survey} data={dayData(2)} onChange={(f,v) => setDayField(2,f,v)} readOnly={isSaved} onFinalSubmit={handleSave} saving={saving} />}
                 {activeDay === 3 && <DaySurvey day={3} personCount={3} stakeholderIdx={1} survey={survey} data={dayData(3)} onChange={(f,v) => setDayField(3,f,v)} readOnly={isSaved} onFinalSubmit={handleSave} saving={saving} />}
                 {activeDay === 4 && <DaySurvey day={4} personCount={3} stakeholderIdx={2} survey={survey} data={dayData(4)} onChange={(f,v) => setDayField(4,f,v)} readOnly={isSaved} onFinalSubmit={handleSave} saving={saving} />}
-                {activeDay === 5 && <Day5 saved={saved} survey={survey} />}
+                {activeDay === 5 && <Day5 saved={saved} survey={survey} data={dayData(5)} onChange={(f,v) => setDayField(5,f,v)} readOnly={isSaved} />}
                 {activeDay === 6 && <Day6 data={dayData(6)} onChange={(f,v) => setDayField(6,f,v)} readOnly={isSaved} />}
                 {activeDay === 7 && <Day7 data={dayData(7)} onChange={(f,v) => setDayField(7,f,v)} readOnly={isSaved} />}
 
-                {activeDay !== 5 && activeDay !== 2 && activeDay !== 3 && activeDay !== 4 && (
+                {activeDay !== 2 && activeDay !== 3 && activeDay !== 4 && (
                   <div className="dt-save-row">
                     <button className="dt-save-btn" onClick={handleSave} disabled={saving || isSaved || !isEditable}>
                       {saving ? 'Saving…' : isSaved ? '✓ Submitted' : '💾 Save & Submit'}
@@ -482,7 +489,7 @@ function DaySurvey({ day, personCount, stakeholderIdx, survey, data, onChange, r
       <div className="dt-name-wrap">
         <label htmlFor={`n-d${day}-p${activePerson}`}>Name of Person {activePerson}</label>
         <input id={`n-d${day}-p${activePerson}`} type="text" className="dt-name-input"
-          placeholder="Enter interviewee's name" value={cur.name||''} readOnly={readOnly}
+          placeholder="Enter interviewee&apos;s name" value={cur.name||''} readOnly={readOnly}
           onChange={e => setField(activePerson, 'name', e.target.value)}
           style={readOnly ? {background:'#f9f9f9'} : {}} />
       </div>
@@ -538,7 +545,7 @@ function DaySurvey({ day, personCount, stakeholderIdx, survey, data, onChange, r
 }
 
 /* ── Day 5 – Analysis ── */
-function Day5({ saved, survey }) {
+function Day5({ saved, survey, data, onChange, readOnly }) {
   if (!survey) return <div className="dt-info-box"><h4>Survey data unavailable</h4></div>;
   const analyses = [2,3,4].map(day => {
     const sh = survey[day-2];
@@ -551,56 +558,89 @@ function Day5({ saved, survey }) {
       const total = yes+no;
       return { q, yes, no, total, yesPct: total>0 ? Math.round((yes/total)*100) : 0 };
     });
-    const avg = stats.length ? Math.round(stats.reduce((a,s)=>a+s.yesPct,0)/stats.length) : 0;
-    return { sh, day, persons, stats, avg, severity: avg>=70?'high':avg>=40?'medium':'low' };
+    return { sh, day, persons, stats };
   }).filter(Boolean);
 
   if (analyses.every(a => a.persons.length===0)) return (
     <div className="dt-info-box">
       <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><FaChartBar /> Data Analysis</h4>
-      <p>No survey data yet. Complete Days 2, 3, and 4 first.</p>
+      <p>No survey data yet. Complete Days 2, 3, and 4 first to proceed with Day 5.</p>
     </div>
   );
 
   return (
     <div>
-      <div className="dt-analysis-info">
-        <strong>Auto-generated from Days 2, 3 &amp; 4.</strong> Review Yes% per question, identify severity, root causes, and affected groups.
+      <div className="dt-analysis-info" style={{ marginBottom: 24, padding: 16, background: '#e3f2fd', color: '#0d47a1', borderRadius: 8 }}>
+        <strong>Task:</strong> Review the Yes/No responses below from your surveys on Days 2, 3 &amp; 4. Use this data to write your analysis and identify root causes.
       </div>
-      {analyses.map(({ sh, day, persons, stats, avg, severity }) => (
-        <div key={day} className="dt-sh-analysis">
-          <h4>Day {day} – {sh.stakeholder} ({persons.length} persons)</h4>
-          {persons.length===0
-            ? <p style={{color:'#888',fontSize:'0.88rem'}}>No data for this day yet.</p>
-            : stats.map(({ q, yes, no, yesPct }, qi) => (
-              <div key={qi} className="dt-q-stat">
-                <span className="q-label">{qi+1}. {q.replace(' (Yes/No)','')}</span>
-                <div className="dt-bar-wrap"><div className="dt-bar-yes" style={{width:`${yesPct}%`}} /></div>
-                <span className="dt-pct">{yesPct}% Yes</span>
-                <span style={{fontSize:'0.78rem',color:'#888'}}>({yes}Y/{no}N)</span>
-              </div>
-            ))
-          }
-          {persons.length>0 && (
-            <div className="dt-severity-box">
-              <h4>📌 Insights for {sh.stakeholder}</h4>
-              <div className="dt-severity-item">
-                <strong>Severity:</strong>
-                <span className={`dt-severity-label ${severity}`}>
-                  {severity==='high'?'🔴 High':severity==='medium'?'🟡 Medium':'🟢 Low'}
-                </span> ({avg}% avg Yes)
-              </div>
-              <div className="dt-severity-item">
-                <strong>Root Causes:</strong>{' '}
-                {stats.filter(s=>s.yesPct>=60).length>0
-                  ? `Top issues: ${stats.filter(s=>s.yesPct>=60).map(s=>`"${s.q.split('?')[0]}"`).join(', ')}.`
-                  : 'No dominant issues in this group.'}
-              </div>
-              <div className="dt-severity-item"><strong>Affected Group:</strong> {sh.stakeholder} — {persons.length} individuals.</div>
-            </div>
-          )}
-        </div>
-      ))}
+      
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginBottom: 30 }}>
+        {analyses.map(({ sh, day, persons, stats }) => (
+          <div key={day} className="dt-sh-analysis" style={{ background: '#f5f5f5', border: '1px solid #e0e0e0', borderRadius: 10, padding: 16 }}>
+            <h4 style={{ margin: '0 0 12px 0', color: '#1a1a1a', borderBottom: '2px solid #e0e0e0', paddingBottom: 8 }}>
+              Day {day} Responses – {sh.stakeholder} ({persons.length} persons)
+            </h4>
+            {persons.length===0
+              ? <p style={{color:'#888',fontSize:'0.88rem'}}>No data for this day yet.</p>
+              : stats.map(({ q, yes, no, yesPct }, qi) => (
+                <div key={qi} className="dt-q-stat" style={{ marginBottom: 12 }}>
+                  <span className="q-label" style={{ fontWeight: 600, display: 'block', marginBottom: 4 }}>
+                    {qi+1}. {q.replace(' (Yes/No)','')}
+                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div className="dt-bar-wrap" style={{ flex: 1, height: 8, background: '#e0e0e0', borderRadius: 4, overflow: 'hidden' }}>
+                      <div className="dt-bar-yes" style={{ width:`${yesPct}%`, height: '100%', background: '#014a01' }} />
+                    </div>
+                    <span className="dt-pct" style={{ fontWeight: 700, color: '#014a01', minWidth: 60 }}>{yesPct}% Yes</span>
+                    <span style={{ fontSize:'0.8rem', color:'#666', minWidth: 60 }}>({yes}Y / {no}N)</span>
+                  </div>
+                </div>
+              ))
+            }
+          </div>
+        ))}
+      </div>
+
+      <div className="dt-info-box" style={{ marginBottom: 16 }}>
+        <h4>Your Analysis</h4>
+        <p style={{ fontSize: '0.88rem', color: '#555', marginTop: 4 }}>Based on the data above, please provide your own analysis.</p>
+      </div>
+      
+      <div className="dt-textarea-wrap" style={{ marginBottom: 20 }}>
+        <label htmlFor="day5-analysis">1. Overall Analysis of Responses</label>
+        <p style={{ fontSize: '0.8rem', color: '#666', marginBottom: 8, marginTop: -4 }}>What are the main findings from your survey data? (Minimum 50 words)</p>
+        <textarea
+          id="day5-analysis" className="dt-textarea"
+          placeholder="Write your overall analysis here..."
+          value={data.analysis || ''} readOnly={readOnly}
+          onChange={e => !readOnly && onChange('analysis', e.target.value)}
+          style={readOnly ? { background:'#f9f9f9', color:'#555', minHeight: 120 } : { minHeight: 120 }}
+        />
+      </div>
+
+      <div className="dt-textarea-wrap" style={{ marginBottom: 20 }}>
+        <label htmlFor="day5-rootcause">2. Identified Root Causes</label>
+        <p style={{ fontSize: '0.8rem', color: '#666', marginBottom: 8, marginTop: -4 }}>What are the root causes of the problem based on the highest &apos;Yes&apos; percentages? (Minimum 50 words)</p>
+        <textarea
+          id="day5-rootcause" className="dt-textarea"
+          placeholder="Write the identified root causes here..."
+          value={data.rootcause || ''} readOnly={readOnly}
+          onChange={e => !readOnly && onChange('rootcause', e.target.value)}
+          style={readOnly ? { background:'#f9f9f9', color:'#555', minHeight: 120 } : { minHeight: 120 }}
+        />
+      </div>
+
+      <div className="dt-textarea-wrap">
+        <label htmlFor="day5-strategy">3. Proposed Intervention Strategy</label>
+        <p style={{ fontSize: '0.8rem', color: '#666', marginBottom: 8, marginTop: -4 }}>How do you plan to address these root causes during Day 6? (Minimum 50 words)</p>
+        <textarea
+          id="day5-strategy" className="dt-textarea"
+          placeholder="Write your proposed strategy here..."
+          value={data.strategy || ''} readOnly={readOnly}
+          onChange={e => !readOnly && onChange('strategy', e.target.value)}
+          style={readOnly ? { background:'#f9f9f9', color:'#555', minHeight: 120 } : { minHeight: 120 }}
+        />
+      </div>
     </div>
   );
 }
@@ -608,6 +648,84 @@ function Day5({ saved, survey }) {
 /* ── Day 6 ── */
 function Day6({ data, onChange, readOnly }) {
   const ro = { background: readOnly ? '#f9f9f9' : undefined };
+  const [entries, setEntries] = useState([{ id: Date.now(), image: null, date: '', description: '' }]);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleImageChange = (index, e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const newEntries = [...entries];
+        newEntries[index].image = reader.result;
+        setEntries(newEntries);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleFieldChange = (index, field, value) => {
+    const newEntries = [...entries];
+    newEntries[index][field] = value;
+    setEntries(newEntries);
+  };
+
+  const addEntry = () => {
+    setEntries([...entries, { id: Date.now() + Math.random(), image: null, date: '', description: '' }]);
+  };
+
+  const removeEntry = (index) => {
+    const newEntries = entries.filter((_, i) => i !== index);
+    setEntries(newEntries);
+  };
+
+  const generatePDF = async () => {
+    setIsGenerating(true);
+    try {
+      const { jsPDF } = await import('jspdf');
+      const doc = new jsPDF();
+      let yOffset = 20;
+
+      doc.setFontSize(20);
+      doc.text('Intervention Activity Documentation', 105, yOffset, { align: 'center' });
+      yOffset += 20;
+
+      for (let i = 0; i < entries.length; i++) {
+        const entry = entries[i];
+        if (i > 0 && i % 2 === 0) {
+          doc.addPage();
+          yOffset = 20;
+        }
+
+        if (entry.image) {
+          doc.addImage(entry.image, 'JPEG', 20, yOffset, 170, 80);
+        } else {
+          doc.setDrawColor(200);
+          doc.rect(20, yOffset, 170, 80);
+          doc.setFontSize(12);
+          doc.text('No Image Uploaded', 105, yOffset + 40, { align: 'center' });
+        }
+        
+        yOffset += 90;
+        doc.setFontSize(12);
+        doc.text(`Date: ${entry.date || 'Not specified'}`, 20, yOffset);
+        yOffset += 8;
+        
+        doc.setFontSize(10);
+        const splitDesc = doc.splitTextToSize(`Description: ${entry.description || 'No description provided.'}`, 170);
+        doc.text(splitDesc, 20, yOffset);
+        yOffset += (splitDesc.length * 5) + 15;
+      }
+
+      doc.save('intervention_documentation.pdf');
+    } catch (err) {
+      console.error('Failed to generate PDF', err);
+      alert('Error generating PDF. Please ensure your images are valid and try again.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   return (
     <div>
       <div className="dt-info-box" style={{marginBottom:18}}>
@@ -618,10 +736,62 @@ function Day6({ data, onChange, readOnly }) {
           <li>Upload to Google Doc / Drive folder — <strong>must be publicly viewable</strong></li>
         </ul>
       </div>
+
+      <div style={{ background: '#f5f5f5', border: '1px solid #ddd', borderRadius: 8, padding: 20, marginBottom: 24 }}>
+        <h4 style={{ margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: 8 }}><FaClipboardList /> Auto Document Generator (Optional)</h4>
+        <p style={{ fontSize: '0.88rem', color: '#555', marginBottom: 16 }}>Use this tool to easily compile your photos and descriptions into a ready-to-upload PDF.</p>
+        
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          {entries.map((entry, index) => (
+            <div key={entry.id} style={{ background: '#fff', border: '1px solid #e0e0e0', borderRadius: 8, padding: 16, position: 'relative' }}>
+              <div style={{ fontWeight: 600, marginBottom: 12, display: 'flex', justifyContent: 'space-between' }}>
+                <span>Entry {index + 1}</span>
+                {entries.length > 1 && !readOnly && (
+                  <button onClick={() => removeEntry(index)} style={{ background: 'none', border: 'none', color: '#d32f2f', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <FaTimes /> Remove
+                  </button>
+                )}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 16 }}>
+                <div>
+                  {entry.image ? (
+                    <div style={{ width: '100%', height: 120, position: 'relative' }}>
+                      <Image src={entry.image} alt="preview" fill style={{ objectFit: 'cover', borderRadius: 6, border: '1px solid #ccc' }} unoptimized />
+                    </div>
+                  ) : (
+                    <div style={{ width: '100%', height: 120, background: '#eee', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999', border: '1px dashed #ccc' }}>No Image</div>
+                  )}
+                  {!readOnly && <input type="file" accept="image/*" onChange={(e) => handleImageChange(index, e)} style={{ marginTop: 8, fontSize: '0.8rem', width: '100%' }} />}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#555' }}>Date of Activity</label>
+                    <input type="date" value={entry.date} onChange={(e) => handleFieldChange(index, 'date', e.target.value)} readOnly={readOnly} style={{ width: '100%', padding: '6px 10px', borderRadius: 4, border: '1px solid #ccc', outline: 'none', ...ro }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#555' }}>Description</label>
+                    <textarea placeholder="Describe this photo..." value={entry.description} onChange={(e) => handleFieldChange(index, 'description', e.target.value)} readOnly={readOnly} style={{ width: '100%', padding: '8px 10px', borderRadius: 4, border: '1px solid #ccc', minHeight: 60, resize: 'vertical', outline: 'none', ...ro }} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        {!readOnly && (
+          <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
+            <button onClick={addEntry} style={{ padding: '10px 16px', borderRadius: 6, border: '1px solid #014a01', background: '#fff', color: '#014a01', fontWeight: 600, cursor: 'pointer', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>+ Add Another Photo</button>
+            <button onClick={generatePDF} disabled={isGenerating} style={{ padding: '10px 16px', borderRadius: 6, border: 'none', background: '#014a01', color: '#fff', fontWeight: 600, cursor: isGenerating ? 'not-allowed' : 'pointer', flex: 1, opacity: isGenerating ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              {isGenerating ? 'Generating PDF...' : '📥 Download as PDF'}
+            </button>
+          </div>
+        )}
+      </div>
+
       <div className="dt-warning-box">⚠️ Set sharing to <strong>&quot;Anyone with the link can view&quot;</strong>. Private links will NOT be evaluated.</div>
       <div className="dt-link-section">
-        <label htmlFor="d6-link">Google Drive / Doc Public Link</label>
-        <p>Paste the shareable link to your photo documentation.</p>
+        <label htmlFor="d6-link">Google Drive Public Link</label>
+        <p>After generating your PDF, upload it to Google Drive and paste the shareable link here.</p>
         <input id="d6-link" type="url" className="dt-link-input" placeholder="https://drive.google.com/…"
           value={data.driveLink||''} readOnly={readOnly} style={ro}
           onChange={e => !readOnly && onChange('driveLink', e.target.value)} />
@@ -629,7 +799,7 @@ function Day6({ data, onChange, readOnly }) {
       <div className="dt-textarea-wrap">
         <label htmlFor="d6-notes">Brief Description of Intervention Activity</label>
         <textarea id="d6-notes" className="dt-textarea" style={{minHeight:100,...ro}}
-          placeholder="Describe your intervention activity and key observations…"
+          placeholder="Summarize your intervention activity and key observations here…"
           value={data.notes||''} readOnly={readOnly}
           onChange={e => !readOnly && onChange('notes', e.target.value)} />
       </div>
@@ -647,7 +817,8 @@ function Day7({ data, onChange, readOnly }) {
         <ul>
           <li><strong>Case Study Report:</strong> Prepare using the template (will be shared). Upload to Google Docs/Drive.</li>
           <li><strong>Presentation Video:</strong> PowerPoint + face recording + voiceover.</li>
-          <li>Upload video to <strong>YouTube</strong> and <strong>LinkedIn</strong>.</li>
+          <li>Upload video to <strong>YouTube</strong> and write a <strong>LinkedIn Article</strong>.</li>
+          <li>Your LinkedIn article MUST include your key findings and embed both your presentation video and article links.</li>
           <li>Submit all three links below.</li>
         </ul>
       </div>
@@ -666,13 +837,12 @@ function Day7({ data, onChange, readOnly }) {
           onChange={e => !readOnly && onChange('youtubeLink', e.target.value)} />
       </div>
       <div className="dt-link-section">
-        <label htmlFor="d7-li">Presentation – LinkedIn Post Link</label>
-        <p>Share your video on LinkedIn and paste the post URL.</p>
-        <input id="d7-li" type="url" className="dt-link-input" placeholder="https://linkedin.com/posts/…"
+        <label htmlFor="d7-li">LinkedIn Article Link</label>
+        <p>Write an article with key findings and embed your video link, then paste the article URL here.</p>
+        <input id="d7-li" type="url" className="dt-link-input" placeholder="https://linkedin.com/pulse/…"
           value={data.linkedinLink||''} readOnly={readOnly} style={ro}
           onChange={e => !readOnly && onChange('linkedinLink', e.target.value)} />
       </div>
-      <div className="dt-warning-box">⚠️ Case study template will be provided soon. Prepare content in advance.</div>
     </div>
   );
 }

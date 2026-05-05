@@ -10,9 +10,8 @@ import ChangePassword from './_components/changePassword/page';
 import Students from './_components/students/page';
 import Leads from './_components/leads/page';
 import CompletedStudents from './_components/completedStudents/page';
-import FinalReports from './_components/finalReports/page';
-import SurveyResponses from '../studentLead/_components/surveyResponses/page';
 import DailyTasksViewer from '../studentLead/_components/dailyTasksViewer/page';
+import EvaluationPlan from '../student/_components/evaluationPlan/page';
 
 export default function FacultyMentorDashboard() {
   const { user, isLoading, isAuthenticated } = useAuth();
@@ -67,10 +66,10 @@ export default function FacultyMentorDashboard() {
             <span className="item-label">Completed Students</span>
           </button>
           <button
-            className={`sidebar-item ${activeSection === 'final-reports' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('final-reports')}
+            className={`sidebar-item ${activeSection === 'evaluation-plan' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('evaluation-plan')}
           >
-            <span className="item-label">Final Reports</span>
+            <span className="item-label">Evaluation Plan</span>
           </button>
           <button
             className={`sidebar-item ${activeSection === 'daily-tasks' ? 'active' : ''}`}
@@ -78,12 +77,7 @@ export default function FacultyMentorDashboard() {
           >
             <span className="item-label">Daily Tasks</span>
           </button>
-          <button
-            className={`sidebar-item ${activeSection === 'survey-responses' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('survey-responses')}
-          >
-            <span className="item-label">Survey Responses</span>
-          </button>
+
           <button
             className={`sidebar-item ${activeSection === 'change-password' ? 'active' : ''}`}
             onClick={() => handleSectionClick('change-password')}
@@ -98,9 +92,8 @@ export default function FacultyMentorDashboard() {
            activeSection === 'students' ? <Students user={user} /> :
            activeSection === 'leads' ? <Leads user={user} /> :
            activeSection === 'completed-students' ? <CompletedStudents user={user} /> :
-           activeSection === 'final-reports' ? <FinalReports user={user} /> :
+           activeSection === 'evaluation-plan' ? <EvaluationPlan /> :
            activeSection === 'daily-tasks' ? <DailyTasksViewer /> :
-           activeSection === 'survey-responses' ? <SurveyResponses user={user} /> :
            <ChangePassword user={user} />}
         </main>
       </div>

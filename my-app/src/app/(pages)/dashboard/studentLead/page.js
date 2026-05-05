@@ -12,6 +12,7 @@ import CompletedStudents from './_components/completedStudents/page';
 import FinalReports from './_components/finalReports/page';
 import SurveyResponses from './_components/surveyResponses/page';
 import DailyTasksViewer from './_components/dailyTasksViewer/page';
+import EvaluationPlan from '../student/_components/evaluationPlan/page';
 
 export default function StudentLeadDashboard() {
   const { user, isLoading, isAuthenticated } = useAuth();
@@ -54,10 +55,10 @@ export default function StudentLeadDashboard() {
             <span className="item-label">Students</span>
           </button>
           <button
-            className={`sidebar-item ${activeSection === 'final-reports' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('final-reports')}
+            className={`sidebar-item ${activeSection === 'evaluation-plan' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('evaluation-plan')}
           >
-            <span className="item-label">Final Reports</span>
+            <span className="item-label">Evaluation Plan</span>
           </button>
           <button
             className={`sidebar-item ${activeSection === 'daily-tasks' ? 'active' : ''}`}
@@ -65,12 +66,7 @@ export default function StudentLeadDashboard() {
           >
             <span className="item-label">Daily Tasks</span>
           </button>
-          <button
-            className={`sidebar-item ${activeSection === 'survey-responses' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('survey-responses')}
-          >
-            <span className="item-label">Survey Responses</span>
-          </button>
+
           <button
             className={`sidebar-item ${activeSection === 'completed-students' ? 'active' : ''}`}
             onClick={() => handleSectionClick('completed-students')}
@@ -89,9 +85,8 @@ export default function StudentLeadDashboard() {
           {activeSection === 'overview' ? <Overview user={user} /> : 
            activeSection === 'profile' ? <Profile user={user} /> :
            activeSection === 'students' ? <Students user={user} /> :
-           activeSection === 'final-reports' ? <FinalReports user={user} /> : 
            activeSection === 'daily-tasks' ? <DailyTasksViewer /> :
-           activeSection === 'survey-responses' ? <SurveyResponses user={user} /> :
+           activeSection === 'evaluation-plan' ? <EvaluationPlan /> :
            activeSection === 'completed-students' ? <CompletedStudents user={user} /> :
            activeSection === 'change-password' ? <ChangePassword user={user} /> : null}
         </main>

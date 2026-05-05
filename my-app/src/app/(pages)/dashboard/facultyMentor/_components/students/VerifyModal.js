@@ -5,6 +5,16 @@ import MarksModal from './MarksModal';
 import { commonActivities, dailyActivities } from '@/app/Data/activities';
 import './page.css';
 
+const MAX_MARKS_MAPPING = {
+  1: 10,
+  2: 5,
+  3: 5,
+  4: 5,
+  5: 15,
+  6: 20,
+  7: 40
+};
+
 export default function VerifyModal({ student, onClose }) {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -439,7 +449,7 @@ export default function VerifyModal({ student, onClose }) {
                     <td>
                       {isVerified && (
                         <span className="total-marks">
-                          {marks[`day${day}`] || 0} / 8.5
+                          {marks[`day${day}`] || 0} / {MAX_MARKS_MAPPING[day]}
                         </span>
                       )}
                     </td>

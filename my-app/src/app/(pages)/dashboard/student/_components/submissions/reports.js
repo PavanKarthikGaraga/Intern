@@ -4,6 +4,16 @@ import { FaEye, FaEyeSlash, FaVideo, FaLock, FaInfoCircle, FaClipboardList, FaHo
 import toast from 'react-hot-toast';
 // import Loader from '@/app/components/loader/loader';
 
+const MAX_MARKS_MAPPING = {
+  1: 10,
+  2: 5,
+  3: 5,
+  4: 5,
+  5: 15,
+  6: 20,
+  7: 40
+};
+
 export default function Reports({ user }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -397,7 +407,7 @@ export default function Reports({ user }) {
                       <div className="detail-item marks">
                         <span className="detail-label">Marks:</span>
                         <span className="detail-value marks-value">
-                          {Number(reports.find(r => r.dayNumber === activeAccordion + 1).marks)}/8.5
+                          {Number(reports.find(r => r.dayNumber === activeAccordion + 1).marks)}/{MAX_MARKS_MAPPING[activeAccordion + 1] || 10}
                         </span>
                       </div>
                     )}
