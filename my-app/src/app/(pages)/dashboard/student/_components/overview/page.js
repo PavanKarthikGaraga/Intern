@@ -210,11 +210,11 @@ export default function Overview({ user, studentData }) {
       </div>
 
       {/* Registration Details Card */}
-      <div style={{ background: '#f0f7f0', border: '2px solid #014a01', borderRadius: '12px', padding: '20px', margin: '16px 0' }}>
-        <h3 style={{ color: '#014a01', marginBottom: '14px', fontWeight: '700', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <div style={{ background: '#fff', border: '2px solid #014a01', borderRadius: '12px', padding: '24px', margin: '16px 0', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
+        <h3 style={{ color: '#014a01', marginBottom: '20px', fontWeight: '700', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '2px solid #e8f5e9', paddingBottom: '12px' }}>
           <FaClipboardList /> Your Registration Details
         </h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
           {[  
             { label: 'Slot', value: studentData.slot ? `Slot ${studentData.slot} (${SLOT_DATES[studentData.slot] || ''})` : 'N/A' },
             { label: 'Batch', value: studentData.batch || 'N/A' },
@@ -224,9 +224,9 @@ export default function Overview({ user, studentData }) {
             { label: 'State', value: studentData.state || 'N/A' },
             { label: 'District', value: studentData.district || 'N/A' },
           ].map(({ label, value }) => (
-            <div key={label} style={{ background: '#fff', borderRadius: '8px', padding: '12px 14px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
-              <p style={{ fontSize: '0.75rem', fontWeight: '600', color: '#666', textTransform: 'uppercase', margin: '0 0 4px' }}>{label}</p>
-              <div style={{ fontSize: '0.95rem', fontWeight: '600', color: value === 'NOT_SELECTED' ? '#970003' : '#014a01', margin: 0 }}>
+            <div key={label} style={{ background: '#f9f9f9', borderRadius: '10px', padding: '14px', border: '1px solid #eee' }}>
+              <p style={{ fontSize: '0.75rem', fontWeight: '700', color: '#666', textTransform: 'uppercase', margin: '0 0 6px', letterSpacing: '0.5px' }}>{label}</p>
+              <div style={{ fontSize: '1rem', fontWeight: '600', color: value === 'NOT_SELECTED' ? '#970003' : '#333', margin: 0 }}>
                 {value === 'NOT_SELECTED' ? (
                   <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><FaExclamationTriangle /> Not Selected Yet</span>
                 ) : value}
@@ -276,19 +276,9 @@ export default function Overview({ user, studentData }) {
       )}
       
       <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-content">
-            <div>
-              <h3>Selected Domain</h3>
-              <p>{studentData.selectedDomain || 'Not Selected'}</p>
-            </div>
-            <TeamOutlined className="stat-icon" />
-          </div>
-        </div>
-
-        <div className="stat-card" style={{ gridColumn: '1 / -1', background: '#fff', border: '2px solid #014a01' }}>
-          <div style={{ padding: '10px 0' }}>
-            <h3 style={{ color: '#014a01', fontSize: '1.2rem', marginBottom: '20px', borderBottom: '2px solid #e8f5e9', paddingBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className="stat-card" style={{ gridColumn: '1 / -1', background: '#fff', border: '2px solid #014a01', padding: '24px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
+          <div style={{ padding: '0' }}>
+            <h3 style={{ color: '#014a01', fontSize: '1.2rem', marginBottom: '20px', borderBottom: '2px solid #e8f5e9', paddingBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '700' }}>
               <TrophyOutlined /> Performance Overview (100 Marks Rubric)
             </h3>
             
