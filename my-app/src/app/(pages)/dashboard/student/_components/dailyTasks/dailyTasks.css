@@ -27,7 +27,7 @@
   background: linear-gradient(90deg, #014a01 0%, #1a7a1a 100%);
   padding: 16px 22px; display: flex; align-items: center; gap: 12px;
 }
-.dt-card-head .day-icon { font-size: 1.6rem; }
+.dt-card-head .day-icon { font-size: 1.6rem; color: #fff; }
 .dt-card-head h3 { color: #fff; font-size: 1.05rem; font-weight: 700; margin: 0; }
 .dt-card-head p { color: rgba(255,255,255,0.82); font-size: 0.84rem; margin: 3px 0 0; }
 .dt-card-body { padding: 22px; }
