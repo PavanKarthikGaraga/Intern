@@ -99,10 +99,10 @@ export async function POST(req) {
             }, { status: 403 });
         }
 
-        const { username, name, phoneNumber, email } = await req.json();
+        const { username, name, phoneNumber, email, branch } = await req.json();
 
         // Validate required fields
-        if (!username || !name || !phoneNumber || !email) {
+        if (!username || !name || !phoneNumber || !email || !branch) {
             return NextResponse.json({ 
                 success: false, 
                 error: 'All fields are required' 
@@ -126,8 +126,8 @@ export async function POST(req) {
 
             // Insert into facultyMentors table
             await connection.query(
-                'INSERT INTO facultyMentors (username, name, phoneNumber, email) VALUES (?, ?, ?, ?)',
-                [username, name, phoneNumber, email]
+                'INSERT INTO facultyMentors (username, name, phoneNumber, email, branch) VALUES (?, ?, ?, ?, ?)',
+                [username, name, phoneNumber, email, branch]
             );
 
             await connection.commit();

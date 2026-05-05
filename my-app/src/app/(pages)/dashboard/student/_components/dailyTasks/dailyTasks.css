@@ -91,7 +91,9 @@
 }
 .dt-q-btn.yes.sel { background: #014a01; color: #fff; border-color: #014a01; }
 .dt-q-btn.no.sel  { background: #c62828; color: #fff; border-color: #c62828; }
+.dt-q-btn.clear { background: #f0f0f0; color: #555; border-color: #ddd; margin-left: 10px; }
 .dt-q-btn:hover:not(.sel) { border-color: #014a01; color: #014a01; }
+.dt-q-btn.clear:hover { background: #e0e0e0; color: #333; border-color: #ccc; }
 
 /* Data analysis */
 .dt-analysis-info {

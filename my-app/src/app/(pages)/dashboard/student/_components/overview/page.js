@@ -1,5 +1,6 @@
 'use client'
 import { TeamOutlined, CalendarOutlined, UserOutlined, TrophyOutlined } from '@ant-design/icons';
+import { FaExclamationTriangle, FaClipboardList, FaCheckCircle } from 'react-icons/fa';
 import { useState } from 'react';
 import { Modal, Button, message } from 'antd';
 import { useRouter } from 'next/navigation';
@@ -187,7 +188,9 @@ export default function Overview({ user, studentData }) {
       
       {/* Important Notification */}
       <div className="notification-banner">
-        <div className="notification-icon">⚠️</div>
+        <div className="notification-icon" style={{ display: 'flex', alignItems: 'center', color: '#ffc107' }}>
+          <FaExclamationTriangle />
+        </div>
         <div className="notification-content">
           <h3>Important Notice - Social Internship 2026</h3>
           <p>Registration is now open. Your slot details are shown below. The full dashboard (daily reports, mentor, final report) will be activated closer to your slot dates.</p>
@@ -196,20 +199,26 @@ export default function Overview({ user, studentData }) {
 
       {/* Registration Details Card */}
       <div style={{ background: '#f0f7f0', border: '2px solid #014a01', borderRadius: '12px', padding: '20px', margin: '16px 0' }}>
-        <h3 style={{ color: '#014a01', marginBottom: '14px', fontWeight: '700', fontSize: '1.1rem' }}>📋 Your Registration Details</h3>
+        <h3 style={{ color: '#014a01', marginBottom: '14px', fontWeight: '700', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <FaClipboardList /> Your Registration Details
+        </h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
           {[  
             { label: 'Slot', value: studentData.slot ? `Slot ${studentData.slot} (${SLOT_DATES[studentData.slot] || ''})` : 'N/A' },
             { label: 'Batch', value: studentData.batch || 'N/A' },
             { label: 'Mode', value: studentData.mode || 'N/A' },
             { label: 'Domain', value: studentData.selectedDomain || 'N/A' },
-            { label: 'Problem Statement', value: studentData.problemStatementData?.problem_statement || '⚠️ Not Selected Yet' },
+            { label: 'Problem Statement', value: studentData.problemStatementData?.problem_statement || 'NOT_SELECTED' },
             { label: 'State', value: studentData.state || 'N/A' },
             { label: 'District', value: studentData.district || 'N/A' },
           ].map(({ label, value }) => (
             <div key={label} style={{ background: '#fff', borderRadius: '8px', padding: '12px 14px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
               <p style={{ fontSize: '0.75rem', fontWeight: '600', color: '#666', textTransform: 'uppercase', margin: '0 0 4px' }}>{label}</p>
-              <p style={{ fontSize: '0.95rem', fontWeight: '600', color: value.startsWith('⚠️') ? '#970003' : '#014a01', margin: 0 }}>{value}</p>
+              <div style={{ fontSize: '0.95rem', fontWeight: '600', color: value === 'NOT_SELECTED' ? '#970003' : '#014a01', margin: 0 }}>
+                {value === 'NOT_SELECTED' ? (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><FaExclamationTriangle /> Not Selected Yet</span>
+                ) : value}
+              </div>
             </div>
           ))}
         </div>
@@ -218,12 +227,14 @@ export default function Overview({ user, studentData }) {
       {/* Problem Statement Picker — shown only if not yet selected */}
       {!studentData.problemStatementData && studentData.selectedDomain && (
         <div style={{ background: '#fff8e1', border: '2px solid #f0a500', borderRadius: '12px', padding: '20px', margin: '16px 0' }}>
-          <h3 style={{ color: '#856404', fontWeight: '700', marginBottom: '10px' }}>⚠️ Action Required: Select Your Problem Statement</h3>
+          <h3 style={{ color: '#856404', fontWeight: '700', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <FaExclamationTriangle /> Action Required: Select Your Problem Statement
+          </h3>
           <p style={{ color: '#6c5700', fontSize: '0.9rem', marginBottom: '14px' }}>
             You registered before problem statements were introduced. Please select your problem statement from the list below based on your domain: <strong>{studentData.selectedDomain}</strong>.
           </p>
           {psSuccess ? (
-            <p style={{ color: '#014a01', fontWeight: '600' }}>✅ Problem statement saved! Refreshing...</p>
+            <p style={{ color: '#014a01', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}><FaCheckCircle /> Problem statement saved! Refreshing...</p>
           ) : (
             <form onSubmit={handlePsSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '500px' }}>
               <select
@@ -440,8 +451,8 @@ export default function Overview({ user, studentData }) {
                 <h3>Download Certificate</h3>
                 {!studentData.problemStatementData ? (
                   <div>
-                    <p style={{ fontSize: '1rem', color: '#d4380d', fontWeight: 'bold' }}>
-                      ⚠️ Your certificate is ready, but you need to submit your problem statement first!
+                    <p style={{ fontSize: '1rem', color: '#d4380d', fontWeight: 'bold', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                      <FaExclamationTriangle style={{ marginTop: '2px' }} /> <span>Your certificate is ready, but you need to submit your problem statement first!</span>
                     </p>
                     <p style={{ fontSize: '0.9rem', marginTop: '8px' }}>
                       Please submit your problem statement to download your certificate.

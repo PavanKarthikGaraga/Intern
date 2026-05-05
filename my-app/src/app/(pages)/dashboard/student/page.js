@@ -23,6 +23,7 @@ export default function StudentDashboard() {
   const [error, setError]           = useState(null);
   const [activeSection, setActiveSection] = useState('overview');
   const [studentData, setStudentData]     = useState(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [slotEnabled, setSlotEnabled]     = useState(false); // default locked
 
   useEffect(() => {
@@ -71,17 +72,26 @@ export default function StudentDashboard() {
   if (loading) return <Loader />;
   if (error)   return <div className="error">{error}</div>;
 
-  const handleSectionClick = (section) => setActiveSection(section);
+  const handleSectionClick = (section) => {
+    setActiveSection(section);
+    setIsSidebarOpen(false);
+  };
 
   // Whether this student's mentor is assigned
   const hasMentor = Boolean(studentData?.facultyMentorId || studentData?.mentor);
 
   return (
     <div className="student-dashboard">
-      <Navbar title="Student Dashboard" user={user} />
+      <Navbar title="Student Dashboard" user={user} onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
 
       <div className="dashboard-content">
-        <nav className="dashboard-sidebar">
+        {/* Overlay for mobile */}
+        <div 
+          className={`sidebar-overlay ${isSidebarOpen ? 'open' : ''}`} 
+          onClick={() => setIsSidebarOpen(false)}
+        ></div>
+
+        <nav className={`dashboard-sidebar ${isSidebarOpen ? 'open' : ''}`}>
           {/* ── Always visible ── */}
           <button className={`sidebar-item ${activeSection === 'overview' ? 'active' : ''}`}
             onClick={() => handleSectionClick('overview')}>

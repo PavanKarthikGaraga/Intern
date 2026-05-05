@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useMemo } from 'react';
-import { FaEye, FaEyeSlash, FaVideo } from 'react-icons/fa';
+import { FaEye, FaEyeSlash, FaVideo, FaLock, FaInfoCircle, FaClipboardList, FaHourglassHalf } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 // import Loader from '@/app/components/loader/loader';
 
@@ -290,7 +290,7 @@ export default function Reports({ user }) {
       <section className="submissions-section">
         <h2>Daily Reports</h2>
         <div className="locked-message">
-          <span className="lock-icon">🔒</span>
+          <span className="lock-icon" style={{ fontSize: '2rem', marginBottom: '8px', display: 'inline-block' }}><FaLock /></span>
           <p>Daily reports are locked. Please wait for a mentor to be assigned to you.</p>
         </div>
       </section>
@@ -431,8 +431,8 @@ export default function Reports({ user }) {
                   )}
 
                   <div className="submission-notes">
-                    <p className="note">
-                      <span className="note-icon">ℹ️</span>
+                    <p className="note" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span className="note-icon" style={{ fontSize: '1.2rem', color: '#1976d2' }}><FaInfoCircle /></span>
                       {getStatus(activeAccordion + 1).className !== 'rejected' 
                         ? "To modify your submission, please contact your student mentor."
                         : "Please ensure your resubmission meets all the requirements."}
@@ -441,8 +441,8 @@ export default function Reports({ user }) {
                 </div>
               ) : !canSubmitDay(activeAccordion) ? (
                 <div className="locked-message">
-                  <span className="lock-icon">🔒</span>
-                  <p>This day is locked. Please complete and submit the previous day's report first.</p>
+                  <span className="lock-icon" style={{ fontSize: '2rem', marginBottom: '8px', display: 'inline-block' }}><FaLock /></span>
+                  <p>This day is locked. Please complete and submit the previous day&apos;s report first.</p>
                 </div>
               ) : (
                 <form onSubmit={(e) => handleSubmit(activeAccordion, e)} className="submission-form">
@@ -491,7 +491,7 @@ export default function Reports({ user }) {
             </div>
           ) : (
             <div className="placeholder-content">
-              <div className="placeholder-icon">📝</div>
+              <div className="placeholder-icon" style={{ fontSize: '3rem', color: '#014a01', marginBottom: '16px' }}><FaClipboardList /></div>
               <h3>Select a Day to Begin</h3>
               <p>Choose a day from the grid to view details or submit your report.</p>
               <div className="status-legend">
@@ -506,7 +506,7 @@ export default function Reports({ user }) {
                     <span>Verified</span>
                   </div>
                   <div className="legend-item">
-                    <span className="legend-icon pending">⏳</span>
+                    <span className="legend-icon pending"><FaHourglassHalf /></span>
                     <span>Pending Review</span>
                   </div>
                   <div className="legend-item">
@@ -514,7 +514,7 @@ export default function Reports({ user }) {
                     <span>Rejected</span>
                   </div>
                   <div className="legend-item">
-                    <span className="legend-icon locked">🔒</span>
+                    <span className="legend-icon locked"><FaLock /></span>
                     <span>Locked</span>
                   </div>
                 </div>

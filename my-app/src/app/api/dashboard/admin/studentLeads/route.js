@@ -89,10 +89,10 @@ export async function POST(req) {
             }, { status: 403 });
         }
 
-        const { username, name, phoneNumber, email, slot } = await req.json();
+        const { username, name, phoneNumber, email, slot, branch } = await req.json();
 
         // Validate required fields
-        if (!username || !name || !phoneNumber || !email || !slot) {
+        if (!username || !name || !phoneNumber || !email || !slot || !branch) {
             return NextResponse.json({ 
                 success: false, 
                 error: 'All fields are required' 
@@ -116,8 +116,8 @@ export async function POST(req) {
 
             // Insert into studentLeads table
             await connection.query(
-                'INSERT INTO studentLeads (username, name, phoneNumber, email, slot) VALUES (?, ?, ?, ?, ?)',
-                [username, name, phoneNumber, email, slot]
+                'INSERT INTO studentLeads (username, name, phoneNumber, email, slot, branch) VALUES (?, ?, ?, ?, ?, ?)',
+                [username, name, phoneNumber, email, slot, branch]
             );
 
             await connection.commit();

@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { surveyData as SURVEY } from './surveyDataShared';
+import { FaCheck, FaLock, FaTimes, FaHourglassHalf, FaPlay, FaClipboardList, FaHandshake, FaChartBar, FaCamera, FaVideo, FaClock, FaCheckCircle, FaTimesCircle, FaExclamationTriangle, FaCalendarAlt } from 'react-icons/fa';
 import './dailyTasks.css';
 
 /* ── Slot start dates (IST midnight) ── */
@@ -73,18 +74,18 @@ function pillClass(st, active) {
   return c;
 }
 function pillIcon(st) {
-  return st === 'submitted' ? '✓' : st === 'locked' ? '🔒' : st === 'missed' ? '❌' : st === 'upcoming' ? '⏳' : '▶';
+  return st === 'submitted' ? <FaCheck /> : st === 'locked' ? <FaLock /> : st === 'missed' ? <FaTimes /> : st === 'upcoming' ? <FaHourglassHalf /> : <FaPlay />;
 }
 function wc(text) { return text.trim() === '' ? 0 : text.trim().split(/\s+/).length; }
 
 const DAY_META = [
-  { day:1, icon:'📋', title:'Day 1 – Problem Statement Understanding', subtitle:'Write your inference and analysis (minimum 100 words)' },
-  { day:2, icon:'🤝', title:'Day 2 – Stakeholder 1 Survey (8 Persons)',  subtitle:'Interview 8 people from the 1st stakeholder group' },
-  { day:3, icon:'🤝', title:'Day 3 – Stakeholder 2 Survey (3 Persons)',  subtitle:'Interview 3 people from the 2nd stakeholder group' },
-  { day:4, icon:'🤝', title:'Day 4 – Stakeholder 3 Survey (3 Persons)',  subtitle:'Interview 3 people from the 3rd stakeholder group' },
-  { day:5, icon:'📊', title:'Day 5 – Data Analysis',                     subtitle:'Count responses, calculate percentages & identify insights' },
-  { day:6, icon:'📸', title:'Day 6 – Intervention Activity',             subtitle:'Upload photo documentation from Days 2, 3 & 4' },
-  { day:7, icon:'📹', title:'Day 7 – Documentation & Presentation',      subtitle:'Submit case study report, YouTube video & LinkedIn post' },
+  { day:1, icon: <FaClipboardList />, title:'Day 1 – Problem Statement Understanding', subtitle:'Write your inference and analysis (minimum 100 words)' },
+  { day:2, icon: <FaHandshake />, title:'Day 2 – Stakeholder 1 Survey (8 Persons)',  subtitle:'Interview 8 people from the 1st stakeholder group' },
+  { day:3, icon: <FaHandshake />, title:'Day 3 – Stakeholder 2 Survey (3 Persons)',  subtitle:'Interview 3 people from the 2nd stakeholder group' },
+  { day:4, icon: <FaHandshake />, title:'Day 4 – Stakeholder 3 Survey (3 Persons)',  subtitle:'Interview 3 people from the 3rd stakeholder group' },
+  { day:5, icon: <FaChartBar />, title:'Day 5 – Data Analysis',                     subtitle:'Count responses, calculate percentages & identify insights' },
+  { day:6, icon: <FaCamera />, title:'Day 6 – Intervention Activity',             subtitle:'Upload photo documentation from Days 2, 3 & 4' },
+  { day:7, icon: <FaVideo />, title:'Day 7 – Documentation & Presentation',      subtitle:'Submit case study report, YouTube video & LinkedIn post' },
 ];
 
 /* ── Timer bar component ── */
@@ -106,10 +107,31 @@ function TimerBar({ deadline }) {
   const urgent = (deadline - serverNow()) < 3 * 3600000 && (deadline - serverNow()) > 0;
   return (
     <div className="dt-timer-bar">
-      <span className="dt-timer-label">⏰ Submission window closes in:</span>
+      <span className="dt-timer-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><FaClock /> Submission window closes in:</span>
       <span className={`dt-timer-count${urgent ? ' urgent' : ''}`}>{tick}</span>
       <span className="dt-timer-date">
         Deadline: {deadline.toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit', hour12:true })}
+      </span>
+    </div>
+  );
+}
+
+/* ── Completed bar component ── */
+function CompletedBar({ deadline, submittedAt }) {
+  const diff = deadline.getTime() - new Date(submittedAt).getTime();
+  let text = '';
+  if (diff < 0) {
+    text = 'Submitted late';
+  } else {
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    text = `Completed ${h}h ${m}m before deadline`;
+  }
+  return (
+    <div className="dt-timer-bar" style={{ background: '#e8f5e9', borderColor: '#c8e6c9' }}>
+      <span className="dt-timer-label" style={{ color: '#2e7d32', display: 'flex', alignItems: 'center', gap: '6px' }}><FaCheckCircle /> {text}</span>
+      <span className="dt-timer-date">
+        Submitted: {new Date(submittedAt).toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit', hour12:true })}
       </span>
     </div>
   );
@@ -121,21 +143,21 @@ function LockedView({ status, dayNum, slot }) {
   const dateStr = dl ? dl.toLocaleDateString('en-IN', { day:'numeric', month:'long' }) : '';
   if (status === 'missed') return (
     <div className="dt-locked-overlay missed-lock">
-      <div className="lock-icon">❌</div>
+      <div className="lock-icon" style={{ fontSize: '2.5rem', marginBottom: '10px' }}><FaTimesCircle /></div>
       <h3>Submission Window Closed</h3>
       <p>The deadline for Day {dayNum} ({dateStr}) passed without a submission.<br/>This day is permanently locked.</p>
     </div>
   );
   if (status === 'locked') return (
     <div className="dt-locked-overlay missed-lock">
-      <div className="lock-icon">🔒</div>
+      <div className="lock-icon" style={{ fontSize: '2.5rem', marginBottom: '10px' }}><FaLock /></div>
       <h3>Day {dayNum} Locked</h3>
       <p>A previous day was not submitted in time. All subsequent days are locked.<br/>Contact your mentor if you believe this is an error.</p>
     </div>
   );
   return (
     <div className="dt-locked-overlay">
-      <div className="lock-icon">⏳</div>
+      <div className="lock-icon" style={{ fontSize: '2.5rem', marginBottom: '10px' }}><FaHourglassHalf /></div>
       <h3>Day {dayNum} Not Yet Available</h3>
       <p>{dayNum === 1
         ? `This day opens on ${dateStr} when your slot begins.`
@@ -197,6 +219,21 @@ export default function DailyTasks({ studentData }) {
       setMsg(`Need at least 100 words (currently ${wc(data.inference||'')})`);
       setMsgType('err'); return;
     }
+    if ([2, 3, 4].includes(activeDay)) {
+      const pCount = activeDay === 2 ? 8 : 3;
+      const sh = survey[activeDay - 2];
+      const qCount = sh?.questions?.length || 0;
+      
+      for (let p = 1; p <= pCount; p++) {
+        const pd = data[`p${p}`] || {};
+        const ansCount = Object.keys(pd.answers || {}).length;
+        if (!pd.name?.trim() || ansCount < qCount) {
+          setMsg(`Please complete all questions and names for all ${pCount} persons before submitting.`);
+          setMsgType('err');
+          return;
+        }
+      }
+    }
     setSaving(true);
     try {
       const res  = await fetch('/api/dashboard/student/daily-tasks', {
@@ -217,7 +254,7 @@ export default function DailyTasks({ studentData }) {
   if (!ps) return (
     <div className="dt-wrap">
       <div className="dt-no-ps">
-        <h3>⚠️ Problem Statement Not Selected</h3>
+        <h3 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}><FaExclamationTriangle /> Problem Statement Not Selected</h3>
         <p>Please select your Problem Statement in the Overview section first.</p>
       </div>
     </div>
@@ -236,12 +273,13 @@ export default function DailyTasks({ studentData }) {
     <div className="dt-wrap">
       <div className="dt-header">
         <div>
-          <h2>📅 Daily Tasks</h2>
+          <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><FaCalendarAlt /> Daily Tasks</h2>
           <p>Problem Statement: <strong>{ps}</strong>
             {slot && <span style={{marginLeft:8,fontSize:'0.8rem',color:'#888'}}>· Slot {slot}</span>}
           </p>
         </div>
         {activeStatus === 'open' && deadline && <TimerBar deadline={deadline} />}
+        {activeStatus === 'submitted' && deadline && saved[activeDay]?.submittedAt && <CompletedBar deadline={deadline} submittedAt={saved[activeDay].submittedAt} />}
       </div>
 
       {/* Timeline pills */}
@@ -273,7 +311,7 @@ export default function DailyTasks({ studentData }) {
           <div>
             <h3>{meta.title}</h3>
             <p>{meta.subtitle}</p>
-            {slot && <p className="dt-day-date">📅 {dayLabel(slot, activeDay)} · Closes 11:59 PM IST</p>}
+            {slot && <p className="dt-day-date" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><FaCalendarAlt /> {dayLabel(slot, activeDay)} · Closes 11:59 PM IST</p>}
           </div>
         </div>
         <div className="dt-card-body">
@@ -282,14 +320,14 @@ export default function DailyTasks({ studentData }) {
             : (
               <>
                 {activeDay === 1 && <Day1 data={dayData(1)} onChange={(f,v) => setDayField(1,f,v)} ps={ps} readOnly={isSaved} />}
-                {activeDay === 2 && <DaySurvey day={2} personCount={8} stakeholderIdx={0} survey={survey} data={dayData(2)} onChange={(f,v) => setDayField(2,f,v)} readOnly={isSaved} />}
-                {activeDay === 3 && <DaySurvey day={3} personCount={3} stakeholderIdx={1} survey={survey} data={dayData(3)} onChange={(f,v) => setDayField(3,f,v)} readOnly={isSaved} />}
-                {activeDay === 4 && <DaySurvey day={4} personCount={3} stakeholderIdx={2} survey={survey} data={dayData(4)} onChange={(f,v) => setDayField(4,f,v)} readOnly={isSaved} />}
+                {activeDay === 2 && <DaySurvey day={2} personCount={8} stakeholderIdx={0} survey={survey} data={dayData(2)} onChange={(f,v) => setDayField(2,f,v)} readOnly={isSaved} onFinalSubmit={handleSave} saving={saving} />}
+                {activeDay === 3 && <DaySurvey day={3} personCount={3} stakeholderIdx={1} survey={survey} data={dayData(3)} onChange={(f,v) => setDayField(3,f,v)} readOnly={isSaved} onFinalSubmit={handleSave} saving={saving} />}
+                {activeDay === 4 && <DaySurvey day={4} personCount={3} stakeholderIdx={2} survey={survey} data={dayData(4)} onChange={(f,v) => setDayField(4,f,v)} readOnly={isSaved} onFinalSubmit={handleSave} saving={saving} />}
                 {activeDay === 5 && <Day5 saved={saved} survey={survey} />}
                 {activeDay === 6 && <Day6 data={dayData(6)} onChange={(f,v) => setDayField(6,f,v)} readOnly={isSaved} />}
                 {activeDay === 7 && <Day7 data={dayData(7)} onChange={(f,v) => setDayField(7,f,v)} readOnly={isSaved} />}
 
-                {activeDay !== 5 && (
+                {activeDay !== 5 && activeDay !== 2 && activeDay !== 3 && activeDay !== 4 && (
                   <div className="dt-save-row">
                     <button className="dt-save-btn" onClick={handleSave} disabled={saving || isSaved || !isEditable}>
                       {saving ? 'Saving…' : isSaved ? '✓ Submitted' : '💾 Save & Submit'}
@@ -340,7 +378,7 @@ function Day1({ data, onChange, ps, readOnly }) {
 }
 
 /* ── Days 2/3/4 – Survey ── */
-function DaySurvey({ day, personCount, stakeholderIdx, survey, data, onChange, readOnly }) {
+function DaySurvey({ day, personCount, stakeholderIdx, survey, data, onChange, readOnly, onFinalSubmit, saving }) {
   const [activePerson, setActivePerson] = useState(1);
   if (!survey) return <div className="dt-info-box"><h4>Survey data not available</h4><p>No questions found for your problem statement. Contact admin.</p></div>;
 
@@ -350,7 +388,7 @@ function DaySurvey({ day, personCount, stakeholderIdx, survey, data, onChange, r
   const persons = Array.from({ length: personCount }, (_, i) => i + 1);
   const pk = (p) => `p${p}`;
   const pd = (p) => data[pk(p)] || { name: '', answers: {} };
-  const isFilled = (p) => { const d = pd(p); return d.name?.trim() && Object.keys(d.answers||{}).length > 0; };
+  const isFilled = (p) => { const d = pd(p); return d.name?.trim() && Object.keys(d.answers||{}).length === sh.questions.length; };
 
   const setField = (p, field, value) => {
     if (readOnly) return;
@@ -397,11 +435,42 @@ function DaySurvey({ day, personCount, stakeholderIdx, survey, data, onChange, r
                   onClick={() => setAnswer(activePerson, qi, 'Yes')} disabled={readOnly}>Yes</button>
                 <button className={`dt-q-btn no ${ans==='No'?'sel':''}`}
                   onClick={() => setAnswer(activePerson, qi, 'No')} disabled={readOnly}>No</button>
+                {ans && !readOnly && (
+                  <button className="dt-q-btn clear"
+                    onClick={() => {
+                      const currentAnswers = { ...cur.answers };
+                      delete currentAnswers[qi];
+                      const currentPersonData = data[pk(activePerson)] || { name:'', answers:{} };
+                      onChange(pk(activePerson), { ...currentPersonData, answers: currentAnswers });
+                    }}>Clear</button>
+                )}
               </div>
             </li>
           );
         })}
       </ul>
+      
+      {!readOnly && (
+        <div style={{ marginTop: '20px', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+          {activePerson < personCount && (
+            <button className="dt-save-btn" onClick={() => {
+              if (isFilled(activePerson)) setActivePerson(activePerson + 1);
+              else alert('Please complete all questions and the name for this person first.');
+            }} style={{ background: '#1a7a1a' }}>
+              Save Person & Next
+            </button>
+          )}
+          {persons.every(p => isFilled(p)) && (
+            <button className="dt-save-btn" onClick={() => {
+              if (window.confirm("Are you sure you want to submit all responses for evaluation? This cannot be undone.")) {
+                 onFinalSubmit();
+              }
+            }} disabled={saving}>
+              {saving ? 'Submitting...' : 'Submit All Responses for Evaluation'}
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -426,7 +495,7 @@ function Day5({ saved, survey }) {
 
   if (analyses.every(a => a.persons.length===0)) return (
     <div className="dt-info-box">
-      <h4>📊 Data Analysis</h4>
+      <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><FaChartBar /> Data Analysis</h4>
       <p>No survey data yet. Complete Days 2, 3, and 4 first.</p>
     </div>
   );

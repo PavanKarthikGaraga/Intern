@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { stateNames } from '@/app/Data/states';
 import { districtNames } from '@/app/Data/districts';
 import { PROBLEM_STATEMENTS } from '@/app/Data/problemStatements';
+import { FaCheckCircle, FaEdit, FaExclamationTriangle } from 'react-icons/fa';
 import './ProblemStatement.css';
 
 export default function ProblemStatement({ user, studentData }) {
@@ -99,8 +100,8 @@ export default function ProblemStatement({ user, studentData }) {
           <p><strong>State:</strong> {existingData.state}</p>
           <p><strong>District:</strong> {existingData.district}</p>
         </div>
-        <div className="success-message" style={{ marginBottom: '1rem' }}>
-          ✅ Problem statement submitted.
+        <div className="success-message" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <FaCheckCircle /> Problem statement submitted.
         </div>
         <button
           onClick={() => setIsEditing(true)}
@@ -109,7 +110,7 @@ export default function ProblemStatement({ user, studentData }) {
             border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600'
           }}
         >
-          ✏️ Update Problem Statement
+          <FaEdit style={{ marginRight: '6px' }} /> Update Problem Statement
         </button>
       </div>
     );
@@ -120,8 +121,8 @@ export default function ProblemStatement({ user, studentData }) {
       <h2>{existingData ? 'Update Problem Statement' : 'Submit Problem Statement'}</h2>
 
       {!registeredDomain && (
-        <div className="note-box" style={{ color: '#970003', fontWeight: '600' }}>
-          ⚠️ No domain found in your registration. Please contact admin.
+        <div className="note-box" style={{ color: '#970003', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <FaExclamationTriangle /> No domain found in your registration. Please contact admin.
         </div>
       )}
 

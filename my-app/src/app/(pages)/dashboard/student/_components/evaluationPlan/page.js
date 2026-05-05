@@ -1,12 +1,14 @@
 'use client';
 
+import { FaSearch, FaClipboardList, FaChartBar, FaHandshake, FaFileAlt, FaVideo, FaClipboardCheck, FaTrophy, FaGraduationCap, FaLightbulb } from 'react-icons/fa';
+
 const CRITERIA = [
-  { name: 'Problem Understanding',  marks: 10, icon: '🔍', desc: 'Clarity of problem statement analysis and inference written on Day 1' },
-  { name: 'Survey Execution',       marks: 15, icon: '📋', desc: 'Quality and completeness of stakeholder surveys conducted on Days 2–4' },
-  { name: 'Data Analysis',          marks: 15, icon: '📊', desc: 'Accuracy of Yes/No data tabulation, percentages, root causes on Day 5' },
-  { name: 'Intervention Activity',  marks: 20, icon: '🤝', desc: 'Documentation of activities, photos and drive link submitted on Day 6' },
-  { name: 'Case Study Report',      marks: 20, icon: '📄', desc: 'Quality of the written case study report submitted on Day 7' },
-  { name: 'Final Presentation',     marks: 20, icon: '🎤', desc: 'YouTube presentation video quality and communication on Day 7' },
+  { name: 'Problem Understanding',  marks: 10, icon: <FaSearch />, desc: 'Clarity of problem statement analysis and inference written on Day 1' },
+  { name: 'Survey Execution',       marks: 15, icon: <FaClipboardList />, desc: 'Quality and completeness of stakeholder surveys conducted on Days 2–4' },
+  { name: 'Data Analysis',          marks: 15, icon: <FaChartBar />, desc: 'Accuracy of Yes/No data tabulation, percentages, root causes on Day 5' },
+  { name: 'Intervention Activity',  marks: 20, icon: <FaHandshake />, desc: 'Documentation of activities, photos and drive link submitted on Day 6' },
+  { name: 'Case Study Report',      marks: 20, icon: <FaFileAlt />, desc: 'Quality of the written case study report submitted on Day 7' },
+  { name: 'Final Presentation',     marks: 20, icon: <FaVideo />, desc: 'YouTube presentation video quality and communication on Day 7' },
 ];
 
 const GRADES = [
@@ -23,9 +25,9 @@ export default function EvaluationPlan() {
     <div style={{ padding: '28px 32px', maxWidth: 860, margin: '0 auto', fontFamily: 'Inter, sans-serif' }}>
 
       {/* Header */}
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#012a01', margin: '0 0 6px', letterSpacing: '-0.02em' }}>
-          📝 Evaluation Plan
+      <div style={{ marginBottom: 28, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#012a01', margin: 0, letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <FaClipboardCheck style={{ color: '#014a01' }} /> Evaluation Plan
         </h1>
         <p style={{ color: '#666', fontSize: '0.88rem', margin: 0 }}>
           Your internship will be evaluated across 6 criteria totalling <strong>100 marks</strong>.
@@ -43,8 +45,8 @@ export default function EvaluationPlan() {
           background: 'linear-gradient(135deg, #014a01, #1b8f2d)',
           padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 10
         }}>
-          <span style={{ fontSize: '1.1rem' }}>📝</span>
-          <h2 style={{ color: '#fff', fontSize: '1rem', fontWeight: 700, margin: 0 }}>EVALUATION RUBRIC</h2>
+          <FaClipboardList style={{ fontSize: '1.2rem', color: '#fff' }} />
+          <h2 style={{ color: '#fff', fontSize: '1rem', fontWeight: 700, margin: 0, letterSpacing: '0.05em' }}>EVALUATION RUBRIC</h2>
         </div>
 
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -65,9 +67,15 @@ export default function EvaluationPlan() {
                   onMouseLeave={e => e.currentTarget.style.background = i % 2 === 0 ? '#fff' : '#fafdf8'}
                 >
                   <td style={TD}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span style={{ fontSize: '1.15rem' }}>{c.icon}</span>
-                      <strong style={{ color: '#1a1a1a', fontSize: '0.92rem' }}>{c.name}</strong>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{ 
+                        fontSize: '1.1rem', color: '#014a01', background: '#e8f5e9',
+                        width: '32px', height: '32px', borderRadius: '8px',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center'
+                      }}>
+                        {c.icon}
+                      </div>
+                      <strong style={{ color: '#1a1a1a', fontSize: '0.95rem', fontWeight: 600 }}>{c.name}</strong>
                     </div>
                   </td>
                   <td style={{ ...TD, textAlign: 'center' }}>
@@ -90,8 +98,10 @@ export default function EvaluationPlan() {
 
             {/* Total row */}
             <tr style={{ background: 'linear-gradient(135deg, #014a01, #1b8f2d)' }}>
-              <td style={{ ...TD, color: '#fff', fontWeight: 800, fontSize: '0.95rem', borderColor: 'transparent' }}>
-                🏆 Total
+              <td style={{ ...TD, color: '#fff', fontWeight: 800, fontSize: '1rem', borderColor: 'transparent' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <FaTrophy style={{ color: '#ffd700' }} /> Total
+                </div>
               </td>
               <td style={{ ...TD, textAlign: 'center', color: '#fff', fontWeight: 800, fontSize: '1.2rem', borderColor: 'transparent' }}>
                 {TOTAL}
@@ -114,8 +124,8 @@ export default function EvaluationPlan() {
           background: 'linear-gradient(135deg, #1565c0, #1976d2)',
           padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 10
         }}>
-          <span style={{ fontSize: '1.1rem' }}>🎓</span>
-          <h2 style={{ color: '#fff', fontSize: '1rem', fontWeight: 700, margin: 0 }}>GRADING SCALE</h2>
+          <FaGraduationCap style={{ fontSize: '1.4rem', color: '#fff' }} />
+          <h2 style={{ color: '#fff', fontSize: '1rem', fontWeight: 700, margin: 0, letterSpacing: '0.05em' }}>GRADING SCALE</h2>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 0 }}>
           {GRADES.map((g, i) => (
@@ -147,11 +157,18 @@ export default function EvaluationPlan() {
 
       {/* ── Info note ── */}
       <div style={{
-        background: '#fff8e1', border: '1.5px solid #ffe082', borderRadius: 12,
-        padding: '14px 18px', display: 'flex', gap: 12, alignItems: 'flex-start'
+        background: '#fff8e1', border: '1px solid #ffe082', borderRadius: 12,
+        padding: '16px 20px', display: 'flex', gap: 14, alignItems: 'flex-start',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.03)'
       }}>
-        <span style={{ fontSize: '1.2rem', flexShrink: 0 }}>💡</span>
-        <div style={{ fontSize: '0.85rem', color: '#5d4037', lineHeight: 1.6 }}>
+        <div style={{ 
+          fontSize: '1.2rem', flexShrink: 0, background: '#ffe082', 
+          width: '32px', height: '32px', borderRadius: '50%',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f57f17'
+        }}>
+          <FaLightbulb />
+        </div>
+        <div style={{ fontSize: '0.9rem', color: '#5d4037', lineHeight: 1.6 }}>
           <strong>Note:</strong> Your final marks are calculated as{' '}
           <strong>Internal Marks + Final Report + Final Presentation</strong>.
           Certificates are generated by the admin only for students who score <strong>≥ 60</strong> and are marked as Passed.
