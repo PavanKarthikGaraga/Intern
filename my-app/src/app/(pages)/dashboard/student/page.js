@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { FaHome, FaUser, FaTasks, FaClipboardList, FaUserTie, FaLock } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import './page.css';
 import Loader from '@/app/components/loader/loader';
@@ -95,39 +96,36 @@ export default function StudentDashboard() {
           {/* ── Always visible ── */}
           <button className={`sidebar-item ${activeSection === 'overview' ? 'active' : ''}`}
             onClick={() => handleSectionClick('overview')}>
+            <FaHome className="sidebar-icon" />
             <span className="item-label">Overview</span>
           </button>
           <button className={`sidebar-item ${activeSection === 'profile' ? 'active' : ''}`}
             onClick={() => handleSectionClick('profile')}>
+            <FaUser className="sidebar-icon" />
             <span className="item-label">Profile</span>
           </button>
-          <button className={`sidebar-item ${activeSection === 'change-password' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('change-password')}>
-            <span className="item-label">Change Password</span>
+          <button className={`sidebar-item ${activeSection === 'daily-tasks' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('daily-tasks')}>
+            <FaTasks className="sidebar-icon" />
+            <span className="item-label">Daily Tasks</span>
           </button>
-
           <button className={`sidebar-item ${activeSection === 'evaluation-plan' ? 'active' : ''}`}
             onClick={() => handleSectionClick('evaluation-plan')}>
+            <FaClipboardList className="sidebar-icon" />
             <span className="item-label">Evaluation Plan</span>
           </button>
-
-          {/* Mentor — always visible when assigned, no slot needed */}
           {hasMentor && (
             <button className={`sidebar-item ${activeSection === 'lead' ? 'active' : ''}`}
               onClick={() => handleSectionClick('lead')}>
+              <FaUserTie className="sidebar-icon" />
               <span className="item-label">My Mentor</span>
             </button>
           )}
-
-          {/* ── Slot-gated sections ── */}
-          {slotEnabled && (
-            <>
-              <button className={`sidebar-item ${activeSection === 'daily-tasks' ? 'active' : ''}`}
-                onClick={() => handleSectionClick('daily-tasks')}>
-                <span className="item-label">Daily Tasks</span>
-              </button>
-            </>
-          )}
+          <button className={`sidebar-item ${activeSection === 'change-password' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('change-password')}>
+            <FaLock className="sidebar-icon" />
+            <span className="item-label">Change Password</span>
+          </button>
 
           {/* Locked notice */}
           {!slotEnabled && (

@@ -680,6 +680,15 @@ function Day6({ data, onChange, readOnly }) {
   };
 
   const generatePDF = async () => {
+    // Validation
+    for (let i = 0; i < entries.length; i++) {
+      const e = entries[i];
+      if (!e.image || !e.date || !e.description?.trim()) {
+        alert(`Please complete Entry ${i + 1} (Image, Date, and Description are all mandatory).`);
+        return;
+      }
+    }
+
     setIsGenerating(true);
     try {
       const { jsPDF } = await import('jspdf');
@@ -687,7 +696,16 @@ function Day6({ data, onChange, readOnly }) {
       let yOffset = 20;
 
       doc.setFontSize(20);
-      doc.text('Intervention Activity Documentation', 105, yOffset, { align: 'center' });
+      doc.setFont('helvetica', 'bold');
+      const title = 'Intervention Activity Documentation';
+      doc.text(title, 105, yOffset, { align: 'center' });
+      
+      // Underline
+      const titleWidth = doc.getTextWidth(title);
+      doc.setLineWidth(0.5);
+      doc.line(105 - (titleWidth / 2), yOffset + 2, 105 + (titleWidth / 2), yOffset + 2);
+      
+      doc.setFont('helvetica', 'normal');
       yOffset += 20;
 
       for (let i = 0; i < entries.length; i++) {
@@ -738,7 +756,7 @@ function Day6({ data, onChange, readOnly }) {
       </div>
 
       <div style={{ background: '#f5f5f5', border: '1px solid #ddd', borderRadius: 8, padding: 20, marginBottom: 24 }}>
-        <h4 style={{ margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: 8 }}><FaClipboardList /> Auto Document Generator (Optional)</h4>
+        <h4 style={{ margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: 8 }}><FaClipboardList /> Auto Document Generator</h4>
         <p style={{ fontSize: '0.88rem', color: '#555', marginBottom: 16 }}>Use this tool to easily compile your photos and descriptions into a ready-to-upload PDF.</p>
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -759,17 +777,17 @@ function Day6({ data, onChange, readOnly }) {
                       <Image src={entry.image} alt="preview" fill style={{ objectFit: 'cover', borderRadius: 6, border: '1px solid #ccc' }} unoptimized />
                     </div>
                   ) : (
-                    <div style={{ width: '100%', height: 120, background: '#eee', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999', border: '1px dashed #ccc' }}>No Image</div>
+                    <div style={{ width: '100%', height: 120, background: '#eee', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999', border: '1px dashed #ccc' }}>No Image (Required)</div>
                   )}
                   {!readOnly && <input type="file" accept="image/*" onChange={(e) => handleImageChange(index, e)} style={{ marginTop: 8, fontSize: '0.8rem', width: '100%' }} />}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   <div>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#555' }}>Date of Activity</label>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#555' }}>Date of Activity (Required)</label>
                     <input type="date" value={entry.date} onChange={(e) => handleFieldChange(index, 'date', e.target.value)} readOnly={readOnly} style={{ width: '100%', padding: '6px 10px', borderRadius: 4, border: '1px solid #ccc', outline: 'none', ...ro }} />
                   </div>
                   <div>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#555' }}>Description</label>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#555' }}>Description (Required)</label>
                     <textarea placeholder="Describe this photo..." value={entry.description} onChange={(e) => handleFieldChange(index, 'description', e.target.value)} readOnly={readOnly} style={{ width: '100%', padding: '8px 10px', borderRadius: 4, border: '1px solid #ccc', minHeight: 60, resize: 'vertical', outline: 'none', ...ro }} />
                   </div>
                 </div>

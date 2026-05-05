@@ -99,13 +99,25 @@ export default function Overview({ user, studentData }) {
   //   router.push('/dashboard/student/problemStatement');
   // };
 
-  const totalMarks = Number(studentData.marks?.internalMarks) + Number(studentData.marks?.finalReport) + Number(studentData.marks?.finalPresentation);
+  const m = studentData.marks || {};
+  const evalComponents = [
+    { label: 'Problem Understanding', score: m.d1 || 0, max: 10, weight: '10%' },
+    { label: 'Survey Execution',     score: m.survey || 0, max: 15, weight: '15%' },
+    { label: 'Data Analysis',        score: m.d5 || 0, max: 15, weight: '15%' },
+    { label: 'Intervention Activity', score: m.d6 || 0, max: 20, weight: '20%' },
+    { label: 'Case Study Report',    score: m.d7 || 0, max: 20, weight: '20%' },
+    { label: 'Final Presentation',   score: m.finalPresentation || 0, max: 20, weight: '20%' },
+  ];
+
+  const totalMarks = evalComponents.reduce((acc, c) => acc + Number(c.score), 0);
 
   // Helper to calculate grade from marks
   const getGrade = (marks) => {
-    if (marks >= 90) return 'A';
-    if (marks >= 75) return 'B';
-    if (marks >= 60) return 'C';
+    if (marks >= 85) return 'S';
+    if (marks >= 75) return 'A';
+    if (marks >= 65) return 'B';
+    if (marks >= 55) return 'C';
+    if (marks >= 50) return 'D';
     return 'F';
   };
 
@@ -274,175 +286,49 @@ export default function Overview({ user, studentData }) {
           </div>
         </div>
 
-        {studentData.sstudentData ? (
-          // Show slot 5/6 stats
-          <>
-            <div className="stat-card">
-              <div className="stat-content">
-                <div>
-                  <h3>Previous Slot:</h3>
-                  <p>{studentData.sstudentData.previousSlot}</p>
-                </div>
-                <TrophyOutlined className="stat-icon" />
-              </div>
-            </div>
-
-            <div className="stat-card">
-              <div className="stat-content">
-                <div>
-                  <h3>Slot {studentData.sstudentData.slot} Internal Marks</h3>
-                  <p>{Math.round(studentData.marks?.internalMarks) || '0'}/60</p>
-                </div>
-                <TrophyOutlined className="stat-icon" />
-              </div>
-            </div>
-
-            <div className="stat-card">
-              <div className="stat-content">
-                <div>
-                  <h3>Slot {studentData.sstudentData.slot} Final Report</h3>
-                  <p>{Math.round(studentData.marks?.finalReport) || '0'}/25</p>
-                </div>
-                <TrophyOutlined className="stat-icon" />
-              </div>
-            </div>
-
-            <div className="stat-card">
-              <div className="stat-content">
-                <div>
-                  <h3>Slot {studentData.sstudentData.slot} Final Presentation</h3>
-                  <p>{Math.round(studentData.marks?.finalPresentation) || '0'}/15</p>
-                </div>
-                <TrophyOutlined className="stat-icon" />
-              </div>
-            </div>
-
-            <div className="stat-card">
-              <div className="stat-content">
-                <div>
-                  <h3>Slot {studentData.sstudentData.slot} Total Marks</h3>
-                  <p>{Math.round(totalMarks || 0)}/100</p>
-                </div>
-                <TrophyOutlined className="stat-icon" />
-              </div>
-            </div>
-
-            <div className="stat-card">
-              <div className="stat-content">
-                <div>
-                  <h3>Slot {studentData.sstudentData.slot} Grade</h3>
-                  <p>{studentData.marks?.grade || 'Not Qualified'} ({getGrade(studentData.marks?.totalMarks)})</p>
-                </div>
-                <TrophyOutlined className="stat-icon" />
-              </div>
-            </div>
-
-            <div className="stat-card">
-              <div className="stat-content">
-                <div>
-                  <h3>Slot {studentData.sstudentData.slot} Attendance</h3>
-                  <p>{studentData.sstudentData.attendance?.presentDays || '0'}/7</p>
-                </div>
-                <CalendarOutlined className="stat-icon" />
-              </div>
-            </div>
-          </>
-        ) : (
-          // Show original stats
-          <>
-            <div className="stat-card">
-              <div className="stat-content">
-                <div>
-                  <h3>Days Completed</h3>
-                  <p>{completedDays || '0'}/7</p>
-                </div>
-                <CalendarOutlined className="stat-icon" />
-              </div>
-            </div>
-
-            <div className="stat-card">
-              <div className="stat-content">
-                <div>
-                  <h3>Faculty Mentor Id</h3>
-                  <p>{studentData.mentorId || 'Not Assigned'}</p>
-                </div>
-                <UserOutlined className="stat-icon" />
-              </div>
-            </div>
-
-            {studentData.marks?.completed !== null && (
-              <>
-                <div className="stat-card">
-                  <div className="stat-content">
-                    <div>
-                      <h3>Internal Marks</h3>
-                      <p>{Number(studentData.marks?.internalMarks) || '0'}/60</p>
-                    </div>
-                    <TrophyOutlined className="stat-icon" />
+        <div className="stat-card" style={{ gridColumn: '1 / -1', background: '#fff', border: '2px solid #014a01' }}>
+          <div style={{ padding: '10px 0' }}>
+            <h3 style={{ color: '#014a01', fontSize: '1.2rem', marginBottom: '20px', borderBottom: '2px solid #e8f5e9', paddingBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <TrophyOutlined /> Performance Overview (100 Marks Rubric)
+            </h3>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
+              {evalComponents.map((c, idx) => (
+                <div key={idx} style={{ background: '#f9f9f9', padding: '15px', borderRadius: '10px', border: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: '#666', fontWeight: '600' }}>{c.label}</p>
+                    <p style={{ margin: '4px 0 0', fontSize: '0.75rem', color: '#999' }}>Weightage: {c.weight}</p>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <span style={{ fontSize: '1.4rem', fontWeight: '800', color: '#014a01' }}>{c.score}</span>
+                    <span style={{ fontSize: '0.9rem', color: '#888' }}> / {c.max}</span>
                   </div>
                 </div>
+              ))}
+            </div>
 
-                <div className="stat-card">
-                  <div className="stat-content">
-                    <div>
-                      <h3>Final Report</h3>
-                      <p>{Number(studentData.marks?.finalReport) || '0'}/25</p>
-                    </div>
-                    <TrophyOutlined className="stat-icon" />
-                  </div>
+            <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '2px dashed #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '40px' }}>
+                <div>
+                  <p style={{ margin: 0, fontSize: '0.9rem', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>Total Score</p>
+                  <p style={{ margin: 0, fontSize: '2.5rem', fontWeight: '900', color: '#014a01' }}>{Math.round(totalMarks)}<span style={{ fontSize: '1.2rem', color: '#888', fontWeight: '400' }}> / 100</span></p>
                 </div>
-
-                <div className="stat-card">
-                  <div className="stat-content">
-                    <div>
-                      <h3>Final Presentation</h3>
-                      <p>{Number(studentData.marks?.finalPresentation) || '0'}/10</p>
-                    </div>
-                    <TrophyOutlined className="stat-icon" />
-                  </div>
+                <div>
+                  <p style={{ margin: 0, fontSize: '0.9rem', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>Final Grade</p>
+                  <p style={{ margin: 0, fontSize: '2.5rem', fontWeight: '900', color: totalMarks >= 50 ? '#014a01' : '#970003' }}>{getGrade(totalMarks)}</p>
                 </div>
-
-                <div className="stat-card">
-                  <div className="stat-content">
-                    <div>
-                      <h3>Total Marks</h3>
-                      <p>{Math.round(studentData.marks?.totalMarks || 0)}/100</p>
-                    </div>
-                    <TrophyOutlined className="stat-icon" />
-                  </div>
+              </div>
+              
+              {eligibleSlot && (
+                <div style={{ background: '#fff8e1', padding: '15px 20px', borderRadius: '10px', border: '1px solid #ffe082', maxWidth: '350px' }}>
+                  <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: '700', color: '#e65100' }}>Slot Registration Available!</p>
+                  <p style={{ margin: '4px 0 10px', fontSize: '0.8rem', color: '#666' }}>You are eligible for Slot {eligibleSlot} to improve your marks.</p>
+                  <Button type="primary" onClick={() => showModal(eligibleSlot)} style={{ background: '#e65100', border: 'none' }}>Register for Slot {eligibleSlot}</Button>
                 </div>
-
-                <div className="stat-card">
-                  <div className="stat-content">
-                    <div>
-                      <h3>Grade</h3>
-                      <p>{studentData.marks?.grade || 'Not Qualified'} ({getGrade(studentData.marks?.totalMarks)})</p>
-                    </div>
-                    <TrophyOutlined className="stat-icon" />
-                  </div>
-                </div>
-
-                {eligibleSlot && (
-                  <div className="stat-card slot-registration-card">
-                    <div className="stat-content">
-                      <div>
-                        <h3>Additional Slot Registration</h3>
-                        <p>You are eligible for Slot {eligibleSlot}!</p>
-                        <Button 
-                          type="primary" 
-                          onClick={() => showModal(eligibleSlot)}
-                          className="slot-registration-button"
-                        >
-                          Register for Slot {eligibleSlot}
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-          </>
-        )}
+              )}
+            </div>
+          </div>
+        </div>
 
         {studentData.certificate?.exists && (
           <div className="stat-card certificate-download-card">
