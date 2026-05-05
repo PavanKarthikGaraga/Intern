@@ -179,7 +179,7 @@ export default function DailyTasks({ studentData }) {
         setActiveDay(firstOpen || 1);
       } catch { setActiveDay(1); }
     })();
-  }, [slot]);
+  }, [slot, username]);
 
   const dayData = useCallback((day) => ({
     ...(saved[day]?.data || {}),
@@ -235,10 +235,13 @@ export default function DailyTasks({ studentData }) {
   return (
     <div className="dt-wrap">
       <div className="dt-header">
-        <h2>📅 Daily Tasks</h2>
-        <p>Problem Statement: <strong>{ps}</strong>
-          {slot && <span style={{marginLeft:8,fontSize:'0.8rem',color:'#888'}}>· Slot {slot}</span>}
-        </p>
+        <div>
+          <h2>📅 Daily Tasks</h2>
+          <p>Problem Statement: <strong>{ps}</strong>
+            {slot && <span style={{marginLeft:8,fontSize:'0.8rem',color:'#888'}}>· Slot {slot}</span>}
+          </p>
+        </div>
+        {activeStatus === 'open' && deadline && <TimerBar deadline={deadline} />}
       </div>
 
       {/* Timeline pills */}
@@ -261,8 +264,7 @@ export default function DailyTasks({ studentData }) {
         })}
       </div>
 
-      {/* Countdown timer */}
-      {activeStatus === 'open' && deadline && <TimerBar deadline={deadline} />}
+      {/* Countdown timer moved to header */}
 
       {/* Day card */}
       <div className="dt-card">

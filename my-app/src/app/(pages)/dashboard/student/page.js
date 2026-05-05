@@ -13,7 +13,7 @@ import Lead from './_components/Lead/page';
 import Reports from './_components/submissions/reports';
 import FinalReport from './_components/finalReport/page';
 import ProblemStatement from './_components/problemStatment/page';
-import SurveyQuestions from './_components/survey/page';
+
 import DailyTasks from './_components/dailyTasks/page';
 import EvaluationPlan from './_components/evaluationPlan/page';
 
@@ -116,12 +116,6 @@ export default function StudentDashboard() {
                 onClick={() => handleSectionClick('daily-tasks')}>
                 <span className="item-label">Daily Tasks</span>
               </button>
-              {studentData?.problemStatementData && (
-                <button className={`sidebar-item ${activeSection === 'survey' ? 'active' : ''}`}
-                  onClick={() => handleSectionClick('survey')}>
-                  <span className="item-label">Survey Questions</span>
-                </button>
-              )}
             </>
           )}
 
@@ -150,9 +144,7 @@ export default function StudentDashboard() {
            activeSection === 'lead'             ? <Lead studentData={studentData} /> :
            // Slot-gated
            activeSection === 'daily-tasks' && slotEnabled  ? <DailyTasks studentData={studentData} /> :
-           activeSection === 'survey'      && slotEnabled  ? <SurveyQuestions studentData={studentData} /> :
-           // Fallback if slot not enabled but somehow navigated here
-           !slotEnabled && (activeSection === 'daily-tasks' || activeSection === 'survey') ? (
+           !slotEnabled && (activeSection === 'daily-tasks') ? (
              <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'60px 24px', textAlign:'center', gap:16 }}>
                <div style={{ fontSize:'3rem' }}>🔒</div>
                <h2 style={{ fontSize:'1.4rem', fontWeight:700, color:'#014a01', margin:0 }}>Slot Not Active Yet</h2>
