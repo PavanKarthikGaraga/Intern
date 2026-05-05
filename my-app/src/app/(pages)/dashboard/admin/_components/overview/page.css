@@ -5,7 +5,7 @@
   padding: 28px 32px;
   background: linear-gradient(135deg, #f0f7f0 0%, #f8fdf8 100%);
   min-height: 100vh;
-  font-family: 'Inter', sans-serif;
+  font-family: inherit;
 }
 
 /* ── Header ── */

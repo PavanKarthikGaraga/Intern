@@ -2,13 +2,13 @@
 import "./globals.css";
 import { AuthProvider } from "../context/AuthContext";
 import { Toaster } from 'react-hot-toast';
-import { Poppins } from 'next/font/google';
+import { Lexend } from 'next/font/google';
 
-const poppins = Poppins({
+const lexend = Lexend({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
+  weight: ['300', '400', '500', '600', '700', '800'],
   display: 'swap',
-  variable: '--font-poppins',
+  variable: '--font-lexend',
 });
 
 export const metadata = {
@@ -18,7 +18,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" suppressHydrationWarning className={poppins.variable}>
+    <html lang="en" suppressHydrationWarning className={lexend.variable}>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </head>
