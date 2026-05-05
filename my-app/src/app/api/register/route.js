@@ -53,6 +53,14 @@ export async function POST(request) {
         });
       }
       
+      // Validate ID number format
+      if (!/^(24|25)\d{8}$/.test(formData.studentInfo.idNumber)) {
+        return new Response(JSON.stringify({ success: false, message: 'Invalid ID number. Must be exactly 10 digits and start with 24 or 25.' }), {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+      
       const [existingUser] = await db.query(
         'SELECT username, phoneNumber, season FROM registrations WHERE username = ? OR phoneNumber = ?',
         [formData.studentInfo.idNumber, formData.studentInfo.phoneNumber]

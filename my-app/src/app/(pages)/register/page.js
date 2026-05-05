@@ -238,8 +238,8 @@ export default function Register() {
           return;
         }
 
-        if (formData.studentInfo.idNumber.length !== 10) {
-          toast.error('Please enter a valid 10-digit ID number');
+        if (!/^(24|25)\d{8}$/.test(formData.studentInfo.idNumber)) {
+          toast.error('Please enter a valid 10-digit ID number starting with 24 or 25');
           return;
         }
 
@@ -326,6 +326,12 @@ export default function Register() {
       // Phone number validation
       if (formData.studentInfo.phoneNumber.length !== 10) {
         toast.error('Please enter a valid 10-digit phone number');
+        return;
+      }
+  
+      // ID number validation
+      if (!/^(24|25)\d{8}$/.test(formData.studentInfo.idNumber)) {
+        toast.error('Please enter a valid 10-digit ID number starting with 24 or 25');
         return;
       }
   
@@ -872,7 +878,7 @@ export default function Register() {
                 <label>ID Number *</label>
                 <input
                   type="text"
-                  placeholder="Enter 10-digit ID"
+                  placeholder="Enter 10-digit ID (starts with 24/25)"
                   value={formData.studentInfo.idNumber}
                   onChange={(e) => {
                     const value = e.target.value.replace(/\D/g, ''); // Remove non-digits
@@ -880,7 +886,7 @@ export default function Register() {
                       handleInputChange('studentInfo', 'idNumber', value);
                     }
                   }}
-                  pattern="[0-9]{10}"
+                  pattern="(24|25)[0-9]{8}"
                 />
               </div>
 
