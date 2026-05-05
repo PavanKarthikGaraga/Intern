@@ -26,6 +26,7 @@ import SFinalProfile from './_components/sfinal/page';
 import ProblemStatements from './_components/problemStatements/page';
 import ActivityLogs from './_components/activityLogs/page';
 import DailyTasksViewer from '../studentLead/_components/dailyTasksViewer/page';
+import TaskUnlocker from './_components/taskUnlocker/page';
 import SlotControl from './_components/slotControl/page';
 
 
@@ -255,6 +256,13 @@ export default function AdminDashboard() {
           </button>
 
           <button
+            className={`sidebar-item ${activeSection === 'task-unlocker' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('task-unlocker')}
+          >
+            <span className="item-label">Task Unlocker</span>
+          </button>
+
+          <button
             className={`sidebar-item ${activeSection === 'reset-password' ? 'active' : ''}`}
             onClick={() => handleSectionClick('reset-password')}
           >
@@ -348,6 +356,7 @@ export default function AdminDashboard() {
            activeSection === 'activity-logs' ? <ActivityLogs /> :
            activeSection === 'slot-control' ? <SlotControl /> :
            activeSection === 'daily-tasks' ? <DailyTasksViewer /> :
+           activeSection === 'task-unlocker' ? <TaskUnlocker /> :
            <ChangePassword />}
         </main>
       </div>

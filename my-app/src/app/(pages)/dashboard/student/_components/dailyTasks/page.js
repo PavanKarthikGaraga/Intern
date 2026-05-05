@@ -17,16 +17,20 @@ const SLOT_START = {
   9: new Date('2026-07-06T00:00:00+05:30'),
 };
 
-/** 11:59:59 PM IST on the Nth day of the slot */
-function dayDeadline(slot, dayNum) {
+/** Window for the Nth day of the slot */
+function dayWindow(slot, dayNum) {
   const start = SLOT_START[slot];
-  if (!start) return null;
+  if (!start) return { open: null, close: null };
   const d = new Date(start);
   d.setDate(d.getDate() + (dayNum - 1));
-  // 23:59:59.999 in IST = UTC+5:30
-  // We store as absolute epoch so it's device-clock-independent when compared with serverNow()
-  d.setHours(23, 59, 59, 999);
-  return d;
+  
+  const open = new Date(d);
+  open.setHours(0, 0, 0, 0); // 12:00 am IST
+  
+  const close = new Date(d);
+  close.setHours(23, 59, 59, 999); // 11:59:59 PM IST
+  
+  return { open, close };
 }
 
 /* Offset between server IST epoch and device clock — set once on mount */
@@ -34,33 +38,37 @@ let _serverOffset = 0;   // ms
 function serverNow() { return Date.now() + _serverOffset; }
 
 function dayLabel(slot, dayNum) {
-  const dl = dayDeadline(slot, dayNum);
-  if (!dl) return '';
-  return dl.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
+  const { close } = dayWindow(slot, dayNum);
+  if (!close) return '';
+  return close.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
 }
 
 const DEMO_ID = '2500099999';
 
-/**
- * Status: 'upcoming' | 'open' | 'submitted' | 'missed' | 'locked'
- */
-function getDayStatus(dayNum, slot, saved, username) {
+function getDayStatus(dayNum, slot, saved, username, unlockedDays = []) {
   // ── Demo bypass: all days open regardless of date ──
   if (username === DEMO_ID) {
     return saved[dayNum] ? 'submitted' : 'open';
   }
   if (!slot || !SLOT_START[slot]) return 'upcoming';
-  const dl = dayDeadline(slot, dayNum);
+  
+  const { open, close } = dayWindow(slot, dayNum);
   const now = serverNow();   // ← server-authoritative IST time
   const isSubmitted = !!saved[dayNum];
+  const isUnlocked = unlockedDays.includes(dayNum);
+
   if (isSubmitted) return 'submitted';
-  if (dl && now > dl.getTime()) return 'missed';
-  if (dayNum === 1) {
-    return now >= SLOT_START[slot].getTime() ? 'open' : 'upcoming';
+  if (isUnlocked) return 'unlocked'; // Admin unlocked this day
+
+  // Check previous days first to see if we should cascade lock
+  if (dayNum > 1) {
+    const prevStatus = getDayStatus(dayNum - 1, slot, saved, username, unlockedDays);
+    if (prevStatus === 'missed' || prevStatus === 'locked') return 'locked';
   }
-  const prevStatus = getDayStatus(dayNum - 1, slot, saved, username);
-  if (prevStatus === 'missed' || prevStatus === 'locked') return 'locked';
-  if (prevStatus !== 'submitted') return 'upcoming';
+
+  if (now > close.getTime()) return 'missed';
+  if (now < open.getTime()) return 'upcoming';
+  
   return 'open';
 }
 
@@ -89,28 +97,73 @@ const DAY_META = [
 ];
 
 /* ── Timer bar component ── */
-function TimerBar({ deadline }) {
+function TimerBar({ openTime, closeTime, status }) {
   const [tick, setTick] = useState('');
+  const [mode, setMode] = useState('');
+
   useEffect(() => {
+    if (status === 'unlocked') {
+      setMode('unlocked');
+      return;
+    }
     const update = () => {
-      const diff = deadline - serverNow();   // ← server time
-      if (diff <= 0) { setTick('Submission closed'); return; }
-      const h = Math.floor(diff / 3600000);
-      const m = Math.floor((diff % 3600000) / 60000);
-      const s = Math.floor((diff % 60000) / 1000);
-      setTick(`${h}h ${m}m ${s}s`);
+      const now = serverNow();
+      if (now < openTime) {
+        setMode('upcoming');
+        const diff = openTime - now;
+        const h = Math.floor(diff / 3600000);
+        const m = Math.floor((diff % 3600000) / 60000);
+        const s = Math.floor((diff % 60000) / 1000);
+        setTick(`${h}h ${m}m ${s}s`);
+      } else if (now <= closeTime) {
+        setMode('open');
+        const diff = closeTime - now;
+        const h = Math.floor(diff / 3600000);
+        const m = Math.floor((diff % 3600000) / 60000);
+        const s = Math.floor((diff % 60000) / 1000);
+        setTick(`${h}h ${m}m ${s}s`);
+      } else {
+        setMode('closed');
+        setTick('Submission closed');
+      }
     };
     update();
     const id = setInterval(update, 1000);
     return () => clearInterval(id);
-  }, [deadline]);
-  const urgent = (deadline - serverNow()) < 3 * 3600000 && (deadline - serverNow()) > 0;
+  }, [openTime, closeTime, status]);
+
+  if (mode === 'unlocked') {
+    return (
+      <div className="dt-timer-bar" style={{ background: '#fff3e0', borderColor: '#ffe0b2' }}>
+        <span className="dt-timer-label" style={{ color: '#e65100', display: 'flex', alignItems: 'center', gap: '6px' }}><FaCheckCircle /> Special Access Granted</span>
+        <span className="dt-timer-date" style={{ color: '#e65100' }}>Admin has opened this day for submission. No deadline applied.</span>
+      </div>
+    );
+  }
+
+  if (mode === 'upcoming') {
+    return (
+      <div className="dt-timer-bar">
+        <span className="dt-timer-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><FaClock /> Submission window opens in:</span>
+        <span className="dt-timer-count">{tick}</span>
+        <span className="dt-timer-date">
+          Opens: {new Date(openTime).toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit', hour12:true })}
+        </span>
+      </div>
+    );
+  }
+
+  if (mode === 'closed') {
+    return null;
+  }
+
+  const urgent = (closeTime - serverNow()) < 3 * 3600000 && (closeTime - serverNow()) > 0;
   return (
     <div className="dt-timer-bar">
       <span className="dt-timer-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><FaClock /> Submission window closes in:</span>
       <span className={`dt-timer-count${urgent ? ' urgent' : ''}`}>{tick}</span>
       <span className="dt-timer-date">
-        Deadline: {deadline.toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit', hour12:true })}
+        Deadline: {new Date(closeTime).toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit', hour12:true })}
       </span>
     </div>
   );
@@ -139,8 +192,8 @@ function CompletedBar({ deadline, submittedAt }) {
 
 /* ── Lock overlay ── */
 function LockedView({ status, dayNum, slot }) {
-  const dl = slot ? dayDeadline(slot, dayNum) : null;
-  const dateStr = dl ? dl.toLocaleDateString('en-IN', { day:'numeric', month:'long' }) : '';
+  const { close } = slot ? dayWindow(slot, dayNum) : { close: null };
+  const dateStr = close ? close.toLocaleDateString('en-IN', { day:'numeric', month:'long' }) : '';
   if (status === 'missed') return (
     <div className="dt-locked-overlay missed-lock">
       <div className="lock-icon" style={{ fontSize: '2.5rem', marginBottom: '10px' }}><FaTimesCircle /></div>
@@ -152,17 +205,14 @@ function LockedView({ status, dayNum, slot }) {
     <div className="dt-locked-overlay missed-lock">
       <div className="lock-icon" style={{ fontSize: '2.5rem', marginBottom: '10px' }}><FaLock /></div>
       <h3>Day {dayNum} Locked</h3>
-      <p>A previous day was not submitted in time. All subsequent days are locked.<br/>Contact your mentor if you believe this is an error.</p>
+      <p>A previous day was not submitted in time. All subsequent days are locked.<br/>Please contact your mentor.</p>
     </div>
   );
   return (
     <div className="dt-locked-overlay">
       <div className="lock-icon" style={{ fontSize: '2.5rem', marginBottom: '10px' }}><FaHourglassHalf /></div>
       <h3>Day {dayNum} Not Yet Available</h3>
-      <p>{dayNum === 1
-        ? `This day opens on ${dateStr} when your slot begins.`
-        : `Complete and submit Day ${dayNum - 1} first to unlock this day.`}
-      </p>
+      <p>This day's submission window has not opened yet.</p>
     </div>
   );
 }
@@ -172,6 +222,7 @@ export default function DailyTasks({ studentData }) {
   const [activeDay, setActiveDay] = useState(null);
   const [saved, setSaved]     = useState({});
   const [draft, setDraft]     = useState({});
+  const [unlockedDays, setUnlockedDays] = useState([]);
   const [saving, setSaving]   = useState(false);
   const [msg, setMsg]         = useState('');
   const [msgType, setMsgType] = useState('ok');
@@ -193,10 +244,13 @@ export default function DailyTasks({ studentData }) {
         const res  = await fetch('/api/dashboard/student/daily-tasks');
         const json = await res.json();
         const tasks = (json.success && json.tasks) ? json.tasks : {};
+        const unlocked = (json.success && json.unlockedDays) ? json.unlockedDays : [];
         setSaved(tasks);
+        setUnlockedDays(unlocked);
+        
         const firstOpen = [1,2,3,4,5,6,7].find(d => {
-          const st = getDayStatus(d, slot, tasks, username);
-          return st === 'open' || st === 'submitted';
+          const st = getDayStatus(d, slot, tasks, username, unlocked);
+          return st === 'open' || st === 'submitted' || st === 'unlocked';
         });
         setActiveDay(firstOpen || 1);
       } catch { setActiveDay(1); }
@@ -262,12 +316,12 @@ export default function DailyTasks({ studentData }) {
 
   if (activeDay === null) return <div className="dt-wrap"><p style={{color:'#888'}}>Loading…</p></div>;
 
-  const statuses    = Object.fromEntries([1,2,3,4,5,6,7].map(d => [d, getDayStatus(d, slot, saved, username)]));
+  const statuses    = Object.fromEntries([1,2,3,4,5,6,7].map(d => [d, getDayStatus(d, slot, saved, username, unlockedDays)]));
   const meta        = DAY_META[activeDay - 1];
   const activeStatus = statuses[activeDay];
   const isSaved     = activeStatus === 'submitted' && !draft[activeDay];
-  const deadline    = slot ? dayDeadline(slot, activeDay) : null;
-  const isEditable  = activeStatus === 'open';
+  // Editable if open or unlocked
+  const isEditable  = activeStatus === 'open' || activeStatus === 'unlocked';
 
   return (
     <div className="dt-wrap">
@@ -278,15 +332,23 @@ export default function DailyTasks({ studentData }) {
             {slot && <span style={{marginLeft:8,fontSize:'0.8rem',color:'#888'}}>· Slot {slot}</span>}
           </p>
         </div>
-        {activeStatus === 'open' && deadline && <TimerBar deadline={deadline} />}
-        {activeStatus === 'submitted' && deadline && saved[activeDay]?.submittedAt && <CompletedBar deadline={deadline} submittedAt={saved[activeDay].submittedAt} />}
       </div>
+
+      {/* Timer moved above timeline */}
+      {isSaved ? (
+        <CompletedBar deadline={slot ? dayWindow(slot, activeDay).close : new Date()} submittedAt={saved[activeDay]?.submittedAt} />
+      ) : activeStatus === 'open' || activeStatus === 'upcoming' ? (
+        <TimerBar openTime={dayWindow(slot, activeDay).open} closeTime={dayWindow(slot, activeDay).close} status={activeStatus} />
+      ) : activeStatus === 'unlocked' ? (
+        <TimerBar openTime={null} closeTime={null} status="unlocked" />
+      ) : null}
 
       {/* Timeline pills */}
       <div className="dt-timeline">
         {DAY_META.map(m => {
           const st = statuses[m.day];
-          const canClick = st === 'open' || st === 'submitted';
+          // Can click if it's not upcoming
+          const canClick = st !== 'upcoming';
           return (
             <button
               key={m.day}

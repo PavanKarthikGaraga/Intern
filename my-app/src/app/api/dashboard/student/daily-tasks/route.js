@@ -93,7 +93,23 @@ export async function GET() {
         };
       });
 
-      return NextResponse.json({ success: true, tasks: taskMap });
+      // Fetch unlocked days
+      await db.execute(`
+        CREATE TABLE IF NOT EXISTS unlockedDays (
+          username VARCHAR(255) NOT NULL,
+          day TINYINT NOT NULL,
+          unlockedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          PRIMARY KEY (username, day)
+        )
+      `);
+      
+      const [unlockedRows] = await db.execute(
+        'SELECT day FROM unlockedDays WHERE username = ?',
+        [payload.username]
+      );
+      const unlockedDays = unlockedRows.map(r => r.day);
+
+      return NextResponse.json({ success: true, tasks: taskMap, unlockedDays });
     } finally {
       db.release();
     }
