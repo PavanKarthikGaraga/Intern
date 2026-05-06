@@ -94,7 +94,7 @@ const getDaysMeta = (studentData, survey) => {
   const s2 = survey?.[1]?.stakeholder || 'Stakeholder 2';
   const s3 = survey?.[2]?.stakeholder || 'Stakeholder 3';
   return [
-    { day:1, icon: <FaClipboardList />, title:'Day 1 – Problem Statement Understanding', subtitle:'Write your inference and analysis (minimum 100 words)' },
+    { day:1, icon: <FaClipboardList />, title:'Day 1 – Problem Statement Understanding', subtitle:'Write why you chose this problem statement, your understanding, and identify the stakeholders (minimum 100 words)' },
     { day:2, icon: <FaHandshake />, title:`Day 2 – ${s1} Survey`,  subtitle:`Interview people from the ${s1} group` },
     { day:3, icon: <FaHandshake />, title:`Day 3 – ${s2} Survey`,  subtitle:`Interview people from the ${s2} group` },
     { day:4, icon: <FaHandshake />, title:`Day 4 – ${s3} Survey`,  subtitle:`Interview people from the ${s3} group` },
@@ -645,9 +645,9 @@ function Day1({ data, onChange, ps, readOnly }) {
         <h4>Task: Problem Statement Understanding</h4>
         <ul>
           <li>Read your problem statement carefully: <strong>{ps}</strong></li>
-          <li>Research using internet, books, or local observation</li>
-          <li>Write your inference and analysis — <strong>minimum 100 words</strong></li>
-          <li>Cover: what the problem is, why it exists, who is affected, and possible root causes</li>
+          <li>Research your topic using the internet or books.</li>
+          <li>Write your understanding — <strong>minimum 100 words</strong></li>
+          <li>Cover: why you chose this problem statement, your understanding of the problem, and identify the key stakeholders.</li>
         </ul>
       </div>
       <div className="dt-textarea-wrap">
