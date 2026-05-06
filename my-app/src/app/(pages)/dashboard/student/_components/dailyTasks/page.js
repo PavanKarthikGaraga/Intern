@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import Image from 'next/image';
 import { surveyData as SURVEY } from './surveyDataShared';
 import { getTemplate } from './caseStudyTemplates';
+import { getInterventionTemplate } from './interventionTemplates';
 import { FaCheck, FaLock, FaTimes, FaHourglassHalf, FaPlay, FaClipboardList, FaHandshake, FaChartBar, FaCamera, FaVideo, FaClock, FaCheckCircle, FaTimesCircle, FaExclamationTriangle, FaCalendarAlt, FaFilePdf } from 'react-icons/fa';
 import './dailyTasks.css';
 
@@ -394,7 +395,7 @@ export default function DailyTasks({ studentData }) {
                 {activeDay === 3 && <DaySurvey day={3} personCount={3} stakeholderIdx={1} survey={survey} data={dayData(3)} onChange={(f,v) => setDayField(3,f,v)} readOnly={isSaved} onFinalSubmit={handleSave} saving={saving} />}
                 {activeDay === 4 && <DaySurvey day={4} personCount={3} stakeholderIdx={2} survey={survey} data={dayData(4)} onChange={(f,v) => setDayField(4,f,v)} readOnly={isSaved} onFinalSubmit={handleSave} saving={saving} />}
                 {activeDay === 5 && <Day5 saved={saved} survey={survey} data={dayData(5)} onChange={(f,v) => setDayField(5,f,v)} readOnly={isSaved} />}
-                {activeDay === 6 && <Day6 data={dayData(6)} onChange={(f,v) => setDayField(6,f,v)} readOnly={isSaved} />}
+                {activeDay === 6 && <Day6 data={dayData(6)} onChange={(f,v) => setDayField(6,f,v)} readOnly={isSaved} studentData={studentData} />}
                 {activeDay === 7 && <Day7 data={dayData(7)} onChange={(f,v) => setDayField(7,f,v)} readOnly={isSaved} studentData={studentData} />}
 
                 {activeDay !== 2 && activeDay !== 3 && activeDay !== 4 && (
@@ -826,34 +827,203 @@ function Day5({ saved, survey, data, onChange, readOnly }) {
   );
 }
 
+/* ── Intervention Generator ── */
+function InterventionGenerator({ studentData, readOnly, data, onChange }) {
+  const domain = studentData?.selectedDomain || '';
+  const template = getInterventionTemplate(domain);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const inputStyle = (ro) => ({
+    width: '100%', padding: '7px 10px', borderRadius: 6,
+    border: '1px solid #cbd5e1', outline: 'none', fontSize: '0.88rem',
+    background: ro ? '#f9f9f9' : '#fff', resize: 'vertical',
+  });
+
+  const handlePhotoUpload = (e, key) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        onChange(key, reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const generatePDF = async () => {
+    setIsGenerating(true);
+    try {
+      const { jsPDF } = await import('jspdf');
+      const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+      const PW = doc.internal.pageSize.getWidth();
+      const PH = doc.internal.pageSize.getHeight();
+      const margin = 15;
+      const contentW = PW - margin * 2;
+
+      const drawBorder = () => {
+        doc.setDrawColor(30, 60, 30);
+        doc.setLineWidth(0.8);
+        doc.rect(8, 8, PW - 16, PH - 16);
+        doc.setLineWidth(0.3);
+        doc.rect(10, 10, PW - 20, PH - 20);
+      };
+
+      const writeText = (text, fontSize, style, color, align, yPos) => {
+        doc.setFontSize(fontSize);
+        doc.setFont('times', style);
+        doc.setTextColor(...color);
+        const lines = doc.splitTextToSize(text, contentW);
+        doc.text(lines, align === 'center' ? PW / 2 : margin, yPos, { align });
+        return lines.length * (fontSize * 0.4);
+      };
+
+      // Page 1
+      drawBorder();
+      let y = margin + 10;
+      
+      doc.setFontSize(11);
+      doc.setFont('times', 'bold');
+      doc.setTextColor(40, 80, 40);
+      doc.text('KALASALINGAM ACADEMY OF RESEARCH AND EDUCATION', PW / 2, y, { align: 'center' });
+      y += 7;
+      doc.setFontSize(9);
+      doc.setFont('times', 'normal');
+      doc.setTextColor(80, 80, 80);
+      doc.text('(Deemed to be University under Section 3 of UGC Act 1956)', PW / 2, y, { align: 'center' });
+      y += 10;
+      doc.setDrawColor(30, 80, 30);
+      doc.setLineWidth(0.5);
+      doc.line(margin, y, PW - margin, y);
+      y += 15;
+
+      doc.setFontSize(16);
+      doc.setFont('times', 'bold');
+      doc.setTextColor(0, 0, 0);
+      const titleText = (data.activityTitle === 'Other' ? data.customTitle : data.activityTitle) || 'Intervention Activity';
+      const titleLines = doc.splitTextToSize(titleText, contentW);
+      doc.text(titleLines, PW/2, y, { align: 'center' });
+      
+      doc.setLineWidth(0.5);
+      doc.setDrawColor(0,0,0);
+      doc.line(PW/2 - 40, y + 2, PW/2 + 40, y + 2);
+      y += titleLines.length * 8 + 10;
+
+      if (data.coverPhoto) {
+        doc.addImage(data.coverPhoto, 'JPEG', margin, y, contentW, 90);
+        y += 100;
+      }
+
+      y += writeText(data.coverDesc || '', 12, 'normal', [0,0,0], 'left', y);
+
+      // Page 2
+      doc.addPage();
+      drawBorder();
+      y = margin + 10;
+      if (data.photo2) {
+        doc.addImage(data.photo2, 'JPEG', margin, y, contentW, 100);
+        y += 110;
+      }
+      y += writeText(data.photo2Desc || '', 12, 'normal', [0,0,0], 'left', y) + 10;
+
+      // Page 3
+      doc.addPage();
+      drawBorder();
+      y = margin + 10;
+      if (data.photo3) {
+        doc.addImage(data.photo3, 'JPEG', margin, y, contentW, 100);
+        y += 110;
+      }
+      y += writeText(data.photo3Desc || '', 12, 'normal', [0,0,0], 'left', y) + 10;
+
+      doc.save(`Day6_Intervention_${studentData?.rollNumber || 'Report'}.pdf`);
+    } catch (e) {
+      console.error(e);
+      alert('Failed to generate PDF. Ensure all uploaded photos are valid images.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  return (
+    <div className="cs-generator-box" style={{ marginTop: '20px', padding: '20px', backgroundColor: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
+      <h3 style={{ margin: '0 0 10px 0', color: '#166534', display: 'flex', alignItems: 'center', gap: '8px' }}><FaFilePdf /> Intervention Activity Report Generator</h3>
+      <p style={{ fontSize: '0.88rem', color: '#15803d', marginBottom: '20px' }}>
+        <strong>🎯 Objective:</strong> {template.objective}<br/>
+        <strong>✅ Requirements:</strong> {template.requirements}
+      </p>
+      
+      <div style={{ marginBottom: '15px' }}>
+        <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', marginBottom: '6px' }}>Select Activity</label>
+        <select value={data.activityTitle || ''} onChange={e => !readOnly && onChange('activityTitle', e.target.value)} style={inputStyle(readOnly)} disabled={readOnly}>
+          <option value="">-- Select an Activity --</option>
+          {template.activities.map(act => <option key={act} value={act}>{act}</option>)}
+          <option value="Other">Other (Specify below)</option>
+        </select>
+      </div>
+
+      {data.activityTitle === 'Other' && (
+        <div style={{ marginBottom: '15px' }}>
+          <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', marginBottom: '6px' }}>Custom Activity Title</label>
+          <input type="text" value={data.customTitle || ''} onChange={e => !readOnly && onChange('customTitle', e.target.value)} style={inputStyle(readOnly)} readOnly={readOnly} placeholder="Enter your activity title" />
+        </div>
+      )}
+
+      {/* Page 1 Details */}
+      <div style={{ marginBottom: '15px', padding: '15px', backgroundColor: '#fff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+        <h4 style={{ margin: '0 0 10px 0', fontSize: '0.95rem' }}>📄 Page 1: Cover Photo & Description</h4>
+        <input type="file" accept="image/*" onChange={e => handlePhotoUpload(e, 'coverPhoto')} disabled={readOnly} style={{ marginBottom: '10px', fontSize: '0.8rem' }} />
+        {data.coverPhoto && <div style={{ marginBottom: '10px', fontSize: '0.75rem', color: '#16a34a' }}>✅ Cover Photo Uploaded</div>}
+        <textarea placeholder="Description of the activity (Min 70 words)..." value={data.coverDesc || ''} onChange={e => !readOnly && onChange('coverDesc', e.target.value)} style={{...inputStyle(readOnly), minHeight: '100px'}} readOnly={readOnly} />
+      </div>
+
+      {/* Page 2 Details */}
+      <div style={{ marginBottom: '15px', padding: '15px', backgroundColor: '#fff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+        <h4 style={{ margin: '0 0 10px 0', fontSize: '0.95rem' }}>📄 Page 2: Second Photo & Description</h4>
+        <input type="file" accept="image/*" onChange={e => handlePhotoUpload(e, 'photo2')} disabled={readOnly} style={{ marginBottom: '10px', fontSize: '0.8rem' }} />
+        {data.photo2 && <div style={{ marginBottom: '10px', fontSize: '0.75rem', color: '#16a34a' }}>✅ Photo 2 Uploaded</div>}
+        <textarea placeholder="Description of this photo (Min 30 words)..." value={data.photo2Desc || ''} onChange={e => !readOnly && onChange('photo2Desc', e.target.value)} style={{...inputStyle(readOnly), minHeight: '80px'}} readOnly={readOnly} />
+      </div>
+
+      {/* Page 3 Details */}
+      <div style={{ marginBottom: '15px', padding: '15px', backgroundColor: '#fff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+        <h4 style={{ margin: '0 0 10px 0', fontSize: '0.95rem' }}>📄 Page 3: Third Photo & Description</h4>
+        <input type="file" accept="image/*" onChange={e => handlePhotoUpload(e, 'photo3')} disabled={readOnly} style={{ marginBottom: '10px', fontSize: '0.8rem' }} />
+        {data.photo3 && <div style={{ marginBottom: '10px', fontSize: '0.75rem', color: '#16a34a' }}>✅ Photo 3 Uploaded</div>}
+        <textarea placeholder="Description of this photo (Min 30 words)..." value={data.photo3Desc || ''} onChange={e => !readOnly && onChange('photo3Desc', e.target.value)} style={{...inputStyle(readOnly), minHeight: '80px'}} readOnly={readOnly} />
+      </div>
+
+      <button onClick={generatePDF} disabled={isGenerating} style={{
+        padding: '10px 20px', backgroundColor: '#16a34a', color: 'white', border: 'none', borderRadius: '6px', cursor: isGenerating ? 'not-allowed' : 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px'
+      }}>
+        {isGenerating ? '⏳ Generating PDF...' : '⬇ Download Intervention PDF'}
+      </button>
+    </div>
+  );
+}
+
 /* ── Day 6 ── */
-function Day6({ data, onChange, readOnly }) {
+function Day6({ data, onChange, readOnly, studentData }) {
   const ro = { background: readOnly ? '#f9f9f9' : undefined };
   return (
     <div>
       <div className="dt-info-box" style={{marginBottom:18}}>
         <h4>Task: Intervention Activity Documentation</h4>
         <ul>
-          <li>Use the <strong>Day-2, Day-3 and Day-4 Report generators</strong> to compile your photos and interactions.</li>
-          <li>Upload all generated PDFs to a single Google Drive folder.</li>
-          <li>Ensure the folder/files are <strong>publicly viewable</strong>.</li>
+          <li>Use the <strong>Intervention Activity Report Generator</strong> below to compile your photos and descriptions.</li>
+          <li>Upload the generated PDF to your Google Drive.</li>
+          <li>Ensure the link is <strong>publicly viewable</strong>.</li>
         </ul>
       </div>
 
-      <div className="dt-warning-box">⚠️ Set sharing to <strong>&quot;Anyone with the link can view&quot;</strong>. Private links will NOT be evaluated.</div>
+      <InterventionGenerator data={data} onChange={onChange} readOnly={readOnly} studentData={studentData} />
+
+      <div className="dt-warning-box" style={{marginTop: 20}}>⚠️ Set sharing to <strong>&quot;Anyone with the link can view&quot;</strong>. Private links will NOT be evaluated.</div>
       <div className="dt-link-section">
         <label htmlFor="d6-link">Google Drive Public Link</label>
-        <p>Paste the shareable link to your reports folder here.</p>
+        <p>Paste the shareable link to your intervention report here.</p>
         <input id="d6-link" type="url" className="dt-link-input" placeholder="https://drive.google.com/…"
           value={data.driveLink||''} readOnly={readOnly} style={ro}
           onChange={e => !readOnly && onChange('driveLink', e.target.value)} />
-      </div>
-      <div className="dt-textarea-wrap">
-        <label htmlFor="d6-notes">Brief Description of Intervention Activity</label>
-        <textarea id="d6-notes" className="dt-textarea" style={{minHeight:100,...ro}}
-          placeholder="Summarize your intervention activity and key observations here…"
-          value={data.notes||''} readOnly={readOnly}
-          onChange={e => !readOnly && onChange('notes', e.target.value)} />
       </div>
     </div>
   );
