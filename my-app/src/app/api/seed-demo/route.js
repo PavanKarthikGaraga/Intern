@@ -129,7 +129,7 @@ export async function POST() {
         ]
       );
 
-      // ── 3.5 Dummy Faculty Mentor ─────────────────────────────────────────────
+      // ── 3.5 Demo Faculty Mentor ──────────────────────────────────────────────
       await db.query(
         `INSERT INTO users (name, username, password, role)
          VALUES ('Demo Mentor', 'DEMO_M', 'password123', 'facultyMentor')
@@ -139,6 +139,26 @@ export async function POST() {
         `INSERT INTO facultyMentors (username, name, phoneNumber, email, branch)
          VALUES ('DEMO_M', 'Demo Mentor', '9999000002', 'mentor@kluniversity.in', 'Computer Science & Engineering')
          ON DUPLICATE KEY UPDATE name='Demo Mentor'`
+      );
+
+      // ── 3.6 Demo Student Lead ────────────────────────────────────────────────
+      await db.query(
+        `INSERT INTO users (name, username, password, role)
+         VALUES ('Demo Lead', 'DEMO_SL', 'password123', 'studentLead')
+         ON DUPLICATE KEY UPDATE name='Demo Lead'`
+      );
+      await db.query(
+        `INSERT INTO studentLeads (username, name, phoneNumber, email, branch, slot, facultyMentorId)
+         VALUES ('DEMO_SL', 'Demo Lead', '9999000003', 'demolead@kluniversity.in', 'Computer Science & Engineering', 1, 'DEMO_M')
+         ON DUPLICATE KEY UPDATE facultyMentorId='DEMO_M', slot=1`
+      );
+
+      // ── 3.7 Link demo student → lead → mentor in registrations ───────────────
+      await db.query(
+        `UPDATE registrations
+         SET studentLeadId = 'DEMO_SL', facultyMentorId = 'DEMO_M'
+         WHERE username = ?`,
+        [DEMO_ID]
       );
 
       // ── 4. marks ─────────────────────────────────────────────────────────────
@@ -155,6 +175,7 @@ export async function POST() {
          ON DUPLICATE KEY UPDATE facultyMentorId='DEMO_M', completed=1`,
         [DEMO_ID]
       );
+
 
       // ── 6. verify ────────────────────────────────────────────────────────────
       await db.query(
@@ -205,8 +226,12 @@ export async function POST() {
 
       return NextResponse.json({
         success: true,
-        message: 'Demo student 2500099999 seeded successfully.',
-        login: { username: DEMO_ID, password: `${DEMO_ID}${DEMO_PHONE.slice(-4)}` },
+        message: 'Demo accounts seeded successfully.',
+        accounts: {
+          student:     { username: DEMO_ID,   password: `${DEMO_ID}${DEMO_PHONE.slice(-4)}` },
+          studentLead: { username: 'DEMO_SL', password: 'password123' },
+          mentor:      { username: 'DEMO_M',  password: 'password123' },
+        },
       });
     } finally { db.release(); }
   } catch (e) {
