@@ -12,7 +12,7 @@ export const CASE_STUDY_TEMPLATES = {
     sections: [
       {
         heading: '1. Basic Information',
-        fields: ['Student Name', 'Roll Number', 'Village/Area', 'District', 'Problem Selected', 'Duration (7 Days)'],
+        fields: ['Student Name', 'Roll Number', 'Village/Area', 'District', 'Domain', 'Problem Statement', 'Duration'],
       },
       {
         heading: '2. Problem Description',
@@ -64,7 +64,7 @@ export const CASE_STUDY_TEMPLATES = {
     sections: [
       {
         heading: '1. Basic Details',
-        fields: ['Student Name', 'Roll Number', 'Village/Area', 'District', 'State', 'Problem Selected', 'Duration: 7 Days'],
+        fields: ['Student Name', 'Roll Number', 'Village/Area', 'District', 'State', 'Domain', 'Problem Statement', 'Duration'],
       },
       {
         heading: '2. Problem Description',
@@ -116,7 +116,7 @@ export const CASE_STUDY_TEMPLATES = {
     sections: [
       {
         heading: '1. Basic Details',
-        fields: ['Student Name', 'Roll Number', 'Village/Area Name', 'District', 'State', 'Problem Statement Selected', 'Duration: 7 Days'],
+        fields: ['Student Name', 'Roll Number', 'Village/Area Name', 'District', 'State', 'Domain', 'Problem Statement', 'Duration'],
       },
       {
         heading: '2. Problem Description',
@@ -168,7 +168,7 @@ export const CASE_STUDY_TEMPLATES = {
     sections: [
       {
         heading: '1. Basic Details',
-        fields: ['Student Name', 'Roll Number', 'Village/Area', 'District', 'State', 'Problem Selected', 'Duration: 7 Days'],
+        fields: ['Student Name', 'Roll Number', 'Village/Area', 'District', 'State', 'Domain', 'Problem Statement', 'Duration'],
       },
       {
         heading: '2. Problem Description',
@@ -220,7 +220,7 @@ export const CASE_STUDY_TEMPLATES = {
     sections: [
       {
         heading: '1. Basic Details',
-        fields: ['Student Name', 'Roll Number', 'Village/Area', 'District', 'State', 'Problem Selected', 'Duration: 7 Days'],
+        fields: ['Student Name', 'Roll Number', 'Village/Area', 'District', 'State', 'Domain', 'Problem Statement', 'Duration'],
       },
       {
         heading: '2. Problem Description',
@@ -272,7 +272,7 @@ export const CASE_STUDY_TEMPLATES = {
     sections: [
       {
         heading: '1. Basic Details',
-        fields: ['Student Name', 'Roll Number', 'Village/Area', 'District', 'State', 'Problem Selected', 'Duration: 7 Days'],
+        fields: ['Student Name', 'Roll Number', 'Village/Area', 'District', 'State', 'Domain', 'Problem Statement', 'Duration'],
       },
       {
         heading: '2. Problem Description',
@@ -324,7 +324,7 @@ export const CASE_STUDY_TEMPLATES = {
     sections: [
       {
         heading: '1. Basic Details',
-        fields: ['Student Name', 'Roll Number', 'Village/Area', 'District', 'State', 'Problem Selected', 'Duration: 7 Days'],
+        fields: ['Student Name', 'Roll Number', 'Village/Area', 'District', 'State', 'Domain', 'Problem Statement', 'Duration'],
       },
       {
         heading: '2. Problem Description',
@@ -376,7 +376,7 @@ export const CASE_STUDY_TEMPLATES = {
     sections: [
       {
         heading: '1. Basic Details',
-        fields: ['Student Name', 'Roll Number', 'Village/Area', 'District', 'State', 'Problem Selected', 'Duration: 7 Days'],
+        fields: ['Student Name', 'Roll Number', 'Village/Area', 'District', 'State', 'Domain', 'Problem Statement', 'Duration'],
       },
       {
         heading: '2. Problem Description',
@@ -428,7 +428,7 @@ export const CASE_STUDY_TEMPLATES = {
     sections: [
       {
         heading: '1. Basic Details',
-        fields: ['Student Name', 'Roll Number', 'Village/Area', 'District', 'State', 'Problem Selected', 'Duration: 7 Days'],
+        fields: ['Student Name', 'Roll Number', 'Village/Area', 'District', 'State', 'Domain', 'Problem Statement', 'Duration'],
       },
       {
         heading: '2. Problem Description',
@@ -480,7 +480,7 @@ export const CASE_STUDY_TEMPLATES = {
     sections: [
       {
         heading: '1. Basic Details',
-        fields: ['Student Name', 'Roll Number', 'Village/Area', 'District', 'State', 'Problem Selected', 'Duration: 7 Days'],
+        fields: ['Student Name', 'Roll Number', 'Village/Area', 'District', 'State', 'Domain', 'Problem Statement', 'Duration'],
       },
       {
         heading: '2. Problem Description',
@@ -532,7 +532,7 @@ export const CASE_STUDY_TEMPLATES = {
     sections: [
       {
         heading: '1. Basic Details',
-        fields: ['Student Name', 'Roll Number', 'Village/Area', 'School Name', 'District', 'State', 'Problem Selected', 'Duration: 7 Days'],
+        fields: ['Student Name', 'Roll Number', 'Village/Area', 'School Name', 'District', 'State', 'Domain', 'Problem Statement', 'Duration'],
       },
       {
         heading: '2. Problem Description',
@@ -584,7 +584,7 @@ export const CASE_STUDY_TEMPLATES = {
     sections: [
       {
         heading: '1. Basic Details',
-        fields: ['Student Name', 'Roll Number', 'Village/Area', 'District', 'State', 'Problem Selected', 'Duration: 7 Days'],
+        fields: ['Student Name', 'Roll Number', 'Village/Area', 'District', 'State', 'Domain', 'Problem Statement', 'Duration'],
       },
       {
         heading: '2. Problem Description',
@@ -634,7 +634,7 @@ export const CASE_STUDY_TEMPLATES = {
   'Sports': {
     title: 'SPORTS & WELLNESS ENGAGEMENT – CASE STUDY REPORT',
     sections: [
-      { heading: '1. Basic Details', fields: ['Student Name', 'Roll Number', 'Village/Area', 'District', 'State', 'Problem Selected', 'Duration: 7 Days'] },
+      { heading: '1. Basic Details', fields: ['Student Name', 'Roll Number', 'Village/Area', 'District', 'State', 'Domain', 'Problem Statement', 'Duration'] },
       { heading: '2. Problem Description', fields: ['What is the selected issue?', 'Where is it observed (youth/community)?', 'Why is it important?'] },
       { heading: '3. Stakeholders Covered', fields: ['Youth/Students', 'Parents', 'Coaches/Trainers', 'Teachers/Health Workers'] },
       { heading: '4. Survey Summary', fields: ['Total respondents', 'Stakeholder-wise distribution'] },
@@ -652,7 +652,7 @@ export const CASE_STUDY_TEMPLATES = {
   'Green Innovations': {
     title: 'GREEN INNOVATIONS & TREE PLANTATION – CASE STUDY REPORT',
     sections: [
-      { heading: '1. Basic Details', fields: ['Student Name', 'Roll Number', 'Village/Area', 'District', 'State', 'Problem Selected', 'Duration: 7 Days'] },
+      { heading: '1. Basic Details', fields: ['Student Name', 'Roll Number', 'Village/Area', 'District', 'State', 'Domain', 'Problem Statement', 'Duration'] },
       { heading: '2. Problem Description', fields: ['What is the selected environmental issue?', 'Where is it observed?', 'Why is it important?'] },
       { heading: '3. Stakeholders Covered', fields: ['Residents', 'Farmers', 'Students', 'Officials/NGOs'] },
       { heading: '4. Survey Summary', fields: ['Total respondents', 'Stakeholder-wise distribution'] },
@@ -670,7 +670,7 @@ export const CASE_STUDY_TEMPLATES = {
   'Mental Health': {
     title: 'MENTAL HEALTH & WELL-BEING – CASE STUDY REPORT',
     sections: [
-      { heading: '1. Basic Details', fields: ['Student Name', 'Roll Number', 'Village/Area', 'Institution', 'District', 'State', 'Problem Selected', 'Duration: 7 Days'] },
+      { heading: '1. Basic Details', fields: ['Student Name', 'Roll Number', 'Village/Area', 'Institution', 'District', 'State', 'Domain', 'Problem Statement', 'Duration'] },
       { heading: '2. Problem Description', fields: ['What is the selected mental health issue?', 'Where is it observed?', 'Why is it important?'] },
       { heading: '3. Stakeholders Covered', fields: ['Students/Youth', 'Parents', 'Teachers', 'Health Workers/Counselors'] },
       { heading: '4. Survey Summary', fields: ['Total respondents', 'Stakeholder-wise distribution'] },
@@ -688,7 +688,7 @@ export const CASE_STUDY_TEMPLATES = {
   'Livelihood': {
     title: 'LIVELIHOOD & ENTREPRENEURSHIP – CASE STUDY REPORT',
     sections: [
-      { heading: '1. Basic Details', fields: ['Student Name', 'Roll Number', 'Village/Area', 'District', 'State', 'Problem Selected', 'Duration: 7 Days'] },
+      { heading: '1. Basic Details', fields: ['Student Name', 'Roll Number', 'Village/Area', 'District', 'State', 'Domain', 'Problem Statement', 'Duration'] },
       { heading: '2. Problem Description', fields: ['What is the selected livelihood issue?', 'Where is it observed?', 'Why is it important?'] },
       { heading: '3. Stakeholders Covered', fields: ['Youth/Job Seekers', 'Parents/Families', 'Entrepreneurs', 'Officials/Banks/Trainers'] },
       { heading: '4. Survey Summary', fields: ['Total respondents', 'Stakeholder-wise distribution'] },
@@ -706,7 +706,7 @@ export const CASE_STUDY_TEMPLATES = {
   'Cultural Heritage': {
     title: 'CULTURAL HERITAGE & NARRATIVES – CASE STUDY REPORT',
     sections: [
-      { heading: '1. Basic Details', fields: ['Student Name', 'Roll Number', 'Village/Area', 'District', 'State', 'Problem Selected', 'Duration: 7 Days'] },
+      { heading: '1. Basic Details', fields: ['Student Name', 'Roll Number', 'Village/Area', 'District', 'State', 'Domain', 'Problem Statement', 'Duration'] },
       { heading: '2. Problem Description', fields: ['What is the selected cultural issue?', 'Where is it observed?', 'Why is it important?'] },
       { heading: '3. Stakeholders Covered', fields: ['Elders', 'Youth/Students', 'Leaders', 'Artisans/Families'] },
       { heading: '4. Survey Summary', fields: ['Total respondents', 'Stakeholder-wise distribution'] },
@@ -724,7 +724,7 @@ export const CASE_STUDY_TEMPLATES = {
   'Disaster Preparedness': {
     title: 'DISASTER PREPAREDNESS & RESILIENCE – CASE STUDY REPORT',
     sections: [
-      { heading: '1. Basic Details', fields: ['Student Name', 'Roll Number', 'Village/Area', 'District', 'State', 'Problem Selected', 'Duration: 7 Days'] },
+      { heading: '1. Basic Details', fields: ['Student Name', 'Roll Number', 'Village/Area', 'District', 'State', 'Domain', 'Problem Statement', 'Duration'] },
       { heading: '2. Problem Description', fields: ['What is the selected disaster-related issue?', 'Where is it observed?', 'Why is it important?'] },
       { heading: '3. Stakeholders Covered', fields: ['Residents', 'Students', 'Officials', 'Volunteers/Health Workers'] },
       { heading: '4. Survey Summary', fields: ['Total respondents', 'Stakeholder-wise distribution'] },
@@ -742,7 +742,7 @@ export const CASE_STUDY_TEMPLATES = {
   'Renewable Energy': {
     title: 'RENEWABLE ENERGY & SUSTAINABILITY – CASE STUDY REPORT',
     sections: [
-      { heading: '1. Basic Details', fields: ['Student Name', 'Roll Number', 'Village/Area', 'District', 'State', 'Problem Selected', 'Duration: 7 Days'] },
+      { heading: '1. Basic Details', fields: ['Student Name', 'Roll Number', 'Village/Area', 'District', 'State', 'Domain', 'Problem Statement', 'Duration'] },
       { heading: '2. Problem Description', fields: ['What is the selected energy-related issue?', 'Where is it observed?', 'Why is it important?'] },
       { heading: '3. Stakeholders Covered', fields: ['Households', 'Students', 'Technicians/Vendors', 'Officials/Banks'] },
       { heading: '4. Survey Summary', fields: ['Total respondents', 'Stakeholder-wise distribution'] },
@@ -760,7 +760,7 @@ export const CASE_STUDY_TEMPLATES = {
   'Energy Utilization': {
     title: 'ENERGY UTILIZATION & EFFICIENCY – CASE STUDY REPORT',
     sections: [
-      { heading: '1. Basic Details', fields: ['Student Name', 'Roll Number', 'Village/Area', 'District', 'State', 'Problem Selected', 'Duration: 7 Days'] },
+      { heading: '1. Basic Details', fields: ['Student Name', 'Roll Number', 'Village/Area', 'District', 'State', 'Domain', 'Problem Statement', 'Duration'] },
       { heading: '2. Problem Description', fields: ['What is the selected energy issue?', 'Where is it observed?', 'Why is it important?'] },
       { heading: '3. Stakeholders Covered', fields: ['Households', 'Students', 'Shop Owners/Institutions', 'Officials/Electricity Staff'] },
       { heading: '4. Survey Summary', fields: ['Total respondents', 'Stakeholder-wise distribution'] },
@@ -781,7 +781,7 @@ export const CASE_STUDY_TEMPLATES = {
     sections: [
       {
         heading: '1. Basic Information',
-        fields: ['Student Name', 'Roll Number', 'Village/Area', 'District', 'Problem Selected', 'Duration (7 Days)'],
+        fields: ['Student Name', 'Roll Number', 'Village/Area', 'District', 'Domain', 'Problem Statement', 'Duration'],
       },
       {
         heading: '2. Problem Description',
@@ -789,7 +789,7 @@ export const CASE_STUDY_TEMPLATES = {
       },
       {
         heading: '3. Stakeholders Covered',
-        fields: ['Stakeholder 1 (8 persons)', 'Stakeholder 2 (3 persons)', 'Stakeholder 3 (3 persons)'],
+        fields: ['Stakeholder 1', 'Stakeholder 2', 'Stakeholder 3'],
       },
       {
         heading: '4. Survey Summary',

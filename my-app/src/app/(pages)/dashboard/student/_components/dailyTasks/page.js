@@ -89,15 +89,20 @@ function pillIcon(st) {
 }
 function wc(text) { return text.trim() === '' ? 0 : text.trim().split(/\s+/).length; }
 
-const DAY_META = [
-  { day:1, icon: <FaClipboardList />, title:'Day 1 – Problem Statement Understanding', subtitle:'Write your inference and analysis (minimum 100 words)' },
-  { day:2, icon: <FaHandshake />, title:'Day 2 – Stakeholder 1 Survey (8 Persons)',  subtitle:'Interview 8 people from the 1st stakeholder group' },
-  { day:3, icon: <FaHandshake />, title:'Day 3 – Stakeholder 2 Survey (3 Persons)',  subtitle:'Interview 3 people from the 2nd stakeholder group' },
-  { day:4, icon: <FaHandshake />, title:'Day 4 – Stakeholder 3 Survey (3 Persons)',  subtitle:'Interview 3 people from the 3rd stakeholder group' },
-  { day:5, icon: <FaChartBar />, title:'Day 5 – Data Analysis',                     subtitle:'Count responses, calculate percentages & identify insights' },
-  { day:6, icon: <FaCamera />, title:'Day 6 – Intervention Activity',             subtitle:'Upload photo documentation from Days 2, 3 & 4' },
-  { day:7, icon: <FaVideo />, title:'Day 7 – Documentation & Presentation',      subtitle:'Submit case study report, YouTube video & LinkedIn article' },
-];
+const getDaysMeta = (studentData, survey) => {
+  const s1 = survey?.[0]?.stakeholder || 'Stakeholder 1';
+  const s2 = survey?.[1]?.stakeholder || 'Stakeholder 2';
+  const s3 = survey?.[2]?.stakeholder || 'Stakeholder 3';
+  return [
+    { day:1, icon: <FaClipboardList />, title:'Day 1 – Problem Statement Understanding', subtitle:'Write your inference and analysis (minimum 100 words)' },
+    { day:2, icon: <FaHandshake />, title:`Day 2 – ${s1} Survey`,  subtitle:`Interview people from the ${s1} group` },
+    { day:3, icon: <FaHandshake />, title:`Day 3 – ${s2} Survey`,  subtitle:`Interview people from the ${s2} group` },
+    { day:4, icon: <FaHandshake />, title:`Day 4 – ${s3} Survey`,  subtitle:`Interview people from the ${s3} group` },
+    { day:5, icon: <FaChartBar />, title:'Day 5 – Data Analysis',                     subtitle:'Count responses, calculate percentages & identify insights' },
+    { day:6, icon: <FaCamera />, title:'Day 6 – Intervention Activity',             subtitle:'Upload photo documentation from Days 2, 3 & 4' },
+    { day:7, icon: <FaVideo />, title:'Day 7 – Documentation & Presentation',      subtitle:'Submit case study report, YouTube video & LinkedIn article' },
+  ];
+};
 
 /* ── Timer bar component ── */
 function TimerBar({ openTime, closeTime, status }) {
@@ -234,6 +239,7 @@ export default function DailyTasks({ studentData }) {
   const slot     = studentData?.slot || null;
   const username = studentData?.username || null;
   const survey   = ps ? (SURVEY[ps] || null) : null;
+  const DAY_META = getDaysMeta(studentData, survey);
 
   useEffect(() => {
     (async () => {
@@ -277,7 +283,11 @@ export default function DailyTasks({ studentData }) {
       setMsgType('err'); return;
     }
     if ([2, 3, 4].includes(activeDay)) {
-      const pCount = activeDay === 2 ? 8 : 3;
+      const pCount = data.personCount || 0;
+      if (pCount === 0) {
+        setMsg(`Please specify the number of people interviewed.`);
+        setMsgType('err'); return;
+      }
       const sh = survey[activeDay - 2];
       const qCount = sh?.questions?.length || 0;
       
@@ -391,9 +401,9 @@ export default function DailyTasks({ studentData }) {
             : (
               <>
                 {activeDay === 1 && <Day1 data={dayData(1)} onChange={(f,v) => setDayField(1,f,v)} ps={ps} readOnly={isSaved} />}
-                {activeDay === 2 && <DaySurvey day={2} personCount={8} stakeholderIdx={0} survey={survey} data={dayData(2)} onChange={(f,v) => setDayField(2,f,v)} readOnly={isSaved} onFinalSubmit={handleSave} saving={saving} />}
-                {activeDay === 3 && <DaySurvey day={3} personCount={3} stakeholderIdx={1} survey={survey} data={dayData(3)} onChange={(f,v) => setDayField(3,f,v)} readOnly={isSaved} onFinalSubmit={handleSave} saving={saving} />}
-                {activeDay === 4 && <DaySurvey day={4} personCount={3} stakeholderIdx={2} survey={survey} data={dayData(4)} onChange={(f,v) => setDayField(4,f,v)} readOnly={isSaved} onFinalSubmit={handleSave} saving={saving} />}
+                {activeDay === 2 && <DaySurvey day={2} stakeholderIdx={0} survey={survey} data={dayData(2)} onChange={(f,v) => setDayField(2,f,v)} readOnly={isSaved} onFinalSubmit={handleSave} saving={saving} />}
+                {activeDay === 3 && <DaySurvey day={3} stakeholderIdx={1} survey={survey} data={dayData(3)} onChange={(f,v) => setDayField(3,f,v)} readOnly={isSaved} onFinalSubmit={handleSave} saving={saving} />}
+                {activeDay === 4 && <DaySurvey day={4} stakeholderIdx={2} survey={survey} data={dayData(4)} onChange={(f,v) => setDayField(4,f,v)} readOnly={isSaved} onFinalSubmit={handleSave} saving={saving} />}
                 {activeDay === 5 && <Day5 saved={saved} survey={survey} data={dayData(5)} onChange={(f,v) => setDayField(5,f,v)} readOnly={isSaved} />}
                 {activeDay === 6 && <Day6 data={dayData(6)} onChange={(f,v) => setDayField(6,f,v)} readOnly={isSaved} studentData={studentData} />}
                 {activeDay === 7 && <Day7 data={dayData(7)} onChange={(f,v) => setDayField(7,f,v)} readOnly={isSaved} studentData={studentData} />}
@@ -626,13 +636,14 @@ function Day1({ data, onChange, ps, readOnly }) {
 }
 
 /* ── Days 2/3/4 – Survey ── */
-function DaySurvey({ day, personCount, stakeholderIdx, survey, data, onChange, readOnly, onFinalSubmit, saving }) {
+function DaySurvey({ day, stakeholderIdx, survey, data, onChange, readOnly, onFinalSubmit, saving }) {
   const [activePerson, setActivePerson] = useState(1);
   if (!survey) return <div className="dt-info-box"><h4>Survey data not available</h4><p>No questions found for your problem statement. Contact admin.</p></div>;
 
   const sh = survey[stakeholderIdx];
   if (!sh) return <p>Stakeholder not found.</p>;
 
+  const personCount = data.personCount || 0;
   const persons = Array.from({ length: personCount }, (_, i) => i + 1);
   const pk = (p) => `p${p}`;
   const pd = (p) => data[pk(p)] || { name: '', answers: {} };
@@ -654,17 +665,35 @@ function DaySurvey({ day, personCount, stakeholderIdx, survey, data, onChange, r
     <div>
       <div className="dt-sh-banner">
         <span className="sh-tag">{sh.stakeholder}</span>
-        <p>Interview {personCount} people. Enter each person&apos;s name and record Yes/No responses.</p>
+        <p>Record your interviews for this stakeholder group.</p>
+        <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <label style={{ fontSize: '0.85rem', fontWeight: 600 }}>Number of people interviewed:</label>
+          <input 
+            type="number" 
+            min="1" max="50" 
+            value={personCount || ''} 
+            onChange={(e) => {
+               if(readOnly) return;
+               const val = parseInt(e.target.value) || 0;
+               onChange('personCount', val);
+            }} 
+            disabled={readOnly}
+            style={{ width: '80px', padding: '6px 10px', borderRadius: '4px', border: '1px solid #ccc', outline: 'none' }} 
+          />
+        </div>
       </div>
-      <p className="dt-persons-label">Select Person:</p>
-      <div className="dt-person-tabs">
-        {persons.map(p => (
-          <button key={p} className={`dt-person-btn ${activePerson===p?'active':''} ${isFilled(p)?'filled':''}`}
-            onClick={() => setActivePerson(p)}>
-            Person {p} {isFilled(p) ? '✓' : ''}
-          </button>
-        ))}
-      </div>
+      
+      {personCount > 0 && (
+        <>
+          <p className="dt-persons-label">Select Person:</p>
+          <div className="dt-person-tabs" style={{ flexWrap: 'wrap' }}>
+            {persons.map(p => (
+              <button key={p} className={`dt-person-btn ${activePerson===p?'active':''} ${isFilled(p)?'filled':''}`}
+                onClick={() => setActivePerson(p)}>
+                Person {p} {isFilled(p) ? '✓' : ''}
+              </button>
+            ))}
+          </div>
       <div className="dt-name-wrap">
         <label htmlFor={`n-d${day}-p${activePerson}`}>Name of Person {activePerson}</label>
         <input id={`n-d${day}-p${activePerson}`} type="text" className="dt-name-input"
@@ -722,6 +751,8 @@ function DaySurvey({ day, personCount, stakeholderIdx, survey, data, onChange, r
 
       {/* Added Report Generator for documentation */}
       <ReportGenerator day={day} stakeholder={sh.stakeholder} readOnly={readOnly} />
+      </>
+      )}
     </div>
   );
 }
@@ -1128,6 +1159,7 @@ function CaseStudyGenerator({ studentData, readOnly }) {
         ['Village/Area', answers['Village/Area'] || answers['Village/Area:'] || '________________'],
         ['District',     answers['District'] || '________________'],
         ['Domain',       domain || '________________'],
+        ['Problem Statement', studentData?.problemStatementData?.problem_statement || '________________'],
         ['Duration',     '7 Days'],
       ];
       doc.setFontSize(11);
