@@ -99,7 +99,7 @@ const getDaysMeta = (studentData, survey) => {
     { day:3, icon: <FaHandshake />, title:`Day 3 – ${s2} Survey`,  subtitle:`Interview people from the ${s2} group` },
     { day:4, icon: <FaHandshake />, title:`Day 4 – ${s3} Survey`,  subtitle:`Interview people from the ${s3} group` },
     { day:5, icon: <FaChartBar />, title:'Day 5 – Data Analysis',                     subtitle:'Count responses, calculate percentages & identify insights' },
-    { day:6, icon: <FaCamera />, title:'Day 6 – Intervention Activity',             subtitle:'Upload photo documentation from Days 2, 3 & 4' },
+    { day:6, icon: <FaCamera />, title:'Day 6 – Intervention Activity',             subtitle:'Select an activity, perform it, and generate the intervention report' },
     { day:7, icon: <FaVideo />, title:'Day 7 – Documentation & Presentation',      subtitle:'Submit case study report, YouTube video & LinkedIn article' },
   ];
 };
@@ -477,29 +477,48 @@ function ReportGenerator({ day, stakeholder, readOnly }) {
       const pageHeight = doc.internal.pageSize.getHeight();
       
       const drawBorders = () => {
-        doc.setDrawColor(0);
-        doc.setLineWidth(0.5);
-        doc.rect(5, 5, pageWidth - 10, pageHeight - 10);
+        doc.setDrawColor(30, 60, 30);
+        doc.setLineWidth(0.8);
+        doc.rect(8, 8, pageWidth - 16, pageHeight - 16);
+        doc.setLineWidth(0.3);
+        doc.rect(10, 10, pageWidth - 20, pageHeight - 20);
       };
 
-      let yOffset = 25;
+      let yOffset = 15 + 10;
       drawBorders();
+
+      // Institution header
+      doc.setFontSize(11);
+      doc.setFont('times', 'bold');
+      doc.setTextColor(40, 80, 40);
+      doc.text('K L DEEMED TO BE UNIVERSITY', pageWidth / 2, yOffset, { align: 'center' });
+      yOffset += 7;
+      doc.setFontSize(9);
+      doc.setFont('times', 'normal');
+      doc.setTextColor(80, 80, 80);
+      doc.text('(Koneru Lakshmaiah Education Foundation, Deemed to be University under Section 3 of UGC Act, 1956)', pageWidth / 2, yOffset, { align: 'center' });
+      yOffset += 10;
+      doc.setDrawColor(30, 80, 30);
+      doc.setLineWidth(0.5);
+      doc.line(15, yOffset, pageWidth - 15, yOffset);
+      yOffset += 15;
 
       // Heading: Day-X Report
       doc.setFontSize(22);
-      doc.setFont('helvetica', 'bold');
+      doc.setFont('times', 'bold');
+      doc.setTextColor(0, 0, 0);
       const title = `Day-${day} Report`;
       doc.text(title, pageWidth / 2, yOffset, { align: 'center' });
       yOffset += 12;
       
-      // Stakeholder Category: Bold and Underlined
+      // Stakeholder Category
       doc.setFontSize(14);
       const shText = `Stakeholder: ${stakeholder}`;
       const shWidth = doc.getTextWidth(shText);
       doc.text(shText, pageWidth / 2, yOffset, { align: 'center' });
       doc.line((pageWidth / 2) - (shWidth / 2), yOffset + 1, (pageWidth / 2) + (shWidth / 2), yOffset + 1);
       
-      doc.setFont('helvetica', 'normal');
+      doc.setFont('times', 'normal');
       yOffset += 15;
 
       for (let i = 0; i < entries.length; i++) {
@@ -521,10 +540,23 @@ function ReportGenerator({ day, stakeholder, readOnly }) {
         yOffset += 7;
         
         doc.setFontSize(11);
-        doc.setFont('helvetica', 'normal');
+        doc.setFont('times', 'normal');
         const splitDesc = doc.splitTextToSize(`Description: ${entry.description}`, 160);
         doc.text(splitDesc, 25, yOffset);
         yOffset += (splitDesc.length * 6) + 15;
+      }
+
+      // Footer on all pages
+      const totalPages = doc.internal.getNumberOfPages();
+      for (let p = 1; p <= totalPages; p++) {
+        doc.setPage(p);
+        doc.setFontSize(8);
+        doc.setFont('times', 'italic');
+        doc.setTextColor(120, 120, 120);
+        doc.text(
+          `SOCIAL INTERNSHIP 2026  |  DAY ${day} REPORT  |  Page ${p} of ${totalPages}`,
+          pageWidth / 2, pageHeight - 11, { align: 'center' }
+        );
       }
 
       doc.save(`Day_${day}_Report.pdf`);
@@ -966,6 +998,19 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
       }
       y += writeText(data.photo3Desc || '', 12, 'normal', [0,0,0], 'left', y) + 10;
 
+      // Footer on all pages
+      const totalPages = doc.internal.getNumberOfPages();
+      for (let p = 1; p <= totalPages; p++) {
+        doc.setPage(p);
+        doc.setFontSize(8);
+        doc.setFont('times', 'italic');
+        doc.setTextColor(120, 120, 120);
+        doc.text(
+          `SOCIAL INTERNSHIP 2026  |  INTERVENTION REPORT  |  Page ${p} of ${totalPages}`,
+          PW / 2, PH - 11, { align: 'center' }
+        );
+      }
+
       doc.save(`Day6_Intervention_${studentData?.rollNumber || 'Report'}.pdf`);
     } catch (e) {
       console.error(e);
@@ -1035,14 +1080,26 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
 /* ── Day 6 ── */
 function Day6({ data, onChange, readOnly, studentData }) {
   const ro = { background: readOnly ? '#f9f9f9' : undefined };
+  const domain = studentData?.selectedDomain || '';
+  const template = getInterventionTemplate(domain);
+
   return (
     <div>
       <div className="dt-info-box" style={{marginBottom:18}}>
         <h4>Task: Intervention Activity Documentation</h4>
         <ul>
-          <li>Use the <strong>Intervention Activity Report Generator</strong> below to compile your photos and descriptions.</li>
-          <li>Upload the generated PDF to your Google Drive.</li>
-          <li>Ensure the link is <strong>publicly viewable</strong>.</li>
+          <li><strong>Select any 1 activity</strong> from the list below and perform it.</li>
+          <li>Capture images during the activity.</li>
+          <li>Use the <strong>Intervention Activity Report Generator</strong> below to compile your photos and descriptions and generate the report.</li>
+          <li>Upload the generated PDF to your Google Drive and submit the public link.</li>
+        </ul>
+      </div>
+
+      <div style={{ padding: '15px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '20px' }}>
+        <h5 style={{ margin: '0 0 10px 0', color: '#334155' }}>Available Activities for {domain || 'your domain'}:</h5>
+        <ul style={{ margin: 0, paddingLeft: '20px', color: '#475569', fontSize: '0.9rem' }}>
+          {template.activities.map(act => <li key={act} style={{ marginBottom: '6px' }}>{act}</li>)}
+          <li>Or any other relevant activity (select "Other")</li>
         </ul>
       </div>
 
