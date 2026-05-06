@@ -2,7 +2,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Image from 'next/image';
 import { surveyData as SURVEY } from './surveyDataShared';
-import { FaCheck, FaLock, FaTimes, FaHourglassHalf, FaPlay, FaClipboardList, FaHandshake, FaChartBar, FaCamera, FaVideo, FaClock, FaCheckCircle, FaTimesCircle, FaExclamationTriangle, FaCalendarAlt } from 'react-icons/fa';
+import { getTemplate } from './caseStudyTemplates';
+import { FaCheck, FaLock, FaTimes, FaHourglassHalf, FaPlay, FaClipboardList, FaHandshake, FaChartBar, FaCamera, FaVideo, FaClock, FaCheckCircle, FaTimesCircle, FaExclamationTriangle, FaCalendarAlt, FaFilePdf } from 'react-icons/fa';
 import './dailyTasks.css';
 
 /* ── Slot start dates (IST midnight) ── */
@@ -394,7 +395,7 @@ export default function DailyTasks({ studentData }) {
                 {activeDay === 4 && <DaySurvey day={4} personCount={3} stakeholderIdx={2} survey={survey} data={dayData(4)} onChange={(f,v) => setDayField(4,f,v)} readOnly={isSaved} onFinalSubmit={handleSave} saving={saving} />}
                 {activeDay === 5 && <Day5 saved={saved} survey={survey} data={dayData(5)} onChange={(f,v) => setDayField(5,f,v)} readOnly={isSaved} />}
                 {activeDay === 6 && <Day6 data={dayData(6)} onChange={(f,v) => setDayField(6,f,v)} readOnly={isSaved} />}
-                {activeDay === 7 && <Day7 data={dayData(7)} onChange={(f,v) => setDayField(7,f,v)} readOnly={isSaved} />}
+                {activeDay === 7 && <Day7 data={dayData(7)} onChange={(f,v) => setDayField(7,f,v)} readOnly={isSaved} studentData={studentData} />}
 
                 {activeDay !== 2 && activeDay !== 3 && activeDay !== 4 && (
                   <div className="dt-save-row">
@@ -858,24 +859,364 @@ function Day6({ data, onChange, readOnly }) {
   );
 }
 
+/* ── Case Study Generator ── */
+function CaseStudyGenerator({ studentData, readOnly }) {
+  const domain   = studentData?.selectedDomain || '';
+  const template = getTemplate(domain);
+  const [answers, setAnswers] = useState({});
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const setAns = (key, val) => setAnswers(prev => ({ ...prev, [key]: val }));
+
+  const inputStyle = (ro) => ({
+    width: '100%', padding: '7px 10px', borderRadius: 6,
+    border: '1px solid #cbd5e1', outline: 'none', fontSize: '0.88rem',
+    background: ro ? '#f9f9f9' : '#fff', resize: 'vertical',
+  });
+
+  const generatePDF = async () => {
+    setIsGenerating(true);
+    try {
+      const { jsPDF } = await import('jspdf');
+      const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+      const PW = doc.internal.pageSize.getWidth();
+      const PH = doc.internal.pageSize.getHeight();
+      const margin = 15;
+      const contentW = PW - margin * 2;
+      let y = margin + 10;
+
+      const drawBorder = () => {
+        doc.setDrawColor(30, 60, 30);
+        doc.setLineWidth(0.8);
+        doc.rect(8, 8, PW - 16, PH - 16);
+        doc.setLineWidth(0.3);
+        doc.rect(10, 10, PW - 20, PH - 20);
+      };
+
+      const checkNewPage = (neededH = 20) => {
+        if (y + neededH > PH - margin - 5) {
+          doc.addPage();
+          drawBorder();
+          y = margin + 10;
+        }
+      };
+
+      const writeText = (text, fontSize, style, color, indent = 0, lineH = 6) => {
+        doc.setFontSize(fontSize);
+        doc.setFont('times', style);
+        doc.setTextColor(...color);
+        const lines = doc.splitTextToSize(text, contentW - indent);
+        checkNewPage(lines.length * lineH + 4);
+        doc.text(lines, margin + indent, y);
+        y += lines.length * lineH;
+      };
+
+      // ── Page 1: Title page ────────────────────────────────────
+      drawBorder();
+
+      // Institution header
+      doc.setFontSize(11);
+      doc.setFont('times', 'bold');
+      doc.setTextColor(40, 80, 40);
+      doc.text('KALASALINGAM ACADEMY OF RESEARCH AND EDUCATION', PW / 2, y, { align: 'center' });
+      y += 7;
+      doc.setFontSize(9);
+      doc.setFont('times', 'normal');
+      doc.setTextColor(80, 80, 80);
+      doc.text('(Deemed to be University under Section 3 of UGC Act 1956)', PW / 2, y, { align: 'center' });
+      y += 7;
+
+      // Divider
+      doc.setDrawColor(30, 80, 30);
+      doc.setLineWidth(0.5);
+      doc.line(margin, y, PW - margin, y);
+      y += 10;
+
+      // Main title
+      doc.setFontSize(16);
+      doc.setFont('times', 'bold');
+      doc.setTextColor(20, 60, 20);
+      const titleLines = doc.splitTextToSize(template.title, contentW);
+      doc.text(titleLines, PW / 2, y, { align: 'center' });
+      y += titleLines.length * 9 + 8;
+
+      // Domain badge
+      doc.setFontSize(11);
+      doc.setFont('times', 'bolditalic');
+      doc.setTextColor(60, 100, 60);
+      doc.text(`Domain: ${domain || 'General'}`, PW / 2, y, { align: 'center' });
+      y += 7;
+      doc.setDrawColor(30, 80, 30);
+      doc.setLineWidth(0.4);
+      doc.line(margin, y, PW - margin, y);
+      y += 14;
+
+      // Basic student info from auto-fill
+      const infoItems = [
+        ['Student Name', studentData?.name || answers['Student Name'] || '________________'],
+        ['Roll Number',  studentData?.username || answers['Roll Number'] || '________________'],
+        ['Village/Area', answers['Village/Area'] || answers['Village/Area:'] || '________________'],
+        ['District',     answers['District'] || '________________'],
+        ['Domain',       domain || '________________'],
+        ['Duration',     '7 Days'],
+      ];
+      doc.setFontSize(11);
+      for (const [k, v] of infoItems) {
+        checkNewPage(8);
+        doc.setFont('times', 'bold');
+        doc.setTextColor(40, 40, 40);
+        doc.text(`${k}:`, margin, y);
+        doc.setFont('times', 'normal');
+        doc.setTextColor(20, 20, 20);
+        doc.text(v, margin + 45, y);
+        y += 8;
+      }
+      y += 6;
+
+      // ── Content sections ─────────────────────────────────────
+      for (const section of template.sections) {
+        // Skip basic info section — already rendered on title page
+        if (section.heading.startsWith('1.')) continue;
+
+        checkNewPage(16);
+
+        // Section heading
+        doc.setFontSize(12);
+        doc.setFont('times', 'bold');
+        doc.setTextColor(20, 60, 20);
+        doc.text(section.heading, margin, y);
+        // underline the heading
+        const hw = doc.getTextWidth(section.heading);
+        doc.setDrawColor(20, 60, 20);
+        doc.setLineWidth(0.35);
+        doc.line(margin, y + 1, margin + hw, y + 1);
+        y += 8;
+
+        // Data Analysis table
+        if (section.tableHeaders) {
+          const colW = contentW / section.tableHeaders.length;
+          const cellH = 8;
+
+          // Header row
+          checkNewPage(cellH + 2);
+          doc.setFillColor(220, 240, 220);
+          doc.rect(margin, y, contentW, cellH, 'F');
+          doc.setDrawColor(100, 140, 100);
+          doc.setLineWidth(0.3);
+          section.tableHeaders.forEach((h, i) => {
+            doc.rect(margin + i * colW, y, colW, cellH);
+            doc.setFont('times', 'bold');
+            doc.setFontSize(9);
+            doc.setTextColor(20, 60, 20);
+            doc.text(h, margin + i * colW + 2, y + 5.5);
+          });
+          y += cellH;
+
+          // Data rows
+          for (const row of section.tableRows) {
+            checkNewPage(cellH + 1);
+            doc.setFillColor(250, 255, 250);
+            doc.rect(margin, y, contentW, cellH, 'F');
+            section.tableHeaders.forEach((_, i) => {
+              doc.setDrawColor(160, 200, 160);
+              doc.rect(margin + i * colW, y, colW, cellH);
+              if (i === 0) {
+                doc.setFont('times', 'bold');
+                doc.setFontSize(9);
+                doc.setTextColor(40, 40, 40);
+                doc.text(row, margin + i * colW + 2, y + 5.5);
+              }
+            });
+            y += cellH;
+          }
+          y += 5;
+          continue;
+        }
+
+        // Regular fields
+        for (const field of (section.fields || [])) {
+          const key = `${section.heading}__${field}`;
+          const val = answers[key] || '';
+          checkNewPage(12);
+          doc.setFontSize(10);
+          doc.setFont('times', 'bold');
+          doc.setTextColor(50, 50, 50);
+          doc.text(`${field}:`, margin + 3, y);
+          y += 6;
+          if (val.trim()) {
+            doc.setFont('times', 'normal');
+            doc.setTextColor(20, 20, 20);
+            const vlines = doc.splitTextToSize(val, contentW - 6);
+            checkNewPage(vlines.length * 5.5);
+            doc.text(vlines, margin + 6, y);
+            y += vlines.length * 5.5 + 2;
+          } else {
+            // blank lines placeholder
+            doc.setDrawColor(180, 180, 180);
+            doc.setLineWidth(0.2);
+            for (let l = 0; l < 2; l++) {
+              doc.line(margin + 6, y + l * 6, margin + contentW - 6, y + l * 6);
+            }
+            y += 14;
+          }
+        }
+        y += 4;
+      }
+
+      // Footer on all pages
+      const totalPages = doc.internal.getNumberOfPages();
+      for (let p = 1; p <= totalPages; p++) {
+        doc.setPage(p);
+        doc.setFontSize(8);
+        doc.setFont('times', 'italic');
+        doc.setTextColor(120, 120, 120);
+        doc.text(
+          `KARE Internship 2026  |  ${template.title}  |  Page ${p} of ${totalPages}`,
+          PW / 2, PH - 11, { align: 'center' }
+        );
+      }
+
+      doc.save(`Case_Study_${domain.replace(/\s+/g, '_') || 'Report'}.pdf`);
+    } catch (err) {
+      console.error('PDF error', err);
+      alert('Failed to generate PDF. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  return (
+    <div style={{
+      background: 'linear-gradient(135deg, #f0fff4 0%, #e6fffa 100%)',
+      border: '1.5px solid #b2dfdb', borderRadius: 14, padding: 28, marginTop: 32,
+      boxShadow: '0 4px 24px 0 rgba(1,74,1,0.08)'
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}>
+        <FaFilePdf style={{ color: '#014a01', fontSize: '1.4rem' }} />
+        <h4 style={{ margin: 0, color: '#014a01', fontSize: '1.15rem', fontWeight: 700 }}>
+          Case Study Report Generator
+        </h4>
+      </div>
+      <p style={{ fontSize: '0.88rem', color: '#4a6b4a', marginBottom: 22 }}>
+        Domain: <strong>{domain || 'Not assigned'}</strong> — Fill in the fields below and click
+        <strong> Download PDF</strong> to generate your professionally formatted case study report.
+      </p>
+
+      {/* Sections */}
+      {template.sections.map((section) => (
+        <div key={section.heading} style={{
+          background: '#fff', border: '1px solid #c8e6c9', borderRadius: 10,
+          padding: '18px 20px', marginBottom: 18,
+          boxShadow: '0 1px 4px rgba(0,0,0,0.06)'
+        }}>
+          <h5 style={{
+            margin: '0 0 14px 0', color: '#014a01', fontSize: '0.97rem',
+            borderBottom: '1px solid #e0f2e9', paddingBottom: 8,
+            display: 'flex', alignItems: 'center', gap: 8
+          }}>
+            {section.heading}
+          </h5>
+
+          {/* Table section */}
+          {section.tableHeaders ? (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                <thead>
+                  <tr style={{ background: '#e8f5e9' }}>
+                    {section.tableHeaders.map(h => (
+                      <th key={h} style={{ border: '1px solid #b2dfdb', padding: '7px 10px', textAlign: 'left', fontWeight: 700, color: '#014a01' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {section.tableRows.map(row => (
+                    <tr key={row}>
+                      <td style={{ border: '1px solid #c8e6c9', padding: '6px 10px', fontWeight: 600, color: '#333' }}>{row}</td>
+                      {section.tableHeaders.slice(1).map((h) => (
+                        <td key={h} style={{ border: '1px solid #c8e6c9', padding: 0 }}>
+                          <input
+                            type="text"
+                            readOnly={readOnly}
+                            value={answers[`${section.heading}__${row}__${h}`] || ''}
+                            onChange={e => setAns(`${section.heading}__${row}__${h}`, e.target.value)}
+                            style={{ width: '100%', border: 'none', padding: '6px 8px', outline: 'none', background: readOnly ? '#f9f9f9' : '#fff', fontSize: '0.85rem' }}
+                            placeholder="—"
+                          />
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            /* Regular fields */
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {section.fields.map(field => {
+                const key = `${section.heading}__${field}`;
+                return (
+                  <div key={field}>
+                    <label style={{ fontSize: '0.82rem', fontWeight: 600, color: '#2e7d32', display: 'block', marginBottom: 4 }}>
+                      {field}
+                    </label>
+                    <textarea
+                      rows={2}
+                      readOnly={readOnly}
+                      value={answers[key] || ''}
+                      onChange={e => setAns(key, e.target.value)}
+                      placeholder={`Enter ${field.toLowerCase()}…`}
+                      style={inputStyle(readOnly)}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      ))}
+
+      {!readOnly && (
+        <button
+          onClick={generatePDF}
+          disabled={isGenerating}
+          style={{
+            marginTop: 8, padding: '13px 28px', borderRadius: 10, border: 'none',
+            background: isGenerating ? '#9e9e9e' : 'linear-gradient(135deg, #014a01, #1b7a1b)',
+            color: '#fff', fontWeight: 700, fontSize: '1rem', cursor: isGenerating ? 'not-allowed' : 'pointer',
+            display: 'flex', alignItems: 'center', gap: 10, boxShadow: '0 4px 12px rgba(1,74,1,0.25)',
+            transition: 'all 0.2s'
+          }}
+        >
+          <FaFilePdf />
+          {isGenerating ? 'Generating PDF…' : '⬇ Download Case Study PDF'}
+        </button>
+      )}
+    </div>
+  );
+}
+
 /* ── Day 7 ── */
-function Day7({ data, onChange, readOnly }) {
+function Day7({ data, onChange, readOnly, studentData }) {
   const ro = { background: readOnly ? '#f9f9f9' : undefined };
   return (
     <div>
       <div className="dt-info-box" style={{marginBottom:18}}>
         <h4>Task: Documentation &amp; Presentation</h4>
         <ul>
-          <li><strong>Case Study Report:</strong> Prepare using the template (will be shared). Upload to Google Docs/Drive.</li>
+          <li><strong>Case Study Report:</strong> Use the generator below to auto-fill and download your domain-specific report as a PDF. Then upload it to Google Docs/Drive.</li>
           <li><strong>Presentation Video:</strong> PowerPoint + face recording + voiceover.</li>
           <li>Upload video to <strong>YouTube</strong> and write a <strong>LinkedIn Article</strong>.</li>
           <li>Your LinkedIn article MUST include your key findings and embed both your presentation video and article links.</li>
           <li>Submit all three links below.</li>
         </ul>
       </div>
-      <div className="dt-link-section">
+
+      {/* Case Study Generator */}
+      <CaseStudyGenerator studentData={studentData} readOnly={readOnly} />
+
+      <div className="dt-link-section" style={{marginTop: 28}}>
         <label htmlFor="d7-cs">Case Study Document Public Link</label>
-        <p>Google Docs / Drive link — must be publicly viewable.</p>
+        <p>After downloading the PDF above, upload it to Google Drive and paste the shareable link here.</p>
         <input id="d7-cs" type="url" className="dt-link-input" placeholder="https://docs.google.com/…"
           value={data.caseStudyLink||''} readOnly={readOnly} style={ro}
           onChange={e => !readOnly && onChange('caseStudyLink', e.target.value)} />
