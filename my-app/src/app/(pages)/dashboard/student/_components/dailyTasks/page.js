@@ -1099,7 +1099,7 @@ function Day6({ data, onChange, readOnly, studentData }) {
         <h5 style={{ margin: '0 0 10px 0', color: '#334155' }}>Available Activities for {domain || 'your domain'}:</h5>
         <ul style={{ margin: 0, paddingLeft: '20px', color: '#475569', fontSize: '0.9rem' }}>
           {template.activities.map(act => <li key={act} style={{ marginBottom: '6px' }}>{act}</li>)}
-          <li>Or any other relevant activity (select "Other")</li>
+          <li>Or any other relevant activity (select &quot;Other&quot;)</li>
         </ul>
       </div>
 
