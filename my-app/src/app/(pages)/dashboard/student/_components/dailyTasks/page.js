@@ -414,6 +414,183 @@ export default function DailyTasks({ studentData }) {
   );
 }
 
+/* ── Report Generator Component ── */
+function ReportGenerator({ day, stakeholder, readOnly }) {
+  const ro = { background: readOnly ? '#f9f9f9' : undefined };
+  const [entries, setEntries] = useState([{ id: Date.now(), image: null, date: '', description: '' }]);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleImageChange = (index, e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const newEntries = [...entries];
+        newEntries[index].image = reader.result;
+        setEntries(newEntries);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleFieldChange = (index, field, value) => {
+    const newEntries = [...entries];
+    newEntries[index][field] = value;
+    setEntries(newEntries);
+  };
+
+  const addEntry = () => {
+    setEntries([...entries, { id: Date.now() + Math.random(), image: null, date: '', description: '' }]);
+  };
+
+  const removeEntry = (index) => {
+    const newEntries = entries.filter((_, i) => i !== index);
+    setEntries(newEntries);
+  };
+
+  const generatePDF = async () => {
+    for (let i = 0; i < entries.length; i++) {
+      const e = entries[i];
+      if (!e.image || !e.date || !e.description?.trim()) {
+        alert(`Please complete Entry ${i + 1} (Image, Date, and Description are all mandatory).`);
+        return;
+      }
+    }
+
+    setIsGenerating(true);
+    try {
+      const { jsPDF } = await import('jspdf');
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      
+      const drawBorders = () => {
+        doc.setDrawColor(0);
+        doc.setLineWidth(0.5);
+        doc.rect(5, 5, pageWidth - 10, pageHeight - 10);
+      };
+
+      let yOffset = 25;
+      drawBorders();
+
+      // Heading: Day-X Report
+      doc.setFontSize(22);
+      doc.setFont('helvetica', 'bold');
+      const title = `Day-${day} Report`;
+      doc.text(title, pageWidth / 2, yOffset, { align: 'center' });
+      yOffset += 12;
+      
+      // Stakeholder Category: Bold and Underlined
+      doc.setFontSize(14);
+      const shText = `Stakeholder: ${stakeholder}`;
+      const shWidth = doc.getTextWidth(shText);
+      doc.text(shText, pageWidth / 2, yOffset, { align: 'center' });
+      doc.line((pageWidth / 2) - (shWidth / 2), yOffset + 1, (pageWidth / 2) + (shWidth / 2), yOffset + 1);
+      
+      doc.setFont('helvetica', 'normal');
+      yOffset += 15;
+
+      for (let i = 0; i < entries.length; i++) {
+        const entry = entries[i];
+        if (i > 0 && i % 2 === 0) {
+          doc.addPage();
+          drawBorders();
+          yOffset = 20;
+        }
+
+        if (entry.image) {
+          doc.addImage(entry.image, 'JPEG', 25, yOffset, 160, 80);
+        }
+        
+        yOffset += 88;
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`Date: ${entry.date}`, 25, yOffset);
+        yOffset += 7;
+        
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'normal');
+        const splitDesc = doc.splitTextToSize(`Description: ${entry.description}`, 160);
+        doc.text(splitDesc, 25, yOffset);
+        yOffset += (splitDesc.length * 6) + 15;
+      }
+
+      doc.save(`Day_${day}_Report.pdf`);
+    } catch (err) {
+      console.error('Failed to generate PDF', err);
+      alert('Error generating PDF.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  return (
+    <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: 24, marginTop: 32, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}>
+      <h4 style={{ margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: 10, color: '#1e293b', fontSize: '1.1rem' }}>
+        <FaClipboardList style={{ color: '#014a01' }} /> Day-{day} Auto Document Generator
+      </h4>
+      <p style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: 20 }}>
+        Capture and document your interactions. This tool will generate a professional PDF report with borders for your Day-{day} activities.
+      </p>
+      
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        {entries.map((entry, index) => (
+          <div key={entry.id} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, padding: 18, position: 'relative', boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)' }}>
+            <div style={{ fontWeight: 600, marginBottom: 16, display: 'flex', justifyContent: 'space-between', color: '#334155' }}>
+              <span>Interaction Photo {index + 1}</span>
+              {entries.length > 1 && !readOnly && (
+                <button onClick={() => removeEntry(index)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', fontWeight: 500 }}>
+                  <FaTimes /> Remove
+                </button>
+              )}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 20 }}>
+              <div>
+                {entry.image ? (
+                  <div style={{ width: '100%', height: 130, position: 'relative', overflow: 'hidden', borderRadius: 8, border: '1px solid #cbd5e1' }}>
+                    <Image src={entry.image} alt="preview" fill style={{ objectFit: 'cover' }} unoptimized />
+                  </div>
+                ) : (
+                  <div style={{ width: '100%', height: 130, background: '#f1f5f9', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', border: '2px dashed #cbd5e1', fontSize: '0.85rem' }}>
+                    Photo Required
+                  </div>
+                )}
+                {!readOnly && (
+                  <label style={{ display: 'block', marginTop: 10, padding: '6px 12px', background: '#f1f5f9', borderRadius: 6, cursor: 'pointer', textAlign: 'center', fontSize: '0.8rem', color: '#475569', fontWeight: 500, border: '1px solid #cbd5e1' }}>
+                    Upload Image
+                    <input type="file" accept="image/*" onChange={(e) => handleImageChange(index, e)} style={{ display: 'none' }} />
+                  </label>
+                )}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>Date</label>
+                  <input type="date" value={entry.date} onChange={(e) => handleFieldChange(index, 'date', e.target.value)} readOnly={readOnly} style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #cbd5e1', outline: 'none', fontSize: '0.9rem', ...ro }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>Short Description</label>
+                  <textarea placeholder="e.g. Discussing problem statement with stakeholder..." value={entry.description} onChange={(e) => handleFieldChange(index, 'description', e.target.value)} readOnly={readOnly} style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #cbd5e1', minHeight: 70, resize: 'none', outline: 'none', fontSize: '0.9rem', ...ro }} />
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      
+      {!readOnly && (
+        <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
+          <button onClick={addEntry} style={{ padding: '12px 20px', borderRadius: 8, border: '1px solid #014a01', background: '#fff', color: '#014a01', fontWeight: 600, cursor: 'pointer', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'all 0.2s' }}>
+            + Add Another Entry
+          </button>
+          <button onClick={generatePDF} disabled={isGenerating} style={{ padding: '12px 20px', borderRadius: 8, border: 'none', background: '#014a01', color: '#fff', fontWeight: 600, cursor: isGenerating ? 'not-allowed' : 'pointer', flex: 1, opacity: isGenerating ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}>
+            {isGenerating ? 'Generating...' : <>📥 Download Day-{day} PDF</>}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ── Day 1 ── */
 function Day1({ data, onChange, ps, readOnly }) {
   const text  = data.inference || '';
@@ -540,6 +717,9 @@ function DaySurvey({ day, personCount, stakeholderIdx, survey, data, onChange, r
           )}
         </div>
       )}
+
+      {/* Added Report Generator for documentation */}
+      <ReportGenerator day={day} stakeholder={sh.stakeholder} readOnly={readOnly} />
     </div>
   );
 }
@@ -648,168 +828,21 @@ function Day5({ saved, survey, data, onChange, readOnly }) {
 /* ── Day 6 ── */
 function Day6({ data, onChange, readOnly }) {
   const ro = { background: readOnly ? '#f9f9f9' : undefined };
-  const [entries, setEntries] = useState([{ id: Date.now(), image: null, date: '', description: '' }]);
-  const [isGenerating, setIsGenerating] = useState(false);
-
-  const handleImageChange = (index, e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const newEntries = [...entries];
-        newEntries[index].image = reader.result;
-        setEntries(newEntries);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleFieldChange = (index, field, value) => {
-    const newEntries = [...entries];
-    newEntries[index][field] = value;
-    setEntries(newEntries);
-  };
-
-  const addEntry = () => {
-    setEntries([...entries, { id: Date.now() + Math.random(), image: null, date: '', description: '' }]);
-  };
-
-  const removeEntry = (index) => {
-    const newEntries = entries.filter((_, i) => i !== index);
-    setEntries(newEntries);
-  };
-
-  const generatePDF = async () => {
-    // Validation
-    for (let i = 0; i < entries.length; i++) {
-      const e = entries[i];
-      if (!e.image || !e.date || !e.description?.trim()) {
-        alert(`Please complete Entry ${i + 1} (Image, Date, and Description are all mandatory).`);
-        return;
-      }
-    }
-
-    setIsGenerating(true);
-    try {
-      const { jsPDF } = await import('jspdf');
-      const doc = new jsPDF();
-      let yOffset = 20;
-
-      doc.setFontSize(20);
-      doc.setFont('helvetica', 'bold');
-      const title = 'Intervention Activity Documentation';
-      doc.text(title, 105, yOffset, { align: 'center' });
-      
-      // Underline
-      const titleWidth = doc.getTextWidth(title);
-      doc.setLineWidth(0.5);
-      doc.line(105 - (titleWidth / 2), yOffset + 2, 105 + (titleWidth / 2), yOffset + 2);
-      
-      doc.setFont('helvetica', 'normal');
-      yOffset += 20;
-
-      for (let i = 0; i < entries.length; i++) {
-        const entry = entries[i];
-        if (i > 0 && i % 2 === 0) {
-          doc.addPage();
-          yOffset = 20;
-        }
-
-        if (entry.image) {
-          doc.addImage(entry.image, 'JPEG', 20, yOffset, 170, 80);
-        } else {
-          doc.setDrawColor(200);
-          doc.rect(20, yOffset, 170, 80);
-          doc.setFontSize(12);
-          doc.text('No Image Uploaded', 105, yOffset + 40, { align: 'center' });
-        }
-        
-        yOffset += 90;
-        doc.setFontSize(12);
-        doc.text(`Date: ${entry.date || 'Not specified'}`, 20, yOffset);
-        yOffset += 8;
-        
-        doc.setFontSize(10);
-        const splitDesc = doc.splitTextToSize(`Description: ${entry.description || 'No description provided.'}`, 170);
-        doc.text(splitDesc, 20, yOffset);
-        yOffset += (splitDesc.length * 5) + 15;
-      }
-
-      doc.save('intervention_documentation.pdf');
-    } catch (err) {
-      console.error('Failed to generate PDF', err);
-      alert('Error generating PDF. Please ensure your images are valid and try again.');
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
   return (
     <div>
       <div className="dt-info-box" style={{marginBottom:18}}>
         <h4>Task: Intervention Activity Documentation</h4>
         <ul>
-          <li>Compile all photos from Days 2, 3, and 4 stakeholder interactions</li>
-          <li>Add <strong>date</strong> and <strong>description</strong> for each photo</li>
-          <li>Upload to Google Doc / Drive folder — <strong>must be publicly viewable</strong></li>
+          <li>Use the <strong>Day-2, Day-3 and Day-4 Report generators</strong> to compile your photos and interactions.</li>
+          <li>Upload all generated PDFs to a single Google Drive folder.</li>
+          <li>Ensure the folder/files are <strong>publicly viewable</strong>.</li>
         </ul>
-      </div>
-
-      <div style={{ background: '#f5f5f5', border: '1px solid #ddd', borderRadius: 8, padding: 20, marginBottom: 24 }}>
-        <h4 style={{ margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: 8 }}><FaClipboardList /> Auto Document Generator</h4>
-        <p style={{ fontSize: '0.88rem', color: '#555', marginBottom: 16 }}>Use this tool to easily compile your photos and descriptions into a ready-to-upload PDF.</p>
-        
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          {entries.map((entry, index) => (
-            <div key={entry.id} style={{ background: '#fff', border: '1px solid #e0e0e0', borderRadius: 8, padding: 16, position: 'relative' }}>
-              <div style={{ fontWeight: 600, marginBottom: 12, display: 'flex', justifyContent: 'space-between' }}>
-                <span>Entry {index + 1}</span>
-                {entries.length > 1 && !readOnly && (
-                  <button onClick={() => removeEntry(index)} style={{ background: 'none', border: 'none', color: '#d32f2f', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <FaTimes /> Remove
-                  </button>
-                )}
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 16 }}>
-                <div>
-                  {entry.image ? (
-                    <div style={{ width: '100%', height: 120, position: 'relative' }}>
-                      <Image src={entry.image} alt="preview" fill style={{ objectFit: 'cover', borderRadius: 6, border: '1px solid #ccc' }} unoptimized />
-                    </div>
-                  ) : (
-                    <div style={{ width: '100%', height: 120, background: '#eee', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999', border: '1px dashed #ccc' }}>No Image (Required)</div>
-                  )}
-                  {!readOnly && <input type="file" accept="image/*" onChange={(e) => handleImageChange(index, e)} style={{ marginTop: 8, fontSize: '0.8rem', width: '100%' }} />}
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#555' }}>Date of Activity (Required)</label>
-                    <input type="date" value={entry.date} onChange={(e) => handleFieldChange(index, 'date', e.target.value)} readOnly={readOnly} style={{ width: '100%', padding: '6px 10px', borderRadius: 4, border: '1px solid #ccc', outline: 'none', ...ro }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#555' }}>Description (Required)</label>
-                    <textarea placeholder="Describe this photo..." value={entry.description} onChange={(e) => handleFieldChange(index, 'description', e.target.value)} readOnly={readOnly} style={{ width: '100%', padding: '8px 10px', borderRadius: 4, border: '1px solid #ccc', minHeight: 60, resize: 'vertical', outline: 'none', ...ro }} />
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-        
-        {!readOnly && (
-          <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
-            <button onClick={addEntry} style={{ padding: '10px 16px', borderRadius: 6, border: '1px solid #014a01', background: '#fff', color: '#014a01', fontWeight: 600, cursor: 'pointer', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>+ Add Another Photo</button>
-            <button onClick={generatePDF} disabled={isGenerating} style={{ padding: '10px 16px', borderRadius: 6, border: 'none', background: '#014a01', color: '#fff', fontWeight: 600, cursor: isGenerating ? 'not-allowed' : 'pointer', flex: 1, opacity: isGenerating ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              {isGenerating ? 'Generating PDF...' : '📥 Download as PDF'}
-            </button>
-          </div>
-        )}
       </div>
 
       <div className="dt-warning-box">⚠️ Set sharing to <strong>&quot;Anyone with the link can view&quot;</strong>. Private links will NOT be evaluated.</div>
       <div className="dt-link-section">
         <label htmlFor="d6-link">Google Drive Public Link</label>
-        <p>After generating your PDF, upload it to Google Drive and paste the shareable link here.</p>
+        <p>Paste the shareable link to your reports folder here.</p>
         <input id="d6-link" type="url" className="dt-link-input" placeholder="https://drive.google.com/…"
           value={data.driveLink||''} readOnly={readOnly} style={ro}
           onChange={e => !readOnly && onChange('driveLink', e.target.value)} />

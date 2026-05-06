@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import './page.css';
 import Navbar from "@/components/Navbar";
@@ -10,12 +10,27 @@ import ChangePassword from './_components/changePassword/page';
 import Students from './_components/students/page';
 import Leads from './_components/leads/page';
 import CompletedStudents from './_components/completedStudents/page';
-import DailyTasksViewer from '../studentLead/_components/dailyTasksViewer/page';
+import FinalReports from './_components/finalReports/page';
 import EvaluationPlan from '../student/_components/evaluationPlan/page';
 
 export default function FacultyMentorDashboard() {
   const { user, isLoading, isAuthenticated } = useAuth();
   const [activeSection, setActiveSection] = useState('overview');
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useEffect(() => {
+    if (!user) return;
+    fetch('/api/dashboard/facultyMentor/finalReports', { credentials: 'include' })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          const submitted = data.data?.submittedReports || [];
+          const pending = submitted.filter(s => !s.completed && !(s.marksCompleted === 'P')).length;
+          setPendingCount(pending);
+        }
+      })
+      .catch(() => {});
+  }, [user]);
 
   if (isLoading) {
     return <div className="loading">Loading...</div>;
@@ -26,7 +41,6 @@ export default function FacultyMentorDashboard() {
   }
 
   const handleSectionClick = (section) => {
-    // console.log('Section clicked:', section);
     setActiveSection(section);
   };
 
@@ -72,10 +86,19 @@ export default function FacultyMentorDashboard() {
             <span className="item-label">Evaluation Plan</span>
           </button>
           <button
-            className={`sidebar-item ${activeSection === 'daily-tasks' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('daily-tasks')}
+            className={`sidebar-item ${activeSection === 'evaluate' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('evaluate')}
+            style={{ position: 'relative' }}
           >
-            <span className="item-label">Daily Tasks</span>
+            <span className="item-label">Evaluate</span>
+            {pendingCount > 0 && (
+              <span style={{
+                position: 'absolute', top: '6px', right: '10px',
+                background: '#e53e3e', color: '#fff', borderRadius: '50%',
+                minWidth: '20px', height: '20px', fontSize: '0.72rem', fontWeight: 700,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px'
+              }}>{pendingCount}</span>
+            )}
           </button>
 
           <button
@@ -93,7 +116,7 @@ export default function FacultyMentorDashboard() {
            activeSection === 'leads' ? <Leads user={user} /> :
            activeSection === 'completed-students' ? <CompletedStudents user={user} /> :
            activeSection === 'evaluation-plan' ? <EvaluationPlan /> :
-           activeSection === 'daily-tasks' ? <DailyTasksViewer /> :
+           activeSection === 'evaluate' ? <FinalReports /> :
            <ChangePassword user={user} />}
         </main>
       </div>
