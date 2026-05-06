@@ -46,6 +46,18 @@ export async function GET(request) {
 
       const leadIds = [leadRows[0].lead1Id, leadRows[0].lead2Id].filter(Boolean);
 
+      // Guard: no leads assigned to this mentor yet
+      if (!leadIds.length) {
+        return NextResponse.json({
+          success: true,
+          data: {
+            submittedReports: [],
+            pendingReports: [],
+            availableSlots: []
+          }
+        }, { status: 200 });
+      }
+
       // Get all students for these leads
       const [students] = await db.execute(
         `SELECT r.username, r.name, r.mode, r.slot, sl.name as studentLeadName, sl.username as studentLeadUsername
@@ -54,6 +66,7 @@ export async function GET(request) {
          WHERE r.studentLeadId IN (${leadIds.map(() => '?').join(',')})`,
         leadIds
       );
+
 
       if (!students.length) {
         return NextResponse.json({
