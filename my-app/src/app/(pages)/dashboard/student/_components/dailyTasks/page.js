@@ -915,12 +915,12 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
       doc.setFontSize(11);
       doc.setFont('times', 'bold');
       doc.setTextColor(40, 80, 40);
-      doc.text('KALASALINGAM ACADEMY OF RESEARCH AND EDUCATION', PW / 2, y, { align: 'center' });
+      doc.text('K L DEEMED TO BE UNIVERSITY', PW / 2, y, { align: 'center' });
       y += 7;
       doc.setFontSize(9);
       doc.setFont('times', 'normal');
       doc.setTextColor(80, 80, 80);
-      doc.text('(Deemed to be University under Section 3 of UGC Act 1956)', PW / 2, y, { align: 'center' });
+      doc.text('(Koneru Lakshmaiah Education Foundation, Deemed to be University under Section 3 of UGC Act, 1956)', PW / 2, y, { align: 'center' });
       y += 10;
       doc.setDrawColor(30, 80, 30);
       doc.setLineWidth(0.5);
@@ -1119,12 +1119,12 @@ function CaseStudyGenerator({ studentData, readOnly }) {
       doc.setFontSize(11);
       doc.setFont('times', 'bold');
       doc.setTextColor(40, 80, 40);
-      doc.text('KALASALINGAM ACADEMY OF RESEARCH AND EDUCATION', PW / 2, y, { align: 'center' });
+      doc.text('K L DEEMED TO BE UNIVERSITY', PW / 2, y, { align: 'center' });
       y += 7;
       doc.setFontSize(9);
       doc.setFont('times', 'normal');
       doc.setTextColor(80, 80, 80);
-      doc.text('(Deemed to be University under Section 3 of UGC Act 1956)', PW / 2, y, { align: 'center' });
+      doc.text('(Koneru Lakshmaiah Education Foundation, Deemed to be University under Section 3 of UGC Act, 1956)', PW / 2, y, { align: 'center' });
       y += 7;
 
       // Divider
@@ -1273,7 +1273,7 @@ function CaseStudyGenerator({ studentData, readOnly }) {
         doc.setFont('times', 'italic');
         doc.setTextColor(120, 120, 120);
         doc.text(
-          `KARE Internship 2026  |  ${template.title}  |  Page ${p} of ${totalPages}`,
+          `SOCIAL INTERNSHIP 2026  |  ${template.title}  |  Page ${p} of ${totalPages}`,
           PW / 2, PH - 11, { align: 'center' }
         );
       }
