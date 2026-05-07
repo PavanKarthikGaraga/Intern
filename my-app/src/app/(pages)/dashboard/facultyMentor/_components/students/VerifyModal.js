@@ -117,6 +117,7 @@ export default function VerifyModal({ student, onClose }) {
     if (student?.username) {
       fetchReports();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [student]);
 
   // Listen for marks from popup
@@ -131,6 +132,7 @@ export default function VerifyModal({ student, onClose }) {
     };
     window.addEventListener('message', handler);
     return () => window.removeEventListener('message', handler);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleVerification = async (day, verified) => {

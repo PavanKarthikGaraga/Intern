@@ -54,6 +54,7 @@ export default function VerifyModal({ student, onClose }) {
     };
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchDaysData = async () => {
@@ -73,6 +74,7 @@ export default function VerifyModal({ student, onClose }) {
     }
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (student?.username) fetchDaysData(); }, [student]);
 
   // POST attendance/marks/message and reset sstatus

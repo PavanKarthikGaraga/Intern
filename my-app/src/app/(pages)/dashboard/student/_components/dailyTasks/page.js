@@ -1486,7 +1486,7 @@ function Day6({ data, onChange, readOnly, studentData }) {
 }
 
 /* ── Case Study Generator ── */
-function CaseStudyGenerator({ studentData, readOnly, survey }) {
+function CaseStudyGenerator({ studentData, readOnly, survey, saved }) {
   const domain   = studentData?.selectedDomain || '';
   const baseTemplate = getTemplate(domain);
   const template = JSON.parse(JSON.stringify(baseTemplate)); // deep copy for mutation
