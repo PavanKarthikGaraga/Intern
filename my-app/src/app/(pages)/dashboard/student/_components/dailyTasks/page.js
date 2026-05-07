@@ -428,7 +428,7 @@ export default function DailyTasks({ studentData }) {
                 {activeDay === 4 && <DaySurvey day={4} stakeholderIdx={2} survey={survey} data={dayData(4)} onChange={(f,v) => setDayField(4,f,v)} readOnly={isSaved} onFinalSubmit={handleSave} saving={saving} minPersons={3} />}
                 {activeDay === 5 && <Day5 saved={saved} survey={survey} data={dayData(5)} onChange={(f,v) => setDayField(5,f,v)} readOnly={isSaved} />}
                 {activeDay === 6 && <Day6 data={dayData(6)} onChange={(f,v) => setDayField(6,f,v)} readOnly={isSaved} studentData={studentData} />}
-                {activeDay === 7 && <Day7 data={dayData(7)} onChange={(f,v) => setDayField(7,f,v)} readOnly={isSaved} studentData={studentData} />}
+                {activeDay === 7 && <Day7 data={dayData(7)} onChange={(f,v) => setDayField(7,f,v)} readOnly={isSaved} studentData={studentData} survey={survey} />}
 
                 {activeDay !== 2 && activeDay !== 3 && activeDay !== 4 && (
                   <div className="dt-save-row">
@@ -1465,9 +1465,32 @@ function Day6({ data, onChange, readOnly, studentData }) {
 }
 
 /* ── Case Study Generator ── */
-function CaseStudyGenerator({ studentData, readOnly }) {
+function CaseStudyGenerator({ studentData, readOnly, survey }) {
   const domain   = studentData?.selectedDomain || '';
-  const template = getTemplate(domain);
+  const baseTemplate = getTemplate(domain);
+  const template = JSON.parse(JSON.stringify(baseTemplate)); // deep copy for mutation
+  
+  if (template && template.sections) {
+    template.sections.forEach(section => {
+      if (section.heading.includes('Stakeholders Covered')) {
+        section.heading = '3. Number of Stakeholders Covered';
+        const dynamicFields = [];
+        if (survey && survey.length > 0) {
+          survey.forEach((s, idx) => {
+            if (s.stakeholder) {
+              dynamicFields.push(`Stakeholder ${idx + 1} (${s.stakeholder})`);
+            }
+          });
+        }
+        if (dynamicFields.length === 0) {
+          dynamicFields.push('Stakeholder 1', 'Stakeholder 2', 'Stakeholder 3');
+        }
+        section.fields = dynamicFields;
+        section.isStakeholderCount = true;
+      }
+    });
+  }
+
   const [answers, setAnswers] = useState({});
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -1794,14 +1817,26 @@ function CaseStudyGenerator({ studentData, readOnly }) {
                     <label style={{ fontSize: '0.82rem', fontWeight: 600, color: '#2e7d32', display: 'block', marginBottom: 4 }}>
                       {field}
                     </label>
-                    <textarea
-                      rows={2}
-                      readOnly={readOnly}
-                      value={answers[key] || ''}
-                      onChange={e => setAns(key, e.target.value)}
-                      placeholder={`Enter ${field.toLowerCase()}…`}
-                      style={inputStyle(readOnly)}
-                    />
+                    {section.isStakeholderCount ? (
+                      <input
+                        type="number"
+                        min="0"
+                        readOnly={readOnly}
+                        value={answers[key] || ''}
+                        onChange={e => setAns(key, e.target.value)}
+                        placeholder="Enter number of people covered"
+                        style={inputStyle(readOnly)}
+                      />
+                    ) : (
+                      <textarea
+                        rows={2}
+                        readOnly={readOnly}
+                        value={answers[key] || ''}
+                        onChange={e => setAns(key, e.target.value)}
+                        placeholder={`Enter ${field.toLowerCase()}…`}
+                        style={inputStyle(readOnly)}
+                      />
+                    )}
                   </div>
                 );
               })}
@@ -1831,7 +1866,7 @@ function CaseStudyGenerator({ studentData, readOnly }) {
 }
 
 /* ── Day 7 ── */
-function Day7({ data, onChange, readOnly, studentData }) {
+function Day7({ data, onChange, readOnly, studentData, survey }) {
   const ro = { background: readOnly ? '#f9f9f9' : undefined };
   return (
     <div>
@@ -1847,7 +1882,7 @@ function Day7({ data, onChange, readOnly, studentData }) {
       </div>
 
       {/* Case Study Generator */}
-      <CaseStudyGenerator studentData={studentData} readOnly={readOnly} />
+      <CaseStudyGenerator studentData={studentData} readOnly={readOnly} survey={survey} />
 
       <div className="dt-link-section" style={{marginTop: 28}}>
         <label htmlFor="d7-cs">Case Study Document Public Link</label>
