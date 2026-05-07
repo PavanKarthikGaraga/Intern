@@ -1529,6 +1529,8 @@ function CaseStudyGenerator({ studentData, readOnly, survey }) {
   const [answers, setAnswers] = useState({});
   const [isGenerating, setIsGenerating] = useState(false);
   const pieChartRef = useRef(null);
+  const savedRef = useRef(saved);
+  useEffect(() => { savedRef.current = saved; }, [saved]);
 
   // Auto-populate basic info and survey summaries
   useEffect(() => {
@@ -1547,7 +1549,7 @@ function CaseStudyGenerator({ studentData, readOnly, survey }) {
     if (survey && survey.length > 0) {
       survey.forEach((s, idx) => {
         const dayNum = idx + 2;
-        const dd = saved && saved[dayNum] && saved[dayNum].data ? saved[dayNum].data : {};
+        const dd = savedRef.current && savedRef.current[dayNum] && savedRef.current[dayNum].data ? savedRef.current[dayNum].data : {};
         const pCount = Object.keys(dd).filter(k => k.startsWith('p')).length;
         
         stakeholderCounts[`Stakeholder ${idx + 1} (${s.stakeholder})`] = pCount.toString();
@@ -1579,7 +1581,7 @@ function CaseStudyGenerator({ studentData, readOnly, survey }) {
     if (dataAnalysisSection && survey && survey.length > 0) {
       survey.forEach((s, idx) => {
         const dayNum = idx + 2;
-        const dd = saved && saved[dayNum] && saved[dayNum].data ? saved[dayNum].data : {};
+        const dd = savedRef.current && savedRef.current[dayNum] && savedRef.current[dayNum].data ? savedRef.current[dayNum].data : {};
         const persons = Object.keys(dd).filter(k => k.startsWith('p'));
         const stakeholderLabel = s.stakeholder;
         const numQ = s.questions ? s.questions.length : 0;
@@ -1647,7 +1649,7 @@ function CaseStudyGenerator({ studentData, readOnly, survey }) {
       });
       return changed ? updated : prev;
     });
-  }, [studentData, template, domain, survey, saved]);
+  }, [studentData, template, domain, survey]);
 
   const setAns = (key, val) => setAnswers(prev => ({ ...prev, [key]: val }));
 
@@ -2160,7 +2162,7 @@ function CaseStudyGenerator({ studentData, readOnly, survey }) {
                         {field === 'Stakeholder-wise distribution' && answers['PIE_CHART_IMG'] && (
                           <div style={{ marginTop: 12, padding: 12, background: '#f5f5f5', borderRadius: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                             <h6 style={{ margin: '0 0 10px 0', color: '#333' }}>Auto-Generated Stakeholder Distribution</h6>
-                            <img src={answers['PIE_CHART_IMG']} alt="Distribution Pie Chart" style={{ width: 250, height: 250 }} />
+                            <Image src={answers['PIE_CHART_IMG']} alt="Distribution Pie Chart" width={250} height={250} unoptimized style={{ width: 250, height: 250 }} />
                           </div>
                         )}
                       </>
