@@ -1562,6 +1562,12 @@ function CaseStudyGenerator({ studentData, readOnly, survey }) {
 
   const wc = (txt) => (txt || '').trim().split(/\s+/).filter(Boolean).length;
 
+  const getMinWords = (heading, field) => {
+    if (heading.startsWith('1.') || heading.startsWith('3.') || heading.startsWith('4.') || heading.startsWith('5.')) return 0;
+    if (field.includes('Student Name') || field.includes('Roll Number') || field.includes('Duration') || field.includes('Domain') || field.includes('District') || field.includes('Village/Area')) return 0;
+    return 30; // 30 words minimum for all descriptive analytical fields
+  };
+
   const handlePhotoUpload = (e, key) => {
     const file = e.target.files[0];
     if (file) {
@@ -1616,6 +1622,18 @@ function CaseStudyGenerator({ studentData, readOnly, survey }) {
           }
           if (wc(answers[`${key}__desc1`]) < 20 || wc(answers[`${key}__desc2`]) < 20) {
             alert(`Description for ${field} photos must be at least 20 words.`); return;
+          }
+        }
+      }
+      
+      if (!section.tableHeaders && !section.isStakeholderCount) {
+        for (const field of (section.fields || [])) {
+          const minW = getMinWords(section.heading, field);
+          if (minW > 0) {
+            const key = `${section.heading}__${field}`;
+            if (wc(answers[key]) < minW) {
+              alert(`The field "${field}" in section "${section.heading}" must be at least ${minW} words.`); return;
+            }
           }
         }
       }
@@ -1820,27 +1838,28 @@ function CaseStudyGenerator({ studentData, readOnly, survey }) {
         for (const field of (section.fields || [])) {
           const key = `${section.heading}__${field}`;
           const val = answers[key] || '';
-          checkNewPage(12);
-          doc.setFontSize(10);
+          checkNewPage(16);
+          doc.setFontSize(11);
           doc.setFont('times', 'bold');
-          doc.setTextColor(50, 50, 50);
+          doc.setTextColor(30, 60, 30);
           doc.text(`${field}:`, margin + 3, y);
-          y += 6;
+          y += 7;
           if (val.trim()) {
             doc.setFont('times', 'normal');
+            doc.setFontSize(11);
             doc.setTextColor(20, 20, 20);
             const vlines = doc.splitTextToSize(val, contentW - 6);
-            checkNewPage(vlines.length * 5.5);
+            checkNewPage(vlines.length * 6);
             doc.text(vlines, margin + 6, y);
-            y += vlines.length * 5.5 + 2;
+            y += vlines.length * 6 + 4;
           } else {
             // blank lines placeholder
-            doc.setDrawColor(180, 180, 180);
+            doc.setDrawColor(200, 200, 200);
             doc.setLineWidth(0.2);
-            for (let l = 0; l < 2; l++) {
+            for (let l = 0; l < 3; l++) {
               doc.line(margin + 6, y + l * 6, margin + contentW - 6, y + l * 6);
             }
-            y += 14;
+            y += 20;
           }
         }
 
@@ -1982,11 +2001,20 @@ function CaseStudyGenerator({ studentData, readOnly, survey }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {section.fields.map(field => {
                 const key = `${section.heading}__${field}`;
+                const minW = getMinWords(section.heading, field);
+                const count = wc(answers[key] || '');
                 return (
                   <div key={field}>
-                    <label style={{ fontSize: '0.82rem', fontWeight: 600, color: '#2e7d32', display: 'block', marginBottom: 4 }}>
-                      {field}
-                    </label>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#2e7d32', display: 'block' }}>
+                        {field}
+                      </label>
+                      {minW > 0 && !section.isStakeholderCount && (
+                        <span style={{ fontSize: '0.75rem', fontWeight: 600, color: count < minW ? '#d32f2f' : '#388e3c' }}>
+                          {count < minW ? `Min ${minW} words (Current: ${count})` : `✓ ${count} words`}
+                        </span>
+                      )}
+                    </div>
                     {section.isStakeholderCount ? (
                       <input
                         type="number"
@@ -1999,7 +2027,7 @@ function CaseStudyGenerator({ studentData, readOnly, survey }) {
                       />
                     ) : (
                       <textarea
-                        rows={2}
+                        rows={minW > 0 ? 3 : 2}
                         readOnly={readOnly}
                         value={answers[key] || ''}
                         onChange={e => setAns(key, e.target.value)}
