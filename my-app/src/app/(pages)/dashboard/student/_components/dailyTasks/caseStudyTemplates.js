@@ -33,7 +33,7 @@ export const CASE_STUDY_TEMPLATES = {
       },
       {
         heading: '6. Key Findings',
-        fields: ['Major problems identified', 'Severity level', 'Root causes'],
+        fields: ['Major problems identified', 'Impact of the Problems', 'Root causes'],
       },
       {
         heading: '7. Field Observations',
@@ -85,7 +85,7 @@ export const CASE_STUDY_TEMPLATES = {
       },
       {
         heading: '6. Key Findings',
-        fields: ['Major problems identified', 'Severity level', 'Root causes'],
+        fields: ['Major problems identified', 'Impact of the Problems', 'Root causes'],
       },
       {
         heading: '7. Field Observations',
@@ -241,7 +241,7 @@ export const CASE_STUDY_TEMPLATES = {
       },
       {
         heading: '6. Key Findings',
-        fields: ['Major problems identified', 'Severity level', 'Root causes'],
+        fields: ['Major problems identified', 'Impact of the Problems', 'Root causes'],
       },
       {
         heading: '7. Field Observations',
@@ -293,7 +293,7 @@ export const CASE_STUDY_TEMPLATES = {
       },
       {
         heading: '6. Key Findings',
-        fields: ['Major problems identified', 'Severity level (Low / Moderate / High)', 'Root causes'],
+        fields: ['Major problems identified', 'Impact of the Problems', 'Root causes'],
       },
       {
         heading: '7. Field Observations',
@@ -345,7 +345,7 @@ export const CASE_STUDY_TEMPLATES = {
       },
       {
         heading: '6. Key Findings',
-        fields: ['Major problems identified', 'Severity level (Low / Moderate / High)', 'Root causes'],
+        fields: ['Major problems identified', 'Impact of the Problems', 'Root causes'],
       },
       {
         heading: '7. Field Observations',
@@ -501,7 +501,7 @@ export const CASE_STUDY_TEMPLATES = {
       },
       {
         heading: '6. Key Findings',
-        fields: ['Major issues identified', 'Severity level', 'Root causes'],
+        fields: ['Major issues identified', 'Impact of the Problems', 'Root causes'],
       },
       {
         heading: '7. Field Observations',
@@ -553,7 +553,7 @@ export const CASE_STUDY_TEMPLATES = {
       },
       {
         heading: '6. Key Findings',
-        fields: ['Major problems identified', 'Severity level', 'Root causes'],
+        fields: ['Major problems identified', 'Impact of the Problems', 'Root causes'],
       },
       {
         heading: '7. Field Observations',
@@ -605,7 +605,7 @@ export const CASE_STUDY_TEMPLATES = {
       },
       {
         heading: '6. Key Findings',
-        fields: ['Major problems identified', 'Severity level (Low / Moderate / High)', 'Root causes'],
+        fields: ['Major problems identified', 'Impact of the Problems', 'Root causes'],
       },
       {
         heading: '7. Field Observations',
@@ -639,7 +639,7 @@ export const CASE_STUDY_TEMPLATES = {
       { heading: '3. Stakeholders Covered', fields: ['Youth/Students', 'Parents', 'Coaches/Trainers', 'Teachers/Health Workers'] },
       { heading: '4. Survey Summary', fields: ['Total respondents', 'Stakeholder-wise distribution'] },
       { heading: '5. Data Analysis', tableHeaders: ['Stakeholder', 'No. of Questions', 'Yes (%)', 'No (%)', 'Key Issue'], tableRows: ['Youth', 'Parents', 'Others'] },
-      { heading: '6. Key Findings', fields: ['Major problems identified', 'Severity level', 'Root causes'] },
+      { heading: '6. Key Findings', fields: ['Major problems identified', 'Impact of the Problems', 'Root causes'] },
       { heading: '7. Field Observations', fields: ['Participation levels', 'Facility condition', 'Lifestyle habits', 'Awareness level'] },
       { heading: '8. Impact Analysis', fields: ['Physical health impact', 'Mental health impact', 'Social impact'] },
       { heading: '9. Student Intervention', fields: ['Activity conducted', 'Target group', 'Number of participants', 'Immediate outcomes'] },
@@ -657,7 +657,7 @@ export const CASE_STUDY_TEMPLATES = {
       { heading: '3. Stakeholders Covered', fields: ['Residents', 'Farmers', 'Students', 'Officials/NGOs'] },
       { heading: '4. Survey Summary', fields: ['Total respondents', 'Stakeholder-wise distribution'] },
       { heading: '5. Data Analysis', tableHeaders: ['Stakeholder', 'No. of Questions', 'Yes (%)', 'No (%)', 'Key Issue'], tableRows: ['Residents', 'Farmers', 'Others'] },
-      { heading: '6. Key Findings', fields: ['Major problems identified', 'Severity level', 'Root causes'] },
+      { heading: '6. Key Findings', fields: ['Major problems identified', 'Impact of the Problems', 'Root causes'] },
       { heading: '7. Field Observations', fields: ['Tree cover status', 'Maintenance practices', 'Awareness levels', 'Environmental conditions'] },
       { heading: '8. Impact Analysis', fields: ['Environmental impact', 'Social impact', 'Sustainability impact'] },
       { heading: '9. Student Intervention', fields: ['Activity conducted', 'Target group', 'Number of participants', 'Immediate outcomes'] },
@@ -675,7 +675,7 @@ export const CASE_STUDY_TEMPLATES = {
       { heading: '3. Stakeholders Covered', fields: ['Students/Youth', 'Parents', 'Teachers', 'Health Workers/Counselors'] },
       { heading: '4. Survey Summary', fields: ['Total respondents', 'Stakeholder-wise distribution'] },
       { heading: '5. Data Analysis', tableHeaders: ['Stakeholder', 'No. of Questions', 'Yes (%)', 'No (%)', 'Key Issue'], tableRows: ['Youth', 'Parents', 'Others'] },
-      { heading: '6. Key Findings', fields: ['Major problems identified', 'Severity level', 'Root causes'] },
+      { heading: '6. Key Findings', fields: ['Major problems identified', 'Impact of the Problems', 'Root causes'] },
       { heading: '7. Field Observations', fields: ['Stress levels', 'Awareness levels', 'Support systems', 'Behavioral patterns'] },
       { heading: '8. Impact Analysis', fields: ['Impact on mental health', 'Impact on academic/work performance', 'Social impact'] },
       { heading: '9. Student Intervention', fields: ['Activity conducted', 'Target group', 'Number of participants', 'Immediate outcomes'] },
@@ -693,7 +693,7 @@ export const CASE_STUDY_TEMPLATES = {
       { heading: '3. Stakeholders Covered', fields: ['Youth/Job Seekers', 'Parents/Families', 'Entrepreneurs', 'Officials/Banks/Trainers'] },
       { heading: '4. Survey Summary', fields: ['Total respondents', 'Stakeholder-wise distribution'] },
       { heading: '5. Data Analysis', tableHeaders: ['Stakeholder', 'No. of Questions', 'Yes (%)', 'No (%)', 'Key Issue'], tableRows: ['Youth', 'Families', 'Others'] },
-      { heading: '6. Key Findings', fields: ['Major problems identified', 'Severity level', 'Root causes'] },
+      { heading: '6. Key Findings', fields: ['Major problems identified', 'Impact of the Problems', 'Root causes'] },
       { heading: '7. Field Observations', fields: ['Employment patterns', 'Skill levels', 'Business activities', 'Financial access'] },
       { heading: '8. Impact Analysis', fields: ['Economic impact', 'Social impact', 'Employment impact'] },
       { heading: '9. Student Intervention', fields: ['Activity conducted', 'Target group', 'Number of participants', 'Immediate outcomes'] },
@@ -711,7 +711,7 @@ export const CASE_STUDY_TEMPLATES = {
       { heading: '3. Stakeholders Covered', fields: ['Elders', 'Youth/Students', 'Leaders', 'Artisans/Families'] },
       { heading: '4. Survey Summary', fields: ['Total respondents', 'Stakeholder-wise distribution'] },
       { heading: '5. Data Analysis', tableHeaders: ['Stakeholder', 'No. of Questions', 'Yes (%)', 'No (%)', 'Key Issue'], tableRows: ['Elders', 'Youth', 'Others'] },
-      { heading: '6. Key Findings', fields: ['Major problems identified', 'Severity level', 'Root causes'] },
+      { heading: '6. Key Findings', fields: ['Major problems identified', 'Impact of the Problems', 'Root causes'] },
       { heading: '7. Field Observations', fields: ['Cultural practices', 'Participation levels', 'Knowledge transfer', 'Language usage'] },
       { heading: '8. Impact Analysis', fields: ['Cultural impact', 'Social impact', 'Heritage preservation impact'] },
       { heading: '9. Student Intervention', fields: ['Activity conducted', 'Target group', 'Number of participants', 'Immediate outcomes'] },
@@ -729,7 +729,7 @@ export const CASE_STUDY_TEMPLATES = {
       { heading: '3. Stakeholders Covered', fields: ['Residents', 'Students', 'Officials', 'Volunteers/Health Workers'] },
       { heading: '4. Survey Summary', fields: ['Total respondents', 'Stakeholder-wise distribution'] },
       { heading: '5. Data Analysis', tableHeaders: ['Stakeholder', 'No. of Questions', 'Yes (%)', 'No (%)', 'Key Issue'], tableRows: ['Residents', 'Students', 'Others'] },
-      { heading: '6. Key Findings', fields: ['Major problems identified', 'Severity level', 'Root causes'] },
+      { heading: '6. Key Findings', fields: ['Major problems identified', 'Impact of the Problems', 'Root causes'] },
       { heading: '7. Field Observations', fields: ['Risk zones', 'Preparedness levels', 'Infrastructure condition', 'Awareness levels'] },
       { heading: '8. Impact Analysis', fields: ['Risk impact', 'Safety impact', 'Community resilience impact'] },
       { heading: '9. Student Intervention', fields: ['Activity conducted', 'Target group', 'Number of participants', 'Immediate outcomes'] },
@@ -747,7 +747,7 @@ export const CASE_STUDY_TEMPLATES = {
       { heading: '3. Stakeholders Covered', fields: ['Households', 'Students', 'Technicians/Vendors', 'Officials/Banks'] },
       { heading: '4. Survey Summary', fields: ['Total respondents', 'Stakeholder-wise distribution'] },
       { heading: '5. Data Analysis', tableHeaders: ['Stakeholder', 'No. of Questions', 'Yes (%)', 'No (%)', 'Key Issue'], tableRows: ['Households', 'Students', 'Others'] },
-      { heading: '6. Key Findings', fields: ['Major problems identified', 'Severity level', 'Root causes'] },
+      { heading: '6. Key Findings', fields: ['Major problems identified', 'Impact of the Problems', 'Root causes'] },
       { heading: '7. Field Observations', fields: ['Energy usage patterns', 'Renewable adoption levels', 'Awareness levels', 'Sustainability practices'] },
       { heading: '8. Impact Analysis', fields: ['Environmental impact', 'Economic impact', 'Social impact'] },
       { heading: '9. Student Intervention', fields: ['Activity conducted', 'Target group', 'Number of participants', 'Immediate outcomes'] },
@@ -765,7 +765,7 @@ export const CASE_STUDY_TEMPLATES = {
       { heading: '3. Stakeholders Covered', fields: ['Households', 'Students', 'Shop Owners/Institutions', 'Officials/Electricity Staff'] },
       { heading: '4. Survey Summary', fields: ['Total respondents', 'Stakeholder-wise distribution'] },
       { heading: '5. Data Analysis', tableHeaders: ['Stakeholder', 'No. of Questions', 'Yes (%)', 'No (%)', 'Key Issue'], tableRows: ['Households', 'Students', 'Others'] },
-      { heading: '6. Key Findings', fields: ['Major problems identified', 'Severity level', 'Root causes'] },
+      { heading: '6. Key Findings', fields: ['Major problems identified', 'Impact of the Problems', 'Root causes'] },
       { heading: '7. Field Observations', fields: ['Consumption patterns', 'Energy wastage', 'Appliance usage', 'Awareness levels'] },
       { heading: '8. Impact Analysis', fields: ['Economic impact (electricity cost)', 'Environmental impact', 'Behavioral impact'] },
       { heading: '9. Student Intervention', fields: ['Activity conducted', 'Target group', 'Number of participants', 'Immediate outcomes'] },
@@ -802,7 +802,7 @@ export const CASE_STUDY_TEMPLATES = {
       },
       {
         heading: '6. Key Findings',
-        fields: ['Major problems identified', 'Severity level', 'Root causes'],
+        fields: ['Major problems identified', 'Impact of the Problems', 'Root causes'],
       },
       {
         heading: '7. Field Observations',

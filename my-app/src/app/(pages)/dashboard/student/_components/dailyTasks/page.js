@@ -1574,6 +1574,39 @@ function CaseStudyGenerator({ studentData, readOnly, survey }) {
       autoFields[`${stakeHeading}__${k}`] = stakeholderCounts[k];
     });
 
+    // Auto-populate Data Analysis table from survey responses
+    const dataAnalysisSection = template.sections.find(s => s.heading.includes('Data Analysis'));
+    if (dataAnalysisSection && survey && survey.length > 0) {
+      survey.forEach((s, idx) => {
+        const dayNum = idx + 2;
+        const dd = saved && saved[dayNum] && saved[dayNum].data ? saved[dayNum].data : {};
+        const persons = Object.keys(dd).filter(k => k.startsWith('p'));
+        const stakeholderLabel = s.stakeholder;
+        const numQ = s.questions ? s.questions.length : 0;
+        
+        autoFields[`${dataAnalysisSection.heading}__${stakeholderLabel}__No. of Questions`] = numQ.toString();
+        
+        if (numQ > 0 && persons.length > 0) {
+          let totalYes = 0, totalAnswers = 0;
+          persons.forEach(pk => {
+            s.questions.forEach((q, qi) => {
+              const a = dd[pk]?.answers?.[qi];
+              if (a === 'Yes' || a === 'No') {
+                totalAnswers++;
+                if (a === 'Yes') totalYes++;
+              }
+            });
+          });
+          if (totalAnswers > 0) {
+            const yesPct = Math.round((totalYes / totalAnswers) * 100);
+            const noPct = 100 - yesPct;
+            autoFields[`${dataAnalysisSection.heading}__${stakeholderLabel}__Yes (%)`] = yesPct.toString();
+            autoFields[`${dataAnalysisSection.heading}__${stakeholderLabel}__No (%)`] = noPct.toString();
+          }
+        }
+      });
+    }
+
     if (pieData.length > 0 && pieChartRef.current) {
       const ctx = pieChartRef.current.getContext('2d');
       ctx.clearRect(0, 0, 400, 400);
@@ -1621,9 +1654,11 @@ function CaseStudyGenerator({ studentData, readOnly, survey }) {
   const wc = (txt) => (txt || '').trim().split(/\s+/).filter(Boolean).length;
 
   const getMinWords = (heading, field) => {
-    if (heading.startsWith('1.') || heading.startsWith('3.') || heading.startsWith('4.') || heading.startsWith('5.')) return 0;
+    // Auto-filled / identity fields — no word count needed
     if (field.includes('Student Name') || field.includes('Roll Number') || field.includes('Duration') || field.includes('Domain') || field.includes('District') || field.includes('Village/Area')) return 0;
-    return 30; // 30 words minimum for all descriptive analytical fields
+    // Sections 1, 3, 4 are numeric / auto-fetched, no min words
+    if (heading.startsWith('1.') || heading.startsWith('3.') || heading.startsWith('4.')) return 0;
+    return 30; // All analytical/descriptive fields need ≥ 30 words
   };
 
   const handlePhotoUpload = (e, key) => {
@@ -1692,6 +1727,15 @@ function CaseStudyGenerator({ studentData, readOnly, survey }) {
             if (wc(answers[key]) < minW) {
               alert(`The field "${field}" in section "${section.heading}" must be at least ${minW} words.`); return;
             }
+          }
+        }
+      }
+      // Validate Data Analysis — Key Issue is mandatory (non-auto fields)
+      if (section.tableHeaders && section.tableRows) {
+        for (const row of section.tableRows) {
+          const keyIssueKey = `${section.heading}__${row}__Key Issue`;
+          if (!answers[keyIssueKey] || !answers[keyIssueKey].trim()) {
+            alert(`Please enter the Key Issue for "${row}" in the Data Analysis section.`); return;
           }
         }
       }
@@ -2021,39 +2065,50 @@ function CaseStudyGenerator({ studentData, readOnly, survey }) {
           {/* Table section */}
           {section.tableHeaders ? (
             <div style={{ overflowX: 'auto' }}>
+              <p style={{ fontSize: '0.8rem', color: '#1565c0', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <strong>ℹ Auto-filled:</strong> No. of Questions, Yes (%), and No (%) are automatically calculated from your survey responses. Only <strong>Key Issue</strong> requires manual entry.
+              </p>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                 <thead>
                   <tr style={{ background: '#e8f5e9' }}>
                     {section.tableHeaders.map(h => (
-                      <th key={h} style={{ border: '1px solid #b2dfdb', padding: '7px 10px', textAlign: 'left', fontWeight: 700, color: '#014a01' }}>{h}</th>
+                      <th key={h} style={{ border: '1px solid #b2dfdb', padding: '7px 10px', textAlign: 'left', fontWeight: 700, color: '#014a01' }}>
+                        {h}
+                        {h === 'Key Issue' && <span style={{ color: '#d32f2f', marginLeft: 4 }}>*</span>}
+                        {(h === 'No. of Questions' || h === 'Yes (%)' || h === 'No (%)') && (
+                          <span style={{ fontSize: '0.65rem', color: '#1565c0', marginLeft: 4, fontWeight: 400 }}>(auto)</span>
+                        )}
+                      </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {section.tableRows.map(row => (
                     <tr key={row}>
-                      <td style={{ border: '1px solid #c8e6c9', padding: '6px 10px', fontWeight: 600, color: '#333' }}>{row}</td>
+                      <td style={{ border: '1px solid #c8e6c9', padding: '6px 10px', fontWeight: 600, color: '#333', background: '#fafafa' }}>{row}</td>
                       {section.tableHeaders.slice(1).map((h) => {
                         const key = `${section.heading}__${row}__${h}`;
+                        const isAutoFilled = h === 'No. of Questions' || h === 'Yes (%)' || h === 'No (%)';
+                        const isKeyIssue = h === 'Key Issue';
+                        const hasVal = answers[key] && answers[key].trim();
                         return (
-                          <td key={h} style={{ border: '1px solid #c8e6c9', padding: 0 }}>
+                          <td key={h} style={{ border: '1px solid #c8e6c9', padding: 0, background: isAutoFilled ? '#f0f9f0' : isKeyIssue && !hasVal && !readOnly ? '#fff8f8' : '#fff' }}>
                             <input
-                              type={h.includes('(%)') || h.includes('No. of Questions') ? 'number' : 'text'}
-                              readOnly={readOnly}
+                              type={isAutoFilled ? 'number' : 'text'}
+                              readOnly={isAutoFilled || readOnly}
                               value={answers[key] || ''}
                               onChange={e => {
-                                const val = e.target.value;
-                                setAns(key, val);
-                                if (val !== '') {
-                                  const num = parseFloat(val);
-                                  if (!isNaN(num)) {
-                                    if (h === 'Yes (%)') setAns(`${section.heading}__${row}__No (%)`, String(100 - num));
-                                    if (h === 'No (%)') setAns(`${section.heading}__${row}__Yes (%)`, String(100 - num));
-                                  }
-                                }
+                                if (isAutoFilled) return;
+                                setAns(key, e.target.value);
                               }}
-                              style={{ width: '100%', border: 'none', padding: '6px 8px', outline: 'none', background: readOnly ? '#f9f9f9' : '#fff', fontSize: '0.85rem' }}
-                              placeholder="—"
+                              style={{
+                                width: '100%', border: 'none', padding: '6px 8px', outline: 'none',
+                                background: 'transparent', fontSize: '0.85rem',
+                                color: isAutoFilled ? '#2e7d32' : '#1a1a1a',
+                                cursor: isAutoFilled ? 'default' : 'text',
+                                fontWeight: isAutoFilled ? 600 : 400,
+                              }}
+                              placeholder={isKeyIssue ? 'Enter key issue… (required)' : '—'}
                             />
                           </td>
                         );
