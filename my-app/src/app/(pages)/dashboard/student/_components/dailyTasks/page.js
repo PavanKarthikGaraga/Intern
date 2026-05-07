@@ -283,14 +283,9 @@ export default function DailyTasks({ studentData }) {
       setMsgType('err'); return;
     }
     if ([2, 3, 4].includes(activeDay)) {
-      const pCount = data.personCount || 0;
-      if (pCount === 0) {
-        setMsg(`Please specify the number of people interviewed.`);
-        setMsgType('err'); return;
-      }
+      const pCount = data.personCount || 3;
       const sh = survey[activeDay - 2];
       const qCount = sh?.questions?.length || 0;
-      
       for (let p = 1; p <= pCount; p++) {
         const pd = data[`p${p}`] || {};
         const ansCount = Object.keys(pd.answers || {}).length;
@@ -651,7 +646,7 @@ function Day1({ data, onChange, ps, readOnly }) {
         </ul>
       </div>
       <div className="dt-textarea-wrap">
-        <label htmlFor="day1-inference">Your Inference &amp; Analysis</label>
+        <label htmlFor="day1-inference">Your Understanding &amp; Stakeholder Analysis</label>
         <textarea
           id="day1-inference" className="dt-textarea"
           placeholder="Write your understanding of the problem statement here…"
@@ -669,13 +664,15 @@ function Day1({ data, onChange, ps, readOnly }) {
 
 /* ── Days 2/3/4 – Survey ── */
 function DaySurvey({ day, stakeholderIdx, survey, data, onChange, readOnly, onFinalSubmit, saving }) {
+  const initCount = Math.max(data.personCount || 3, 3);
+  const [personCount, setPersonCount] = useState(initCount);
   const [activePerson, setActivePerson] = useState(1);
+
   if (!survey) return <div className="dt-info-box"><h4>Survey data not available</h4><p>No questions found for your problem statement. Contact admin.</p></div>;
 
   const sh = survey[stakeholderIdx];
   if (!sh) return <p>Stakeholder not found.</p>;
 
-  const personCount = data.personCount || 0;
   const persons = Array.from({ length: personCount }, (_, i) => i + 1);
   const pk = (p) => `p${p}`;
   const pd = (p) => data[pk(p)] || { name: '', answers: {} };
@@ -692,95 +689,102 @@ function DaySurvey({ day, stakeholderIdx, survey, data, onChange, readOnly, onFi
     onChange(pk(p), { ...cur, answers: { ...(cur.answers||{}), [qi]: val } });
   };
 
+  const addPerson = () => {
+    const next = personCount + 1;
+    setPersonCount(next);
+    onChange('personCount', next);
+  };
+
+  const removePerson = () => {
+    if (personCount <= 1) return;
+    const next = personCount - 1;
+    setPersonCount(next);
+    onChange('personCount', next);
+    if (activePerson > next) setActivePerson(next);
+  };
+
+  // Initialise personCount in data on first use
+  if (!data.personCount) onChange('personCount', personCount);
+
   const cur = pd(activePerson);
   return (
     <div>
       <div className="dt-sh-banner">
         <span className="sh-tag">{sh.stakeholder}</span>
         <p>Record your interviews for this stakeholder group.</p>
-        <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <label style={{ fontSize: '0.85rem', fontWeight: 600 }}>Number of people interviewed:</label>
-          <input 
-            type="number" 
-            min="1" max="50" 
-            value={personCount || ''} 
-            onChange={(e) => {
-               if(readOnly) return;
-               const val = parseInt(e.target.value) || 0;
-               onChange('personCount', val);
-            }} 
-            disabled={readOnly}
-            style={{ width: '80px', padding: '6px 10px', borderRadius: '4px', border: '1px solid #ccc', outline: 'none' }}
-          />
-        </div>
       </div>
 
-      {personCount > 0 && (
-        <>
-          <p className="dt-persons-label">Select Person:</p>
-          <div className="dt-person-tabs" style={{ flexWrap: 'wrap' }}>
-            {persons.map(p => (
-              <button key={p} className={`dt-person-btn ${activePerson===p?'active':''} ${isFilled(p)?'filled':''}`}
-                onClick={() => setActivePerson(p)}>
-                Person {p} {isFilled(p) ? '✓' : ''}
-              </button>
-            ))}
-          </div>
-          <div className="dt-name-wrap">
-            <label htmlFor={`n-d${day}-p${activePerson}`}>Name of Person {activePerson}</label>
-            <input id={`n-d${day}-p${activePerson}`} type="text" className="dt-name-input"
-              placeholder="Enter interviewee's name" value={cur.name||''} readOnly={readOnly}
-              onChange={e => setField(activePerson, 'name', e.target.value)}
-              style={readOnly ? {background:'#f9f9f9'} : {}} />
-          </div>
-          <ul className="dt-questions">
-            {sh.questions.map((q, qi) => {
-              const ans = cur.answers?.[qi];
-              return (
-                <li key={qi} className="dt-q-item">
-                  <p className="dt-q-text">{qi+1}. {q}</p>
-                  <div className="dt-q-btns">
-                    <button className={`dt-q-btn yes ${ans==='Yes'?'sel':''}`}
-                      onClick={() => setAnswer(activePerson, qi, 'Yes')} disabled={readOnly}>Yes</button>
-                    <button className={`dt-q-btn no ${ans==='No'?'sel':''}`}
-                      onClick={() => setAnswer(activePerson, qi, 'No')} disabled={readOnly}>No</button>
-                    {ans && !readOnly && (
-                      <button className="dt-q-btn clear"
-                        onClick={() => {
-                          const currentAnswers = { ...cur.answers };
-                          delete currentAnswers[qi];
-                          const currentPersonData = data[pk(activePerson)] || { name:'', answers:{} };
-                          onChange(pk(activePerson), { ...currentPersonData, answers: currentAnswers });
-                        }}>Clear</button>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+      <p className="dt-persons-label">Select Person:</p>
+      <div className="dt-person-tabs" style={{ flexWrap: 'wrap', gap: '8px', marginBottom: '12px' }}>
+        {persons.map(p => (
+          <button key={p} className={`dt-person-btn ${activePerson===p?'active':''} ${isFilled(p)?'filled':''}`}
+            onClick={() => setActivePerson(p)}>
+            Person {p} {isFilled(p) ? '✓' : ''}
+          </button>
+        ))}
+        {!readOnly && (
+          <>
+            <button onClick={addPerson} style={{ padding: '6px 14px', borderRadius: '6px', border: '1px dashed #014a01', background: '#f0fdf4', color: '#014a01', fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem' }}>+ Add Person</button>
+            {personCount > 1 && (
+              <button onClick={removePerson} style={{ padding: '6px 14px', borderRadius: '6px', border: '1px dashed #dc2626', background: '#fef2f2', color: '#dc2626', fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem' }}>− Remove Last</button>
+            )}
+          </>
+        )}
+      </div>
 
-          {!readOnly && (
-            <div style={{ marginTop: '20px', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-              {activePerson < personCount && (
-                <button className="dt-save-btn" onClick={() => {
-                  if (isFilled(activePerson)) setActivePerson(activePerson + 1);
-                  else alert('Please complete all questions and the name for this person first.');
-                }} style={{ background: '#1a7a1a' }}>
-                  Save Person &amp; Next
-                </button>
-              )}
-              {persons.every(p => isFilled(p)) && (
-                <button className="dt-save-btn" onClick={() => {
-                  if (window.confirm("Are you sure you want to submit all responses for evaluation? This cannot be undone.")) {
-                    onFinalSubmit();
-                  }
-                }} disabled={saving}>
-                  {saving ? 'Submitting...' : 'Submit All Responses for Evaluation'}
-                </button>
-              )}
-            </div>
+      <div className="dt-name-wrap">
+        <label htmlFor={`n-d${day}-p${activePerson}`}>Name of Person {activePerson}</label>
+        <input id={`n-d${day}-p${activePerson}`} type="text" className="dt-name-input"
+          placeholder="Enter interviewee's name" value={cur.name||''} readOnly={readOnly}
+          onChange={e => setField(activePerson, 'name', e.target.value)}
+          style={readOnly ? {background:'#f9f9f9'} : {}} />
+      </div>
+      <ul className="dt-questions">
+        {sh.questions.map((q, qi) => {
+          const ans = cur.answers?.[qi];
+          return (
+            <li key={qi} className="dt-q-item">
+              <p className="dt-q-text">{qi+1}. {q}</p>
+              <div className="dt-q-btns">
+                <button className={`dt-q-btn yes ${ans==='Yes'?'sel':''}`}
+                  onClick={() => setAnswer(activePerson, qi, 'Yes')} disabled={readOnly}>Yes</button>
+                <button className={`dt-q-btn no ${ans==='No'?'sel':''}`}
+                  onClick={() => setAnswer(activePerson, qi, 'No')} disabled={readOnly}>No</button>
+                {ans && !readOnly && (
+                  <button className="dt-q-btn clear"
+                    onClick={() => {
+                      const currentAnswers = { ...cur.answers };
+                      delete currentAnswers[qi];
+                      const currentPersonData = data[pk(activePerson)] || { name:'', answers:{} };
+                      onChange(pk(activePerson), { ...currentPersonData, answers: currentAnswers });
+                    }}>Clear</button>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+
+      {!readOnly && (
+        <div style={{ marginTop: '20px', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+          {activePerson < personCount && (
+            <button className="dt-save-btn" onClick={() => {
+              if (isFilled(activePerson)) setActivePerson(activePerson + 1);
+              else alert('Please complete all questions and the name for this person first.');
+            }} style={{ background: '#1a7a1a' }}>
+              Save Person &amp; Next
+            </button>
           )}
-        </>
+          {persons.every(p => isFilled(p)) && (
+            <button className="dt-save-btn" onClick={() => {
+              if (window.confirm("Are you sure you want to submit all responses for evaluation? This cannot be undone.")) {
+                onFinalSubmit();
+              }
+            }} disabled={saving}>
+              {saving ? 'Submitting...' : 'Submit All Responses for Evaluation'}
+            </button>
+          )}
+        </div>
       )}
     </div>
   );
