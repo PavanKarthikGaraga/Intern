@@ -1088,10 +1088,14 @@ function Day5({ saved, survey, data, onChange, readOnly }) {
   return (
     <div>
       <div className="dt-analysis-info" style={{ marginBottom: 24, padding: 16, background: '#e3f2fd', color: '#0d47a1', borderRadius: 8 }}>
-        <h4 style={{ margin: '0 0 10px 0', color: '#0d47a1', display: 'flex', alignItems: 'center', gap: '8px' }}>🎯 Objective</h4>
+        <h4 style={{ margin: '0 0 10px 0', color: '#0d47a1', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <FaClipboardList /> Objective
+        </h4>
         <p style={{ margin: '0 0 10px 0' }}>To convert survey data into meaningful insights.</p>
-        <h5 style={{ margin: '0 0 5px 0', color: '#0d47a1' }}>📊 Interpretation Guidelines:</h5>
-        <ul style={{ margin: 0, paddingLeft: 20, fontSize: '0.9rem' }}>
+        <h5 style={{ margin: '0 0 5px 0', color: '#0d47a1', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <FaChartBar /> Interpretation Guidelines:
+        </h5>
+        <ul style={{ margin: 0, paddingLeft: 28, fontSize: '0.9rem' }}>
           <li><strong>&gt;70% YES</strong> &rarr; High Severity Problem</li>
           <li><strong>40–70% YES</strong> &rarr; Moderate Severity Problem</li>
           <li><strong>&lt;40% YES</strong> &rarr; Low Severity Problem</li>
@@ -1498,6 +1502,20 @@ function CaseStudyGenerator({ studentData, readOnly, survey }) {
         section.fields = dynamicFields;
         section.isStakeholderCount = true;
       }
+      if (section.heading.includes('Data Analysis')) {
+        if (section.tableRows) {
+          const dynamicRows = [];
+          if (survey && survey.length > 0) {
+            survey.forEach(s => {
+              if (s.stakeholder) dynamicRows.push(s.stakeholder);
+            });
+          }
+          if (dynamicRows.length === 0) {
+            dynamicRows.push('Stakeholder 1', 'Stakeholder 2', 'Stakeholder 3');
+          }
+          section.tableRows = dynamicRows;
+        }
+      }
     });
   }
 
@@ -1725,8 +1743,19 @@ function CaseStudyGenerator({ studentData, readOnly, survey }) {
 
         // Data Analysis table
         if (section.tableHeaders) {
-          const colW = contentW / section.tableHeaders.length;
           const cellH = 8;
+          let colWidths = [];
+          if (section.heading.includes('Data Analysis')) {
+             colWidths = [
+               contentW * 0.20, // Stakeholder
+               contentW * 0.16, // No of Q
+               contentW * 0.11, // Yes
+               contentW * 0.11, // No
+               contentW * 0.42  // Key Issue
+             ];
+          } else {
+             colWidths = Array(section.tableHeaders.length).fill(contentW / section.tableHeaders.length);
+          }
 
           // Header row
           checkNewPage(cellH + 2);
@@ -1734,12 +1763,16 @@ function CaseStudyGenerator({ studentData, readOnly, survey }) {
           doc.rect(margin, y, contentW, cellH, 'F');
           doc.setDrawColor(100, 140, 100);
           doc.setLineWidth(0.3);
+          
+          let currentX = margin;
           section.tableHeaders.forEach((h, i) => {
-            doc.rect(margin + i * colW, y, colW, cellH);
+            const w = colWidths[i];
+            doc.rect(currentX, y, w, cellH);
             doc.setFont('times', 'bold');
             doc.setFontSize(9);
             doc.setTextColor(20, 60, 20);
-            doc.text(h, margin + i * colW + 2, y + 5.5);
+            doc.text(h, currentX + 2, y + 5.5);
+            currentX += w;
           });
           y += cellH;
 
@@ -1748,15 +1781,27 @@ function CaseStudyGenerator({ studentData, readOnly, survey }) {
             checkNewPage(cellH + 1);
             doc.setFillColor(250, 255, 250);
             doc.rect(margin, y, contentW, cellH, 'F');
-            section.tableHeaders.forEach((_, i) => {
+            
+            currentX = margin;
+            section.tableHeaders.forEach((h, i) => {
+              const w = colWidths[i];
               doc.setDrawColor(160, 200, 160);
-              doc.rect(margin + i * colW, y, colW, cellH);
+              doc.rect(currentX, y, w, cellH);
+              doc.setFontSize(9);
+              
               if (i === 0) {
                 doc.setFont('times', 'bold');
-                doc.setFontSize(9);
                 doc.setTextColor(40, 40, 40);
-                doc.text(row, margin + i * colW + 2, y + 5.5);
+                doc.text(row, currentX + 2, y + 5.5);
+              } else {
+                doc.setFont('times', 'normal');
+                doc.setTextColor(20, 20, 20);
+                let val = answers[`${section.heading}__${row}__${h}`] || '';
+                // Extremely basic clipping so it doesn't bleed too far
+                if (val.length > w / 1.5) val = val.substring(0, Math.floor(w / 1.5)) + '...';
+                doc.text(val, currentX + 2, y + 5.5);
               }
+              currentX += w;
             });
             y += cellH;
           }
@@ -1895,18 +1940,31 @@ function CaseStudyGenerator({ studentData, readOnly, survey }) {
                   {section.tableRows.map(row => (
                     <tr key={row}>
                       <td style={{ border: '1px solid #c8e6c9', padding: '6px 10px', fontWeight: 600, color: '#333' }}>{row}</td>
-                      {section.tableHeaders.slice(1).map((h) => (
-                        <td key={h} style={{ border: '1px solid #c8e6c9', padding: 0 }}>
-                          <input
-                            type="text"
-                            readOnly={readOnly}
-                            value={answers[`${section.heading}__${row}__${h}`] || ''}
-                            onChange={e => setAns(`${section.heading}__${row}__${h}`, e.target.value)}
-                            style={{ width: '100%', border: 'none', padding: '6px 8px', outline: 'none', background: readOnly ? '#f9f9f9' : '#fff', fontSize: '0.85rem' }}
-                            placeholder="—"
-                          />
-                        </td>
-                      ))}
+                      {section.tableHeaders.slice(1).map((h) => {
+                        const key = `${section.heading}__${row}__${h}`;
+                        return (
+                          <td key={h} style={{ border: '1px solid #c8e6c9', padding: 0 }}>
+                            <input
+                              type={h.includes('(%)') || h.includes('No. of Questions') ? 'number' : 'text'}
+                              readOnly={readOnly}
+                              value={answers[key] || ''}
+                              onChange={e => {
+                                const val = e.target.value;
+                                setAns(key, val);
+                                if (val !== '') {
+                                  const num = parseFloat(val);
+                                  if (!isNaN(num)) {
+                                    if (h === 'Yes (%)') setAns(`${section.heading}__${row}__No (%)`, String(100 - num));
+                                    if (h === 'No (%)') setAns(`${section.heading}__${row}__Yes (%)`, String(100 - num));
+                                  }
+                                }
+                              }}
+                              style={{ width: '100%', border: 'none', padding: '6px 8px', outline: 'none', background: readOnly ? '#f9f9f9' : '#fff', fontSize: '0.85rem' }}
+                              placeholder="—"
+                            />
+                          </td>
+                        );
+                      })}
                     </tr>
                   ))}
                 </tbody>
