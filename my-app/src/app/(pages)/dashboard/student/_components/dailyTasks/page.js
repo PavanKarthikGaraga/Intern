@@ -396,9 +396,9 @@ export default function DailyTasks({ studentData }) {
             : (
               <>
                 {activeDay === 1 && <Day1 data={dayData(1)} onChange={(f,v) => setDayField(1,f,v)} ps={ps} readOnly={isSaved} />}
-                {activeDay === 2 && <DaySurvey day={2} stakeholderIdx={0} survey={survey} data={dayData(2)} onChange={(f,v) => setDayField(2,f,v)} readOnly={isSaved} onFinalSubmit={handleSave} saving={saving} />}
-                {activeDay === 3 && <DaySurvey day={3} stakeholderIdx={1} survey={survey} data={dayData(3)} onChange={(f,v) => setDayField(3,f,v)} readOnly={isSaved} onFinalSubmit={handleSave} saving={saving} />}
-                {activeDay === 4 && <DaySurvey day={4} stakeholderIdx={2} survey={survey} data={dayData(4)} onChange={(f,v) => setDayField(4,f,v)} readOnly={isSaved} onFinalSubmit={handleSave} saving={saving} />}
+                {activeDay === 2 && <DaySurvey day={2} stakeholderIdx={0} survey={survey} data={dayData(2)} onChange={(f,v) => setDayField(2,f,v)} readOnly={isSaved} onFinalSubmit={handleSave} saving={saving} minPersons={6} />}
+                {activeDay === 3 && <DaySurvey day={3} stakeholderIdx={1} survey={survey} data={dayData(3)} onChange={(f,v) => setDayField(3,f,v)} readOnly={isSaved} onFinalSubmit={handleSave} saving={saving} minPersons={3} />}
+                {activeDay === 4 && <DaySurvey day={4} stakeholderIdx={2} survey={survey} data={dayData(4)} onChange={(f,v) => setDayField(4,f,v)} readOnly={isSaved} onFinalSubmit={handleSave} saving={saving} minPersons={3} />}
                 {activeDay === 5 && <Day5 saved={saved} survey={survey} data={dayData(5)} onChange={(f,v) => setDayField(5,f,v)} readOnly={isSaved} />}
                 {activeDay === 6 && <Day6 data={dayData(6)} onChange={(f,v) => setDayField(6,f,v)} readOnly={isSaved} studentData={studentData} />}
                 {activeDay === 7 && <Day7 data={dayData(7)} onChange={(f,v) => setDayField(7,f,v)} readOnly={isSaved} studentData={studentData} />}
@@ -662,9 +662,187 @@ function Day1({ data, onChange, ps, readOnly }) {
   );
 }
 
+/* ── Survey Report Generator (Days 2/3/4) ── */
+function SurveyReportGenerator({ day, stakeholder, persons, personData }) {
+  const initSlots = () => persons.map(p => ({
+    id: `person-${p}-${Date.now()}`,
+    image: null,
+    description: personData[`p${p}`]?.name ? `${personData[`p${p}`].name}` : `Person ${p}`,
+  }));
+  const [slots, setSlots] = useState(initSlots);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleImageUpload = (index, e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setSlots(prev => prev.map((s, i) => i === index ? { ...s, image: reader.result } : s));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDescChange = (index, val) => {
+    setSlots(prev => prev.map((s, i) => i === index ? { ...s, description: val } : s));
+  };
+
+  const addSlot = () => {
+    setSlots(prev => [...prev, { id: `extra-${Date.now()}`, image: null, description: '' }]);
+  };
+
+  const removeSlot = (index) => {
+    if (slots.length <= 1) return;
+    setSlots(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const generatePDF = async () => {
+    for (let i = 0; i < slots.length; i++) {
+      if (!slots[i].image) {
+        alert(`Please upload a photo for slot ${i + 1} before generating the PDF.`);
+        return;
+      }
+    }
+    setIsGenerating(true);
+    try {
+      const { jsPDF } = await import('jspdf');
+      const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+      const PW = doc.internal.pageSize.getWidth();
+      const PH = doc.internal.pageSize.getHeight();
+      const margin = 15;
+      const contentW = PW - margin * 2;
+
+      const drawBorder = () => {
+        doc.setDrawColor(30, 60, 30);
+        doc.setLineWidth(0.8);
+        doc.rect(8, 8, PW - 16, PH - 16);
+        doc.setLineWidth(0.3);
+        doc.rect(10, 10, PW - 20, PH - 20);
+      };
+
+      const addHeader = (y) => {
+        doc.setFontSize(11); doc.setFont('times', 'bold'); doc.setTextColor(40, 80, 40);
+        doc.text('K L DEEMED TO BE UNIVERSITY', PW / 2, y, { align: 'center' });
+        y += 7;
+        doc.setFontSize(9); doc.setFont('times', 'normal'); doc.setTextColor(80, 80, 80);
+        doc.text('(Koneru Lakshmaiah Education Foundation, Deemed to be University under Section 3 of UGC Act, 1956)', PW / 2, y, { align: 'center' });
+        y += 8;
+        doc.setDrawColor(30, 80, 30); doc.setLineWidth(0.5);
+        doc.line(margin, y, PW - margin, y);
+        y += 10;
+
+        doc.setFontSize(18); doc.setFont('times', 'bold'); doc.setTextColor(0, 0, 0);
+        doc.text(`Day-${day} Report`, PW / 2, y, { align: 'center' });
+        y += 8;
+        doc.setFontSize(13); doc.setFont('times', 'italic'); doc.setTextColor(30, 90, 30);
+        const shText = `( ${stakeholder} )`;
+        doc.text(shText, PW / 2, y, { align: 'center' });
+        y += 12;
+        return y;
+      };
+
+      // Build pages: 2 slots per page
+      let pageSlots = [];
+      for (let i = 0; i < slots.length; i += 2) {
+        pageSlots.push(slots.slice(i, i + 2));
+      }
+
+      pageSlots.forEach((pair, pageIdx) => {
+        if (pageIdx > 0) doc.addPage();
+        drawBorder();
+        let y = margin + 5;
+        y = addHeader(y);
+
+        pair.forEach((slot, si) => {
+          if (slot.image) {
+            doc.addImage(slot.image, 'JPEG', margin, y, contentW, 72);
+            y += 76;
+          }
+          const descLines = doc.splitTextToSize(slot.description || '', contentW);
+          doc.setFontSize(10); doc.setFont('times', 'normal'); doc.setTextColor(0, 0, 0);
+          doc.text(descLines, margin, y);
+          y += descLines.length * 5 + (si === 0 && pair.length > 1 ? 10 : 0);
+        });
+      });
+
+      // Footer on all pages
+      const totalPages = doc.internal.getNumberOfPages();
+      for (let p = 1; p <= totalPages; p++) {
+        doc.setPage(p);
+        doc.setFontSize(8); doc.setFont('times', 'italic'); doc.setTextColor(120, 120, 120);
+        doc.text(
+          `SOCIAL INTERNSHIP 2026  |  DAY ${day} REPORT  |  Page ${p} of ${totalPages}`,
+          PW / 2, PH - 11, { align: 'center' }
+        );
+      }
+
+      doc.save(`Day${day}_${stakeholder.replace(/\s+/g, '_')}_Report.pdf`);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to generate PDF.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  return (
+    <div style={{ marginTop: 32, padding: 20, background: '#f0fdf4', borderRadius: 12, border: '1px solid #bbf7d0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.06)' }}>
+      <h4 style={{ margin: '0 0 6px 0', color: '#166534', display: 'flex', alignItems: 'center', gap: 10 }}>
+        <FaFilePdf /> Day-{day} Report Generator
+      </h4>
+      <p style={{ fontSize: '0.85rem', color: '#15803d', marginBottom: 20 }}>
+        Upload photos for each person interviewed. 2 photos will appear per PDF page with descriptions.
+      </p>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {slots.map((slot, index) => (
+          <div key={slot.id} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, padding: 16, position: 'relative' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <span style={{ fontWeight: 600, color: '#334155', fontSize: '0.9rem' }}>📷 Photo {index + 1}</span>
+              {slots.length > persons.length && (
+                <button onClick={() => removeSlot(index)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 500 }}>✕ Remove</button>
+              )}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 16 }}>
+              <div>
+                {slot.image ? (
+                  <img src={slot.image} alt="preview" style={{ width: '100%', height: 110, objectFit: 'cover', borderRadius: 8, border: '1px solid #cbd5e1' }} />
+                ) : (
+                  <div style={{ width: '100%', height: 110, background: '#f1f5f9', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', border: '2px dashed #cbd5e1', fontSize: '0.8rem' }}>No Photo</div>
+                )}
+                <label style={{ display: 'block', marginTop: 8, padding: '5px 10px', background: '#e0f2fe', borderRadius: 6, cursor: 'pointer', textAlign: 'center', fontSize: '0.78rem', color: '#0369a1', fontWeight: 500 }}>
+                  Upload Photo
+                  <input type="file" accept="image/*" onChange={e => handleImageUpload(index, e)} style={{ display: 'none' }} />
+                </label>
+              </div>
+              <div>
+                <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>Description</label>
+                <textarea
+                  value={slot.description}
+                  onChange={e => handleDescChange(index, e.target.value)}
+                  placeholder="Description of this interaction..."
+                  style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid #cbd5e1', minHeight: 80, resize: 'none', outline: 'none', fontSize: '0.88rem', boxSizing: 'border-box' }}
+                />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display: 'flex', gap: 12, marginTop: 20, flexWrap: 'wrap' }}>
+        <button onClick={addSlot} style={{ padding: '10px 18px', borderRadius: 8, border: '1px solid #014a01', background: '#fff', color: '#014a01', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+          + Add Photo Slot
+        </button>
+        <button onClick={generatePDF} disabled={isGenerating} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: '#16a34a', color: '#fff', fontWeight: 600, cursor: isGenerating ? 'not-allowed' : 'pointer', opacity: isGenerating ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <FaFilePdf /> {isGenerating ? 'Generating...' : `Download Day-${day} PDF`}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /* ── Days 2/3/4 – Survey ── */
-function DaySurvey({ day, stakeholderIdx, survey, data, onChange, readOnly, onFinalSubmit, saving }) {
-  const initCount = Math.max(data.personCount || 3, 3);
+function DaySurvey({ day, stakeholderIdx, survey, data, onChange, readOnly, onFinalSubmit, saving, minPersons = 3 }) {
+  const initCount = Math.max(data.personCount || minPersons, minPersons);
   const [personCount, setPersonCount] = useState(initCount);
   const [activePerson, setActivePerson] = useState(1);
 
@@ -677,6 +855,7 @@ function DaySurvey({ day, stakeholderIdx, survey, data, onChange, readOnly, onFi
   const pk = (p) => `p${p}`;
   const pd = (p) => data[pk(p)] || { name: '', answers: {} };
   const isFilled = (p) => { const d = pd(p); return d.name?.trim() && Object.keys(d.answers||{}).length === sh.questions.length; };
+  const allFilled = persons.every(p => isFilled(p));
 
   const setField = (p, field, value) => {
     if (readOnly) return;
@@ -696,7 +875,7 @@ function DaySurvey({ day, stakeholderIdx, survey, data, onChange, readOnly, onFi
   };
 
   const removePerson = () => {
-    if (personCount <= 1) return;
+    if (personCount <= minPersons) return;
     const next = personCount - 1;
     setPersonCount(next);
     onChange('personCount', next);
@@ -712,6 +891,7 @@ function DaySurvey({ day, stakeholderIdx, survey, data, onChange, readOnly, onFi
       <div className="dt-sh-banner">
         <span className="sh-tag">{sh.stakeholder}</span>
         <p>Record your interviews for this stakeholder group.</p>
+        <p style={{ fontSize: '0.8rem', color: '#555', marginTop: 4 }}>Minimum {minPersons} persons required.</p>
       </div>
 
       <p className="dt-persons-label">Select Person:</p>
@@ -725,9 +905,9 @@ function DaySurvey({ day, stakeholderIdx, survey, data, onChange, readOnly, onFi
         {!readOnly && (
           <>
             <button onClick={addPerson} style={{ padding: '6px 14px', borderRadius: '6px', border: '1px dashed #014a01', background: '#f0fdf4', color: '#014a01', fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem' }}>+ Add Person</button>
-            {personCount > 1 && (
-              <button onClick={removePerson} style={{ padding: '6px 14px', borderRadius: '6px', border: '1px dashed #dc2626', background: '#fef2f2', color: '#dc2626', fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem' }}>− Remove Last</button>
-            )}
+            <button onClick={removePerson} disabled={personCount <= minPersons} style={{ padding: '6px 14px', borderRadius: '6px', border: `1px dashed ${personCount <= minPersons ? '#ccc' : '#dc2626'}`, background: personCount <= minPersons ? '#f9f9f9' : '#fef2f2', color: personCount <= minPersons ? '#aaa' : '#dc2626', fontWeight: 600, cursor: personCount <= minPersons ? 'not-allowed' : 'pointer', fontSize: '0.85rem' }}>
+              − Remove Last {personCount <= minPersons ? `(min ${minPersons})` : ''}
+            </button>
           </>
         )}
       </div>
@@ -775,7 +955,7 @@ function DaySurvey({ day, stakeholderIdx, survey, data, onChange, readOnly, onFi
               Save Person &amp; Next
             </button>
           )}
-          {persons.every(p => isFilled(p)) && (
+          {allFilled && (
             <button className="dt-save-btn" onClick={() => {
               if (window.confirm("Are you sure you want to submit all responses for evaluation? This cannot be undone.")) {
                 onFinalSubmit();
@@ -785,6 +965,16 @@ function DaySurvey({ day, stakeholderIdx, survey, data, onChange, readOnly, onFi
             </button>
           )}
         </div>
+      )}
+
+      {/* PDF Report Generator — shown once all persons are filled */}
+      {allFilled && (
+        <SurveyReportGenerator
+          day={day}
+          stakeholder={sh.stakeholder}
+          persons={persons}
+          personData={data}
+        />
       )}
     </div>
   );
