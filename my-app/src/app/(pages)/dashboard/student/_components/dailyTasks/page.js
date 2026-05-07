@@ -805,7 +805,7 @@ function SurveyReportGenerator({ day, stakeholder, persons, personData }) {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 16 }}>
               <div>
                 {slot.image ? (
-                  <img src={slot.image} alt="preview" style={{ width: '100%', height: 110, objectFit: 'cover', borderRadius: 8, border: '1px solid #cbd5e1' }} />
+                  <Image src={slot.image} alt="preview" width={200} height={110} unoptimized style={{ width: '100%', height: 110, objectFit: 'cover', borderRadius: 8, border: '1px solid #cbd5e1' }} />
                 ) : (
                   <div style={{ width: '100%', height: 110, background: '#f1f5f9', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', border: '2px dashed #cbd5e1', fontSize: '0.8rem' }}>No Photo</div>
                 )}
