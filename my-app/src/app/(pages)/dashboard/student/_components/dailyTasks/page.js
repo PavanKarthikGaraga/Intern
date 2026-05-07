@@ -1183,6 +1183,27 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
   };
 
   const generatePDF = async () => {
+    // ── Pre-generation validation ──
+    if (!data.activityTitle) {
+      alert("Please select an activity title."); return;
+    }
+    if (data.activityTitle === 'Other' && !data.customTitle?.trim()) {
+      alert("Please specify the custom activity title."); return;
+    }
+    if (!data.coverPhoto || !data.photo2 || !data.photo3 || !data.photo4 || !data.photo5) {
+      alert("Please upload all 5 photos before generating the report."); return;
+    }
+    if (wc(data.coverDesc || '') < 80) {
+      alert(`Cover photo description needs at least 80 words (current: ${wc(data.coverDesc||'')})`); return;
+    }
+    const otherKeys = ['photo2Desc', 'photo3Desc', 'photo4Desc', 'photo5Desc'];
+    for (let k of otherKeys) {
+      const count = wc(data[k] || '');
+      if (count < 40) {
+        alert(`Each photo description needs at least 40 words (current: ${count} words)`); return;
+      }
+    }
+
     setIsGenerating(true);
     try {
       const { jsPDF } = await import('jspdf');
@@ -1311,6 +1332,12 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
     }
   };
 
+  const WordCountLabel = ({ count, min }) => (
+    <span style={{ float: 'right', fontSize: '0.75rem', fontWeight: 600, color: count < min ? '#ef4444' : '#16a34a' }}>
+      {count < min ? `Min ${min} words required (Current: ${count})` : `✅ ${count} words`}
+    </span>
+  );
+
   return (
     <div className="cs-generator-box" style={{ marginTop: '20px', padding: '20px', backgroundColor: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
       <h3 style={{ margin: '0 0 10px 0', color: '#166534', display: 'flex', alignItems: 'center', gap: '8px' }}><FaFilePdf /> Intervention Activity Report Generator</h3>
@@ -1320,7 +1347,7 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
       </p>
       
       <div style={{ marginBottom: '15px' }}>
-        <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', marginBottom: '6px' }}>Select Activity</label>
+        <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', marginBottom: '6px' }}>Select Activity <span style={{color:'#ef4444'}}>*</span></label>
         <select value={data.activityTitle || ''} onChange={e => !readOnly && onChange('activityTitle', e.target.value)} style={inputStyle(readOnly)} disabled={readOnly}>
           <option value="">-- Select an Activity --</option>
           {template.activities.map(act => <option key={act} value={act}>{act}</option>)}
@@ -1330,14 +1357,17 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
 
       {data.activityTitle === 'Other' && (
         <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', marginBottom: '6px' }}>Custom Activity Title</label>
+          <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', marginBottom: '6px' }}>Custom Activity Title <span style={{color:'#ef4444'}}>*</span></label>
           <input type="text" value={data.customTitle || ''} onChange={e => !readOnly && onChange('customTitle', e.target.value)} style={inputStyle(readOnly)} readOnly={readOnly} placeholder="Enter your activity title" />
         </div>
       )}
 
       {/* Page 1 Details */}
       <div style={{ marginBottom: '15px', padding: '15px', backgroundColor: '#fff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-        <h4 style={{ margin: '0 0 10px 0', fontSize: '0.95rem' }}>📄 Page 1: Cover Photo &amp; Description</h4>
+        <div style={{ marginBottom: '10px' }}>
+          <h4 style={{ margin: 0, fontSize: '0.95rem', display: 'inline-block' }}>📄 Page 1: Cover Photo &amp; Description</h4>
+          <WordCountLabel count={wc(data.coverDesc || '')} min={80} />
+        </div>
         <input type="file" accept="image/*" onChange={e => handlePhotoUpload(e, 'coverPhoto')} disabled={readOnly} style={{ marginBottom: '10px', fontSize: '0.8rem' }} />
         {data.coverPhoto && <div style={{ marginBottom: '10px', fontSize: '0.75rem', color: '#16a34a' }}>✅ Cover Photo Uploaded</div>}
         <textarea placeholder="Description of the activity (Min 80 words)..." value={data.coverDesc || ''} onChange={e => !readOnly && onChange('coverDesc', e.target.value)} style={{...inputStyle(readOnly), minHeight: '100px'}} readOnly={readOnly} />
@@ -1345,14 +1375,20 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
 
       {/* Page 2 Details: Photo 2 + Photo 3 */}
       <div style={{ marginBottom: '15px', padding: '15px', backgroundColor: '#fff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-        <h4 style={{ margin: '0 0 10px 0', fontSize: '0.95rem' }}>📄 Page 2: Photo 2 &amp; Description</h4>
+        <div style={{ marginBottom: '10px' }}>
+          <h4 style={{ margin: 0, fontSize: '0.95rem', display: 'inline-block' }}>📄 Page 2: Photo 2 &amp; Description</h4>
+          <WordCountLabel count={wc(data.photo2Desc || '')} min={40} />
+        </div>
         <input type="file" accept="image/*" onChange={e => handlePhotoUpload(e, 'photo2')} disabled={readOnly} style={{ marginBottom: '10px', fontSize: '0.8rem' }} />
         {data.photo2 && <div style={{ marginBottom: '10px', fontSize: '0.75rem', color: '#16a34a' }}>✅ Photo 2 Uploaded</div>}
         <textarea placeholder="Description of this photo (Min 40 words)..." value={data.photo2Desc || ''} onChange={e => !readOnly && onChange('photo2Desc', e.target.value)} style={{...inputStyle(readOnly), minHeight: '80px'}} readOnly={readOnly} />
       </div>
 
       <div style={{ marginBottom: '15px', padding: '15px', backgroundColor: '#fff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-        <h4 style={{ margin: '0 0 10px 0', fontSize: '0.95rem' }}>📄 Page 2: Photo 3 &amp; Description</h4>
+        <div style={{ marginBottom: '10px' }}>
+          <h4 style={{ margin: 0, fontSize: '0.95rem', display: 'inline-block' }}>📄 Page 2: Photo 3 &amp; Description</h4>
+          <WordCountLabel count={wc(data.photo3Desc || '')} min={40} />
+        </div>
         <input type="file" accept="image/*" onChange={e => handlePhotoUpload(e, 'photo3')} disabled={readOnly} style={{ marginBottom: '10px', fontSize: '0.8rem' }} />
         {data.photo3 && <div style={{ marginBottom: '10px', fontSize: '0.75rem', color: '#16a34a' }}>✅ Photo 3 Uploaded</div>}
         <textarea placeholder="Description of this photo (Min 40 words)..." value={data.photo3Desc || ''} onChange={e => !readOnly && onChange('photo3Desc', e.target.value)} style={{...inputStyle(readOnly), minHeight: '80px'}} readOnly={readOnly} />
@@ -1360,14 +1396,20 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
 
       {/* Page 3 Details: Photo 4 + Photo 5 */}
       <div style={{ marginBottom: '15px', padding: '15px', backgroundColor: '#fff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-        <h4 style={{ margin: '0 0 10px 0', fontSize: '0.95rem' }}>📄 Page 3: Photo 4 &amp; Description</h4>
+        <div style={{ marginBottom: '10px' }}>
+          <h4 style={{ margin: 0, fontSize: '0.95rem', display: 'inline-block' }}>📄 Page 3: Photo 4 &amp; Description</h4>
+          <WordCountLabel count={wc(data.photo4Desc || '')} min={40} />
+        </div>
         <input type="file" accept="image/*" onChange={e => handlePhotoUpload(e, 'photo4')} disabled={readOnly} style={{ marginBottom: '10px', fontSize: '0.8rem' }} />
         {data.photo4 && <div style={{ marginBottom: '10px', fontSize: '0.75rem', color: '#16a34a' }}>✅ Photo 4 Uploaded</div>}
         <textarea placeholder="Description of this photo (Min 40 words)..." value={data.photo4Desc || ''} onChange={e => !readOnly && onChange('photo4Desc', e.target.value)} style={{...inputStyle(readOnly), minHeight: '80px'}} readOnly={readOnly} />
       </div>
 
       <div style={{ marginBottom: '15px', padding: '15px', backgroundColor: '#fff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-        <h4 style={{ margin: '0 0 10px 0', fontSize: '0.95rem' }}>📄 Page 3: Photo 5 &amp; Description</h4>
+        <div style={{ marginBottom: '10px' }}>
+          <h4 style={{ margin: 0, fontSize: '0.95rem', display: 'inline-block' }}>📄 Page 3: Photo 5 &amp; Description</h4>
+          <WordCountLabel count={wc(data.photo5Desc || '')} min={40} />
+        </div>
         <input type="file" accept="image/*" onChange={e => handlePhotoUpload(e, 'photo5')} disabled={readOnly} style={{ marginBottom: '10px', fontSize: '0.8rem' }} />
         {data.photo5 && <div style={{ marginBottom: '10px', fontSize: '0.75rem', color: '#16a34a' }}>✅ Photo 5 Uploaded</div>}
         <textarea placeholder="Description of this photo (Min 40 words)..." value={data.photo5Desc || ''} onChange={e => !readOnly && onChange('photo5Desc', e.target.value)} style={{...inputStyle(readOnly), minHeight: '80px'}} readOnly={readOnly} />
