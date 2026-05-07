@@ -781,8 +781,6 @@ function DaySurvey({ day, stakeholderIdx, survey, data, onChange, readOnly, onFi
         </div>
       )}
 
-      {/* Added Report Generator for documentation */}
-      <ReportGenerator day={day} stakeholder={sh.stakeholder} readOnly={readOnly} />
       </>
       )}
     </div>
@@ -978,25 +976,47 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
 
       y += writeText(data.coverDesc || '', 12, 'normal', [0,0,0], 'left', y);
 
-      // Page 2
+      // Page 2: Photo 2 + Photo 3 (2 images stacked)
       doc.addPage();
       drawBorder();
       y = margin + 10;
       if (data.photo2) {
-        doc.addImage(data.photo2, 'JPEG', margin, y, contentW, 100);
-        y += 110;
+        doc.addImage(data.photo2, 'JPEG', margin, y, contentW, 75);
+        y += 80;
       }
-      y += writeText(data.photo2Desc || '', 12, 'normal', [0,0,0], 'left', y) + 10;
+      const desc2Lines = doc.splitTextToSize(data.photo2Desc || '', contentW);
+      doc.setFontSize(11); doc.setFont('times', 'normal'); doc.setTextColor(0, 0, 0);
+      doc.text(desc2Lines, margin, y);
+      y += desc2Lines.length * 5 + 12;
 
-      // Page 3
+      if (data.photo3) {
+        doc.addImage(data.photo3, 'JPEG', margin, y, contentW, 75);
+        y += 80;
+      }
+      const desc3Lines = doc.splitTextToSize(data.photo3Desc || '', contentW);
+      doc.setFontSize(11); doc.setFont('times', 'normal'); doc.setTextColor(0, 0, 0);
+      doc.text(desc3Lines, margin, y);
+
+      // Page 3: Photo 4 + Photo 5 (2 images stacked — same structure as Page 2)
       doc.addPage();
       drawBorder();
       y = margin + 10;
-      if (data.photo3) {
-        doc.addImage(data.photo3, 'JPEG', margin, y, contentW, 100);
-        y += 110;
+      if (data.photo4) {
+        doc.addImage(data.photo4, 'JPEG', margin, y, contentW, 75);
+        y += 80;
       }
-      y += writeText(data.photo3Desc || '', 12, 'normal', [0,0,0], 'left', y) + 10;
+      const desc4Lines = doc.splitTextToSize(data.photo4Desc || '', contentW);
+      doc.setFontSize(11); doc.setFont('times', 'normal'); doc.setTextColor(0, 0, 0);
+      doc.text(desc4Lines, margin, y);
+      y += desc4Lines.length * 5 + 12;
+
+      if (data.photo5) {
+        doc.addImage(data.photo5, 'JPEG', margin, y, contentW, 75);
+        y += 80;
+      }
+      const desc5Lines = doc.splitTextToSize(data.photo5Desc || '', contentW);
+      doc.setFontSize(11); doc.setFont('times', 'normal'); doc.setTextColor(0, 0, 0);
+      doc.text(desc5Lines, margin, y);
 
       // Footer on all pages
       const totalPages = doc.internal.getNumberOfPages();
@@ -1052,20 +1072,34 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
         <textarea placeholder="Description of the activity (Min 70 words)..." value={data.coverDesc || ''} onChange={e => !readOnly && onChange('coverDesc', e.target.value)} style={{...inputStyle(readOnly), minHeight: '100px'}} readOnly={readOnly} />
       </div>
 
-      {/* Page 2 Details */}
+      {/* Page 2 Details: Photo 2 + Photo 3 */}
       <div style={{ marginBottom: '15px', padding: '15px', backgroundColor: '#fff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-        <h4 style={{ margin: '0 0 10px 0', fontSize: '0.95rem' }}>📄 Page 2: Second Photo & Description</h4>
+        <h4 style={{ margin: '0 0 10px 0', fontSize: '0.95rem' }}>📄 Page 2: Photo 2 & Description</h4>
         <input type="file" accept="image/*" onChange={e => handlePhotoUpload(e, 'photo2')} disabled={readOnly} style={{ marginBottom: '10px', fontSize: '0.8rem' }} />
         {data.photo2 && <div style={{ marginBottom: '10px', fontSize: '0.75rem', color: '#16a34a' }}>✅ Photo 2 Uploaded</div>}
         <textarea placeholder="Description of this photo (Min 30 words)..." value={data.photo2Desc || ''} onChange={e => !readOnly && onChange('photo2Desc', e.target.value)} style={{...inputStyle(readOnly), minHeight: '80px'}} readOnly={readOnly} />
       </div>
 
-      {/* Page 3 Details */}
       <div style={{ marginBottom: '15px', padding: '15px', backgroundColor: '#fff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-        <h4 style={{ margin: '0 0 10px 0', fontSize: '0.95rem' }}>📄 Page 3: Third Photo & Description</h4>
+        <h4 style={{ margin: '0 0 10px 0', fontSize: '0.95rem' }}>📄 Page 2: Photo 3 & Description</h4>
         <input type="file" accept="image/*" onChange={e => handlePhotoUpload(e, 'photo3')} disabled={readOnly} style={{ marginBottom: '10px', fontSize: '0.8rem' }} />
         {data.photo3 && <div style={{ marginBottom: '10px', fontSize: '0.75rem', color: '#16a34a' }}>✅ Photo 3 Uploaded</div>}
         <textarea placeholder="Description of this photo (Min 30 words)..." value={data.photo3Desc || ''} onChange={e => !readOnly && onChange('photo3Desc', e.target.value)} style={{...inputStyle(readOnly), minHeight: '80px'}} readOnly={readOnly} />
+      </div>
+
+      {/* Page 3 Details: Photo 4 + Photo 5 */}
+      <div style={{ marginBottom: '15px', padding: '15px', backgroundColor: '#fff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+        <h4 style={{ margin: '0 0 10px 0', fontSize: '0.95rem' }}>📄 Page 3: Photo 4 & Description</h4>
+        <input type="file" accept="image/*" onChange={e => handlePhotoUpload(e, 'photo4')} disabled={readOnly} style={{ marginBottom: '10px', fontSize: '0.8rem' }} />
+        {data.photo4 && <div style={{ marginBottom: '10px', fontSize: '0.75rem', color: '#16a34a' }}>✅ Photo 4 Uploaded</div>}
+        <textarea placeholder="Description of this photo (Min 30 words)..." value={data.photo4Desc || ''} onChange={e => !readOnly && onChange('photo4Desc', e.target.value)} style={{...inputStyle(readOnly), minHeight: '80px'}} readOnly={readOnly} />
+      </div>
+
+      <div style={{ marginBottom: '15px', padding: '15px', backgroundColor: '#fff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+        <h4 style={{ margin: '0 0 10px 0', fontSize: '0.95rem' }}>📄 Page 3: Photo 5 & Description</h4>
+        <input type="file" accept="image/*" onChange={e => handlePhotoUpload(e, 'photo5')} disabled={readOnly} style={{ marginBottom: '10px', fontSize: '0.8rem' }} />
+        {data.photo5 && <div style={{ marginBottom: '10px', fontSize: '0.75rem', color: '#16a34a' }}>✅ Photo 5 Uploaded</div>}
+        <textarea placeholder="Description of this photo (Min 30 words)..." value={data.photo5Desc || ''} onChange={e => !readOnly && onChange('photo5Desc', e.target.value)} style={{...inputStyle(readOnly), minHeight: '80px'}} readOnly={readOnly} />
       </div>
 
       <button onClick={generatePDF} disabled={isGenerating} style={{
