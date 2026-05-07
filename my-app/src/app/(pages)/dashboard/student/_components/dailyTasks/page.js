@@ -324,8 +324,11 @@ export default function DailyTasks({ studentData }) {
       }
     }
     if (activeDay === 5) {
-      if (wc(data.analysis || '') < 50 || wc(data.rootcause || '') < 50 || wc(data.strategy || '') < 50) {
-        setMsg(`Need at least 50 words for each section. (Analysis: ${wc(data.analysis||'')}, Root Causes: ${wc(data.rootcause||'')}, Strategy: ${wc(data.strategy||'')})`);
+      const pCount = wc(data.topProblems || data.analysis || '');
+      const rCount = wc(data.rootCauses || data.rootcause || '');
+      const sCount = wc(data.finalStatement || data.strategy || '');
+      if (pCount < 50 || rCount < 50 || sCount < 50) {
+        setMsg(`Need at least 50 words for each section. (Top Problems: ${pCount}, Root Causes: ${rCount}, Final Statement: ${sCount})`);
         setMsgType('err'); return;
       }
     }
@@ -1085,7 +1088,14 @@ function Day5({ saved, survey, data, onChange, readOnly }) {
   return (
     <div>
       <div className="dt-analysis-info" style={{ marginBottom: 24, padding: 16, background: '#e3f2fd', color: '#0d47a1', borderRadius: 8 }}>
-        <strong>Task:</strong> Review the Yes/No responses below from your surveys on Days 2, 3 &amp; 4. Use this data to write your analysis and identify root causes.
+        <h4 style={{ margin: '0 0 10px 0', color: '#0d47a1', display: 'flex', alignItems: 'center', gap: '8px' }}>🎯 Objective</h4>
+        <p style={{ margin: '0 0 10px 0' }}>To convert survey data into meaningful insights.</p>
+        <h5 style={{ margin: '0 0 5px 0', color: '#0d47a1' }}>📊 Interpretation Guidelines:</h5>
+        <ul style={{ margin: 0, paddingLeft: 20, fontSize: '0.9rem' }}>
+          <li><strong>&gt;70% YES</strong> &rarr; High Severity Problem</li>
+          <li><strong>40–70% YES</strong> &rarr; Moderate Severity Problem</li>
+          <li><strong>&lt;40% YES</strong> &rarr; Low Severity Problem</li>
+        </ul>
       </div>
       
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginBottom: 30 }}>
@@ -1116,42 +1126,42 @@ function Day5({ saved, survey, data, onChange, readOnly }) {
       </div>
 
       <div className="dt-info-box" style={{ marginBottom: 16 }}>
-        <h4>Your Analysis</h4>
-        <p style={{ fontSize: '0.88rem', color: '#555', marginTop: 4 }}>Based on the data above, please provide your own analysis.</p>
+        <h4>Identify &amp; Output</h4>
+        <p style={{ fontSize: '0.88rem', color: '#555', marginTop: 4 }}>Based on the data above, identify the top problems, root causes, and formulate your final problem statement.</p>
       </div>
       
       <div className="dt-textarea-wrap" style={{ marginBottom: 20 }}>
-        <label htmlFor="day5-analysis">1. Overall Analysis of Responses</label>
-        <p style={{ fontSize: '0.8rem', color: '#666', marginBottom: 8, marginTop: -4 }}>What are the main findings from your survey data? (Minimum 50 words)</p>
+        <label htmlFor="day5-topProblems">1. Top 3 Problems Identified</label>
+        <p style={{ fontSize: '0.8rem', color: '#666', marginBottom: 8, marginTop: -4 }}>Based on the severity (YES percentages), list the top 3 problems. (Minimum 50 words)</p>
         <textarea
-          id="day5-analysis" className="dt-textarea"
-          placeholder="Write your overall analysis here..."
-          value={data.analysis || ''} readOnly={readOnly}
-          onChange={e => !readOnly && onChange('analysis', e.target.value)}
+          id="day5-topProblems" className="dt-textarea"
+          placeholder="List the top 3 problems here..."
+          value={data.topProblems || data.analysis || ''} readOnly={readOnly}
+          onChange={e => !readOnly && onChange('topProblems', e.target.value)}
           style={readOnly ? { background:'#f9f9f9', color:'#555', minHeight: 120 } : { minHeight: 120 }}
         />
       </div>
 
       <div className="dt-textarea-wrap" style={{ marginBottom: 20 }}>
-        <label htmlFor="day5-rootcause">2. Identified Root Causes</label>
-        <p style={{ fontSize: '0.8rem', color: '#666', marginBottom: 8, marginTop: -4 }}>What are the root causes of the problem based on the highest &apos;Yes&apos; percentages? (Minimum 50 words)</p>
+        <label htmlFor="day5-rootCauses">2. Root Causes Analysis</label>
+        <p style={{ fontSize: '0.8rem', color: '#666', marginBottom: 8, marginTop: -4 }}>Identify root causes (e.g., Skill gap, Lack of awareness, Infrastructure issues). (Minimum 50 words)</p>
         <textarea
-          id="day5-rootcause" className="dt-textarea"
+          id="day5-rootCauses" className="dt-textarea"
           placeholder="Write the identified root causes here..."
-          value={data.rootcause || ''} readOnly={readOnly}
-          onChange={e => !readOnly && onChange('rootcause', e.target.value)}
+          value={data.rootCauses || data.rootcause || ''} readOnly={readOnly}
+          onChange={e => !readOnly && onChange('rootCauses', e.target.value)}
           style={readOnly ? { background:'#f9f9f9', color:'#555', minHeight: 120 } : { minHeight: 120 }}
         />
       </div>
 
       <div className="dt-textarea-wrap">
-        <label htmlFor="day5-strategy">3. Proposed Intervention Strategy</label>
-        <p style={{ fontSize: '0.8rem', color: '#666', marginBottom: 8, marginTop: -4 }}>How do you plan to address these root causes during Day 6? (Minimum 50 words)</p>
+        <label htmlFor="day5-finalStatement">3. Final Problem Statement</label>
+        <p style={{ fontSize: '0.8rem', color: '#666', marginBottom: 8, marginTop: -4 }}>Formulate your final problem statement based on the analysis. (Minimum 50 words)</p>
         <textarea
-          id="day5-strategy" className="dt-textarea"
-          placeholder="Write your proposed strategy here..."
-          value={data.strategy || ''} readOnly={readOnly}
-          onChange={e => !readOnly && onChange('strategy', e.target.value)}
+          id="day5-finalStatement" className="dt-textarea"
+          placeholder="Write your final problem statement here..."
+          value={data.finalStatement || data.strategy || ''} readOnly={readOnly}
+          onChange={e => !readOnly && onChange('finalStatement', e.target.value)}
           style={readOnly ? { background:'#f9f9f9', color:'#555', minHeight: 120 } : { minHeight: 120 }}
         />
       </div>
