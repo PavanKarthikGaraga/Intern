@@ -1535,13 +1535,76 @@ function CaseStudyGenerator({ studentData, readOnly, survey }) {
 
   const setAns = (key, val) => setAnswers(prev => ({ ...prev, [key]: val }));
 
+  const wc = (txt) => (txt || '').trim().split(/\s+/).filter(Boolean).length;
+
+  const handlePhotoUpload = (e, key) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAns(key, reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const inputStyle = (ro) => ({
     width: '100%', padding: '7px 10px', borderRadius: 6,
     border: '1px solid #cbd5e1', outline: 'none', fontSize: '0.88rem',
     background: ro ? '#f9f9f9' : '#fff', resize: 'vertical',
   });
 
+  const PhotoUploadField = ({ label, photoKey, descKey, minWords }) => {
+    const count = wc(answers[descKey] || '');
+    return (
+      <div style={{ marginTop: 10, padding: 12, border: '1px dashed #a5d6a7', borderRadius: 8, background: '#fcfdfc' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+          <strong style={{ fontSize: '0.85rem', color: '#2e7d32' }}>{label}</strong>
+          <span style={{ fontSize: '0.8rem', fontWeight: 600, color: count < minWords ? '#d32f2f' : '#388e3c' }}>
+            {count < minWords ? `Min ${minWords} words (Current: ${count})` : `✓ ${count} words`}
+          </span>
+        </div>
+        <div style={{ marginBottom: 10, display: 'flex', alignItems: 'center' }}>
+          <input type="file" accept="image/*" onChange={e => handlePhotoUpload(e, photoKey)} disabled={readOnly} style={{ fontSize: '0.8rem' }} />
+          {answers[photoKey] && <span style={{ fontSize: '0.8rem', color: '#388e3c', marginLeft: 10, fontWeight: 600 }}>✓ Image Selected</span>}
+        </div>
+        <textarea
+          rows={3}
+          readOnly={readOnly}
+          value={answers[descKey] || ''}
+          onChange={e => setAns(descKey, e.target.value)}
+          placeholder={`Enter description (min ${minWords} words)...`}
+          style={inputStyle(readOnly)}
+        />
+      </div>
+    );
+  };
+
   const generatePDF = async () => {
+    // Validation
+    for (const section of template.sections) {
+      if (section.isStakeholderCount) {
+        for (const field of section.fields) {
+          const key = `${section.heading}__${field}`;
+          if (!answers[`${key}__photo1`] || !answers[`${key}__photo2`]) {
+            alert(`Please upload 2 photos for ${field}.`); return;
+          }
+          if (wc(answers[`${key}__desc1`]) < 20 || wc(answers[`${key}__desc2`]) < 20) {
+            alert(`Description for ${field} photos must be at least 20 words.`); return;
+          }
+        }
+      }
+      if (section.heading.includes('Intervention')) {
+        const key = `${section.heading}__InterventionPhotos`;
+        if (!answers[`${key}__photo1`] || !answers[`${key}__photo2`]) {
+          alert(`Please upload 2 photos for Student Intervention.`); return;
+        }
+        if (wc(answers[`${key}__desc1`]) < 20 || wc(answers[`${key}__desc2`]) < 20) {
+          alert(`Description for Intervention photos must be at least 20 words.`); return;
+        }
+      }
+    }
+
     setIsGenerating(true);
     try {
       const { jsPDF } = await import('jspdf');
@@ -1728,6 +1791,38 @@ function CaseStudyGenerator({ studentData, readOnly, survey }) {
             y += 14;
           }
         }
+
+        // --- Render Photos ---
+        if (section.isStakeholderCount) {
+          for (const field of section.fields) {
+            const key = `${section.heading}__${field}`;
+            for (let i = 1; i <= 2; i++) {
+              checkNewPage(120);
+              doc.setFontSize(11); doc.setFont('times', 'bold'); doc.setTextColor(20, 60, 20);
+              doc.text(`${field} - Photo ${i}:`, margin, y); y += 6;
+              try { doc.addImage(answers[`${key}__photo${i}`], 'JPEG', margin, y, contentW, 90); } catch(e) { console.error(e); }
+              y += 95;
+              doc.setFont('times', 'normal'); doc.setTextColor(20, 20, 20);
+              const lines = doc.splitTextToSize(answers[`${key}__desc${i}`] || '', contentW);
+              doc.text(lines, margin, y); y += lines.length * 5.5 + 6;
+            }
+          }
+        }
+
+        if (section.heading.includes('Intervention')) {
+          const key = `${section.heading}__InterventionPhotos`;
+          for (let i = 1; i <= 2; i++) {
+            checkNewPage(120);
+            doc.setFontSize(11); doc.setFont('times', 'bold'); doc.setTextColor(20, 60, 20);
+            doc.text(`Student Intervention - Photo ${i}:`, margin, y); y += 6;
+            try { doc.addImage(answers[`${key}__photo${i}`], 'JPEG', margin, y, contentW, 90); } catch(e) { console.error(e); }
+            y += 95;
+            doc.setFont('times', 'normal'); doc.setTextColor(20, 20, 20);
+            const lines = doc.splitTextToSize(answers[`${key}__desc${i}`] || '', contentW);
+            doc.text(lines, margin, y); y += lines.length * 5.5 + 6;
+          }
+        }
+
         y += 4;
       }
 
@@ -1847,9 +1942,26 @@ function CaseStudyGenerator({ studentData, readOnly, survey }) {
                         style={inputStyle(readOnly)}
                       />
                     )}
+
+                    {/* Render photo upload fields for Stakeholders */}
+                    {section.isStakeholderCount && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 12, marginBottom: 8 }}>
+                        <PhotoUploadField label={`${field} - Photo 1`} photoKey={`${key}__photo1`} descKey={`${key}__desc1`} minWords={20} />
+                        <PhotoUploadField label={`${field} - Photo 2`} photoKey={`${key}__photo2`} descKey={`${key}__desc2`} minWords={20} />
+                      </div>
+                    )}
                   </div>
                 );
               })}
+
+              {/* Render photo upload fields for Intervention Section */}
+              {section.heading.includes('Intervention') && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 16, paddingTop: 16, borderTop: '2px solid #e8f5e9' }}>
+                  <h6 style={{ margin: 0, color: '#2e7d32', fontSize: '0.95rem' }}>Intervention Photos &amp; Descriptions</h6>
+                  <PhotoUploadField label="Intervention Photo 1" photoKey={`${section.heading}__InterventionPhotos__photo1`} descKey={`${section.heading}__InterventionPhotos__desc1`} minWords={20} />
+                  <PhotoUploadField label="Intervention Photo 2" photoKey={`${section.heading}__InterventionPhotos__photo2`} descKey={`${section.heading}__InterventionPhotos__desc2`} minWords={20} />
+                </div>
+              )}
             </div>
           )}
         </div>
