@@ -1429,6 +1429,35 @@ function CaseStudyGenerator({ studentData, readOnly }) {
   const [answers, setAnswers] = useState({});
   const [isGenerating, setIsGenerating] = useState(false);
 
+  // Auto-populate basic info
+  useEffect(() => {
+    if (!studentData || !template) return;
+    const basicHeading = template.sections[0]?.heading; // Usually "1. Basic Information" or "1. Basic Details"
+    if (!basicHeading || (!basicHeading.includes('Basic'))) return;
+
+    const autoFields = {
+      'Student Name': studentData.name,
+      'Roll Number': studentData.username,
+      'Domain': domain,
+      'Problem Statement': studentData.problemStatementData?.problem_statement,
+      'Duration': '7 Days',
+    };
+
+    setAnswers(prev => {
+      const updated = { ...prev };
+      let changed = false;
+      Object.entries(autoFields).forEach(([field, value]) => {
+        const key = `${basicHeading}__${field}`;
+        // Only set if not already present or if it was the placeholder
+        if (value && !updated[key]) {
+          updated[key] = value;
+          changed = true;
+        }
+      });
+      return changed ? updated : prev;
+    });
+  }, [studentData, template, domain]);
+
   const setAns = (key, val) => setAnswers(prev => ({ ...prev, [key]: val }));
 
   const inputStyle = (ro) => ({
