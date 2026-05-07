@@ -1530,7 +1530,7 @@ function CaseStudyGenerator({ studentData, readOnly, survey }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const pieChartRef = useRef(null);
   const savedRef = useRef(saved);
-  useEffect(() => { savedRef.current = saved; }, [saved]);
+  savedRef.current = saved; // keep ref current on every render without adding to dep array
 
   // Auto-populate basic info and survey summaries
   useEffect(() => {
