@@ -710,11 +710,11 @@ function DaySurvey({ day, stakeholderIdx, survey, data, onChange, readOnly, onFi
                onChange('personCount', val);
             }} 
             disabled={readOnly}
-            style={{ width: '80px', padding: '6px 10px', borderRadius: '4px', border: '1px solid #ccc', outline: 'none' }} 
+            style={{ width: '80px', padding: '6px 10px', borderRadius: '4px', border: '1px solid #ccc', outline: 'none' }}
           />
         </div>
       </div>
-      
+
       {personCount > 0 && (
         <>
           <p className="dt-persons-label">Select Person:</p>
@@ -726,62 +726,61 @@ function DaySurvey({ day, stakeholderIdx, survey, data, onChange, readOnly, onFi
               </button>
             ))}
           </div>
-      <div className="dt-name-wrap">
-        <label htmlFor={`n-d${day}-p${activePerson}`}>Name of Person {activePerson}</label>
-        <input id={`n-d${day}-p${activePerson}`} type="text" className="dt-name-input"
-          placeholder="Enter interviewee&apos;s name" value={cur.name||''} readOnly={readOnly}
-          onChange={e => setField(activePerson, 'name', e.target.value)}
-          style={readOnly ? {background:'#f9f9f9'} : {}} />
-      </div>
-      <ul className="dt-questions">
-        {sh.questions.map((q, qi) => {
-          const ans = cur.answers?.[qi];
-          return (
-            <li key={qi} className="dt-q-item">
-              <p className="dt-q-text">{qi+1}. {q}</p>
-              <div className="dt-q-btns">
-                <button className={`dt-q-btn yes ${ans==='Yes'?'sel':''}`}
-                  onClick={() => setAnswer(activePerson, qi, 'Yes')} disabled={readOnly}>Yes</button>
-                <button className={`dt-q-btn no ${ans==='No'?'sel':''}`}
-                  onClick={() => setAnswer(activePerson, qi, 'No')} disabled={readOnly}>No</button>
-                {ans && !readOnly && (
-                  <button className="dt-q-btn clear"
-                    onClick={() => {
-                      const currentAnswers = { ...cur.answers };
-                      delete currentAnswers[qi];
-                      const currentPersonData = data[pk(activePerson)] || { name:'', answers:{} };
-                      onChange(pk(activePerson), { ...currentPersonData, answers: currentAnswers });
-                    }}>Clear</button>
-                )}
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-      
-      {!readOnly && (
-        <div style={{ marginTop: '20px', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-          {activePerson < personCount && (
-            <button className="dt-save-btn" onClick={() => {
-              if (isFilled(activePerson)) setActivePerson(activePerson + 1);
-              else alert('Please complete all questions and the name for this person first.');
-            }} style={{ background: '#1a7a1a' }}>
-              Save Person & Next
-            </button>
-          )}
-          {persons.every(p => isFilled(p)) && (
-            <button className="dt-save-btn" onClick={() => {
-              if (window.confirm("Are you sure you want to submit all responses for evaluation? This cannot be undone.")) {
-                 onFinalSubmit();
-              }
-            }} disabled={saving}>
-              {saving ? 'Submitting...' : 'Submit All Responses for Evaluation'}
-            </button>
-          )}
-        </div>
-      )}
+          <div className="dt-name-wrap">
+            <label htmlFor={`n-d${day}-p${activePerson}`}>Name of Person {activePerson}</label>
+            <input id={`n-d${day}-p${activePerson}`} type="text" className="dt-name-input"
+              placeholder="Enter interviewee's name" value={cur.name||''} readOnly={readOnly}
+              onChange={e => setField(activePerson, 'name', e.target.value)}
+              style={readOnly ? {background:'#f9f9f9'} : {}} />
+          </div>
+          <ul className="dt-questions">
+            {sh.questions.map((q, qi) => {
+              const ans = cur.answers?.[qi];
+              return (
+                <li key={qi} className="dt-q-item">
+                  <p className="dt-q-text">{qi+1}. {q}</p>
+                  <div className="dt-q-btns">
+                    <button className={`dt-q-btn yes ${ans==='Yes'?'sel':''}`}
+                      onClick={() => setAnswer(activePerson, qi, 'Yes')} disabled={readOnly}>Yes</button>
+                    <button className={`dt-q-btn no ${ans==='No'?'sel':''}`}
+                      onClick={() => setAnswer(activePerson, qi, 'No')} disabled={readOnly}>No</button>
+                    {ans && !readOnly && (
+                      <button className="dt-q-btn clear"
+                        onClick={() => {
+                          const currentAnswers = { ...cur.answers };
+                          delete currentAnswers[qi];
+                          const currentPersonData = data[pk(activePerson)] || { name:'', answers:{} };
+                          onChange(pk(activePerson), { ...currentPersonData, answers: currentAnswers });
+                        }}>Clear</button>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
 
-      </>
+          {!readOnly && (
+            <div style={{ marginTop: '20px', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+              {activePerson < personCount && (
+                <button className="dt-save-btn" onClick={() => {
+                  if (isFilled(activePerson)) setActivePerson(activePerson + 1);
+                  else alert('Please complete all questions and the name for this person first.');
+                }} style={{ background: '#1a7a1a' }}>
+                  Save Person &amp; Next
+                </button>
+              )}
+              {persons.every(p => isFilled(p)) && (
+                <button className="dt-save-btn" onClick={() => {
+                  if (window.confirm("Are you sure you want to submit all responses for evaluation? This cannot be undone.")) {
+                    onFinalSubmit();
+                  }
+                }} disabled={saving}>
+                  {saving ? 'Submitting...' : 'Submit All Responses for Evaluation'}
+                </button>
+              )}
+            </div>
+          )}
+        </>
       )}
     </div>
   );
