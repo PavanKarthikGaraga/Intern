@@ -440,7 +440,7 @@ export default function DailyTasks({ studentData }) {
                 {activeDay === 4 && <DaySurvey day={4} stakeholderIdx={2} survey={survey} data={dayData(4)} onChange={(f,v) => setDayField(4,f,v)} readOnly={isSaved} onFinalSubmit={handleSave} saving={saving} minPersons={3} />}
                 {activeDay === 5 && <Day5 saved={saved} survey={survey} data={dayData(5)} onChange={(f,v) => setDayField(5,f,v)} readOnly={isSaved} />}
                 {activeDay === 6 && <Day6 data={dayData(6)} onChange={(f,v) => setDayField(6,f,v)} readOnly={isSaved} studentData={studentData} />}
-                {activeDay === 7 && <Day7 data={dayData(7)} onChange={(f,v) => setDayField(7,f,v)} readOnly={isSaved} studentData={studentData} survey={survey} />}
+                {activeDay === 7 && <Day7 saved={saved} data={dayData(7)} onChange={(f,v) => setDayField(7,f,v)} readOnly={isSaved} studentData={studentData} survey={survey} />}
 
                 {activeDay !== 2 && activeDay !== 3 && activeDay !== 4 && (
                   <div className="dt-save-row">
@@ -1528,35 +1528,93 @@ function CaseStudyGenerator({ studentData, readOnly, survey }) {
 
   const [answers, setAnswers] = useState({});
   const [isGenerating, setIsGenerating] = useState(false);
+  const pieChartRef = useRef(null);
 
-  // Auto-populate basic info
+  // Auto-populate basic info and survey summaries
   useEffect(() => {
     if (!studentData || !template) return;
     const basicHeading = template.sections[0]?.heading; // Usually "1. Basic Information" or "1. Basic Details"
+    const distHeading = '4. Survey Summary';
+    const stakeHeading = '3. Number of Stakeholders Covered';
+    
     if (!basicHeading || (!basicHeading.includes('Basic'))) return;
 
+    let totalRespondents = 0;
+    let distStr = '';
+    const stakeholderCounts = {};
+    const pieData = [];
+
+    if (survey && survey.length > 0) {
+      survey.forEach((s, idx) => {
+        const dayNum = idx + 2;
+        const dd = saved && saved[dayNum] && saved[dayNum].data ? saved[dayNum].data : {};
+        const pCount = Object.keys(dd).filter(k => k.startsWith('p')).length;
+        
+        stakeholderCounts[`Stakeholder ${idx + 1} (${s.stakeholder})`] = pCount.toString();
+        totalRespondents += pCount;
+        distStr += `${s.stakeholder}: ${pCount}${idx < survey.length - 1 ? ', ' : ''}`;
+        
+        if (pCount > 0) {
+          pieData.push({ label: s.stakeholder, val: pCount });
+        }
+      });
+    }
+
     const autoFields = {
-      'Student Name': studentData.name,
-      'Roll Number': studentData.username,
-      'Domain': domain,
-      'Problem Statement': studentData.problemStatementData?.problem_statement,
-      'Duration': '7 Days',
+      [`${basicHeading}__Student Name`]: studentData.name,
+      [`${basicHeading}__Roll Number`]: studentData.username,
+      [`${basicHeading}__Domain`]: domain,
+      [`${basicHeading}__Problem Statement`]: studentData.problemStatementData?.problem_statement,
+      [`${basicHeading}__Duration`]: '7 Days',
+      [`${distHeading}__Total respondents`]: totalRespondents.toString(),
+      [`${distHeading}__Stakeholder-wise distribution`]: distStr,
     };
+    
+    Object.keys(stakeholderCounts).forEach(k => {
+      autoFields[`${stakeHeading}__${k}`] = stakeholderCounts[k];
+    });
+
+    if (pieData.length > 0 && pieChartRef.current) {
+      const ctx = pieChartRef.current.getContext('2d');
+      ctx.clearRect(0, 0, 400, 400);
+      let total = pieData.reduce((acc, d) => acc + d.val, 0);
+      let startAngle = 0;
+      const colors = ['#2e7d32', '#1565c0', '#e65100', '#d32f2f', '#6a1b9a'];
+      
+      pieData.forEach((d, i) => {
+        const sliceAngle = (d.val / total) * 2 * Math.PI;
+        ctx.fillStyle = colors[i % colors.length];
+        ctx.beginPath();
+        ctx.moveTo(200, 200);
+        ctx.arc(200, 200, 150, startAngle, startAngle + sliceAngle);
+        ctx.fill();
+        
+        // label
+        const midAngle = startAngle + sliceAngle / 2;
+        const lx = 200 + 170 * Math.cos(midAngle);
+        const ly = 200 + 170 * Math.sin(midAngle);
+        ctx.fillStyle = '#333';
+        ctx.font = 'bold 16px Arial';
+        ctx.textAlign = lx > 200 ? 'left' : 'right';
+        ctx.fillText(`${d.label} (${d.val})`, lx, ly);
+        
+        startAngle += sliceAngle;
+      });
+      autoFields['PIE_CHART_IMG'] = pieChartRef.current.toDataURL('image/png');
+    }
 
     setAnswers(prev => {
       const updated = { ...prev };
       let changed = false;
-      Object.entries(autoFields).forEach(([field, value]) => {
-        const key = `${basicHeading}__${field}`;
-        // Only set if not already present or if it was the placeholder
-        if (value && !updated[key]) {
+      Object.entries(autoFields).forEach(([key, value]) => {
+        if (value !== undefined && updated[key] !== value) {
           updated[key] = value;
           changed = true;
         }
       });
       return changed ? updated : prev;
     });
-  }, [studentData, template, domain]);
+  }, [studentData, template, domain, survey, saved]);
 
   const setAns = (key, val) => setAnswers(prev => ({ ...prev, [key]: val }));
 
@@ -1852,6 +1910,13 @@ function CaseStudyGenerator({ studentData, readOnly, survey }) {
             checkNewPage(vlines.length * 6);
             doc.text(vlines, margin + 6, y);
             y += vlines.length * 6 + 4;
+            
+            // Add Pie Chart below distribution
+            if (field === 'Stakeholder-wise distribution' && answers['PIE_CHART_IMG']) {
+              checkNewPage(80);
+              doc.addImage(answers['PIE_CHART_IMG'], 'PNG', margin + 30, y, 70, 70);
+              y += 75;
+            }
           } else {
             // blank lines placeholder
             doc.setDrawColor(200, 200, 200);
@@ -1935,6 +2000,8 @@ function CaseStudyGenerator({ studentData, readOnly, survey }) {
         Domain: <strong>{domain || 'Not assigned'}</strong> — Fill in the fields below and click
         <strong> Download PDF</strong> to generate your professionally formatted case study report.
       </p>
+      
+      <canvas ref={pieChartRef} width="400" height="400" style={{ display: 'none' }} />
 
       {/* Sections */}
       {template.sections.map((section) => (
@@ -2026,14 +2093,22 @@ function CaseStudyGenerator({ studentData, readOnly, survey }) {
                         style={inputStyle(readOnly)}
                       />
                     ) : (
-                      <textarea
-                        rows={minW > 0 ? 3 : 2}
-                        readOnly={readOnly}
-                        value={answers[key] || ''}
-                        onChange={e => setAns(key, e.target.value)}
-                        placeholder={`Enter ${field.toLowerCase()}…`}
-                        style={inputStyle(readOnly)}
-                      />
+                      <>
+                        <textarea
+                          rows={minW > 0 ? 3 : 2}
+                          readOnly={readOnly}
+                          value={answers[key] || ''}
+                          onChange={e => setAns(key, e.target.value)}
+                          placeholder={`Enter ${field.toLowerCase()}…`}
+                          style={inputStyle(readOnly)}
+                        />
+                        {field === 'Stakeholder-wise distribution' && answers['PIE_CHART_IMG'] && (
+                          <div style={{ marginTop: 12, padding: 12, background: '#f5f5f5', borderRadius: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <h6 style={{ margin: '0 0 10px 0', color: '#333' }}>Auto-Generated Stakeholder Distribution</h6>
+                            <img src={answers['PIE_CHART_IMG']} alt="Distribution Pie Chart" style={{ width: 250, height: 250 }} />
+                          </div>
+                        )}
+                      </>
                     )}
 
                     {/* Render photo upload fields for Stakeholders */}
@@ -2081,7 +2156,7 @@ function CaseStudyGenerator({ studentData, readOnly, survey }) {
 }
 
 /* ── Day 7 ── */
-function Day7({ data, onChange, readOnly, studentData, survey }) {
+function Day7({ saved, data, onChange, readOnly, studentData, survey }) {
   const ro = { background: readOnly ? '#f9f9f9' : undefined };
   return (
     <div>
@@ -2097,7 +2172,7 @@ function Day7({ data, onChange, readOnly, studentData, survey }) {
       </div>
 
       {/* Case Study Generator */}
-      <CaseStudyGenerator studentData={studentData} readOnly={readOnly} survey={survey} />
+      <CaseStudyGenerator saved={saved} studentData={studentData} readOnly={readOnly} survey={survey} />
 
       <div className="dt-link-section" style={{marginTop: 28}}>
         <label htmlFor="d7-cs">Case Study Document Public Link</label>
