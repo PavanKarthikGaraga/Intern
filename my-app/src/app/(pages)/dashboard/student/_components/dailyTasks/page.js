@@ -664,11 +664,15 @@ function Day1({ data, onChange, ps, readOnly }) {
 
 /* ── Survey Report Generator (Days 2/3/4) ── */
 function SurveyReportGenerator({ day, stakeholder, persons, personData }) {
+  const wc = (txt) => (txt || '').trim().split(/\s+/).filter(Boolean).length;
+  
   const initSlots = () => persons.map(p => ({
     id: `person-${p}-${Date.now()}`,
     image: null,
-    description: personData[`p${p}`]?.name ? `${personData[`p${p}`].name}` : `Person ${p}`,
+    name: personData[`p${p}`]?.name || `Person ${p}`,
+    description: '',
   }));
+  
   const [slots, setSlots] = useState(initSlots);
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -682,12 +686,12 @@ function SurveyReportGenerator({ day, stakeholder, persons, personData }) {
     reader.readAsDataURL(file);
   };
 
-  const handleDescChange = (index, val) => {
-    setSlots(prev => prev.map((s, i) => i === index ? { ...s, description: val } : s));
+  const handleFieldChange = (index, field, val) => {
+    setSlots(prev => prev.map((s, i) => i === index ? { ...s, [field]: val } : s));
   };
 
   const addSlot = () => {
-    setSlots(prev => [...prev, { id: `extra-${Date.now()}`, image: null, description: '' }]);
+    setSlots(prev => [...prev, { id: `extra-${Date.now()}`, image: null, name: '', description: '' }]);
   };
 
   const removeSlot = (index) => {
@@ -699,6 +703,15 @@ function SurveyReportGenerator({ day, stakeholder, persons, personData }) {
     for (let i = 0; i < slots.length; i++) {
       if (!slots[i].image) {
         alert(`Please upload a photo for slot ${i + 1} before generating the PDF.`);
+        return;
+      }
+      const count = wc(slots[i].description);
+      if (count < 30 || count > 50) {
+        alert(`Description for photo ${i + 1} must be between 30 and 50 words. (Current: ${count} words)`);
+        return;
+      }
+      if (!slots[i].name?.trim()) {
+        alert(`Please enter a stakeholder name for photo ${i + 1}.`);
         return;
       }
     }
@@ -740,7 +753,6 @@ function SurveyReportGenerator({ day, stakeholder, persons, personData }) {
         return y;
       };
 
-      // Build pages: 2 slots per page
       let pageSlots = [];
       for (let i = 0; i < slots.length; i += 2) {
         pageSlots.push(slots.slice(i, i + 2));
@@ -754,17 +766,20 @@ function SurveyReportGenerator({ day, stakeholder, persons, personData }) {
 
         pair.forEach((slot, si) => {
           if (slot.image) {
-            doc.addImage(slot.image, 'JPEG', margin, y, contentW, 72);
-            y += 76;
+            doc.addImage(slot.image, 'JPEG', margin, y, contentW, 65);
+            y += 70;
           }
-          const descLines = doc.splitTextToSize(slot.description || '', contentW);
-          doc.setFontSize(10); doc.setFont('times', 'normal'); doc.setTextColor(0, 0, 0);
+          doc.setFontSize(11); doc.setFont('times', 'bold'); doc.setTextColor(0,0,0);
+          doc.text(`Stakeholder Name: ${slot.name}`, margin, y);
+          y += 6;
+          
+          doc.setFontSize(10); doc.setFont('times', 'normal');
+          const descLines = doc.splitTextToSize(`Description: ${slot.description}`, contentW);
           doc.text(descLines, margin, y);
-          y += descLines.length * 5 + (si === 0 && pair.length > 1 ? 10 : 0);
+          y += descLines.length * 5 + 12;
         });
       });
 
-      // Footer on all pages
       const totalPages = doc.internal.getNumberOfPages();
       for (let p = 1; p <= totalPages; p++) {
         doc.setPage(p);
@@ -790,42 +805,56 @@ function SurveyReportGenerator({ day, stakeholder, persons, personData }) {
         <FaFilePdf /> Day-{day} Report Generator
       </h4>
       <p style={{ fontSize: '0.85rem', color: '#15803d', marginBottom: 20 }}>
-        Upload photos for each person interviewed. 2 photos will appear per PDF page with descriptions.
+        Upload photos for each person interviewed. 2 photos per page. Descriptions must be 30-50 words.
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        {slots.map((slot, index) => (
-          <div key={slot.id} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, padding: 16, position: 'relative' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <span style={{ fontWeight: 600, color: '#334155', fontSize: '0.9rem' }}>📷 Photo {index + 1}</span>
-              {slots.length > persons.length && (
-                <button onClick={() => removeSlot(index)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 500 }}>✕ Remove</button>
-              )}
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 16 }}>
-              <div>
-                {slot.image ? (
-                  <Image src={slot.image} alt="preview" width={200} height={110} unoptimized style={{ width: '100%', height: 110, objectFit: 'cover', borderRadius: 8, border: '1px solid #cbd5e1' }} />
-                ) : (
-                  <div style={{ width: '100%', height: 110, background: '#f1f5f9', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', border: '2px dashed #cbd5e1', fontSize: '0.8rem' }}>No Photo</div>
+        {slots.map((slot, index) => {
+          const count = wc(slot.description);
+          return (
+            <div key={slot.id} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, padding: 16, position: 'relative' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <span style={{ fontWeight: 600, color: '#334155', fontSize: '0.9rem' }}>📷 Photo {index + 1}</span>
+                {slots.length > persons.length && (
+                  <button onClick={() => removeSlot(index)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 500 }}>✕ Remove</button>
                 )}
-                <label style={{ display: 'block', marginTop: 8, padding: '5px 10px', background: '#e0f2fe', borderRadius: 6, cursor: 'pointer', textAlign: 'center', fontSize: '0.78rem', color: '#0369a1', fontWeight: 500 }}>
-                  Upload Photo
-                  <input type="file" accept="image/*" onChange={e => handleImageUpload(index, e)} style={{ display: 'none' }} />
-                </label>
               </div>
-              <div>
-                <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>Description</label>
-                <textarea
-                  value={slot.description}
-                  onChange={e => handleDescChange(index, e.target.value)}
-                  placeholder="Description of this interaction..."
-                  style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid #cbd5e1', minHeight: 80, resize: 'none', outline: 'none', fontSize: '0.88rem', boxSizing: 'border-box' }}
-                />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 16 }}>
+                <div>
+                  {slot.image ? (
+                    <Image src={slot.image} alt="preview" width={200} height={110} unoptimized style={{ width: '100%', height: 110, objectFit: 'cover', borderRadius: 8, border: '1px solid #cbd5e1' }} />
+                  ) : (
+                    <div style={{ width: '100%', height: 110, background: '#f1f5f9', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', border: '2px dashed #cbd5e1', fontSize: '0.8rem' }}>No Photo</div>
+                  )}
+                  <label style={{ display: 'block', marginTop: 8, padding: '5px 10px', background: '#e0f2fe', borderRadius: 6, cursor: 'pointer', textAlign: 'center', fontSize: '0.78rem', color: '#0369a1', fontWeight: 500 }}>
+                    Upload Photo
+                    <input type="file" accept="image/*" onChange={e => handleImageUpload(index, e)} style={{ display: 'none' }} />
+                  </label>
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>Stakeholder Name</label>
+                  <input 
+                    type="text"
+                    value={slot.name}
+                    onChange={e => handleFieldChange(index, 'name', e.target.value)}
+                    style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid #cbd5e1', marginBottom: 10, outline: 'none', fontSize: '0.88rem' }}
+                  />
+                  
+                  <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>
+                    Description (30-50 words)
+                    <span style={{ float: 'right', color: (count < 30 || count > 50) ? '#ef4444' : '#16a34a' }}>{count} words</span>
+                  </label>
+                  <textarea
+                    value={slot.description}
+                    onChange={e => handleFieldChange(index, 'description', e.target.value)}
+                    placeholder="Describe this photo/interaction..."
+                    style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid #cbd5e1', minHeight: 70, resize: 'none', outline: 'none', fontSize: '0.88rem' }}
+                  />
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div style={{ display: 'flex', gap: 12, marginTop: 20, flexWrap: 'wrap' }}>
@@ -895,22 +924,34 @@ function DaySurvey({ day, stakeholderIdx, survey, data, onChange, readOnly, onFi
       </div>
 
       <p className="dt-persons-label">Select Person:</p>
-      <div className="dt-person-tabs" style={{ flexWrap: 'wrap', gap: '8px', marginBottom: '12px' }}>
+      <div className="dt-person-tabs" style={{ flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
         {persons.map(p => (
           <button key={p} className={`dt-person-btn ${activePerson===p?'active':''} ${isFilled(p)?'filled':''}`}
-            onClick={() => setActivePerson(p)}>
+            onClick={() => {
+              // Restriction: check if all persons before p are filled
+              if (p > activePerson) {
+                for (let i = 1; i < p; i++) {
+                  if (!isFilled(i)) {
+                    alert(`Please complete Person ${i} first.`);
+                    return;
+                  }
+                }
+              }
+              setActivePerson(p);
+            }}>
             Person {p} {isFilled(p) ? '✓' : ''}
           </button>
         ))}
-        {!readOnly && (
-          <>
-            <button onClick={addPerson} style={{ padding: '6px 14px', borderRadius: '6px', border: '1px dashed #014a01', background: '#f0fdf4', color: '#014a01', fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem' }}>+ Add Person</button>
-            <button onClick={removePerson} disabled={personCount <= minPersons} style={{ padding: '6px 14px', borderRadius: '6px', border: `1px dashed ${personCount <= minPersons ? '#ccc' : '#dc2626'}`, background: personCount <= minPersons ? '#f9f9f9' : '#fef2f2', color: personCount <= minPersons ? '#aaa' : '#dc2626', fontWeight: 600, cursor: personCount <= minPersons ? 'not-allowed' : 'pointer', fontSize: '0.85rem' }}>
-              − Remove Last {personCount <= minPersons ? `(min ${minPersons})` : ''}
-            </button>
-          </>
-        )}
       </div>
+      
+      {!readOnly && (
+        <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+          <button onClick={addPerson} style={{ padding: '6px 14px', borderRadius: '6px', border: '1px dashed #014a01', background: '#f0fdf4', color: '#014a01', fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem' }}>+ Add Person</button>
+          <button onClick={removePerson} disabled={personCount <= minPersons} style={{ padding: '6px 14px', borderRadius: '6px', border: `1px dashed ${personCount <= minPersons ? '#ccc' : '#dc2626'}`, background: personCount <= minPersons ? '#f9f9f9' : '#fef2f2', color: personCount <= minPersons ? '#aaa' : '#dc2626', fontWeight: 600, cursor: personCount <= minPersons ? 'not-allowed' : 'pointer', fontSize: '0.85rem' }}>
+            − Remove Last {personCount <= minPersons ? `(min ${minPersons})` : ''}
+          </button>
+        </div>
+      )}
 
       <div className="dt-name-wrap">
         <label htmlFor={`n-d${day}-p${activePerson}`}>Name of Person {activePerson}</label>
