@@ -646,7 +646,7 @@ function Day1({ data, onChange, ps, readOnly }) {
         </ul>
       </div>
       <div className="dt-textarea-wrap">
-        <label htmlFor="day1-inference">Your Understanding &amp; Stakeholder Analysis</label>
+        <label htmlFor="day1-inference">Your Understanding</label>
         <textarea
           id="day1-inference" className="dt-textarea"
           placeholder="Write your understanding of the problem statement here…"
