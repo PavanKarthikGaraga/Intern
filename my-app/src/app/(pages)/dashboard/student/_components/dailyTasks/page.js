@@ -346,7 +346,7 @@ export default function DailyTasks({ studentData, onSectionChange }) {
         const rCount = wc(data[`day${d}_rootCauses`] || '');
         const sCount = wc(data[`day${d}_recommendations`] || '');
         if (pCount < 50 || rCount < 50 || sCount < 50) {
-          setMsg(`Need at least 50 words for each section on Day ${d}. (Top Problems: ${pCount}, Root Causes: ${rCount}, Recommendations: ${sCount})`);
+          setMsg(`Please ensure all analysis sections have at least 50 words. Check your Day ${d} inputs.`);
           setMsgType('err'); return;
         }
       }
@@ -938,7 +938,7 @@ function SurveyReportGenerator({ day, stakeholder, persons, personData }) {
         <FaFilePdf /> Day-{day} Report Generator
       </h4>
       <p style={{ fontSize: '0.85rem', color: '#15803d', marginBottom: 20 }}>
-        Upload photos for each person interviewed. 2 photos per page. Descriptions must be 30-50 words.
+        Upload photos for each person interviewed. Descriptions must be 30-50 words.
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -1228,45 +1228,59 @@ function Day5({ saved, survey, data, onChange, readOnly }) {
                 </div>
               ))
             }
-            {persons.length > 0 && (
-               <div style={{ marginTop: 24, paddingTop: 20, borderTop: '2px solid #e0e0e0' }}>
-                 <div className="dt-textarea-wrap" style={{ marginBottom: 20 }}>
-                   <label htmlFor={`day5-topProblems-${day}`}>1. Top 3 Problems Identified</label>
-                   <p style={{ fontSize: '0.8rem', color: '#666', marginBottom: 8, marginTop: -4 }}>Based on the severity (YES percentages), list the top 3 problems. (Minimum 50 words)</p>
-                   <textarea
-                     id={`day5-topProblems-${day}`} className="dt-textarea"
-                     placeholder="List the top 3 problems here..."
-                     value={data[`day${day}_topProblems`] || ''} readOnly={readOnly}
-                     onChange={e => !readOnly && onChange(`day${day}_topProblems`, e.target.value)}
-                     style={readOnly ? { background:'#f9f9f9', color:'#555', minHeight: 100 } : { minHeight: 100 }}
-                   />
-                 </div>
-                 
-                 <div className="dt-textarea-wrap" style={{ marginBottom: 20 }}>
-                   <label htmlFor={`day5-rootCauses-${day}`}>2. Root Causes Analysis</label>
-                   <p style={{ fontSize: '0.8rem', color: '#666', marginBottom: 8, marginTop: -4 }}>Identify root causes (e.g., Skill gap, Lack of awareness, Infrastructure issues). (Minimum 50 words)</p>
-                   <textarea
-                     id={`day5-rootCauses-${day}`} className="dt-textarea"
-                     placeholder="Write the identified root causes here..."
-                     value={data[`day${day}_rootCauses`] || ''} readOnly={readOnly}
-                     onChange={e => !readOnly && onChange(`day${day}_rootCauses`, e.target.value)}
-                     style={readOnly ? { background:'#f9f9f9', color:'#555', minHeight: 100 } : { minHeight: 100 }}
-                   />
-                 </div>
+            {persons.length > 0 && (() => {
+               const pCount = wc(data[`day${day}_topProblems`] || '');
+               const rCount = wc(data[`day${day}_rootCauses`] || '');
+               const sCount = wc(data[`day${day}_recommendations`] || '');
+               return (
+                 <div style={{ marginTop: 24, paddingTop: 20, borderTop: '2px solid #e0e0e0' }}>
+                   <div className="dt-textarea-wrap" style={{ marginBottom: 20 }}>
+                     <label htmlFor={`day5-topProblems-${day}`}>1. Top 3 Problems Identified</label>
+                     <p style={{ fontSize: '0.8rem', color: '#666', marginBottom: 8, marginTop: -4 }}>Based on the severity (YES percentages), list the top 3 problems. (Minimum 50 words)</p>
+                     <textarea
+                       id={`day5-topProblems-${day}`} className="dt-textarea"
+                       placeholder="List the top 3 problems here..."
+                       value={data[`day${day}_topProblems`] || ''} readOnly={readOnly}
+                       onChange={e => !readOnly && onChange(`day${day}_topProblems`, e.target.value)}
+                       style={readOnly ? { background:'#f9f9f9', color:'#555', minHeight: 100 } : { minHeight: 100 }}
+                     />
+                     <p className={`dt-word-count ${pCount >= 50 ? 'ok' : pCount > 0 ? 'warn' : ''}`}>
+                       {pCount} / 50 words minimum {pCount >= 50 ? '✓' : ''}
+                     </p>
+                   </div>
+                   
+                   <div className="dt-textarea-wrap" style={{ marginBottom: 20 }}>
+                     <label htmlFor={`day5-rootCauses-${day}`}>2. Root Causes Analysis</label>
+                     <p style={{ fontSize: '0.8rem', color: '#666', marginBottom: 8, marginTop: -4 }}>Identify root causes (e.g., Skill gap, Lack of awareness, Infrastructure issues). (Minimum 50 words)</p>
+                     <textarea
+                       id={`day5-rootCauses-${day}`} className="dt-textarea"
+                       placeholder="Write the identified root causes here..."
+                       value={data[`day${day}_rootCauses`] || ''} readOnly={readOnly}
+                       onChange={e => !readOnly && onChange(`day${day}_rootCauses`, e.target.value)}
+                       style={readOnly ? { background:'#f9f9f9', color:'#555', minHeight: 100 } : { minHeight: 100 }}
+                     />
+                     <p className={`dt-word-count ${rCount >= 50 ? 'ok' : rCount > 0 ? 'warn' : ''}`}>
+                       {rCount} / 50 words minimum {rCount >= 50 ? '✓' : ''}
+                     </p>
+                   </div>
 
-                 <div className="dt-textarea-wrap" style={{ marginBottom: 8 }}>
-                   <label htmlFor={`day5-recommendations-${day}`}>3. Recommendations &amp; Improvement Suggestions</label>
-                   <p style={{ fontSize: '0.8rem', color: '#666', marginBottom: 8, marginTop: -4 }}>Provide suitable recommendations or improvement suggestions based on the identified problems and root causes that may help improve the current community situation. (Minimum 50 words)</p>
-                   <textarea
-                     id={`day5-recommendations-${day}`} className="dt-textarea"
-                     placeholder="Write your recommendations here..."
-                     value={data[`day${day}_recommendations`] || ''} readOnly={readOnly}
-                     onChange={e => !readOnly && onChange(`day${day}_recommendations`, e.target.value)}
-                     style={readOnly ? { background:'#f9f9f9', color:'#555', minHeight: 100 } : { minHeight: 100 }}
-                   />
+                   <div className="dt-textarea-wrap" style={{ marginBottom: 8 }}>
+                     <label htmlFor={`day5-recommendations-${day}`}>3. Recommendations &amp; Improvement Suggestions</label>
+                     <p style={{ fontSize: '0.8rem', color: '#666', marginBottom: 8, marginTop: -4 }}>Provide suitable recommendations or improvement suggestions based on the identified problems and root causes that may help improve the current community situation. (Minimum 50 words)</p>
+                     <textarea
+                       id={`day5-recommendations-${day}`} className="dt-textarea"
+                       placeholder="Write your recommendations here..."
+                       value={data[`day${day}_recommendations`] || ''} readOnly={readOnly}
+                       onChange={e => !readOnly && onChange(`day${day}_recommendations`, e.target.value)}
+                       style={readOnly ? { background:'#f9f9f9', color:'#555', minHeight: 100 } : { minHeight: 100 }}
+                     />
+                     <p className={`dt-word-count ${sCount >= 50 ? 'ok' : sCount > 0 ? 'warn' : ''}`}>
+                       {sCount} / 50 words minimum {sCount >= 50 ? '✓' : ''}
+                     </p>
+                   </div>
                  </div>
-               </div>
-            )}
+               );
+            })()}
           </div>
         ))}
       </div>

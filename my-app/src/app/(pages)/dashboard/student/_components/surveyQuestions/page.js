@@ -24,7 +24,7 @@ export default function SurveyQuestions({ studentData }) {
         <h2 style={{ color: '#b45309', fontWeight: 700, marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
           <FaInfoCircle color="#f59e0b" /> No Survey Data Found
         </h2>
-        <p style={{ color: '#555', fontSize: '1.1rem' }}>We couldn't find the survey questions for your selected problem statement: <br/><br/><strong>{ps}</strong></p>
+        <p style={{ color: '#555', fontSize: '1.1rem' }}>We couldn&apos;t find the survey questions for your selected problem statement: <br/><br/><strong>{ps}</strong></p>
       </div>
     );
   }
