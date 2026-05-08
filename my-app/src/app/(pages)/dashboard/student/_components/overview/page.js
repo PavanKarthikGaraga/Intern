@@ -299,14 +299,23 @@ export default function Overview({ user, studentData }) {
 
             <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '2px dashed #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '40px' }}>
-                <div>
-                  <p style={{ margin: 0, fontSize: '0.9rem', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>Total Score</p>
-                  <p style={{ margin: 0, fontSize: '2.5rem', fontWeight: '900', color: '#014a01' }}>{Math.round(totalMarks)}<span style={{ fontSize: '1.2rem', color: '#888', fontWeight: '400' }}> / 100</span></p>
-                </div>
-                <div>
-                  <p style={{ margin: 0, fontSize: '0.9rem', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>Final Grade</p>
-                  <p style={{ margin: 0, fontSize: '2.5rem', fontWeight: '900', color: totalMarks >= 50 ? '#014a01' : '#970003' }}>{getGrade(totalMarks)}</p>
-                </div>
+                {(m.completed === 'P' || m.completed === 1) ? (
+                  <>
+                    <div>
+                      <p style={{ margin: 0, fontSize: '0.9rem', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>Total Score</p>
+                      <p style={{ margin: 0, fontSize: '2.5rem', fontWeight: '900', color: '#014a01' }}>{Math.round(totalMarks)}<span style={{ fontSize: '1.2rem', color: '#888', fontWeight: '400' }}> / 100</span></p>
+                    </div>
+                    <div>
+                      <p style={{ margin: 0, fontSize: '0.9rem', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>Final Grade</p>
+                      <p style={{ margin: 0, fontSize: '2.5rem', fontWeight: '900', color: totalMarks >= 50 ? '#014a01' : '#970003' }}>{getGrade(totalMarks)}</p>
+                    </div>
+                  </>
+                ) : (
+                  <div>
+                    <p style={{ margin: 0, fontSize: '0.9rem', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>Overall Status</p>
+                    <p style={{ margin: 0, fontSize: '1.2rem', fontWeight: '700', color: '#e65100', marginTop: '4px' }}>Evaluation Pending</p>
+                  </div>
+                )}
               </div>
               
               {eligibleSlot && (
