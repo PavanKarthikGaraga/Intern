@@ -44,13 +44,13 @@ export async function GET(req) {
             }, { status: 403 });
         }
 
-        // Get all faculty mentors with their details
         const [mentors] = await pool.query(`
             SELECT 
                 fm.username,
                 fm.name,
                 fm.email,
                 fm.phoneNumber,
+                fm.branch,
                 (
                     SELECT COUNT(*)
                     FROM studentLeads sl

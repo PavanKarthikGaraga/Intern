@@ -160,6 +160,7 @@ export default function FacultyMentors() {
                         <tr>
                             <th>Name</th>
                             <th>Username</th>
+                            <th>Department</th>
                             <th>Email</th>
                             <th>Phone</th>
                             <th>Statistics</th>
@@ -171,6 +172,7 @@ export default function FacultyMentors() {
                             <tr key={mentor.username}>
                                 <td>{mentor.name}</td>
                                 <td>{mentor.username}</td>
+                                <td><span style={{ background: '#e0f2fe', color: '#0369a1', padding: '2px 8px', borderRadius: 12, fontSize: '0.82rem', fontWeight: 600 }}>{mentor.branch || '—'}</span></td>
                                 <td>{mentor.email}</td>
                                 <td>{mentor.phoneNumber}</td>
                                 <td>
