@@ -48,7 +48,7 @@ export default function SurveyQuestions({ studentData }) {
           <div key={idx} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
             <div style={{ background: '#014a01', padding: '16px 20px', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <FaUsers /> Stakeholder {idx + 1}: {stakeholderObj.stakeholder}
+                <FaUsers /> Stakeholder {idx + 1}: {stakeholderObj.stakeholder} (Day {idx + 2})
               </h3>
               <span style={{ background: 'rgba(255,255,255,0.2)', padding: '4px 12px', borderRadius: 20, fontSize: '0.85rem', fontWeight: 600 }}>
                 {stakeholderObj.questions.length} Questions
