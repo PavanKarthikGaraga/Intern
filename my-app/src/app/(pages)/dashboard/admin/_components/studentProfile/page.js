@@ -106,6 +106,32 @@ export default function StudentProfile({ isOpen, onClose, username }) {
                         </div>
                     </div>
 
+                    {(studentData?.linkedinUrl || studentData?.youtubeUrl) && (
+                        <div className="profile-section">
+                            <h3>Social Profiles (Day 1 Submission)</h3>
+                            <div className="info-grid">
+                                {studentData?.linkedinUrl && (
+                                    <div className="info-item">
+                                        <label>LinkedIn Profile:</label>
+                                        <a href={studentData.linkedinUrl} target="_blank" rel="noopener noreferrer"
+                                           style={{ color: '#0077b5', fontWeight: 600, wordBreak: 'break-all' }}>
+                                            🔗 View LinkedIn
+                                        </a>
+                                    </div>
+                                )}
+                                {studentData?.youtubeUrl && (
+                                    <div className="info-item">
+                                        <label>YouTube Channel:</label>
+                                        <a href={studentData.youtubeUrl} target="_blank" rel="noopener noreferrer"
+                                           style={{ color: '#ff0000', fontWeight: 600, wordBreak: 'break-all' }}>
+                                            🔗 View YouTube Channel
+                                        </a>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
                     <div className="profile-section">
                         <h3>Program Details</h3>
                         <div className="info-grid">

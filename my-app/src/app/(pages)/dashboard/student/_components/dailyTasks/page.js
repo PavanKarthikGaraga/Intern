@@ -282,6 +282,16 @@ export default function DailyTasks({ studentData }) {
       setMsg(`Need at least 100 words (currently ${wc(data.inference||'')})`);
       setMsgType('err'); return;
     }
+    if (activeDay === 1) {
+      const li = (data.linkedinUrl || '').trim();
+      const yt = (data.youtubeUrl  || '').trim();
+      const liValid = li.startsWith('https://www.linkedin.com/') || li.startsWith('https://linkedin.com/');
+      const ytValid = yt.startsWith('https://www.youtube.com/@') || yt.startsWith('https://youtube.com/@') || yt.startsWith('https://www.youtube.com/channel/');
+      if (!li) { setMsg('Please provide your LinkedIn profile URL.'); setMsgType('err'); return; }
+      if (!liValid) { setMsg('LinkedIn URL must start with https://www.linkedin.com/in/…'); setMsgType('err'); return; }
+      if (!yt) { setMsg('Please provide your YouTube channel URL.'); setMsgType('err'); return; }
+      if (!ytValid) { setMsg('YouTube URL must start with https://www.youtube.com/@… or /channel/…'); setMsgType('err'); return; }
+    }
     if ([2, 3, 4].includes(activeDay)) {
       const pCount = data.personCount || 3;
       const sh = survey[activeDay - 2];
@@ -673,6 +683,14 @@ function ReportGenerator({ day, stakeholder, readOnly }) {
 function Day1({ data, onChange, ps, readOnly }) {
   const text  = data.inference || '';
   const words = wc(text);
+  const linkedinUrl  = data.linkedinUrl  || '';
+  const youtubeUrl   = data.youtubeUrl   || '';
+
+  const isLinkedinValid = linkedinUrl.trim().startsWith('https://www.linkedin.com/') || linkedinUrl.trim().startsWith('https://linkedin.com/');
+  const isYoutubeValid  = youtubeUrl.trim().startsWith('https://www.youtube.com/@') || youtubeUrl.trim().startsWith('https://youtube.com/@') || youtubeUrl.trim().startsWith('https://www.youtube.com/channel/');
+
+  const ro = { background: '#f9f9f9', color: '#555' };
+
   return (
     <div>
       <div className="dt-info-box" style={{ marginBottom: 16 }}>
@@ -682,8 +700,12 @@ function Day1({ data, onChange, ps, readOnly }) {
           <li>Research your topic using the internet or books.</li>
           <li>Write your understanding — <strong>minimum 100 words</strong></li>
           <li>Cover: why you chose this problem statement, your understanding of the problem, and identify the key stakeholders.</li>
+          <li>Create a <strong>LinkedIn account</strong> (if you don&apos;t have one) and submit your profile URL.</li>
+          <li>Create a <strong>YouTube channel</strong> (if you don&apos;t have one) and submit your channel URL.</li>
         </ul>
       </div>
+
+      {/* Understanding textarea */}
       <div className="dt-textarea-wrap">
         <label htmlFor="day1-inference">Your Understanding</label>
         <textarea
@@ -691,11 +713,73 @@ function Day1({ data, onChange, ps, readOnly }) {
           placeholder="Write your understanding of the problem statement here…"
           value={text} readOnly={readOnly}
           onChange={e => !readOnly && onChange('inference', e.target.value)}
-          style={readOnly ? { background:'#f9f9f9', color:'#555' } : {}}
+          style={readOnly ? ro : {}}
         />
         <p className={`dt-word-count ${words >= 100 ? 'ok' : words > 60 ? 'warn' : ''}`}>
           {words} / 100 words minimum {words >= 100 ? '✓' : ''}
         </p>
+      </div>
+
+      {/* LinkedIn URL */}
+      <div className="dt-link-section" style={{ marginTop: 20 }}>
+        <label htmlFor="day1-linkedin" style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 600 }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="#0077b5" style={{flexShrink:0}}><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+          LinkedIn Profile URL <span style={{ color: '#e53e3e', marginLeft: 2 }}>*</span>
+        </label>
+        <p style={{ fontSize: '0.82rem', color: '#6b7280', marginBottom: 6, marginTop: 2 }}>
+          Example: <code style={{ background: '#f3f4f6', padding: '1px 5px', borderRadius: 3 }}>https://www.linkedin.com/in/your-name-12345</code>
+        </p>
+        <input
+          id="day1-linkedin"
+          type="url"
+          className={`dt-link-input${!readOnly && linkedinUrl && !isLinkedinValid ? ' dt-link-error' : ''}`}
+          placeholder="https://www.linkedin.com/in/your-profile"
+          value={linkedinUrl}
+          readOnly={readOnly}
+          style={readOnly ? ro : {}}
+          onChange={e => !readOnly && onChange('linkedinUrl', e.target.value)}
+        />
+        {!readOnly && linkedinUrl && (
+          <p style={{ fontSize: '0.8rem', marginTop: 4, color: isLinkedinValid ? '#16a34a' : '#dc2626', fontWeight: 500 }}>
+            {isLinkedinValid ? '✓ Valid LinkedIn profile URL' : '✗ Must start with https://www.linkedin.com/in/…'}
+          </p>
+        )}
+        {readOnly && linkedinUrl && (
+          <a href={linkedinUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.85rem', color: '#0077b5', marginTop: 4, display: 'inline-block' }}>
+            🔗 View LinkedIn Profile
+          </a>
+        )}
+      </div>
+
+      {/* YouTube Channel URL */}
+      <div className="dt-link-section" style={{ marginTop: 16 }}>
+        <label htmlFor="day1-youtube" style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 600 }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="#ff0000" style={{flexShrink:0}}><path d="M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"/></svg>
+          YouTube Channel URL <span style={{ color: '#e53e3e', marginLeft: 2 }}>*</span>
+        </label>
+        <p style={{ fontSize: '0.82rem', color: '#6b7280', marginBottom: 6, marginTop: 2 }}>
+          Example: <code style={{ background: '#f3f4f6', padding: '1px 5px', borderRadius: 3 }}>https://www.youtube.com/@YourChannelName</code>
+        </p>
+        <input
+          id="day1-youtube"
+          type="url"
+          className={`dt-link-input${!readOnly && youtubeUrl && !isYoutubeValid ? ' dt-link-error' : ''}`}
+          placeholder="https://www.youtube.com/@YourChannelName"
+          value={youtubeUrl}
+          readOnly={readOnly}
+          style={readOnly ? ro : {}}
+          onChange={e => !readOnly && onChange('youtubeUrl', e.target.value)}
+        />
+        {!readOnly && youtubeUrl && (
+          <p style={{ fontSize: '0.8rem', marginTop: 4, color: isYoutubeValid ? '#16a34a' : '#dc2626', fontWeight: 500 }}>
+            {isYoutubeValid ? '✓ Valid YouTube channel URL' : '✗ Must start with https://www.youtube.com/@… or /channel/…'}
+          </p>
+        )}
+        {readOnly && youtubeUrl && (
+          <a href={youtubeUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.85rem', color: '#ff0000', marginTop: 4, display: 'inline-block' }}>
+            🔗 View YouTube Channel
+          </a>
+        )}
       </div>
     </div>
   );

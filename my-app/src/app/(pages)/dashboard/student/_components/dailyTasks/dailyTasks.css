@@ -132,6 +132,7 @@
   font-size: 0.93rem; font-family: inherit; transition: border 0.2s; box-sizing: border-box;
 }
 .dt-link-input:focus { border-color: #014a01; outline: none; box-shadow: 0 0 0 3px rgba(1,74,1,0.1); }
+.dt-link-input.dt-link-error { border-color: #dc2626; box-shadow: 0 0 0 3px rgba(220,38,38,0.1); }
 .dt-warning-box {
   background: #fdecea; border: 1.5px solid #f5c6c6; border-radius: 8px;
   padding: 10px 14px; margin-bottom: 14px; font-size: 0.84rem; color: #c62828; font-weight: 600;

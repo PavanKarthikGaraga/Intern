@@ -98,6 +98,19 @@ export async function GET(req) {
             student.marks = marks[0];
         }
 
+        // Get Day 1 LinkedIn & YouTube links from dailyTasks
+        try {
+            const [day1Rows] = await pool.query(
+                `SELECT data FROM dailyTasks WHERE username = ? AND day = 1`,
+                [username]
+            );
+            if (day1Rows && day1Rows.length > 0) {
+                const d1 = typeof day1Rows[0].data === 'string' ? JSON.parse(day1Rows[0].data) : day1Rows[0].data;
+                student.linkedinUrl = d1.linkedinUrl || null;
+                student.youtubeUrl  = d1.youtubeUrl  || null;
+            }
+        } catch (_) { /* dailyTasks may not exist yet */ }
+
         return NextResponse.json({
             success: true,
             student

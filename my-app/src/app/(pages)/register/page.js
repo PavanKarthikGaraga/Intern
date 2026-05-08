@@ -76,27 +76,31 @@ export default function Register() {
 
   const [selectedDomainInfo, setSelectedDomainInfo] = useState('');
   const [stats, setStats] = useState(null);
+  const [slotAvailability, setSlotAvailability] = useState({}); // { 1: true, 2: false, ... }
   const [availabilityMessage, setAvailabilityMessage] = useState('');
   const [isAvailable, setIsAvailable] = useState(true);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
 
-  // Add new useEffect for initial stats loading
+  // Fetch initial stats + slot availability
   useEffect(() => {
-    const loadInitialStats = async () => {
+    const loadInitialData = async () => {
       try {
-        const response = await axios.get('/api/register/stats');
-        const data = response.data;
-        
-        if (data.success) {
-          setStats(data.stats);
+        const [statsRes, availRes] = await Promise.all([
+          axios.get('/api/register/stats'),
+          axios.get('/api/register/slot-availability'),
+        ]);
+        if (statsRes.data.success) setStats(statsRes.data.stats);
+        if (availRes.data.success) {
+          const map = {};
+          availRes.data.slots.forEach(s => { map[s.slot] = Boolean(s.registrationOpen); });
+          setSlotAvailability(map);
         }
       } catch (error) {
-        console.error('Error loading initial stats:', error);
+        console.error('Error loading initial data:', error);
       }
     };
-
-    loadInitialStats();
-  }, []); // Empty dependency array means this runs once on mount
+    loadInitialData();
+  }, []);
 
   const handleDomainClick = (domain) => {
     setSelectedDomainInfo(domain.description);
@@ -712,19 +716,26 @@ export default function Register() {
                   <option value="">{formData.batch ? 'Select Slot' : 'Select Batch first'}</option>
                   {(formData.batch === 'Y-25-VJA' || formData.batch === 'Y-25-HYD') && (
                     <>
-                      <option value="1">Slot 1 — May 11–17</option>
-                      <option value="2">Slot 2 — May 18–24</option>
-                      <option value="3">Slot 3 — May 25–31</option>
-                      <option value="4">Slot 4 — Jun 1–7</option>
-                      <option value="5">Slot 5 — Jun 8–14</option>
-                      <option value="6">Slot 6 — Jun 15–21</option>
+                      {[1,2,3,4,5,6].map(s => {
+                        const open = slotAvailability[s] !== false; // default open
+                        return (
+                          <option key={s} value={String(s)} disabled={!open}>
+                            {open ? `Slot ${s} — ${SLOT_DATES[s]}` : `Slot ${s} — Registration Closed`}
+                          </option>
+                        );
+                      })}
                     </>
                   )}
                   {formData.batch === 'Y-24' && (
                     <>
-                      <option value="7">Slot 7 — Jun 22–28</option>
-                      <option value="8">Slot 8 — Jun 29–Jul 5</option>
-                      <option value="9">Slot 9 — Jul 6–12</option>
+                      {[7,8,9].map(s => {
+                        const open = slotAvailability[s] !== false;
+                        return (
+                          <option key={s} value={String(s)} disabled={!open}>
+                            {open ? `Slot ${s} — ${SLOT_DATES[s]}` : `Slot ${s} — Registration Closed`}
+                          </option>
+                        );
+                      })}
                     </>
                   )}
                 </select>

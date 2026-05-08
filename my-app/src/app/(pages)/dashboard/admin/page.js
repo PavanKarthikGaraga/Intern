@@ -28,6 +28,7 @@ import ActivityLogs from './_components/activityLogs/page';
 import DailyTasksViewer from '../studentLead/_components/dailyTasksViewer/page';
 import TaskUnlocker from './_components/taskUnlocker/page';
 import SlotControl from './_components/slotControl/page';
+import RegistrationControl from './_components/registrationControl/page';
 
 
 export default function AdminDashboard() {
@@ -249,6 +250,13 @@ export default function AdminDashboard() {
           </button>
 
           <button
+            className={`sidebar-item ${activeSection === 'registration-control' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('registration-control')}
+          >
+            <span className="item-label">Registration Control</span>
+          </button>
+
+          <button
             className={`sidebar-item ${activeSection === 'daily-tasks' ? 'active' : ''}`}
             onClick={() => handleSectionClick('daily-tasks')}
           >
@@ -355,6 +363,7 @@ export default function AdminDashboard() {
            activeSection === 'problem-statements' ? <ProblemStatements /> :
            activeSection === 'activity-logs' ? <ActivityLogs /> :
            activeSection === 'slot-control' ? <SlotControl /> :
+           activeSection === 'registration-control' ? <RegistrationControl /> :
            activeSection === 'daily-tasks' ? <DailyTasksViewer /> :
            activeSection === 'task-unlocker' ? <TaskUnlocker /> :
            <ChangePassword />}
