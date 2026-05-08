@@ -226,7 +226,7 @@ function LockedView({ status, dayNum, slot }) {
 }
 
 /* ── Main component ── */
-export default function DailyTasks({ studentData }) {
+export default function DailyTasks({ studentData, onSectionChange }) {
   const [activeDay, setActiveDay] = useState(null);
   const [saved, setSaved]     = useState({});
   const [draft, setDraft]     = useState({});
@@ -444,7 +444,7 @@ export default function DailyTasks({ studentData }) {
             ? <LockedView status={activeStatus} dayNum={activeDay} slot={slot} />
             : (
               <>
-                {activeDay === 1 && <Day1 data={dayData(1)} onChange={(f,v) => setDayField(1,f,v)} ps={ps} readOnly={isSaved} />}
+                {activeDay === 1 && <Day1 data={dayData(1)} onChange={(f,v) => setDayField(1,f,v)} ps={ps} readOnly={isSaved} onSectionChange={onSectionChange} />}
                 {activeDay === 2 && <DaySurvey day={2} stakeholderIdx={0} survey={survey} data={dayData(2)} onChange={(f,v) => setDayField(2,f,v)} readOnly={isSaved} onFinalSubmit={handleSave} saving={saving} minPersons={6} />}
                 {activeDay === 3 && <DaySurvey day={3} stakeholderIdx={1} survey={survey} data={dayData(3)} onChange={(f,v) => setDayField(3,f,v)} readOnly={isSaved} onFinalSubmit={handleSave} saving={saving} minPersons={3} />}
                 {activeDay === 4 && <DaySurvey day={4} stakeholderIdx={2} survey={survey} data={dayData(4)} onChange={(f,v) => setDayField(4,f,v)} readOnly={isSaved} onFinalSubmit={handleSave} saving={saving} minPersons={3} />}
@@ -680,7 +680,7 @@ function ReportGenerator({ day, stakeholder, readOnly }) {
 }
 
 /* ── Day 1 ── */
-function Day1({ data, onChange, ps, readOnly }) {
+function Day1({ data, onChange, ps, readOnly, onSectionChange }) {
   const text  = data.inference || '';
   const words = wc(text);
   const linkedinUrl  = data.linkedinUrl  || '';
@@ -700,9 +700,19 @@ function Day1({ data, onChange, ps, readOnly }) {
           <li>Research your topic using the internet or books.</li>
           <li>Write your understanding — <strong>minimum 100 words</strong></li>
           <li>Cover: why you chose this problem statement, your understanding of the problem, and identify the key stakeholders.</li>
+          <li>Go through the stakeholders and survey questions to ask on Day 2, 3, and 4.</li>
           <li>Create a <strong>LinkedIn account</strong> (if you don&apos;t have one) and submit your profile URL.</li>
           <li>Create a <strong>YouTube channel</strong> (if you don&apos;t have one) and submit your channel URL.</li>
         </ul>
+        <div style={{ marginTop: 16 }}>
+          <button 
+            type="button"
+            onClick={() => onSectionChange && onSectionChange('survey-questions')}
+            style={{ padding: '8px 16px', background: '#014a01', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}
+          >
+            Click here to view your stakeholders and survey questions to ask and record responses on day 2,3,4 stakeholder wise.
+          </button>
+        </div>
       </div>
 
       {/* Understanding textarea */}

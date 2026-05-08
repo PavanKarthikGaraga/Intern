@@ -17,6 +17,7 @@ import ProblemStatement from './_components/problemStatment/page';
 
 import DailyTasks from './_components/dailyTasks/page';
 import EvaluationPlan from './_components/evaluationPlan/page';
+import SurveyQuestions from './_components/surveyQuestions/page';
 
 export default function StudentDashboard() {
   const { user, isLoading: authLoading } = useAuth();
@@ -109,6 +110,11 @@ export default function StudentDashboard() {
             <FaTasks className="sidebar-icon" />
             <span className="item-label">Daily Tasks</span>
           </button>
+          <button className={`sidebar-item ${activeSection === 'survey-questions' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('survey-questions')}>
+            <FaClipboardList className="sidebar-icon" />
+            <span className="item-label">Survey Questions</span>
+          </button>
           <button className={`sidebar-item ${activeSection === 'evaluation-plan' ? 'active' : ''}`}
             onClick={() => handleSectionClick('evaluation-plan')}>
             <FaClipboardList className="sidebar-icon" />
@@ -150,8 +156,9 @@ export default function StudentDashboard() {
            activeSection === 'change-password'  ? <ChangePassword user={user} /> :
            activeSection === 'evaluation-plan'   ? <EvaluationPlan /> :
            activeSection === 'lead'             ? <Lead studentData={studentData} /> :
+           activeSection === 'survey-questions' ? <SurveyQuestions studentData={studentData} /> :
            // Slot-gated
-           activeSection === 'daily-tasks' && slotEnabled  ? <DailyTasks studentData={studentData} /> :
+           activeSection === 'daily-tasks' && slotEnabled  ? <DailyTasks studentData={studentData} onSectionChange={setActiveSection} /> :
            !slotEnabled && (activeSection === 'daily-tasks') ? (
              <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'60px 24px', textAlign:'center', gap:16 }}>
                <div style={{ fontSize:'3rem' }}>🔒</div>
