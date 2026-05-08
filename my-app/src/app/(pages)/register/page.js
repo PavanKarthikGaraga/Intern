@@ -513,12 +513,8 @@ export default function Register() {
                           <td data-status={checkSlotAvailability(slot, 'Remote').toLowerCase().replace(' ', '-')}>
                             {stats ? stats[`slot${slot}Remote`] || 0 : 0} Registered
                           </td>
-                          <td data-status={checkSlotAvailability(slot, 'Incampus').toLowerCase().replace(' ', '-')}>
-                            {stats ? stats[`slot${slot}Incamp`] || 0 : 0} Registered
-                          </td>
-                          <td data-status={checkSlotAvailability(slot, 'InVillage').toLowerCase().replace(' ', '-')}>
-                            {stats ? stats[`slot${slot}Invillage`] || 0 : 0} Registered
-                          </td>
+                          <td style={{color:'#bbb',fontStyle:'italic',textAlign:'center'}}>—</td>
+                          <td style={{color:'#bbb',fontStyle:'italic',textAlign:'center'}}>—</td>
                         </tr>
                       ))}
                     </tbody>
