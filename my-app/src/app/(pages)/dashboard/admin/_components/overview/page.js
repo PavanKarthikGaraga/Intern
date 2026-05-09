@@ -7,7 +7,7 @@ import {
 } from 'recharts';
 import {
   TeamOutlined, CheckCircleOutlined, UserOutlined, SolutionOutlined, ReloadOutlined,
-  GlobalOutlined, BarChartOutlined
+  GlobalOutlined, BarChartOutlined, HomeOutlined, CarOutlined
 } from '@ant-design/icons';
 import './page.css';
 
@@ -125,7 +125,7 @@ export default function Overview() {
   if (error)   return <div className="error">{error}</div>;
   if (!overviewData) return <div className="no-data">No data available</div>;
 
-  const { leadsCount, studentsCount, completedCount, facultyCount, stateStats, districtStats } = overviewData;
+  const { leadsCount, studentsCount, completedCount, facultyCount, stateStats, districtStats, residenceStats } = overviewData;
   const states = [...new Set(stateStats.map(s => s.state))];
   const districts = selectedState
     ? [...new Set(districtStats.filter(s => s.state === selectedState).map(s => s.district))]
@@ -405,6 +405,60 @@ export default function Overview() {
             </div>
           </>
         )}
+      </div>
+
+      {/* ── Residence Statistics (In-Campus) ── */}
+      <div className="ov-section-card">
+        <h2 className="ov-section-title">
+          <HomeOutlined style={{ fontSize:'1.1rem', color:'#014a01' }} />
+          Residence & Transport (In-Campus Students Only)
+        </h2>
+        
+        <div className="ov-table-container" style={{ overflowX:'auto' }}>
+          <table className="ov-data-table" style={{ width:'100%', borderCollapse:'collapse', marginTop:10 }}>
+            <thead>
+              <tr style={{ textAlign:'left', borderBottom:'2px solid #f0f7f0' }}>
+                <th style={{ padding:'12px 16px', fontSize:'0.75rem', textTransform:'uppercase', color:'#888' }}>Slot</th>
+                <th style={{ padding:'12px 16px', fontSize:'0.75rem', textTransform:'uppercase', color:'#888' }}>Accommodation Opted</th>
+                <th style={{ padding:'12px 16px', fontSize:'0.75rem', textTransform:'uppercase', color:'#888' }}>Transportation Opted</th>
+              </tr>
+            </thead>
+            <tbody>
+              {residenceStats?.map(s => (
+                <tr key={s.slot} style={{ borderBottom:'1px solid #f8fdf8' }}>
+                  <td style={{ padding:'12px 16px', fontWeight:700, color:'#012a01' }}>Slot {s.slot}</td>
+                  <td style={{ padding:'12px 16px' }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                      <HomeOutlined style={{ color:'#1565c0' }} />
+                      <span style={{ 
+                        padding:'4px 12px', borderRadius:20, background:'#e3f2fd', color:'#1565c0', 
+                        fontSize:'0.82rem', fontWeight:600 
+                      }}>
+                        {s.accommodationCount} Students
+                      </span>
+                    </div>
+                  </td>
+                  <td style={{ padding:'12px 16px' }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                      <CarOutlined style={{ color:'#e65100' }} />
+                      <span style={{ 
+                        padding:'4px 12px', borderRadius:20, background:'#fff3e0', color:'#e65100', 
+                        fontSize:'0.82rem', fontWeight:600 
+                      }}>
+                        {s.transportationCount} Students
+                      </span>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {(!residenceStats || residenceStats.length === 0) && (
+                <tr>
+                  <td colSpan="3" style={{ padding:'24px', textAlign:'center', color:'#aaa' }}>No residence data available</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

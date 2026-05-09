@@ -182,6 +182,18 @@ export async function GET(req) {
       ORDER BY updatedAt DESC
     `);
 
+    // Get accommodation and transport stats for In-Campus students slot-wise
+    const [residenceStats] = await pool.query(`
+      SELECT 
+        slot,
+        SUM(CASE WHEN LOWER(accommodation) = 'yes' THEN 1 ELSE 0 END) as accommodationCount,
+        SUM(CASE WHEN LOWER(transportation) = 'yes' THEN 1 ELSE 0 END) as transportationCount
+      FROM registrations
+      WHERE mode = 'InCampus'
+      GROUP BY slot
+      ORDER BY slot
+    `);
+
     return NextResponse.json({
       success: true,
       overviewData: {
@@ -199,7 +211,8 @@ export async function GET(req) {
         modeStats,
         slotStats,
         stateStats,
-        districtStats
+        districtStats,
+        residenceStats
       }
     });
   } catch (error) {
