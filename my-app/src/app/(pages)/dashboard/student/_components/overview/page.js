@@ -712,10 +712,6 @@ export default function Overview({ user, studentData }) {
     </div>
   );
 }
-    </div>
-  );
-}
-
 function getYouTubeID(url) {
   const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
   const match = url.match(regExp);
