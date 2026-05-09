@@ -48,7 +48,7 @@ function dayLabel(slot, dayNum) {
 
 const DEMO_ID = '2500099999';
 
-function getDayStatus(dayNum, slot, saved, username, unlockedDays = []) {
+function getDayStatus(dayNum, slot, saved, username, unlockedDays = [], slotEnabled = false) {
   // ── Demo bypass: all days open regardless of date ──
   if (username === DEMO_ID) {
     return saved[dayNum] ? 'submitted' : 'open';
@@ -65,12 +65,12 @@ function getDayStatus(dayNum, slot, saved, username, unlockedDays = []) {
 
   // Check previous days first to see if we should cascade lock
   if (dayNum > 1) {
-    const prevStatus = getDayStatus(dayNum - 1, slot, saved, username, unlockedDays);
+    const prevStatus = getDayStatus(dayNum - 1, slot, saved, username, unlockedDays, slotEnabled);
     if (prevStatus === 'missed' || prevStatus === 'locked') return 'locked';
   }
 
   if (now > close.getTime()) return 'missed';
-  if (now < open.getTime()) return 'upcoming';
+  if (now < open.getTime()) return slotEnabled ? 'preview' : 'upcoming';
   
   return 'open';
 }
@@ -235,6 +235,8 @@ export default function DailyTasks({ studentData, onSectionChange }) {
   const [msg, setMsg]         = useState('');
   const [msgType, setMsgType] = useState('ok');
 
+  const slotEnabled = studentData?.slotEnabled || false;
+
   const ps       = studentData?.problemStatementData?.problem_statement || null;
   const slot     = studentData?.slot || null;
   const username = studentData?.username || null;
@@ -258,8 +260,8 @@ export default function DailyTasks({ studentData, onSectionChange }) {
         setUnlockedDays(unlocked);
         
         const firstOpen = [1,2,3,4,5,6,7].find(d => {
-          const st = getDayStatus(d, slot, tasks, username, unlocked);
-          return st === 'open' || st === 'submitted' || st === 'unlocked';
+          const st = getDayStatus(d, slot, tasks, username, unlocked, slotEnabled);
+          return st === 'open' || st === 'submitted' || st === 'unlocked' || st === 'preview';
         });
         setActiveDay(firstOpen || 1);
       } catch { setActiveDay(1); }
@@ -379,12 +381,13 @@ export default function DailyTasks({ studentData, onSectionChange }) {
 
   if (activeDay === null) return <div className="dt-wrap"><p style={{color:'#888'}}>Loading…</p></div>;
 
-  const statuses    = Object.fromEntries([1,2,3,4,5,6,7].map(d => [d, getDayStatus(d, slot, saved, username, unlockedDays)]));
+  const statuses    = Object.fromEntries([1,2,3,4,5,6,7].map(d => [d, getDayStatus(d, slot, saved, username, unlockedDays, slotEnabled)]));
   const meta        = DAY_META[activeDay - 1];
   const activeStatus = statuses[activeDay];
   const isSaved     = activeStatus === 'submitted' && !draft[activeDay];
-  // Editable if open or unlocked
+  // Editable if open or unlocked; preview = view only
   const isEditable  = activeStatus === 'open' || activeStatus === 'unlocked';
+  const isPreview   = activeStatus === 'preview';
 
   return (
     <div className="dt-wrap">
@@ -397,11 +400,16 @@ export default function DailyTasks({ studentData, onSectionChange }) {
         </div>
       </div>
 
-      {/* Timer moved above timeline */}
+      {/* Timer bar */}
       {isSaved ? (
         <CompletedBar deadline={slot ? dayWindow(slot, activeDay).close : new Date()} submittedAt={saved[activeDay]?.submittedAt} />
       ) : activeStatus === 'open' || activeStatus === 'upcoming' ? (
         <TimerBar openTime={dayWindow(slot, activeDay).open} closeTime={dayWindow(slot, activeDay).close} status={activeStatus} />
+      ) : activeStatus === 'preview' ? (
+        <div className="dt-timer-bar" style={{ background: '#eff6ff', borderColor: '#bfdbfe' }}>
+          <span className="dt-timer-label" style={{ color: '#1d4ed8', display: 'flex', alignItems: 'center', gap: '6px' }}><FaHourglassHalf /> Preview Mode — Slot Unlocked</span>
+          <span className="dt-timer-date" style={{ color: '#1d4ed8' }}>You can read the tasks now. Submission opens on {new Date(dayWindow(slot, activeDay).open).toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit', hour12:true })}</span>
+        </div>
       ) : activeStatus === 'unlocked' ? (
         <TimerBar openTime={null} closeTime={null} status="unlocked" />
       ) : null}
@@ -410,8 +418,8 @@ export default function DailyTasks({ studentData, onSectionChange }) {
       <div className="dt-timeline">
         {DAY_META.map(m => {
           const st = statuses[m.day];
-          // Can click if it's not upcoming
-          const canClick = st !== 'upcoming';
+          // Can click if it's not upcoming or locked
+          const canClick = st !== 'upcoming' && st !== 'locked';
           return (
             <button
               key={m.day}
@@ -444,20 +452,21 @@ export default function DailyTasks({ studentData, onSectionChange }) {
             ? <LockedView status={activeStatus} dayNum={activeDay} slot={slot} />
             : (
               <>
-                {activeDay === 1 && <Day1 data={dayData(1)} onChange={(f,v) => setDayField(1,f,v)} ps={ps} readOnly={isSaved} onSectionChange={onSectionChange} />}
-                {activeDay === 2 && <DaySurvey day={2} stakeholderIdx={0} survey={survey} data={dayData(2)} onChange={(f,v) => setDayField(2,f,v)} readOnly={isSaved} onFinalSubmit={handleSave} saving={saving} minPersons={6} />}
-                {activeDay === 3 && <DaySurvey day={3} stakeholderIdx={1} survey={survey} data={dayData(3)} onChange={(f,v) => setDayField(3,f,v)} readOnly={isSaved} onFinalSubmit={handleSave} saving={saving} minPersons={3} />}
-                {activeDay === 4 && <DaySurvey day={4} stakeholderIdx={2} survey={survey} data={dayData(4)} onChange={(f,v) => setDayField(4,f,v)} readOnly={isSaved} onFinalSubmit={handleSave} saving={saving} minPersons={3} />}
-                {activeDay === 5 && <Day5 saved={saved} survey={survey} data={dayData(5)} onChange={(f,v) => setDayField(5,f,v)} readOnly={isSaved} />}
-                {activeDay === 6 && <Day6 data={dayData(6)} onChange={(f,v) => setDayField(6,f,v)} readOnly={isSaved} studentData={studentData} />}
-                {activeDay === 7 && <Day7 saved={saved} data={dayData(7)} onChange={(f,v) => setDayField(7,f,v)} readOnly={isSaved} studentData={studentData} survey={survey} />}
+                {activeDay === 1 && <Day1 data={dayData(1)} onChange={(f,v) => setDayField(1,f,v)} ps={ps} readOnly={isSaved || isPreview} onSectionChange={onSectionChange} />}
+                {activeDay === 2 && <DaySurvey day={2} stakeholderIdx={0} survey={survey} data={dayData(2)} onChange={(f,v) => setDayField(2,f,v)} readOnly={isSaved || isPreview} onFinalSubmit={handleSave} saving={saving} minPersons={6} />}
+                {activeDay === 3 && <DaySurvey day={3} stakeholderIdx={1} survey={survey} data={dayData(3)} onChange={(f,v) => setDayField(3,f,v)} readOnly={isSaved || isPreview} onFinalSubmit={handleSave} saving={saving} minPersons={3} />}
+                {activeDay === 4 && <DaySurvey day={4} stakeholderIdx={2} survey={survey} data={dayData(4)} onChange={(f,v) => setDayField(4,f,v)} readOnly={isSaved || isPreview} onFinalSubmit={handleSave} saving={saving} minPersons={3} />}
+                {activeDay === 5 && <Day5 saved={saved} survey={survey} data={dayData(5)} onChange={(f,v) => setDayField(5,f,v)} readOnly={isSaved || isPreview} />}
+                {activeDay === 6 && <Day6 data={dayData(6)} onChange={(f,v) => setDayField(6,f,v)} readOnly={isSaved || isPreview} studentData={studentData} />}
+                {activeDay === 7 && <Day7 saved={saved} data={dayData(7)} onChange={(f,v) => setDayField(7,f,v)} readOnly={isSaved || isPreview} studentData={studentData} survey={survey} />}
 
                 {activeDay !== 2 && activeDay !== 3 && activeDay !== 4 && (
                   <div className="dt-save-row">
                     <button className="dt-save-btn" onClick={handleSave} disabled={saving || isSaved || !isEditable}>
-                      {saving ? 'Saving…' : isSaved ? '✓ Submitted' : '💾 Save & Submit'}
+                      {saving ? 'Saving…' : isSaved ? '✓ Submitted' : isPreview ? '🔒 Submission Not Open Yet' : '💾 Save & Submit'}
                     </button>
                     {isSaved && <span style={{fontSize:'0.82rem',color:'#888'}}>Submitted — view only</span>}
+                    {isPreview && <span style={{fontSize:'0.82rem',color:'#1d4ed8'}}>Submission opens {new Date(dayWindow(slot, activeDay).open).toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit', hour12:true })}</span>}
                     {msg && <span className={`dt-save-msg ${msgType}`}>{msg}</span>}
                   </div>
                 )}
