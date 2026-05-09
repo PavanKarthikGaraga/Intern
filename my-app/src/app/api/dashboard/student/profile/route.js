@@ -40,7 +40,14 @@ export async function PUT(request) {
             hostelName,
             accommodation,
             transportation,
-            busRoute
+            busRoute,
+            selectedDomain,
+            fieldOfInterest,
+            mode,
+            slot,
+            year,
+            batch,
+            careerChoice
         } = body;
 
         const username = decoded.username;
@@ -53,7 +60,6 @@ export async function PUT(request) {
             const [rows] = await db.execute('SELECT profileEdited FROM registrations WHERE username = ?', [username]);
             checkRows = rows;
         } catch (err) {
-            // If the column doesn't exist yet, we will assume it's not edited
             if (err.code !== 'ER_BAD_FIELD_ERROR') throw err;
             checkRows = [{ profileEdited: 0 }];
         }
@@ -64,54 +70,39 @@ export async function PUT(request) {
 
         const profileEditedCount = Number(checkRows[0].profileEdited || 0);
 
-        if (profileEditedCount >= 2) {
-            return NextResponse.json({ success: false, error: 'You have reached the maximum number of profile edits.' }, { status: 400 });
+        if (profileEditedCount >= 1) {
+            return NextResponse.json({ success: false, error: 'You have already edited your profile once. Further changes are not allowed.' }, { status: 400 });
         }
-
-        // If edited once already, only residence info can be changed
-        const isResidenceOnly = profileEditedCount === 1;
 
         // Proceed to update
         await db.beginTransaction();
 
         try {
-            if (isResidenceOnly) {
-                // Only update residence related fields
-                await db.execute(`
-                    UPDATE registrations 
-                    SET residenceType = ?, hostelName = ?, busRoute = ?, 
-                        accommodation = ?, transportation = ?, profileEdited = profileEdited + 1
-                    WHERE username = ?
-                `, [
-                    residenceType, 
-                    residenceType === 'Hostel' ? hostelName : 'N/A',
-                    busRoute || null,
-                    accommodation || null,
-                    transportation || null,
-                    username
-                ]);
-            } else {
-                // Full update allowed on first edit
-                await db.execute(`
-                    UPDATE registrations 
-                    SET name = ?, gender = ?, branch = ?, email = ?, phoneNumber = ?, 
-                        district = ?, state = ?, country = ?, pincode = ?, 
-                        residenceType = ?, hostelName = ?, busRoute = ?, 
-                        accommodation = ?, transportation = ?, profileEdited = profileEdited + 1
-                    WHERE username = ?
-                `, [
-                    name, gender, branch, email, phoneNumber, 
-                    district, state, country, pincode, 
-                    residenceType, residenceType === 'Hostel' ? hostelName : 'N/A',
-                    busRoute || null,
-                    accommodation || null,
-                    transportation || null,
-                    username
-                ]);
+            // Full update allowed on first and only edit
+            await db.execute(`
+                UPDATE registrations 
+                SET name = ?, gender = ?, branch = ?, email = ?, phoneNumber = ?, 
+                    district = ?, state = ?, country = ?, pincode = ?, 
+                    residenceType = ?, hostelName = ?, busRoute = ?, 
+                    accommodation = ?, transportation = ?, 
+                    selectedDomain = ?, fieldOfInterest = ?, mode = ?, slot = ?, 
+                    year = ?, batch = ?, careerChoice = ?,
+                    profileEdited = profileEdited + 1
+                WHERE username = ?
+            `, [
+                name, gender, branch, email, phoneNumber, 
+                district, state, country, pincode, 
+                residenceType, residenceType === 'Hostel' ? hostelName : 'N/A',
+                busRoute || null,
+                accommodation || null,
+                transportation || null,
+                selectedDomain, fieldOfInterest, mode, slot,
+                year, batch, careerChoice,
+                username
+            ]);
 
-                // Update the users table as well if name changed
-                await db.execute('UPDATE users SET name = ? WHERE username = ?', [name, username]);
-            }
+            // Update the users table as well if name changed
+            await db.execute('UPDATE users SET name = ? WHERE username = ?', [name, username]);
 
             await db.commit();
 
@@ -120,7 +111,12 @@ export async function PUT(request) {
                 actorUsername: username,
                 actorName: name,
                 actorRole: 'student',
-                details: { editedFields: true }
+                details: { 
+                    editedFields: true,
+                    domain: selectedDomain,
+                    mode: mode,
+                    slot: slot
+                }
             }).catch(() => {});
 
             return NextResponse.json({ success: true, message: 'Profile updated successfully' });

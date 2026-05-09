@@ -22,6 +22,20 @@ export default function Profile({ user, studentData: initialStudentData }) {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({});
   const [isSaving, setIsSaving] = useState(false);
+  const [domains, setDomains] = useState([]);
+
+  useEffect(() => {
+    const fetchDomains = async () => {
+      try {
+        const response = await fetch('/api/dashboard/admin/domains');
+        const data = await response.json();
+        if (data.success) setDomains(data.domains);
+      } catch (error) {
+        console.error('Error fetching domains:', error);
+      }
+    };
+    fetchDomains();
+  }, []);
 
   useEffect(() => {
     if (initialStudentData) {
@@ -41,6 +55,13 @@ export default function Profile({ user, studentData: initialStudentData }) {
         accommodation: initialStudentData.accommodation || 'No',
         transportation: initialStudentData.transportation || 'No',
         busRoute: initialStudentData.busRoute || '',
+        selectedDomain: initialStudentData.selectedDomain || '',
+        fieldOfInterest: initialStudentData.fieldOfInterest || '',
+        mode: initialStudentData.mode || '',
+        slot: initialStudentData.slot || '',
+        year: initialStudentData.year || '',
+        batch: initialStudentData.batch || '',
+        careerChoice: initialStudentData.careerChoice || '',
       });
     }
   }, [initialStudentData]);
@@ -79,8 +100,8 @@ export default function Profile({ user, studentData: initialStudentData }) {
   };
 
   const profileEditedCount = Number(studentData.profileEdited || 0);
-  const canEdit = profileEditedCount < 2;
-  const isResidenceOnlyEdit = profileEditedCount === 1;
+  const canEdit = profileEditedCount < 1;
+  const isResidenceOnlyEdit = false; // Overriding previous 2-tier logic as per new 1-time request
 
   return (
     <div className="student-profile">
@@ -123,6 +144,13 @@ export default function Profile({ user, studentData: initialStudentData }) {
         >
           <HomeOutlined className="tab-icon" />
           Accommodation Details
+        </button>
+        <button 
+          className={`tab-button ${activeProfileSection === 'internship' ? 'active' : ''}`}
+          onClick={() => setActiveProfileSection('internship')}
+        >
+          <EditOutlined className="tab-icon" />
+          Internship Details
         </button>
       </div>
 
@@ -360,6 +388,146 @@ export default function Profile({ user, studentData: initialStudentData }) {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {activeProfileSection === 'internship' && (
+          <div className="section-content">
+            <div className="section-header">
+              <h1>Internship Details</h1>
+              <div className="header-underline"></div>
+            </div>
+            <div className="info-container">
+              <div className="info-group">
+                <label>Domain</label>
+                <div className="info-value">
+                  {isEditing ? (
+                    <select name="selectedDomain" value={formData.selectedDomain} onChange={handleChange} style={{ width: '100%', padding: '5px' }}>
+                      <option value="">Select Domain</option>
+                      {domains.map(d => <option key={d} value={d}>{d}</option>)}
+                    </select>
+                  ) : (
+                    <>{studentData.selectedDomain}<div className="value-underline"></div></>
+                  )}
+                </div>
+              </div>
+
+              <div className="info-group">
+                <label>Field of Interest</label>
+                <div className="info-value">
+                  {isEditing ? (
+                    <select name="fieldOfInterest" value={formData.fieldOfInterest} onChange={handleChange} style={{ width: '100%', padding: '5px' }}>
+                      <option value="">Select Field</option>
+                      <option value="Awareness Campaigns">Awareness Campaigns</option>
+                      <option value="Content Creation (YouTube / Reels)">Content Creation (YouTube / Reels)</option>
+                      <option value="Cover Song Production">Cover Song Production</option>
+                      <option value="Dance">Dance</option>
+                      <option value="Documentary Making">Documentary Making</option>
+                      <option value="Dramatics">Dramatics</option>
+                      <option value="Environmental Activities">Environmental Activities</option>
+                      <option value="Leadership Activities">Leadership Activities</option>
+                      <option value="Literature">Literature</option>
+                      <option value="Painting">Painting</option>
+                      <option value="Photography">Photography</option>
+                      <option value="Public Speaking">Public Speaking</option>
+                      <option value="Rural Development">Rural Development</option>
+                      <option value="Short Film Making">Short Film Making</option>
+                      <option value="Singing">Singing</option>
+                      <option value="Social Service / Volunteering">Social Service / Volunteering</option>
+                      <option value="Spirituality">Spirituality</option>
+                      <option value="Story Telling">Story Telling</option>
+                      <option value="Technical (Hardware)">Technical (Hardware)</option>
+                      <option value="Technical (Software)">Technical (Software)</option>
+                      <option value="Video Editing">Video Editing</option>
+                      <option value="Yoga & Meditation">Yoga & Meditation</option>
+                    </select>
+                  ) : (
+                    <>{studentData.fieldOfInterest}<div className="value-underline"></div></>
+                  )}
+                </div>
+              </div>
+
+              <div className="info-group">
+                <label>Internship Mode</label>
+                <div className="info-value">
+                  {isEditing ? (
+                    <select name="mode" value={formData.mode} onChange={handleChange} style={{ width: '100%', padding: '5px' }}>
+                      <option value="Remote">Remote</option>
+                      <option value="Incampus">In Campus</option>
+                      <option value="InVillage">In Village</option>
+                    </select>
+                  ) : (
+                    <>{studentData.mode}<div className="value-underline"></div></>
+                  )}
+                </div>
+              </div>
+
+              <div className="info-group">
+                <label>Slot</label>
+                <div className="info-value">
+                  {isEditing ? (
+                    <select name="slot" value={formData.slot} onChange={handleChange} style={{ width: '100%', padding: '5px' }}>
+                      <option value="1">Slot 1 — May 11–17</option>
+                      <option value="2">Slot 2 — May 18–24</option>
+                      <option value="3">Slot 3 — May 25–31</option>
+                      <option value="4">Slot 4 — Jun 1–7</option>
+                      <option value="5">Slot 5 — Jun 8–14</option>
+                      <option value="6">Slot 6 — Jun 15–21</option>
+                      <option value="7">Slot 7 — Jun 22–28</option>
+                      <option value="8">Slot 8 — Jun 29–Jul 5</option>
+                      <option value="9">Slot 9 — Jul 6–12</option>
+                    </select>
+                  ) : (
+                    <>Slot {studentData.slot}<div className="value-underline"></div></>
+                  )}
+                </div>
+              </div>
+
+              <div className="info-group">
+                <label>Year</label>
+                <div className="info-value">
+                  {isEditing ? (
+                    <select name="year" value={formData.year} onChange={handleChange} style={{ width: '100%', padding: '5px' }}>
+                      <option value="1">1st Year</option>
+                      <option value="2">2nd Year</option>
+                      <option value="3">3rd Year</option>
+                      <option value="4">4th Year</option>
+                    </select>
+                  ) : (
+                    <>{studentData.year} Year<div className="value-underline"></div></>
+                  )}
+                </div>
+              </div>
+
+              <div className="info-group">
+                <label>Batch</label>
+                <div className="info-value">
+                  {isEditing ? (
+                    <input type="text" name="batch" value={formData.batch} onChange={handleChange} placeholder="e.g. 2022-26" style={{ width: '100%', padding: '5px' }} />
+                  ) : (
+                    <>{studentData.batch}<div className="value-underline"></div></>
+                  )}
+                </div>
+              </div>
+
+              <div className="info-group">
+                <label>Career Choice</label>
+                <div className="info-value">
+                  {isEditing ? (
+                    <select name="careerChoice" value={formData.careerChoice} onChange={handleChange} style={{ width: '100%', padding: '5px' }}>
+                      <option value="">Select Career Choice</option>
+                      <option value="Job">Job</option>
+                      <option value="Entrepreneurship">Entrepreneurship</option>
+                      <option value="Higher Studies">Higher Studies</option>
+                      <option value="Competitive Exams">Competitive Exams (UPSC/GATE/etc)</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  ) : (
+                    <>{studentData.careerChoice}<div className="value-underline"></div></>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         )}
