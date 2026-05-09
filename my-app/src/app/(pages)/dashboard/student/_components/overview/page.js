@@ -1,9 +1,10 @@
 'use client'
 import { TeamOutlined, CalendarOutlined, UserOutlined, TrophyOutlined } from '@ant-design/icons';
 import { FaExclamationTriangle, FaClipboardList, FaCheckCircle } from 'react-icons/fa';
-import { useState } from 'react';
-import { Modal, Button, message } from 'antd';
+import { Modal, Button, message, Empty } from 'antd';
+import { YoutubeOutlined, InstagramOutlined, PlayCircleOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { PROBLEM_STATEMENTS } from '@/app/Data/problemStatements';
 
 export default function Overview({ user, studentData }) {
@@ -13,7 +14,26 @@ export default function Overview({ user, studentData }) {
   const [psStatement, setPsStatement] = useState('');
   const [psSubmitting, setPsSubmitting] = useState(false);
   const [psSuccess, setPsSuccess] = useState(false);
+  const [videos, setVideos] = useState([]);
+  const [videosLoading, setVideosLoading] = useState(true);
   const router = useRouter();
+
+  useEffect(() => {
+    const fetchVideos = async () => {
+      try {
+        const res = await fetch('/api/dashboard/student/videos');
+        const data = await res.json();
+        if (data.success) {
+          setVideos(data.videos);
+        }
+      } catch (err) {
+        console.error('Error fetching guidance videos:', err);
+      } finally {
+        setVideosLoading(false);
+      }
+    };
+    fetchVideos();
+  }, []);
 
   if (!studentData) {
     return <div className="loading">Loading Data .......</div>;
@@ -544,6 +564,158 @@ export default function Overview({ user, studentData }) {
       <p className="beta-note">
         Note: This is a beta version. If you experience any issues or discrepancies, please report them to SAC Department.
       </p>
+      {/* Guidance Videos Section */}
+      <div className="overview-section" style={{ marginTop: '40px' }}>
+        <div className="section-header">
+          <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <PlayCircleOutlined /> Guidance & Explanation Videos
+          </h2>
+          <div className="header-underline"></div>
+        </div>
+
+        {videosLoading ? (
+          <div style={{ padding: '40px', textAlign: 'center' }}>Loading guidance videos...</div>
+        ) : videos.length === 0 ? (
+          <div style={{ padding: '40px', background: 'white', borderRadius: '8px', textAlign: 'center' }}>
+            <Empty description="No guidance videos available at the moment." />
+          </div>
+        ) : (
+          <div className="video-grid">
+            {videos.map((video, index) => (
+              <div key={index} className="video-card">
+                <div className="video-embed-container">
+                  {video.type === 'youtube' ? (
+                    <iframe
+                      width="100%"
+                      height="200"
+                      src={`https://www.youtube.com/embed/${getYouTubeID(video.url)}`}
+                      title={video.title || "YouTube video player"}
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    ></iframe>
+                  ) : (
+                    <div className="insta-reels-placeholder">
+                      <InstagramOutlined style={{ fontSize: '40px', color: '#c2185b', marginBottom: '10px' }} />
+                      <p style={{ fontSize: '14px', margin: '0 0 10px 0' }}>Instagram Reel</p>
+                      <a 
+                        href={video.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="watch-btn"
+                      >
+                        Watch on Instagram
+                      </a>
+                    </div>
+                  )}
+                </div>
+                <div className="video-info">
+                  <h3 className="video-title">
+                    {video.type === 'youtube' ? <YoutubeOutlined style={{ color: '#d32f2f' }} /> : <InstagramOutlined style={{ color: '#c2185b' }} />}
+                    {video.title || 'Guidance Video'}
+                  </h3>
+                  {video.description && <p className="video-description">{video.description}</p>}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <style jsx>{`
+        .video-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+          gap: 25px;
+          margin-top: 20px;
+        }
+        .video-card {
+          background: white;
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+          transition: transform 0.3s ease;
+        }
+        .video-card:hover {
+          transform: translateY(-5px);
+        }
+        .video-embed-container {
+          position: relative;
+          background: #000;
+          height: 200px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .insta-reels-placeholder {
+          text-align: center;
+          color: white;
+          padding: 20px;
+          width: 100%;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+        }
+        .watch-btn {
+          background: white;
+          color: #c2185b;
+          padding: 6px 15px;
+          border-radius: 20px;
+          text-decoration: none;
+          font-weight: 600;
+          font-size: 13px;
+          transition: background 0.3s ease;
+        }
+        .watch-btn:hover {
+          background: #f0f0f0;
+        }
+        .video-info {
+          padding: 15px;
+        }
+        .video-title {
+          font-size: 16px;
+          font-weight: 600;
+          margin: 0 0 10px 0;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          color: #2c3e50;
+        }
+        .video-description {
+          font-size: 13px;
+          color: #666;
+          margin: 0;
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+        .overview-section {
+          padding-bottom: 40px;
+        }
+        .section-header h2 {
+          font-size: 24px;
+          font-weight: 600;
+          margin: 0;
+          color: #2c3e50;
+        }
+        .header-underline {
+          width: 60px;
+          height: 4px;
+          background: rgb(151, 0, 3);
+          margin-top: 8px;
+          border-radius: 2px;
+        }
+      `}</style>
     </div>
   );
+}
+
+function getYouTubeID(url) {
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : null;
 }

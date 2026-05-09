@@ -29,6 +29,7 @@ import DailyTasksViewer from '../studentLead/_components/dailyTasksViewer/page';
 import TaskUnlocker from './_components/taskUnlocker/page';
 import SlotControl from './_components/slotControl/page';
 import RegistrationControl from './_components/registrationControl/page';
+import VideoDump from './_components/videoDump/page';
 
 
 export default function AdminDashboard() {
@@ -236,6 +237,13 @@ export default function AdminDashboard() {
           </button>
 
           <button
+            className={`sidebar-item ${activeSection === 'videoDump' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('videoDump')}
+          >
+            <span className="item-label">Video Dump</span>
+          </button>
+
+          <button
             className={`sidebar-item ${activeSection === 'activity-logs' ? 'active' : ''}`}
             onClick={() => handleSectionClick('activity-logs')}
           >
@@ -361,6 +369,7 @@ export default function AdminDashboard() {
            activeSection === 'certificate-download' ? <CertificateDownload /> :
            activeSection === 'supply-final' ? <SFinalProfile /> :
            activeSection === 'problem-statements' ? <ProblemStatements /> :
+           activeSection === 'videoDump' ? <VideoDump /> :
            activeSection === 'activity-logs' ? <ActivityLogs /> :
            activeSection === 'slot-control' ? <SlotControl /> :
            activeSection === 'registration-control' ? <RegistrationControl /> :
