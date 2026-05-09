@@ -198,16 +198,18 @@ export default function Overview({ user, studentData }) {
       <h1>Welcome {user?.name || studentData.name || 'Student'}</h1>
       <p className="role-text">Student</p>
       
-      {/* Important Notification */}
-      <div className="notification-banner">
-        <div className="notification-icon" style={{ display: 'flex', alignItems: 'center', color: '#ffc107' }}>
-          <FaExclamationTriangle />
+      {/* Important Notification — only shown while slot is not yet unlocked */}
+      {!studentData.slotEnabled && (
+        <div className="notification-banner">
+          <div className="notification-icon" style={{ display: 'flex', alignItems: 'center', color: '#ffc107' }}>
+            <FaExclamationTriangle />
+          </div>
+          <div className="notification-content">
+            <h3>Important Notice - Social Internship 2026</h3>
+            <p>Registration is now open. Your slot details are shown below. The full dashboard (daily reports, mentor, final report) will be activated closer to your slot dates.</p>
+          </div>
         </div>
-        <div className="notification-content">
-          <h3>Important Notice - Social Internship 2026</h3>
-          <p>Registration is now open. Your slot details are shown below. The full dashboard (daily reports, mentor, final report) will be activated closer to your slot dates.</p>
-        </div>
-      </div>
+      )}
 
       {/* Registration Details Card */}
       <div style={{ background: '#fff', border: '2px solid #014a01', borderRadius: '12px', padding: '24px', margin: '16px 0', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>

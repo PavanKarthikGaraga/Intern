@@ -59,8 +59,6 @@ export async function POST(request) {
                     reportOpen = { ...reportOpen, ...reportOpenRows[0] };
                 }
             } catch (err) {
-                // If the table doesn't have slot7/8/9, it might crash depending on the query,
-                // but SELECT * should be safe unless the table itself is missing.
                 console.warn('Warning: Could not fetch reportOpen, using defaults.');
             }
 
@@ -110,6 +108,16 @@ export async function POST(request) {
                     { status: 404 }
                 );
             }
+
+            // Get slotControl enabled status for this student's slot
+            let slotEnabled = false;
+            try {
+                const [slotControlRows] = await db.execute(
+                    'SELECT enabled FROM slotControl WHERE slot = ?',
+                    [rows[0].slot]
+                );
+                slotEnabled = slotControlRows[0]?.enabled === 1;
+            } catch (e) { console.warn('slotControl table not found, defaulting to false.'); }
 
             // Get attendance data (safe fallback if table missing)
             let attendanceRows = [[]];
@@ -326,7 +334,8 @@ export async function POST(request) {
                     marks: sstudentMarks,
                     messages: sstudentMessages
                 } : null,
-                certificate: certificate ? { exists: true, uid: certificate.uid } : { exists: false }
+                certificate: certificate ? { exists: true, uid: certificate.uid } : { exists: false },
+                slotEnabled
             };
 
             return NextResponse.json({
