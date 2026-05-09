@@ -52,6 +52,8 @@ export async function GET(req) {
     const search = searchParams.get('search');
     const gender = searchParams.get('gender');
     const fieldOfInterest = searchParams.get('fieldOfInterest');
+    const accommodation = searchParams.get('accommodation');
+    const transportation = searchParams.get('transportation');
     const season = searchParams.get('season') || '2026';
     const itemsPerPage = 30;
     const offset = (page - 1) * itemsPerPage;
@@ -82,6 +84,14 @@ export async function GET(req) {
     if (fieldOfInterest) {
       conditions.push('r.fieldOfInterest = ?');
       params.push(fieldOfInterest);
+    }
+    if (accommodation) {
+      conditions.push('r.accommodation = ?');
+      params.push(accommodation);
+    }
+    if (transportation) {
+      conditions.push('r.transportation = ?');
+      params.push(transportation);
     }
     if (season) {
       conditions.push('r.season = ?');

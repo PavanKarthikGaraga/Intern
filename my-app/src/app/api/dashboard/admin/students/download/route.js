@@ -24,9 +24,60 @@ export async function GET(request) {
       }, { status: 403 });
     }
 
-    // Get all students data
+    // Get filter params
     const { searchParams } = new URL(request.url);
+    const domain = searchParams.get('domain');
+    const slot = searchParams.get('slot');
+    const mode = searchParams.get('mode');
+    const search = searchParams.get('search');
+    const gender = searchParams.get('gender');
+    const fieldOfInterest = searchParams.get('fieldOfInterest');
+    const accommodation = searchParams.get('accommodation');
+    const transportation = searchParams.get('transportation');
     const season = searchParams.get('season') || '2026';
+
+    let conditions = [];
+    let params = [];
+
+    if (domain) {
+      conditions.push('r.selectedDomain = ?');
+      params.push(domain);
+    }
+    if (slot) {
+      conditions.push('r.slot = ?');
+      params.push(slot);
+    }
+    if (mode) {
+      conditions.push('r.mode = ?');
+      params.push(mode);
+    }
+    if (search) {
+      conditions.push('(r.name LIKE ? OR r.email LIKE ? OR r.selectedDomain LIKE ? OR r.fieldOfInterest LIKE ?)');
+      params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
+    }
+    if (gender) {
+      conditions.push('r.gender = ?');
+      params.push(gender);
+    }
+    if (fieldOfInterest) {
+      conditions.push('r.fieldOfInterest = ?');
+      params.push(fieldOfInterest);
+    }
+    if (accommodation) {
+      conditions.push('r.accommodation = ?');
+      params.push(accommodation);
+    }
+    if (transportation) {
+      conditions.push('r.transportation = ?');
+      params.push(transportation);
+    }
+    if (season) {
+      conditions.push('r.season = ?');
+      params.push(season);
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
     const query = `
       SELECT 
         r.username,
@@ -45,6 +96,8 @@ export async function GET(request) {
         r.residenceType,
         r.hostelName,
         r.busRoute,
+        r.accommodation,
+        r.transportation,
         r.country,
         r.state,
         r.district,
@@ -59,11 +112,11 @@ export async function GET(request) {
       LEFT JOIN final f ON r.username = f.username
       LEFT JOIN studentLeads sl ON r.studentLeadId = sl.username
       LEFT JOIN facultyMentors fm ON r.facultyMentorId = fm.username
-      WHERE r.season = ?
+      ${whereClause}
       ORDER BY r.name ASC
     `;
 
-    const [students] = await pool.query(query, [season]);
+    const [students] = await pool.query(query, params);
 
     // Process the data to format dates and boolean values
     const processedData = students.map(student => {

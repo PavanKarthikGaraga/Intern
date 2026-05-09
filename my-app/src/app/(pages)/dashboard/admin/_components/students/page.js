@@ -23,7 +23,9 @@ export default function Students() {
     mode: '',
     search: '',
     gender: '',
-    fieldOfInterest: ''
+    fieldOfInterest: '',
+    accommodation: '',
+    transportation: ''
   });
   const [pagination, setPagination] = useState({
     currentPage: 1,
@@ -70,7 +72,9 @@ export default function Students() {
         ...(filters.mode && { mode: filters.mode }),
         ...(filters.search && { search: filters.search }),
         ...(filters.gender && { gender: filters.gender }),
-        ...(filters.fieldOfInterest && { fieldOfInterest: filters.fieldOfInterest })
+        ...(filters.fieldOfInterest && { fieldOfInterest: filters.fieldOfInterest }),
+        ...(filters.accommodation && { accommodation: filters.accommodation }),
+        ...(filters.transportation && { transportation: filters.transportation })
       });
 
       const response = await fetch(`/api/dashboard/admin/students?${queryParams}`, {
@@ -96,7 +100,7 @@ export default function Students() {
       setLoading(false);
       setIsSearching(false);
     }
-  }, [filters.search, filters.domain, filters.slot, filters.mode, filters.gender, filters.fieldOfInterest, pagination.currentPage, pagination.limit]);
+  }, [filters.search, filters.domain, filters.slot, filters.mode, filters.gender, filters.fieldOfInterest, filters.accommodation, filters.transportation, pagination.currentPage, pagination.limit]);
 
   useEffect(() => {
     if (isInitialMount.current) {
@@ -220,7 +224,18 @@ export default function Students() {
 
   const handleDownloadExcel = async () => {
     try {
-      const response = await fetch('/api/dashboard/admin/students/download', {
+      const queryParams = new URLSearchParams({
+        ...(filters.domain && { domain: filters.domain }),
+        ...(filters.slot && { slot: filters.slot }),
+        ...(filters.mode && { mode: filters.mode }),
+        ...(filters.search && { search: filters.search }),
+        ...(filters.gender && { gender: filters.gender }),
+        ...(filters.fieldOfInterest && { fieldOfInterest: filters.fieldOfInterest }),
+        ...(filters.accommodation && { accommodation: filters.accommodation }),
+        ...(filters.transportation && { transportation: filters.transportation })
+      });
+
+      const response = await fetch(`/api/dashboard/admin/students/download?${queryParams}`, {
         credentials: 'include'
       });
 
@@ -390,6 +405,30 @@ export default function Students() {
               <option value="">All Genders</option>
               <option value="Male">Male</option>
               <option value="Female">Female</option>
+            </select>
+          </div>
+          <div className="filter-group">
+            <label htmlFor="accommodation">Accommodation</label>
+            <select
+              id="accommodation"
+              value={filters.accommodation}
+              onChange={(e) => handleFilterChange('accommodation', e.target.value)}
+            >
+              <option value="">All</option>
+              <option value="Yes">Yes</option>
+              <option value="No">No</option>
+            </select>
+          </div>
+          <div className="filter-group">
+            <label htmlFor="transportation">Transportation</label>
+            <select
+              id="transportation"
+              value={filters.transportation}
+              onChange={(e) => handleFilterChange('transportation', e.target.value)}
+            >
+              <option value="">All</option>
+              <option value="Yes">Yes</option>
+              <option value="No">No</option>
             </select>
           </div>
         </div>
