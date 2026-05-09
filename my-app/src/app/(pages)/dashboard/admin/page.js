@@ -30,6 +30,7 @@ import TaskUnlocker from './_components/taskUnlocker/page';
 import SlotControl from './_components/slotControl/page';
 import RegistrationControl from './_components/registrationControl/page';
 import VideoDump from './_components/videoDump/page';
+import Announcements from './_components/announcements/page';
 
 
 export default function AdminDashboard() {
@@ -237,6 +238,13 @@ export default function AdminDashboard() {
           </button>
 
           <button
+            className={`sidebar-item ${activeSection === 'announcements' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('announcements')}
+          >
+            <span className="item-label">Announcements</span>
+          </button>
+
+          <button
             className={`sidebar-item ${activeSection === 'videoDump' ? 'active' : ''}`}
             onClick={() => handleSectionClick('videoDump')}
           >
@@ -370,6 +378,7 @@ export default function AdminDashboard() {
            activeSection === 'supply-final' ? <SFinalProfile /> :
            activeSection === 'problem-statements' ? <ProblemStatements /> :
            activeSection === 'videoDump' ? <VideoDump /> :
+           activeSection === 'announcements' ? <Announcements /> :
            activeSection === 'activity-logs' ? <ActivityLogs /> :
            activeSection === 'slot-control' ? <SlotControl /> :
            activeSection === 'registration-control' ? <RegistrationControl /> :
