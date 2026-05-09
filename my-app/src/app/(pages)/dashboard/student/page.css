@@ -1904,3 +1904,113 @@
   margin-top: 8px;
 }
 
+/* ── Profile Edit Controls ── */
+.profile-header-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 20px;
+  background: rgb(151, 0, 3);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s, transform 0.15s;
+  box-shadow: 0 2px 8px rgba(151,0,3,0.25);
+}
+.edit-btn:hover { background: #a80003; transform: translateY(-1px); }
+
+.edit-badge {
+  background: rgba(255,255,255,0.22);
+  border-radius: 10px;
+  padding: 2px 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.edit-disabled-msg {
+  font-size: 0.82rem;
+  color: #2e7d32;
+  background: #e8f5e9;
+  border: 1px solid #c8e6c9;
+  border-radius: 20px;
+  padding: 6px 16px;
+  font-weight: 500;
+}
+
+.edit-action-group {
+  display: flex;
+  gap: 10px;
+}
+
+.cancel-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  background: #f0f0f0;
+  color: #555;
+  border: 1.5px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.cancel-btn:hover { background: #e0e0e0; border-color: #aaa; }
+
+.save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 22px;
+  background: #2e7d32;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s, transform 0.15s;
+  box-shadow: 0 2px 8px rgba(46,125,50,0.25);
+}
+.save-btn:hover:not(:disabled) { background: #1b5e20; transform: translateY(-1px); }
+.save-btn:disabled { background: #a5d6a7; cursor: not-allowed; }
+
+/* ── Profile form inputs / selects ── */
+.profile-input,
+.profile-select {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1.5px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  color: #333;
+  background: #fafafa;
+  transition: border-color 0.18s, box-shadow 0.18s;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+.profile-input:focus,
+.profile-select:focus {
+  outline: none;
+  border-color: rgb(151, 0, 3);
+  box-shadow: 0 0 0 3px rgba(151,0,3,0.1);
+  background: #fff;
+}
+
+/* ── value-underline kept minimal ── */
+.value-underline { display: none; }
+

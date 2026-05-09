@@ -1,7 +1,10 @@
-'use client'
+'use client';
 import { useState, useEffect } from 'react';
-import { UserOutlined, PhoneOutlined, HomeOutlined, MailOutlined, EnvironmentOutlined, EditOutlined, SaveOutlined } from '@ant-design/icons';
-import Loader from '@/app/components/loader/loader';
+import {
+  UserOutlined, PhoneOutlined, HomeOutlined, MailOutlined,
+  EnvironmentOutlined, EditOutlined, SaveOutlined, CloseOutlined,
+  BankOutlined, CarOutlined, BookOutlined
+} from '@ant-design/icons';
 import toast from 'react-hot-toast';
 
 import { stateNames } from '@/app/Data/states';
@@ -10,69 +13,144 @@ import { countryCodes } from '@/app/Data/coutries';
 import { branchNames } from '@/app/Data/branches';
 import { girlHostels, boyHostels, busRoutes } from '@/app/Data/locations';
 
+/* ── Deduplicated & sorted country list ── */
 const uniqueCountryCodes = countryCodes
-  .filter((country, index, self) =>
-    index === self.findIndex((c) => c.code === country.code)
-  )
+  .filter((c, i, arr) => i === arr.findIndex(x => x.code === c.code))
   .sort((a, b) => a.name.localeCompare(b.name));
 
+const FIELDS_OF_INTEREST = [
+  'Awareness Campaigns','Content Creation (YouTube / Reels)','Cover Song Production',
+  'Dance','Documentary Making','Dramatics','Environmental Activities',
+  'Leadership Activities','Literature','Painting','Photography','Public Speaking',
+  'Rural Development','Short Film Making','Singing','Social Service / Volunteering',
+  'Spirituality','Story Telling','Technical (Hardware)','Technical (Software)',
+  'Video Editing','Yoga & Meditation',
+];
+
+const SLOT_LABELS = {
+  '1':'Slot 1 — May 11–17','2':'Slot 2 — May 18–24','3':'Slot 3 — May 25–31',
+  '4':'Slot 4 — Jun 1–7','5':'Slot 5 — Jun 8–14','6':'Slot 6 — Jun 15–21',
+  '7':'Slot 7 — Jun 22–28','8':'Slot 8 — Jun 29–Jul 5','9':'Slot 9 — Jul 6–12',
+};
+
+/* ─── Tiny reusable field components ─── */
+const ViewField = ({ label, icon, value, fallback = '—' }) => (
+  <div className="info-group">
+    <label>{label}</label>
+    <div className="info-value">
+      {icon && <span className="info-icon">{icon}</span>}
+      <span>{value || fallback}</span>
+      <div className="value-underline" />
+    </div>
+  </div>
+);
+
+const EditInput = ({ label, name, value, onChange, type = 'text', placeholder }) => (
+  <div className="info-group">
+    <label>{label}</label>
+    <div className="info-value">
+      <input
+        type={type}
+        name={name}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        className="profile-input"
+      />
+    </div>
+  </div>
+);
+
+const EditSelect = ({ label, name, value, onChange, children }) => (
+  <div className="info-group">
+    <label>{label}</label>
+    <div className="info-value">
+      <select name={name} value={value} onChange={onChange} className="profile-select">
+        {children}
+      </select>
+    </div>
+  </div>
+);
+
+/* ══════════════════════════════════════════════════════ */
 export default function Profile({ user, studentData: initialStudentData }) {
-  const [activeProfileSection, setActiveProfileSection] = useState('personal');
+  const [activeTab, setActiveTab] = useState('personal');
   const [studentData, setStudentData] = useState(initialStudentData);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({});
   const [isSaving, setIsSaving] = useState(false);
   const [domains, setDomains] = useState([]);
 
+  /* Fetch domain list */
   useEffect(() => {
-    const fetchDomains = async () => {
-      try {
-        const response = await fetch('/api/dashboard/admin/domains');
-        const data = await response.json();
-        if (data.success) setDomains(data.domains);
-      } catch (error) {
-        console.error('Error fetching domains:', error);
-      }
-    };
-    fetchDomains();
+    fetch('/api/dashboard/admin/domains')
+      .then(r => r.json())
+      .then(d => { if (d.success) setDomains(d.domains); })
+      .catch(() => {});
   }, []);
 
+  /* Seed form whenever student data arrives */
   useEffect(() => {
-    if (initialStudentData) {
-      setStudentData(initialStudentData);
-      setFormData({
-        name: initialStudentData.name || '',
-        gender: initialStudentData.gender || '',
-        branch: initialStudentData.branch || '',
-        email: initialStudentData.email || '',
-        phoneNumber: initialStudentData.phoneNumber || '',
-        district: initialStudentData.district || '',
-        state: initialStudentData.state || '',
-        country: initialStudentData.country || 'IN',
-        pincode: initialStudentData.pincode || '',
-        residenceType: initialStudentData.residenceType || '',
-        hostelName: initialStudentData.hostelName || '',
-        accommodation: initialStudentData.accommodation || 'No',
-        transportation: initialStudentData.transportation || 'No',
-        busRoute: initialStudentData.busRoute || '',
-        selectedDomain: initialStudentData.selectedDomain || '',
-        fieldOfInterest: initialStudentData.fieldOfInterest || '',
-        mode: initialStudentData.mode || '',
-        slot: initialStudentData.slot || '',
-        year: initialStudentData.year || '',
-        batch: initialStudentData.batch || '',
-        careerChoice: initialStudentData.careerChoice || '',
-      });
-    }
+    if (!initialStudentData) return;
+    setStudentData(initialStudentData);
+    setFormData({
+      name:           initialStudentData.name           || '',
+      gender:         initialStudentData.gender         || 'Male',
+      branch:         initialStudentData.branch         || '',
+      email:          initialStudentData.email          || '',
+      phoneNumber:    initialStudentData.phoneNumber    || '',
+      country:        initialStudentData.country        || 'IN',
+      state:          initialStudentData.state          || '',
+      district:       initialStudentData.district       || '',
+      pincode:        initialStudentData.pincode        || '',
+      residenceType:  initialStudentData.residenceType  || 'Day Scholar',
+      hostelName:     initialStudentData.hostelName     || '',
+      accommodation:  initialStudentData.accommodation  || 'No',
+      transportation: initialStudentData.transportation || 'No',
+      busRoute:       initialStudentData.busRoute       || '',
+      selectedDomain: initialStudentData.selectedDomain || '',
+      fieldOfInterest:initialStudentData.fieldOfInterest|| '',
+      mode:           initialStudentData.mode           || 'Remote',
+      slot:           String(initialStudentData.slot    || '1'),
+      year:           String(initialStudentData.year    || '1'),
+      careerChoice:   initialStudentData.careerChoice   || '',
+    });
   }, [initialStudentData]);
 
   if (!studentData) {
-    return <div className="loading">Loading Profile data...</div>;
+    return <div className="loading">Loading Profile data…</div>;
   }
 
-  const handleChange = (e) => {
+  const handleChange = e => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleCancel = () => {
+    /* Reset form to saved values */
+    setFormData({
+      name:           studentData.name           || '',
+      gender:         studentData.gender         || 'Male',
+      branch:         studentData.branch         || '',
+      email:          studentData.email          || '',
+      phoneNumber:    studentData.phoneNumber    || '',
+      country:        studentData.country        || 'IN',
+      state:          studentData.state          || '',
+      district:       studentData.district       || '',
+      pincode:        studentData.pincode        || '',
+      residenceType:  studentData.residenceType  || 'Day Scholar',
+      hostelName:     studentData.hostelName     || '',
+      accommodation:  studentData.accommodation  || 'No',
+      transportation: studentData.transportation || 'No',
+      busRoute:       studentData.busRoute       || '',
+      selectedDomain: studentData.selectedDomain || '',
+      fieldOfInterest:studentData.fieldOfInterest|| '',
+      mode:           studentData.mode           || 'Remote',
+      slot:           String(studentData.slot    || '1'),
+      year:           String(studentData.year    || '1'),
+      careerChoice:   studentData.careerChoice   || '',
+    });
+    setIsEditing(false);
   };
 
   const handleSave = async () => {
@@ -81,18 +159,21 @@ export default function Profile({ user, studentData: initialStudentData }) {
       const res = await fetch('/api/dashboard/student/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(formData),
       });
       const data = await res.json();
-      
       if (data.success) {
         toast.success('Profile updated successfully!');
-        setStudentData(prev => ({ ...prev, ...formData, profileEdited: (prev.profileEdited || 0) + 1 }));
+        setStudentData(prev => ({
+          ...prev,
+          ...formData,
+          profileEdited: (Number(prev.profileEdited) || 0) + 1,
+        }));
         setIsEditing(false);
       } else {
         toast.error(data.error || 'Failed to update profile');
       }
-    } catch (err) {
+    } catch {
       toast.error('An error occurred while saving.');
     } finally {
       setIsSaving(false);
@@ -101,436 +182,335 @@ export default function Profile({ user, studentData: initialStudentData }) {
 
   const profileEditedCount = Number(studentData.profileEdited || 0);
   const canEdit = profileEditedCount < 1;
-  const isResidenceOnlyEdit = false; // Overriding previous 2-tier logic as per new 1-time request
+
+  /* Helper: show country name from code */
+  const countryName = code =>
+    uniqueCountryCodes.find(c => c.code === code)?.name || code || '—';
+
+  /* ── Tabs config ── */
+  const TABS = [
+    { id: 'personal',      label: 'Personal',      icon: <UserOutlined /> },
+    { id: 'contact',       label: 'Contact',        icon: <PhoneOutlined /> },
+    { id: 'accommodation', label: 'Accommodation',  icon: <HomeOutlined /> },
+    { id: 'internship',    label: 'Internship',     icon: <BookOutlined /> },
+  ];
 
   return (
     <div className="student-profile">
-      <div className="profile-header-actions" style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
-        {canEdit && !isEditing && (
-          <button className="edit-btn" onClick={() => setIsEditing(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', backgroundColor: 'rgb(151, 0, 3)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-            <EditOutlined /> Edit Profile (One-time only)
+
+      {/* ── Header bar ── */}
+      <div className="profile-header-actions">
+        {!isEditing && canEdit && (
+          <button className="edit-btn" onClick={() => setIsEditing(true)}>
+            <EditOutlined /> Edit Profile <span className="edit-badge">One-time</span>
           </button>
         )}
+        {!isEditing && !canEdit && (
+          <span className="edit-disabled-msg">
+            ✓ Profile already edited — no further changes allowed
+          </span>
+        )}
         {isEditing && (
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <button className="cancel-btn" onClick={() => setIsEditing(false)} style={{ padding: '8px 16px', backgroundColor: '#f0f0f0', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-              Cancel
+          <div className="edit-action-group">
+            <button className="cancel-btn" onClick={handleCancel}>
+              <CloseOutlined /> Cancel
             </button>
-            <button className="save-btn" onClick={handleSave} disabled={isSaving} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', backgroundColor: '#2e7d32', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-              <SaveOutlined /> {isSaving ? 'Saving...' : 'Save Changes'}
+            <button className="save-btn" onClick={handleSave} disabled={isSaving}>
+              <SaveOutlined /> {isSaving ? 'Saving…' : 'Save Changes'}
             </button>
           </div>
         )}
       </div>
 
+      {/* ── Tabs ── */}
       <div className="profile-tabs">
-        <button 
-          className={`tab-button ${activeProfileSection === 'personal' ? 'active' : ''}`}
-          onClick={() => setActiveProfileSection('personal')}
-        >
-          <UserOutlined className="tab-icon" />
-          Personal Information
-        </button>
-        <button 
-          className={`tab-button ${activeProfileSection === 'contact' ? 'active' : ''}`}
-          onClick={() => setActiveProfileSection('contact')}
-        >
-          <PhoneOutlined className="tab-icon" />
-          Contact Information
-        </button>
-        <button 
-          className={`tab-button ${activeProfileSection === 'accommodation' ? 'active' : ''}`}
-          onClick={() => setActiveProfileSection('accommodation')}
-        >
-          <HomeOutlined className="tab-icon" />
-          Accommodation Details
-        </button>
-        <button 
-          className={`tab-button ${activeProfileSection === 'internship' ? 'active' : ''}`}
-          onClick={() => setActiveProfileSection('internship')}
-        >
-          <EditOutlined className="tab-icon" />
-          Internship Details
-        </button>
+        {TABS.map(t => (
+          <button
+            key={t.id}
+            className={`tab-button ${activeTab === t.id ? 'active' : ''}`}
+            onClick={() => setActiveTab(t.id)}
+          >
+            <span className="tab-icon">{t.icon}</span>
+            {t.label}
+          </button>
+        ))}
       </div>
 
+      {/* ── Content ── */}
       <div className="profile-content">
-        {activeProfileSection === 'personal' && (
+
+        {/* ═══ PERSONAL ═══ */}
+        {activeTab === 'personal' && (
           <div className="section-content">
             <div className="section-header">
               <h1>Personal Information</h1>
-              <div className="header-underline"></div>
+              <div className="header-underline" />
             </div>
             <div className="info-container">
-              <div className="info-group">
-                <label>Name</label>
-                <div className="info-value">
-                  {isEditing && !isResidenceOnlyEdit ? (
-                    <input type="text" name="name" value={formData.name} onChange={handleChange} style={{ width: '100%', padding: '5px' }} />
-                  ) : (
-                    <>{studentData.name}<div className="value-underline"></div></>
-                  )}
-                </div>
-              </div>
-              <div className="info-group">
-                <label>ID Number</label>
-                <div className="info-value">
-                  {user.username}
-                  <div className="value-underline"></div>
-                </div>
-              </div>
-              <div className="info-group">
-                <label>Gender</label>
-                <div className="info-value">
-                  {isEditing && !isResidenceOnlyEdit ? (
-                    <select name="gender" value={formData.gender} onChange={handleChange} style={{ width: '100%', padding: '5px' }}>
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  ) : (
-                    <>{studentData.gender}<div className="value-underline"></div></>
-                  )}
-                </div>
-              </div>
-              <div className="info-group">
-                <label>Branch</label>
-                <div className="info-value">
-                  {isEditing && !isResidenceOnlyEdit ? (
-                    <select name="branch" value={formData.branch} onChange={handleChange} style={{ width: '100%', padding: '5px' }}>
-                      <option value="">Select Branch</option>
-                      {branchNames.map(branch => (
-                        <option key={branch.id || branch.name} value={branch.name}>{branch.name}</option>
-                      ))}
-                    </select>
-                  ) : (
-                    <>{studentData.branch}<div className="value-underline"></div></>
-                  )}
-                </div>
-              </div>
+
+              {/* ID — always read-only */}
+              <ViewField label="Student ID" value={user.username} />
+
+              {/* Name */}
+              {isEditing ? (
+                <EditInput label="Name" name="name" value={formData.name} onChange={handleChange} />
+              ) : (
+                <ViewField label="Name" value={studentData.name} />
+              )}
+
+              {/* Gender */}
+              {isEditing ? (
+                <EditSelect label="Gender" name="gender" value={formData.gender} onChange={handleChange}>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </EditSelect>
+              ) : (
+                <ViewField label="Gender" value={studentData.gender} />
+              )}
+
+              {/* Branch */}
+              {isEditing ? (
+                <EditSelect label="Branch" name="branch" value={formData.branch} onChange={handleChange}>
+                  {formData.branch === '' && <option value="">Select Branch</option>}
+                  {branchNames.map(b => (
+                    <option key={b.id || b.name} value={b.name}>{b.name}</option>
+                  ))}
+                </EditSelect>
+              ) : (
+                <ViewField label="Branch" value={studentData.branch} />
+              )}
+
+              {/* Year */}
+              {isEditing ? (
+                <EditSelect label="Year of Study" name="year" value={formData.year} onChange={handleChange}>
+                  <option value="1">1st Year</option>
+                  <option value="2">2nd Year</option>
+                  <option value="3">3rd Year</option>
+                  <option value="4">4th Year</option>
+                </EditSelect>
+              ) : (
+                <ViewField label="Year of Study" value={studentData.year ? `${studentData.year} Year` : '—'} />
+              )}
+
+              {/* Batch — always read-only */}
+              <ViewField label="Batch" value={studentData.batch} />
+
             </div>
           </div>
         )}
 
-        {activeProfileSection === 'contact' && (
+        {/* ═══ CONTACT ═══ */}
+        {activeTab === 'contact' && (
           <div className="section-content">
             <div className="section-header">
               <h1>Contact Information</h1>
-              <div className="header-underline"></div>
+              <div className="header-underline" />
             </div>
             <div className="info-container">
-              <div className="info-group">
-                <label>Email</label>
-                <div className="info-value">
-                  <MailOutlined className="info-icon" />
-                  {studentData.email}
-                  <div className="value-underline"></div>
-                </div>
-              </div>
-              <div className="info-group">
-                <label>Phone</label>
-                <div className="info-value">
-                  <PhoneOutlined className="info-icon" />
-                  {isEditing && !isResidenceOnlyEdit ? (
-                    <input type="text" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} style={{ width: '100%', padding: '5px', marginLeft: '5px' }} />
-                  ) : (
-                    <>{studentData.phoneNumber}<div className="value-underline"></div></>
-                  )}
-                </div>
-              </div>
-              
-              {isEditing && !isResidenceOnlyEdit ? (
-                <>
-                  <div className="info-group">
-                    <label>Country</label>
-                    <div className="info-value">
-                      <select name="country" value={formData.country} onChange={handleChange} style={{ width: '100%', padding: '5px' }}>
-                        <option value="">Select Country</option>
-                        {uniqueCountryCodes.map(country => (
-                          <option key={country.code} value={country.code}>{country.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                  {formData.country === 'IN' && (
-                    <>
-                      <div className="info-group">
-                        <label>State</label>
-                        <div className="info-value">
-                          <select name="state" value={formData.state} onChange={handleChange} style={{ width: '100%', padding: '5px' }}>
-                            <option value="">Select State</option>
-                            {stateNames.map(state => (
-                              <option key={state} value={state}>{state}</option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                      {formData.state && (
-                        <div className="info-group">
-                          <label>District</label>
-                          <div className="info-value">
-                            <select name="district" value={formData.district} onChange={handleChange} style={{ width: '100%', padding: '5px' }}>
-                              <option value="">Select District</option>
-                              {districtNames[formData.state]?.map(district => (
-                                <option key={district} value={district}>{district}</option>
-                              ))}
-                            </select>
-                          </div>
-                        </div>
-                      )}
-                    </>
-                  )}
-                  <div className="info-group">
-                    <label>Pincode</label>
-                    <div className="info-value">
-                      <input type="text" name="pincode" value={formData.pincode} onChange={handleChange} style={{ width: '100%', padding: '5px' }} />
-                    </div>
-                  </div>
-                </>
+
+              {/* Email — always read-only */}
+              <ViewField label="Email Address" icon={<MailOutlined />} value={studentData.email} />
+
+              {/* Phone */}
+              {isEditing ? (
+                <EditInput label="Phone Number" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} type="tel" placeholder="10-digit mobile number" />
               ) : (
-                <div className="info-group">
-                  <label>Address</label>
-                  <div className="info-value">
-                    <EnvironmentOutlined className="info-icon" />
-                    {studentData.district}, {studentData.state}, {studentData.country} - {studentData.pincode}
-                    <div className="value-underline"></div>
-                  </div>
-                </div>
+                <ViewField label="Phone Number" icon={<PhoneOutlined />} value={studentData.phoneNumber} />
               )}
+
+              {/* Country */}
+              {isEditing ? (
+                <EditSelect label="Country" name="country" value={formData.country} onChange={handleChange}>
+                  {uniqueCountryCodes.map(c => (
+                    <option key={c.code} value={c.code}>{c.name}</option>
+                  ))}
+                </EditSelect>
+              ) : (
+                <ViewField label="Country" icon={<EnvironmentOutlined />} value={countryName(studentData.country)} />
+              )}
+
+              {/* State */}
+              {isEditing ? (
+                <EditSelect label="State" name="state" value={formData.state} onChange={e => {
+                  handleChange(e);
+                  setFormData(prev => ({ ...prev, district: '' }));
+                }}>
+                  {!formData.state && <option value="">Select State</option>}
+                  {stateNames.map(s => <option key={s} value={s}>{s}</option>)}
+                </EditSelect>
+              ) : (
+                <ViewField label="State" value={studentData.state} />
+              )}
+
+              {/* District */}
+              {isEditing ? (
+                <EditSelect label="District" name="district" value={formData.district} onChange={handleChange}>
+                  {!formData.district && <option value="">Select District</option>}
+                  {(districtNames[formData.state] || []).map(d => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </EditSelect>
+              ) : (
+                <ViewField label="District" value={studentData.district} />
+              )}
+
+              {/* Pincode */}
+              {isEditing ? (
+                <EditInput label="Pincode" name="pincode" value={formData.pincode} onChange={handleChange} type="text" placeholder="6-digit pincode" />
+              ) : (
+                <ViewField label="Pincode" value={studentData.pincode} />
+              )}
+
             </div>
           </div>
         )}
 
-        {activeProfileSection === 'accommodation' && (
+        {/* ═══ ACCOMMODATION ═══ */}
+        {activeTab === 'accommodation' && (
           <div className="section-content">
             <div className="section-header">
               <h1>Accommodation Details</h1>
-              <div className="header-underline"></div>
+              <div className="header-underline" />
             </div>
             <div className="info-container">
-              <div className="info-group">
-                <label>Accommodation Required?</label>
-                <div className="info-value">
-                  {isEditing ? (
-                    <select name="accommodation" value={formData.accommodation} onChange={handleChange} style={{ width: '100%', padding: '5px' }}>
-                      <option value="Yes">Yes</option>
-                      <option value="No">No</option>
-                    </select>
-                  ) : (
-                    <>{studentData.accommodation || 'No'}<div className="value-underline"></div></>
-                  )}
-                </div>
-              </div>
 
-              <div className="info-group">
-                <label>Transportation Required?</label>
-                <div className="info-value">
-                  {isEditing ? (
-                    <select name="transportation" value={formData.transportation} onChange={handleChange} style={{ width: '100%', padding: '5px' }}>
-                      <option value="Yes">Yes</option>
-                      <option value="No">No</option>
-                    </select>
-                  ) : (
-                    <>{studentData.transportation || 'No'}<div className="value-underline"></div></>
-                  )}
-                </div>
-              </div>
-
-              {((isEditing ? formData.transportation === 'Yes' : studentData.transportation === 'Yes')) && (
-                <div className="info-group">
-                  <label>Bus Route</label>
-                  <div className="info-value">
-                    {isEditing ? (
-                      <select name="busRoute" value={formData.busRoute} onChange={handleChange} style={{ width: '100%', padding: '5px' }}>
-                        <option value="">Select Route</option>
-                        {busRoutes.map(route => (
-                          <option key={route['Route ID']} value={route['Route ID']}>
-                            {route['Route ID']} - {route.Route} ({route.Location})
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <>{studentData.busRoute || 'N/A'}<div className="value-underline"></div></>
-                    )}
-                  </div>
-                </div>
+              {/* Accommodation */}
+              {isEditing ? (
+                <EditSelect label="Accommodation Required?" name="accommodation" value={formData.accommodation} onChange={handleChange}>
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </EditSelect>
+              ) : (
+                <ViewField label="Accommodation Required?" value={studentData.accommodation || 'No'} />
               )}
 
-              <div className="info-group">
-                <label>Residence Type</label>
-                <div className="info-value">
-                  <HomeOutlined className="info-icon" />
-                  {isEditing ? (
-                    <select name="residenceType" value={formData.residenceType} onChange={handleChange} style={{ width: '100%', padding: '5px', marginLeft: '5px' }}>
-                      <option value="Day Scholar">Day Scholar</option>
-                      <option value="Hostel">Hostel</option>
-                    </select>
-                  ) : (
-                    <>{studentData.residenceType}<div className="value-underline"></div></>
-                  )}
-                </div>
-              </div>
-              {(isEditing ? formData.residenceType === 'Hostel' : studentData.residenceType === 'Hostel') && (
-                <div className="info-group">
-                  <label>Hostel</label>
-                  <div className="info-value">
-                    <HomeOutlined className="info-icon" />
-                    {isEditing ? (
-                      <select name="hostelName" value={formData.hostelName} onChange={handleChange} style={{ width: '100%', padding: '5px', marginLeft: '5px' }}>
-                        <option value="">Select Hostel</option>
-                        {(formData.gender === 'Male' ? boyHostels : girlHostels).map(hostel => (
-                          <option key={hostel.hostelName} value={hostel.hostelName}>{hostel.hostelName}</option>
-                        ))}
-                      </select>
-                    ) : (
-                      <>{studentData.hostelName}<div className="value-underline"></div></>
-                    )}
-                  </div>
-                </div>
+              {/* Transportation */}
+              {isEditing ? (
+                <EditSelect label="Transportation Required?" name="transportation" value={formData.transportation} onChange={handleChange}>
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </EditSelect>
+              ) : (
+                <ViewField label="Transportation Required?" icon={<CarOutlined />} value={studentData.transportation || 'No'} />
               )}
+
+              {/* Bus Route — only when transport = Yes */}
+              {(isEditing ? formData.transportation : studentData.transportation) === 'Yes' && (
+                isEditing ? (
+                  <EditSelect label="Bus Route" name="busRoute" value={formData.busRoute} onChange={handleChange}>
+                    {!formData.busRoute && <option value="">Select Route</option>}
+                    {busRoutes.map(r => (
+                      <option key={r['Route ID']} value={r['Route ID']}>
+                        {r['Route ID']} — {r.Route} ({r.Location})
+                      </option>
+                    ))}
+                  </EditSelect>
+                ) : (
+                  <ViewField label="Bus Route" value={studentData.busRoute || 'N/A'} />
+                )
+              )}
+
+              {/* Residence Type */}
+              {isEditing ? (
+                <EditSelect label="Residence Type" name="residenceType" value={formData.residenceType} onChange={handleChange}>
+                  <option value="Day Scholar">Day Scholar</option>
+                  <option value="Hostel">Hostel</option>
+                </EditSelect>
+              ) : (
+                <ViewField label="Residence Type" icon={<HomeOutlined />} value={studentData.residenceType} />
+              )}
+
+              {/* Hostel — only when residenceType = Hostel */}
+              {(isEditing ? formData.residenceType : studentData.residenceType) === 'Hostel' && (
+                isEditing ? (
+                  <EditSelect label="Hostel Name" name="hostelName" value={formData.hostelName} onChange={handleChange}>
+                    {!formData.hostelName && <option value="">Select Hostel</option>}
+                    {(formData.gender === 'Male' ? boyHostels : girlHostels).map(h => (
+                      <option key={h.hostelName} value={h.hostelName}>{h.hostelName}</option>
+                    ))}
+                  </EditSelect>
+                ) : (
+                  <ViewField label="Hostel Name" icon={<BankOutlined />} value={studentData.hostelName} />
+                )
+              )}
+
             </div>
           </div>
         )}
 
-        {activeProfileSection === 'internship' && (
+        {/* ═══ INTERNSHIP ═══ */}
+        {activeTab === 'internship' && (
           <div className="section-content">
             <div className="section-header">
               <h1>Internship Details</h1>
-              <div className="header-underline"></div>
+              <div className="header-underline" />
             </div>
             <div className="info-container">
-              <div className="info-group">
-                <label>Domain</label>
-                <div className="info-value">
-                  {isEditing ? (
-                    <select name="selectedDomain" value={formData.selectedDomain} onChange={handleChange} style={{ width: '100%', padding: '5px' }}>
-                      <option value="">Select Domain</option>
-                      {domains.map(d => <option key={d} value={d}>{d}</option>)}
-                    </select>
-                  ) : (
-                    <>{studentData.selectedDomain}<div className="value-underline"></div></>
-                  )}
-                </div>
-              </div>
 
-              <div className="info-group">
-                <label>Field of Interest</label>
-                <div className="info-value">
-                  {isEditing ? (
-                    <select name="fieldOfInterest" value={formData.fieldOfInterest} onChange={handleChange} style={{ width: '100%', padding: '5px' }}>
-                      <option value="">Select Field</option>
-                      <option value="Awareness Campaigns">Awareness Campaigns</option>
-                      <option value="Content Creation (YouTube / Reels)">Content Creation (YouTube / Reels)</option>
-                      <option value="Cover Song Production">Cover Song Production</option>
-                      <option value="Dance">Dance</option>
-                      <option value="Documentary Making">Documentary Making</option>
-                      <option value="Dramatics">Dramatics</option>
-                      <option value="Environmental Activities">Environmental Activities</option>
-                      <option value="Leadership Activities">Leadership Activities</option>
-                      <option value="Literature">Literature</option>
-                      <option value="Painting">Painting</option>
-                      <option value="Photography">Photography</option>
-                      <option value="Public Speaking">Public Speaking</option>
-                      <option value="Rural Development">Rural Development</option>
-                      <option value="Short Film Making">Short Film Making</option>
-                      <option value="Singing">Singing</option>
-                      <option value="Social Service / Volunteering">Social Service / Volunteering</option>
-                      <option value="Spirituality">Spirituality</option>
-                      <option value="Story Telling">Story Telling</option>
-                      <option value="Technical (Hardware)">Technical (Hardware)</option>
-                      <option value="Technical (Software)">Technical (Software)</option>
-                      <option value="Video Editing">Video Editing</option>
-                      <option value="Yoga & Meditation">Yoga & Meditation</option>
-                    </select>
-                  ) : (
-                    <>{studentData.fieldOfInterest}<div className="value-underline"></div></>
-                  )}
-                </div>
-              </div>
+              {/* Domain */}
+              {isEditing ? (
+                <EditSelect label="Domain" name="selectedDomain" value={formData.selectedDomain} onChange={handleChange}>
+                  {!formData.selectedDomain && <option value="">Select Domain</option>}
+                  {domains.map(d => <option key={d} value={d}>{d}</option>)}
+                </EditSelect>
+              ) : (
+                <ViewField label="Domain" value={studentData.selectedDomain} />
+              )}
 
-              <div className="info-group">
-                <label>Internship Mode</label>
-                <div className="info-value">
-                  {isEditing ? (
-                    <select name="mode" value={formData.mode} onChange={handleChange} style={{ width: '100%', padding: '5px' }}>
-                      <option value="Remote">Remote</option>
-                      <option value="Incampus">In Campus</option>
-                      <option value="InVillage">In Village</option>
-                    </select>
-                  ) : (
-                    <>{studentData.mode}<div className="value-underline"></div></>
-                  )}
-                </div>
-              </div>
+              {/* Field of Interest */}
+              {isEditing ? (
+                <EditSelect label="Field of Interest" name="fieldOfInterest" value={formData.fieldOfInterest} onChange={handleChange}>
+                  {!formData.fieldOfInterest && <option value="">Select Field</option>}
+                  {FIELDS_OF_INTEREST.map(f => <option key={f} value={f}>{f}</option>)}
+                </EditSelect>
+              ) : (
+                <ViewField label="Field of Interest" value={studentData.fieldOfInterest} />
+              )}
 
-              <div className="info-group">
-                <label>Slot</label>
-                <div className="info-value">
-                  {isEditing ? (
-                    <select name="slot" value={formData.slot} onChange={handleChange} style={{ width: '100%', padding: '5px' }}>
-                      <option value="1">Slot 1 — May 11–17</option>
-                      <option value="2">Slot 2 — May 18–24</option>
-                      <option value="3">Slot 3 — May 25–31</option>
-                      <option value="4">Slot 4 — Jun 1–7</option>
-                      <option value="5">Slot 5 — Jun 8–14</option>
-                      <option value="6">Slot 6 — Jun 15–21</option>
-                      <option value="7">Slot 7 — Jun 22–28</option>
-                      <option value="8">Slot 8 — Jun 29–Jul 5</option>
-                      <option value="9">Slot 9 — Jul 6–12</option>
-                    </select>
-                  ) : (
-                    <>Slot {studentData.slot}<div className="value-underline"></div></>
-                  )}
-                </div>
-              </div>
+              {/* Mode */}
+              {isEditing ? (
+                <EditSelect label="Internship Mode" name="mode" value={formData.mode} onChange={handleChange}>
+                  <option value="Remote">Remote</option>
+                  <option value="Incampus">In Campus</option>
+                  <option value="InVillage">In Village</option>
+                </EditSelect>
+              ) : (
+                <ViewField label="Internship Mode" value={studentData.mode} />
+              )}
 
-              <div className="info-group">
-                <label>Year</label>
-                <div className="info-value">
-                  {isEditing ? (
-                    <select name="year" value={formData.year} onChange={handleChange} style={{ width: '100%', padding: '5px' }}>
-                      <option value="1">1st Year</option>
-                      <option value="2">2nd Year</option>
-                      <option value="3">3rd Year</option>
-                      <option value="4">4th Year</option>
-                    </select>
-                  ) : (
-                    <>{studentData.year} Year<div className="value-underline"></div></>
-                  )}
-                </div>
-              </div>
+              {/* Slot */}
+              {isEditing ? (
+                <EditSelect label="Slot" name="slot" value={formData.slot} onChange={handleChange}>
+                  {Object.entries(SLOT_LABELS).map(([v, l]) => (
+                    <option key={v} value={v}>{l}</option>
+                  ))}
+                </EditSelect>
+              ) : (
+                <ViewField label="Slot" value={SLOT_LABELS[String(studentData.slot)] || `Slot ${studentData.slot}`} />
+              )}
 
-              <div className="info-group">
-                <label>Batch</label>
-                <div className="info-value">
-                  {isEditing ? (
-                    <input type="text" name="batch" value={formData.batch} onChange={handleChange} placeholder="e.g. 2022-26" style={{ width: '100%', padding: '5px' }} />
-                  ) : (
-                    <>{studentData.batch}<div className="value-underline"></div></>
-                  )}
-                </div>
-              </div>
+              {/* Career Choice */}
+              {isEditing ? (
+                <EditSelect label="Career Choice" name="careerChoice" value={formData.careerChoice} onChange={handleChange}>
+                  {!formData.careerChoice && <option value="">Select Career Choice</option>}
+                  <option value="Job">Job</option>
+                  <option value="Entrepreneurship">Entrepreneurship</option>
+                  <option value="Higher Studies">Higher Studies</option>
+                  <option value="Competitive Exams">Competitive Exams (UPSC / GATE / etc.)</option>
+                  <option value="Other">Other</option>
+                </EditSelect>
+              ) : (
+                <ViewField label="Career Choice" value={studentData.careerChoice} />
+              )}
 
-              <div className="info-group">
-                <label>Career Choice</label>
-                <div className="info-value">
-                  {isEditing ? (
-                    <select name="careerChoice" value={formData.careerChoice} onChange={handleChange} style={{ width: '100%', padding: '5px' }}>
-                      <option value="">Select Career Choice</option>
-                      <option value="Job">Job</option>
-                      <option value="Entrepreneurship">Entrepreneurship</option>
-                      <option value="Higher Studies">Higher Studies</option>
-                      <option value="Competitive Exams">Competitive Exams (UPSC/GATE/etc)</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  ) : (
-                    <>{studentData.careerChoice}<div className="value-underline"></div></>
-                  )}
-                </div>
-              </div>
+              {/* Batch — always read-only */}
+              <ViewField label="Batch" value={studentData.batch} />
+
             </div>
           </div>
         )}
+
       </div>
     </div>
   );
