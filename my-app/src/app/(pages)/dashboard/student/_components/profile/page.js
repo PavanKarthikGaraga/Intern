@@ -8,7 +8,7 @@ import { stateNames } from '@/app/Data/states';
 import { districtNames } from '@/app/Data/districts';
 import { countryCodes } from '@/app/Data/coutries';
 import { branchNames } from '@/app/Data/branches';
-import { girlHostels, boyHostels } from '@/app/Data/locations';
+import { girlHostels, boyHostels, busRoutes } from '@/app/Data/locations';
 
 const uniqueCountryCodes = countryCodes
   .filter((country, index, self) =>
@@ -38,6 +38,9 @@ export default function Profile({ user, studentData: initialStudentData }) {
         pincode: initialStudentData.pincode || '',
         residenceType: initialStudentData.residenceType || '',
         hostelName: initialStudentData.hostelName || '',
+        accommodation: initialStudentData.accommodation || 'No',
+        transportation: initialStudentData.transportation || 'No',
+        busRoute: initialStudentData.busRoute || '',
       });
     }
   }, [initialStudentData]);
@@ -63,7 +66,7 @@ export default function Profile({ user, studentData: initialStudentData }) {
       
       if (data.success) {
         toast.success('Profile updated successfully!');
-        setStudentData(prev => ({ ...prev, ...formData, profileEdited: 1 }));
+        setStudentData(prev => ({ ...prev, ...formData, profileEdited: (prev.profileEdited || 0) + 1 }));
         setIsEditing(false);
       } else {
         toast.error(data.error || 'Failed to update profile');
@@ -75,7 +78,9 @@ export default function Profile({ user, studentData: initialStudentData }) {
     }
   };
 
-  const canEdit = !studentData.profileEdited;
+  const profileEditedCount = Number(studentData.profileEdited || 0);
+  const canEdit = profileEditedCount < 2;
+  const isResidenceOnlyEdit = profileEditedCount === 1;
 
   return (
     <div className="student-profile">
@@ -132,7 +137,7 @@ export default function Profile({ user, studentData: initialStudentData }) {
               <div className="info-group">
                 <label>Name</label>
                 <div className="info-value">
-                  {isEditing ? (
+                  {isEditing && !isResidenceOnlyEdit ? (
                     <input type="text" name="name" value={formData.name} onChange={handleChange} style={{ width: '100%', padding: '5px' }} />
                   ) : (
                     <>{studentData.name}<div className="value-underline"></div></>
@@ -149,7 +154,7 @@ export default function Profile({ user, studentData: initialStudentData }) {
               <div className="info-group">
                 <label>Gender</label>
                 <div className="info-value">
-                  {isEditing ? (
+                  {isEditing && !isResidenceOnlyEdit ? (
                     <select name="gender" value={formData.gender} onChange={handleChange} style={{ width: '100%', padding: '5px' }}>
                       <option value="Male">Male</option>
                       <option value="Female">Female</option>
@@ -163,7 +168,7 @@ export default function Profile({ user, studentData: initialStudentData }) {
               <div className="info-group">
                 <label>Branch</label>
                 <div className="info-value">
-                  {isEditing ? (
+                  {isEditing && !isResidenceOnlyEdit ? (
                     <select name="branch" value={formData.branch} onChange={handleChange} style={{ width: '100%', padding: '5px' }}>
                       <option value="">Select Branch</option>
                       {branchNames.map(branch => (
@@ -198,7 +203,7 @@ export default function Profile({ user, studentData: initialStudentData }) {
                 <label>Phone</label>
                 <div className="info-value">
                   <PhoneOutlined className="info-icon" />
-                  {isEditing ? (
+                  {isEditing && !isResidenceOnlyEdit ? (
                     <input type="text" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} style={{ width: '100%', padding: '5px', marginLeft: '5px' }} />
                   ) : (
                     <>{studentData.phoneNumber}<div className="value-underline"></div></>
@@ -206,7 +211,7 @@ export default function Profile({ user, studentData: initialStudentData }) {
                 </div>
               </div>
               
-              {isEditing ? (
+              {isEditing && !isResidenceOnlyEdit ? (
                 <>
                   <div className="info-group">
                     <label>Country</label>
@@ -276,7 +281,55 @@ export default function Profile({ user, studentData: initialStudentData }) {
             </div>
             <div className="info-container">
               <div className="info-group">
-                <label>Type</label>
+                <label>Accommodation Required?</label>
+                <div className="info-value">
+                  {isEditing ? (
+                    <select name="accommodation" value={formData.accommodation} onChange={handleChange} style={{ width: '100%', padding: '5px' }}>
+                      <option value="Yes">Yes</option>
+                      <option value="No">No</option>
+                    </select>
+                  ) : (
+                    <>{studentData.accommodation || 'No'}<div className="value-underline"></div></>
+                  )}
+                </div>
+              </div>
+
+              <div className="info-group">
+                <label>Transportation Required?</label>
+                <div className="info-value">
+                  {isEditing ? (
+                    <select name="transportation" value={formData.transportation} onChange={handleChange} style={{ width: '100%', padding: '5px' }}>
+                      <option value="Yes">Yes</option>
+                      <option value="No">No</option>
+                    </select>
+                  ) : (
+                    <>{studentData.transportation || 'No'}<div className="value-underline"></div></>
+                  )}
+                </div>
+              </div>
+
+              {((isEditing ? formData.transportation === 'Yes' : studentData.transportation === 'Yes')) && (
+                <div className="info-group">
+                  <label>Bus Route</label>
+                  <div className="info-value">
+                    {isEditing ? (
+                      <select name="busRoute" value={formData.busRoute} onChange={handleChange} style={{ width: '100%', padding: '5px' }}>
+                        <option value="">Select Route</option>
+                        {busRoutes.map(route => (
+                          <option key={route['Route ID']} value={route['Route ID']}>
+                            {route['Route ID']} - {route.Route} ({route.Location})
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <>{studentData.busRoute || 'N/A'}<div className="value-underline"></div></>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="info-group">
+                <label>Residence Type</label>
                 <div className="info-value">
                   <HomeOutlined className="info-icon" />
                   {isEditing ? (

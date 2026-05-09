@@ -1,7 +1,7 @@
 export const girlHostels = [
   {
       "S.No": "1",
-      "hostelName": "Kanchanaganga Girls Hostel",
+      "hostelName": "Lotus Girls Hostel",
       "Location of the Hostel": "Campus",
       "Hostel Land line Number": "08645-350222"
   },
@@ -61,11 +61,6 @@ export const boyHostels = [
   },
   {
       "S.No": "10",
-      "hostelName": "Lotus",
-      "Location of the Hostel": "In Campus"
-  },
-  {
-      "S.No": "11",
       "hostelName": "Kanchana Ganga Hostel",
       "Location of the Hostel": "In Campus"
   }
