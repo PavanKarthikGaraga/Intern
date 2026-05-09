@@ -1,7 +1,7 @@
 import { verifyAccessToken } from "../../../../lib/jwt";
 import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
-import pool from "../../../../lib/db";
+import { defaultPool } from "../../../../lib/db";
 
 export async function POST(request) {
     try {
@@ -35,7 +35,7 @@ export async function POST(request) {
             }, { status: 400 });
         }
 
-        const db = await pool.getConnection();
+        const db = await defaultPool.getConnection();
 
         try {
             // Get current user's password hash
