@@ -403,13 +403,8 @@ export default function DailyTasks({ studentData, onSectionChange }) {
       {/* Timer bar */}
       {isSaved ? (
         <CompletedBar deadline={slot ? dayWindow(slot, activeDay).close : new Date()} submittedAt={saved[activeDay]?.submittedAt} />
-      ) : activeStatus === 'open' || activeStatus === 'upcoming' ? (
+      ) : activeStatus === 'open' || activeStatus === 'upcoming' || activeStatus === 'preview' ? (
         <TimerBar openTime={dayWindow(slot, activeDay).open} closeTime={dayWindow(slot, activeDay).close} status={activeStatus} />
-      ) : activeStatus === 'preview' ? (
-        <div className="dt-timer-bar" style={{ background: '#eff6ff', borderColor: '#bfdbfe' }}>
-          <span className="dt-timer-label" style={{ color: '#1d4ed8', display: 'flex', alignItems: 'center', gap: '6px' }}><FaHourglassHalf /> Preview Mode — Slot Unlocked</span>
-          <span className="dt-timer-date" style={{ color: '#1d4ed8' }}>You can read the tasks now. Submission opens on {new Date(dayWindow(slot, activeDay).open).toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit', hour12:true })}</span>
-        </div>
       ) : activeStatus === 'unlocked' ? (
         <TimerBar openTime={null} closeTime={null} status="unlocked" />
       ) : null}
