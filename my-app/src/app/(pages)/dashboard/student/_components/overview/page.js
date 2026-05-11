@@ -131,7 +131,7 @@ export default function Overview({ user, studentData }) {
   ];
 
   const totalMarks = evalComponents.reduce((acc, c) => acc + (c.score !== null ? Number(c.score) : 0), 0);
-  const hasAnyMarks = evalComponents.some(c => c.score !== null && c.score > 0);
+  const allDaysEvaluated = evalComponents.every(c => c.score !== null);
 
   // Helper to calculate grade from marks
   const getGrade = (marks) => {
@@ -483,7 +483,7 @@ export default function Overview({ user, studentData }) {
 
             <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '2px dashed #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '40px' }}>
-                {hasAnyMarks ? (
+                {allDaysEvaluated ? (
                   <>
                     <div>
                       <p style={{ margin: 0, fontSize: '0.9rem', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>Total Score</p>
@@ -497,7 +497,7 @@ export default function Overview({ user, studentData }) {
                 ) : (
                   <div>
                     <p style={{ margin: 0, fontSize: '0.9rem', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>Overall Status</p>
-                    <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: '700', color: '#e65100', marginTop: '4px' }}>Evaluation Pending — Marks will appear here once evaluated by admin.</p>
+                    <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: '700', color: '#e65100', marginTop: '4px' }}>Evaluation Pending — Marks and Grade will appear here once all 7 days are evaluated by admin.</p>
                   </div>
                 )}
               </div>

@@ -102,6 +102,51 @@
   text-align: center;
   border: 1.5px solid #e0e0e0;
   box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.ev-stat-click {
+  cursor: pointer;
+}
+.ev-stat-click:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+}
+.ev-stat-active {
+  border-width: 2px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+}
+.ev-stat-blue.ev-stat-active  { border-color: #1565c0; background: #e3f2fd; }
+.ev-stat-green.ev-stat-active { border-color: #2e7d32; background: #e8f5e9; }
+.ev-stat-orange.ev-stat-active{ border-color: #e65100; background: #fff3e0; }
+.ev-stat-red.ev-stat-active   { border-color: #b71c1c; background: #fdecea; }
+
+/* Sub-tabs */
+.ev-sub-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 10px 0 2px;
+  border-bottom: 2px solid #f0f0f0;
+}
+.ev-sub-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 18px;
+  border-radius: 7px;
+  border: 1.5px solid #e0e0e0;
+  background: #f9f9f9;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #555;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.ev-sub-tab:hover { background: #f0f0f0; }
+.ev-sub-tab.active {
+  background: #fff8e1;
+  border-color: #f5c518;
+  color: #856404;
 }
 .ev-stat-num {
   font-size: 1.8rem;

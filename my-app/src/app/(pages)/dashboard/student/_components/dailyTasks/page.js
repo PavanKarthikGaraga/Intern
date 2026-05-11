@@ -242,6 +242,10 @@ export default function DailyTasks({ studentData, onSectionChange }) {
   const username = studentData?.username || null;
   const survey   = ps ? (SURVEY[ps] || null) : null;
   const DAY_META = getDaysMeta(studentData, survey);
+  const dailyMarks = studentData?.dailyMarks || {};
+
+  // Max marks per day (matches evaluation rubric)
+  const DAY_MAX = { 1:10, 2:5, 3:5, 4:5, 5:15, 6:20, 7:40 };
 
   useEffect(() => {
     (async () => {
@@ -400,9 +404,32 @@ export default function DailyTasks({ studentData, onSectionChange }) {
         </div>
       </div>
 
-      {/* Timer bar */}
+      {/* Timer / status bar */}
       {isSaved ? (
-        <CompletedBar deadline={slot ? dayWindow(slot, activeDay).close : new Date()} submittedAt={saved[activeDay]?.submittedAt} />
+        <>
+          <CompletedBar deadline={slot ? dayWindow(slot, activeDay).close : new Date()} submittedAt={saved[activeDay]?.submittedAt} />
+          {/* Evaluated marks banner */}
+          {(() => {
+            const mark = dailyMarks[`d${activeDay}`];
+            const max  = DAY_MAX[activeDay];
+            if (typeof mark === 'number' || (typeof mark === 'string' && mark !== '')) {
+              return (
+                <div style={{ display:'flex', alignItems:'center', gap:10, background:'#e8f5e9', border:'1.5px solid #a5d6a7', borderRadius:10, padding:'10px 18px', margin:'8px 0' }}>
+                  <FaCheckCircle style={{ color:'#2e7d32', fontSize:'1.1rem' }} />
+                  <span style={{ fontWeight:700, color:'#2e7d32', fontSize:'0.95rem' }}>Evaluated</span>
+                  <span style={{ background:'#014a01', color:'#fff', fontWeight:800, fontSize:'1rem', borderRadius:8, padding:'2px 14px', marginLeft:4 }}>{mark} / {max}</span>
+                  <span style={{ color:'#555', fontSize:'0.82rem', marginLeft:4 }}>marks awarded</span>
+                </div>
+              );
+            }
+            return (
+              <div style={{ display:'flex', alignItems:'center', gap:8, background:'#fff8e1', border:'1.5px solid #ffe082', borderRadius:10, padding:'8px 16px', margin:'8px 0' }}>
+                <FaHourglassHalf style={{ color:'#e65100' }} />
+                <span style={{ fontWeight:600, color:'#e65100', fontSize:'0.88rem' }}>Evaluation Pending — marks will appear here once evaluated by admin.</span>
+              </div>
+            );
+          })()}
+        </>
       ) : activeStatus === 'open' || activeStatus === 'upcoming' || activeStatus === 'preview' ? (
         <TimerBar openTime={dayWindow(slot, activeDay).open} closeTime={dayWindow(slot, activeDay).close} status={activeStatus} />
       ) : activeStatus === 'unlocked' ? (
@@ -460,7 +487,17 @@ export default function DailyTasks({ studentData, onSectionChange }) {
                     <button className="dt-save-btn" onClick={handleSave} disabled={saving || isSaved || !isEditable}>
                       {saving ? 'Saving…' : isSaved ? '✓ Submitted' : isPreview ? '🔒 Submission Not Open Yet' : '💾 Save & Submit'}
                     </button>
-                    {isSaved && <span style={{fontSize:'0.82rem',color:'#888'}}>Submitted — view only</span>}
+                    {isSaved && (() => {
+                      const mark = dailyMarks[`d${activeDay}`];
+                      const max  = DAY_MAX[activeDay];
+                      // Show if mark is a number (including 0)
+                      if (typeof mark === 'number' || (typeof mark === 'string' && mark !== '')) return (
+                        <span style={{ display:'flex', alignItems:'center', gap:6, background:'#e8f5e9', border:'1px solid #a5d6a7', borderRadius:8, padding:'4px 12px', fontSize:'0.85rem', fontWeight:700, color:'#2e7d32' }}>
+                          <FaCheckCircle /> Evaluated: {mark}/{max}
+                        </span>
+                      );
+                      return <span style={{fontSize:'0.82rem',color:'#e65100', fontWeight:600}}>⏳ Evaluation Pending</span>;
+                    })()}
                     {isPreview && <span style={{fontSize:'0.82rem',color:'#1d4ed8'}}>Submission opens {new Date(dayWindow(slot, activeDay).open).toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit', hour12:true })}</span>}
                     {msg && <span className={`dt-save-msg ${msgType}`}>{msg}</span>}
                   </div>

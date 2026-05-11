@@ -286,12 +286,13 @@ function EvalRow({ student, day, maxMarks, onSave }) {
 
 /* ════════════════════════════════════════════════════════════════════════════ */
 export default function Evaluate() {
-  const [slot, setSlot]         = useState('');
-  const [day, setDay]           = useState('');
-  const [data, setData]         = useState(null);
-  const [loading, setLoading]   = useState(false);
-  const [search, setSearch]     = useState('');
-  const [tab, setTab]           = useState('submitted'); // 'submitted' | 'pending'
+  const [slot, setSlot]       = useState('');
+  const [day, setDay]         = useState('');
+  const [data, setData]       = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [search, setSearch]   = useState('');
+  const [tab, setTab]         = useState('submitted');  // 'submitted' | 'not_submitted'
+  const [subTab, setSubTab]   = useState('pending_eval'); // 'pending_eval' | 'evaluated'
 
   const fetchData = useCallback(async () => {
     if (!slot || !day) return;
@@ -350,10 +351,10 @@ export default function Evaluate() {
       s.username?.includes(search)
     );
 
-  const submitted  = filterStudents(data?.submitted);
-  const pending    = filterStudents(data?.notSubmitted);
-  const evalDone   = (data?.submitted || []).filter(s => s.evaluated).length;
-  const evalTotal  = (data?.submitted || []).length;
+  const allSubmitted  = filterStudents(data?.submitted);
+  const evalDone      = allSubmitted.filter(s => s.evaluated);
+  const evalPending   = allSubmitted.filter(s => !s.evaluated);
+  const notSubmitted  = filterStudents(data?.notSubmitted);
 
   return (
     <div className="ev-wrap">
@@ -410,22 +411,34 @@ export default function Evaluate() {
         <div className="ev-loading"><div className="ev-spinner-lg" /> Loading students…</div>
       ) : data ? (
         <>
-          {/* ── Stats row ── */}
+          {/* ── Stats row (clickable) ── */}
           <div className="ev-stats-row">
-            <div className="ev-stat-card ev-stat-blue">
-              <div className="ev-stat-num">{evalTotal}</div>
+            <div
+              className={`ev-stat-card ev-stat-blue ev-stat-click ${tab === 'submitted' ? 'ev-stat-active' : ''}`}
+              onClick={() => { setTab('submitted'); }}
+            >
+              <div className="ev-stat-num">{allSubmitted.length}</div>
               <div className="ev-stat-lbl">Submitted</div>
             </div>
-            <div className="ev-stat-card ev-stat-green">
-              <div className="ev-stat-num">{evalDone}</div>
+            <div
+              className={`ev-stat-card ev-stat-green ev-stat-click ${tab === 'submitted' && subTab === 'evaluated' ? 'ev-stat-active' : ''}`}
+              onClick={() => { setTab('submitted'); setSubTab('evaluated'); }}
+            >
+              <div className="ev-stat-num">{evalDone.length}</div>
               <div className="ev-stat-lbl">Evaluated</div>
             </div>
-            <div className="ev-stat-card ev-stat-orange">
-              <div className="ev-stat-num">{evalTotal - evalDone}</div>
+            <div
+              className={`ev-stat-card ev-stat-orange ev-stat-click ${tab === 'submitted' && subTab === 'pending_eval' ? 'ev-stat-active' : ''}`}
+              onClick={() => { setTab('submitted'); setSubTab('pending_eval'); }}
+            >
+              <div className="ev-stat-num">{evalPending.length}</div>
               <div className="ev-stat-lbl">Pending Evaluation</div>
             </div>
-            <div className="ev-stat-card ev-stat-red">
-              <div className="ev-stat-num">{(data.notSubmitted || []).length}</div>
+            <div
+              className={`ev-stat-card ev-stat-red ev-stat-click ${tab === 'not_submitted' ? 'ev-stat-active' : ''}`}
+              onClick={() => setTab('not_submitted')}
+            >
+              <div className="ev-stat-num">{notSubmitted.length}</div>
               <div className="ev-stat-lbl">Not Submitted</div>
             </div>
             <div className="ev-stat-card ev-stat-info">
@@ -434,45 +447,83 @@ export default function Evaluate() {
             </div>
           </div>
 
-          {/* ── Tabs ── */}
+          {/* ── Main tabs ── */}
           <div className="ev-tabs">
             <button
               className={`ev-tab ${tab === 'submitted' ? 'active' : ''}`}
               onClick={() => setTab('submitted')}
             >
-              <FaCheck /> Submitted ({submitted.length})
+              <FaCheck /> Submitted ({allSubmitted.length})
             </button>
             <button
-              className={`ev-tab ${tab === 'pending' ? 'active' : ''}`}
-              onClick={() => setTab('pending')}
+              className={`ev-tab ${tab === 'not_submitted' ? 'active' : ''}`}
+              onClick={() => setTab('not_submitted')}
             >
-              <FaTimes /> Not Submitted ({pending.length})
+              <FaTimes /> Not Submitted ({notSubmitted.length})
             </button>
           </div>
 
-          {/* ── Submitted list ── */}
+          {/* ── Submitted section ── */}
           {tab === 'submitted' && (
-            <div className="ev-list">
-              {submitted.length === 0 ? (
-                <div className="ev-empty-sm">No students found.</div>
-              ) : submitted.map(s => (
-                <EvalRow
-                  key={s.username}
-                  student={s}
-                  day={Number(day)}
-                  maxMarks={data.maxMarks}
-                  onSave={handleSave}
-                />
-              ))}
-            </div>
+            <>
+              {/* Sub-tabs: Pending Eval / Evaluated */}
+              <div className="ev-sub-tabs">
+                <button
+                  className={`ev-sub-tab ${subTab === 'pending_eval' ? 'active' : ''}`}
+                  onClick={() => setSubTab('pending_eval')}
+                >
+                  ⏳ Pending Evaluation ({evalPending.length})
+                </button>
+                <button
+                  className={`ev-sub-tab ${subTab === 'evaluated' ? 'active' : ''}`}
+                  onClick={() => setSubTab('evaluated')}
+                >
+                  ✅ Evaluated ({evalDone.length})
+                </button>
+              </div>
+
+              {/* Pending Evaluation list */}
+              {subTab === 'pending_eval' && (
+                <div className="ev-list">
+                  {evalPending.length === 0 ? (
+                    <div className="ev-empty-sm">🎉 All submitted students have been evaluated!</div>
+                  ) : evalPending.map(s => (
+                    <EvalRow
+                      key={s.username}
+                      student={s}
+                      day={Number(day)}
+                      maxMarks={data.maxMarks}
+                      onSave={handleSave}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* Evaluated list */}
+              {subTab === 'evaluated' && (
+                <div className="ev-list">
+                  {evalDone.length === 0 ? (
+                    <div className="ev-empty-sm">No students evaluated yet.</div>
+                  ) : evalDone.map(s => (
+                    <EvalRow
+                      key={s.username}
+                      student={s}
+                      day={Number(day)}
+                      maxMarks={data.maxMarks}
+                      onSave={handleSave}
+                    />
+                  ))}
+                </div>
+              )}
+            </>
           )}
 
-          {/* ── Not submitted list ── */}
-          {tab === 'pending' && (
+          {/* ── Not Submitted list ── */}
+          {tab === 'not_submitted' && (
             <div className="ev-list">
-              {pending.length === 0 ? (
-                <div className="ev-empty-sm">All students have submitted!</div>
-              ) : pending.map(s => (
+              {notSubmitted.length === 0 ? (
+                <div className="ev-empty-sm">All students have submitted! 🎉</div>
+              ) : notSubmitted.map(s => (
                 <div key={s.username} className="ev-row ev-row-missing">
                   <div className="ev-row-header">
                     <div className="ev-row-left">
