@@ -50,22 +50,29 @@ export async function GET(request) {
         CREATE TABLE IF NOT EXISTS dailyMarks (
           id       INT AUTO_INCREMENT PRIMARY KEY,
           username VARCHAR(255) NOT NULL UNIQUE,
-          day1     DECIMAL(5,2) DEFAULT 0,
-          day2     DECIMAL(5,2) DEFAULT 0,
-          day3     DECIMAL(5,2) DEFAULT 0,
-          day4     DECIMAL(5,2) DEFAULT 0,
-          day5     DECIMAL(5,2) DEFAULT 0,
-          day6     DECIMAL(5,2) DEFAULT 0,
-          day7     DECIMAL(5,2) DEFAULT 0,
+          day1     DECIMAL(5,2) DEFAULT NULL,
+          day2     DECIMAL(5,2) DEFAULT NULL,
+          day3     DECIMAL(5,2) DEFAULT NULL,
+          day4     DECIMAL(5,2) DEFAULT NULL,
+          day5     DECIMAL(5,2) DEFAULT NULL,
+          day6     DECIMAL(5,2) DEFAULT NULL,
+          day7     DECIMAL(5,2) DEFAULT NULL,
           evaluatedBy VARCHAR(255) DEFAULT NULL,
           updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         )
       `);
 
+      // Migration: If columns are still DEFAULT 0, change them to NULL
+      for (let i = 1; i <= 7; i++) {
+        try {
+          await db.execute(`ALTER TABLE dailyMarks MODIFY COLUMN day${i} DECIMAL(5,2) DEFAULT NULL`);
+        } catch (e) { /* ignore if already null or fail */ }
+      }
+
       // All students in this slot
       const [allStudents] = await db.execute(
         `SELECT r.username, r.name, r.slot, r.selectedDomain,
-                COALESCE(dm.day${day}, 0) AS dayMark
+                dm.day${day} AS dayMark
          FROM registrations r
          LEFT JOIN dailyMarks dm ON r.username = dm.username
          WHERE r.slot = ? AND r.season = '2026'
@@ -103,8 +110,8 @@ export async function GET(request) {
             selectedDomain: s.selectedDomain,
             submittedAt: sub.submittedAt,
             taskData: sub.taskData,
-            dayMark: Number(s.dayMark),
-            evaluated: Number(s.dayMark) > 0,
+            dayMark: s.dayMark === null ? null : Number(s.dayMark),
+            evaluated: s.dayMark !== null,
           });
         } else {
           notSubmitted.push({
