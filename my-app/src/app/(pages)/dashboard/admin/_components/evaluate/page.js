@@ -171,25 +171,54 @@ function TaskPreview({ day, data }) {
 
 /* ── Single student evaluation row ── */
 function EvalRow({ student, day, maxMarks, onSave }) {
-  const [expanded, setExpanded]   = useState(false);
-  const [editMark, setEditMark]   = useState(student.dayMark ?? 0);
-  const [saving, setSaving]       = useState(false);
-  const [saved, setSaved]         = useState(student.evaluated);
+  const [expanded, setExpanded] = useState(false);
+  const [editMark, setEditMark] = useState(String(student.dayMark ?? 0));
+  const [saving, setSaving]     = useState(false);
+  const [saved, setSaved]       = useState(student.evaluated);
+
+  // Validate: numeric, 0–maxMarks, max 1 decimal place
+  const numVal  = parseFloat(editMark);
+  const isValid =
+    editMark !== '' &&
+    !isNaN(numVal) &&
+    numVal >= 0 &&
+    numVal <= maxMarks &&
+    /^\d+(\.\d)?$/.test(editMark); // 0–1 decimal only
+
+  const handleChange = (e) => {
+    let raw = e.target.value;
+
+    // Strip any character that isn't a digit or single dot
+    raw = raw.replace(/[^0-9.]/g, '');
+
+    // Allow only one decimal point
+    const parts = raw.split('.');
+    if (parts.length > 2) raw = parts[0] + '.' + parts.slice(1).join('');
+
+    // Allow at most 1 decimal digit
+    if (parts[1]?.length > 1) raw = parts[0] + '.' + parts[1][0];
+
+    // Don't allow value > maxMarks (clamp silently)
+    if (raw !== '' && parseFloat(raw) > maxMarks) raw = String(maxMarks);
+
+    setEditMark(raw);
+    setSaved(false);
+  };
 
   const handleSave = async () => {
-    const val = Number(editMark);
-    if (isNaN(val) || val < 0 || val > maxMarks) {
-      toast.error(`Marks must be between 0 and ${maxMarks}`);
+    if (!isValid) {
+      toast.error(`Enter a value between 0 and ${maxMarks} (max 1 decimal place)`);
       return;
     }
     setSaving(true);
-    const ok = await onSave(student.username, val);
+    const ok = await onSave(student.username, numVal);
     setSaving(false);
     if (ok) setSaved(true);
   };
 
-  const pct = maxMarks > 0 ? Math.round((Number(editMark) / maxMarks) * 100) : 0;
+  const pct      = maxMarks > 0 ? Math.round((Math.min(numVal || 0, maxMarks) / maxMarks) * 100) : 0;
   const barColor = pct >= 80 ? '#014a01' : pct >= 50 ? '#e65100' : '#c62828';
+  const inputErr = editMark !== '' && !isValid;
 
   return (
     <div className={`ev-row ${saved ? 'ev-row-done' : ''}`}>
@@ -204,17 +233,19 @@ function EvalRow({ student, day, maxMarks, onSave }) {
         <div className="ev-row-right">
           {saved && <span className="ev-done-badge"><FaCheckCircle /> Evaluated</span>}
           <div className="ev-marks-group" onClick={e => e.stopPropagation()}>
-            <input
-              type="number"
-              min={0}
-              max={maxMarks}
-              step={0.5}
-              className="ev-marks-input"
-              value={editMark}
-              onChange={e => { setEditMark(e.target.value); setSaved(false); }}
-            />
+            <div className="ev-input-wrap" title={inputErr ? `Must be 0 – ${maxMarks}, max 1 decimal` : ''}>
+              <input
+                type="text"
+                inputMode="decimal"
+                className={`ev-marks-input ${inputErr ? 'ev-input-error' : ''}`}
+                value={editMark}
+                onChange={handleChange}
+                placeholder="0"
+              />
+              {inputErr && <span className="ev-input-err-icon" title={`Must be 0 – ${maxMarks}`}>!</span>}
+            </div>
             <span className="ev-marks-max">/ {maxMarks}</span>
-            <button className="ev-save-btn" onClick={handleSave} disabled={saving}>
+            <button className="ev-save-btn" onClick={handleSave} disabled={saving || !isValid}>
               {saving ? <span className="ev-spinner" /> : <FaSave />}
             </button>
           </div>
@@ -223,6 +254,13 @@ function EvalRow({ student, day, maxMarks, onSave }) {
           </button>
         </div>
       </div>
+
+      {/* Validation error message */}
+      {inputErr && (
+        <div className="ev-err-msg">
+          ⚠ Value must be between 0 and {maxMarks} with at most 1 decimal place (e.g. 7.5)
+        </div>
+      )}
 
       {/* Progress bar */}
       <div className="ev-progress-bar-wrap">

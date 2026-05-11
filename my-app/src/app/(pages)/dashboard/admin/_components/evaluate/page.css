@@ -239,6 +239,40 @@
   transition: border-color 0.2s;
 }
 .ev-marks-input:focus { border-color: #014a01; }
+.ev-marks-input.ev-input-error {
+  border-color: #c62828;
+  background: #fff5f5;
+  color: #c62828;
+}
+.ev-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.ev-input-err-icon {
+  position: absolute;
+  right: -18px;
+  width: 16px;
+  height: 16px;
+  background: #c62828;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 900;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: help;
+}
+.ev-err-msg {
+  font-size: 0.75rem;
+  color: #c62828;
+  background: #fff5f5;
+  border-left: 3px solid #c62828;
+  padding: 5px 14px;
+  margin: 0 18px 6px;
+  border-radius: 0 5px 5px 0;
+}
 .ev-marks-max { font-size: 0.85rem; color: #888; white-space: nowrap; }
 .ev-save-btn {
   width: 34px;
