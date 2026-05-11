@@ -135,27 +135,28 @@
   flex-shrink: 0;
 }
 
-.confirm-btn {
+.inline-edit-wrap .confirm-btn {
   background: rgb(151,0,3);
   color: #fff;
 }
 
-.confirm-btn:hover:not(:disabled) {
+.inline-edit-wrap .confirm-btn:hover:not(:disabled) {
   background: rgb(120,0,2);
 }
 
-.confirm-btn:disabled {
+.inline-edit-wrap .confirm-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-.cancel-btn {
-  background: #e0e0e0;
-  color: #555;
+.inline-edit-wrap .cancel-btn {
+  background: #6c757d;
+  color: #fff;
+  border: none;
 }
 
-.cancel-btn:hover {
-  background: #bdbdbd;
+.inline-edit-wrap .cancel-btn:hover {
+  background: #495057;
 }
 
 /* ── Mini spinner inside save button ── */
