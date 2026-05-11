@@ -146,6 +146,16 @@ export async function POST(request) {
                 );
             } catch (e) { console.warn('marks table missing or error:', e.message); }
 
+            // Get admin-evaluated daily task marks (safe fallback)
+            let dailyMarksRow = null;
+            try {
+                const [dmRows] = await db.execute(
+                    'SELECT day1, day2, day3, day4, day5, day6, day7 FROM dailyMarks WHERE username = ?',
+                    [username]
+                );
+                dailyMarksRow = dmRows[0] || null;
+            } catch (e) { console.warn('dailyMarks table missing or error:', e.message); }
+
             // Check if student is registered in sstudents (safe fallback if table missing)
             let sstudentRows = [[]];
             try {
@@ -335,7 +345,17 @@ export async function POST(request) {
                     messages: sstudentMessages
                 } : null,
                 certificate: certificate ? { exists: true, uid: certificate.uid } : { exists: false },
-                slotEnabled
+                slotEnabled,
+                dailyMarks: dailyMarksRow ? {
+                    d1: Number(dailyMarksRow.day1) || 0,
+                    d2: Number(dailyMarksRow.day2) || 0,
+                    d3: Number(dailyMarksRow.day3) || 0,
+                    d4: Number(dailyMarksRow.day4) || 0,
+                    d5: Number(dailyMarksRow.day5) || 0,
+                    d6: Number(dailyMarksRow.day6) || 0,
+                    d7: Number(dailyMarksRow.day7) || 0,
+                    total: [1,2,3,4,5,6,7].reduce((s, i) => s + (Number(dailyMarksRow[`day${i}`]) || 0), 0),
+                } : null,
             };
 
             return NextResponse.json({

@@ -150,6 +150,7 @@ export default function Students() {
   const [filters, setFilters] = useState({
     domain: '', slot: '', mode: '', search: '',
     gender: '', fieldOfInterest: '', accommodation: '', transportation: '',
+    taskDay: '', taskStatus: '',
   });
   const [pagination, setPagination] = useState({
     currentPage: 1, totalPages: 1, totalItems: 0, limit: 30, pendingPage: null,
@@ -183,6 +184,8 @@ export default function Students() {
         ...(filters.fieldOfInterest && { fieldOfInterest: filters.fieldOfInterest }),
         ...(filters.accommodation   && { accommodation:   filters.accommodation }),
         ...(filters.transportation  && { transportation:  filters.transportation }),
+        ...(filters.taskDay         && { taskDay:         filters.taskDay }),
+        ...(filters.taskDay && filters.taskStatus && { taskStatus: filters.taskStatus }),
       });
       const res = await fetch(`/api/dashboard/admin/students?${queryParams}`, { credentials: 'include' });
       if (!res.ok) throw new Error('Failed to fetch students');
@@ -203,7 +206,8 @@ export default function Students() {
   }, [
     filters.search, filters.domain, filters.slot, filters.mode,
     filters.gender, filters.fieldOfInterest, filters.accommodation,
-    filters.transportation, pagination.currentPage, pagination.limit,
+    filters.transportation, filters.taskDay, filters.taskStatus,
+    pagination.currentPage, pagination.limit,
   ]);
 
   useEffect(() => {
@@ -322,6 +326,8 @@ export default function Students() {
         ...(filters.fieldOfInterest && { fieldOfInterest: filters.fieldOfInterest }),
         ...(filters.accommodation   && { accommodation:   filters.accommodation }),
         ...(filters.transportation  && { transportation:  filters.transportation }),
+        ...(filters.taskDay         && { taskDay:         filters.taskDay }),
+        ...(filters.taskDay && filters.taskStatus && { taskStatus: filters.taskStatus }),
       });
       const res = await fetch(`/api/dashboard/admin/students/download?${queryParams}`, { credentials: 'include' });
       if (!res.ok) throw new Error('Failed to download data');
@@ -446,6 +452,38 @@ export default function Students() {
               <option value="">All</option>
               <option value="Yes">Yes</option>
               <option value="No">No</option>
+            </select>
+          </div>
+          {/* ── Task Day filter ── */}
+          <div className="filter-group">
+            <label htmlFor="taskDay">📋 Task Day</label>
+            <select
+              id="taskDay"
+              value={filters.taskDay}
+              onChange={e => {
+                handleFilterChange('taskDay', e.target.value);
+                if (!e.target.value) handleFilterChange('taskStatus', '');
+              }}
+            >
+              <option value="">All Days</option>
+              {[1,2,3,4,5,6,7].map(d => (
+                <option key={d} value={String(d)}>Day {d}</option>
+              ))}
+            </select>
+          </div>
+          {/* ── Task Status filter (only active when a day is selected) ── */}
+          <div className="filter-group">
+            <label htmlFor="taskStatus" style={{ color: filters.taskDay ? 'inherit' : '#aaa' }}>📊 Task Status</label>
+            <select
+              id="taskStatus"
+              value={filters.taskStatus}
+              disabled={!filters.taskDay}
+              onChange={e => handleFilterChange('taskStatus', e.target.value)}
+              style={{ opacity: filters.taskDay ? 1 : 0.5, cursor: filters.taskDay ? 'pointer' : 'not-allowed' }}
+            >
+              <option value="">All Students</option>
+              <option value="submitted">✅ Submitted</option>
+              <option value="not_submitted">❌ Not Submitted</option>
             </select>
           </div>
         </div>

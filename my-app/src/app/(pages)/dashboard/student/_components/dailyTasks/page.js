@@ -362,7 +362,7 @@ export default function DailyTasks({ studentData, onSectionChange }) {
       });
       const json = await res.json();
       if (json.success) {
-        setSaved(prev => ({ ...prev, [activeDay]: { data } }));
+        setSaved(prev => ({ ...prev, [activeDay]: { data, submittedAt: new Date().toISOString() } }));
         setDraft(prev => { const n = { ...prev }; delete n[activeDay]; return n; });
         setMsg('✓ Saved successfully!'); setMsgType('ok');
       } else { setMsg(json.error || 'Save failed'); setMsgType('err'); }

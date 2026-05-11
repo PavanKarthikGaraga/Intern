@@ -120,13 +120,6 @@ export default function StudentDashboard() {
             <FaClipboardList className="sidebar-icon" />
             <span className="item-label">Evaluation Plan</span>
           </button>
-          {hasMentor && (
-            <button className={`sidebar-item ${activeSection === 'lead' ? 'active' : ''}`}
-              onClick={() => handleSectionClick('lead')}>
-              <FaUserTie className="sidebar-icon" />
-              <span className="item-label">My Mentor</span>
-            </button>
-          )}
           <button className={`sidebar-item ${activeSection === 'change-password' ? 'active' : ''}`}
             onClick={() => handleSectionClick('change-password')}>
             <FaLock className="sidebar-icon" />

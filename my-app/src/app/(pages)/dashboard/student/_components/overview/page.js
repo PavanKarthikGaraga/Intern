@@ -119,17 +119,19 @@ export default function Overview({ user, studentData }) {
   //   router.push('/dashboard/student/problemStatement');
   // };
 
-  const m = studentData.marks || {};
+  const dm = studentData.dailyMarks || {};
   const evalComponents = [
-    { label: 'Problem Understanding', score: m.d1 || 0, max: 10, weight: '10%' },
-    { label: 'Survey Execution',     score: m.survey || 0, max: 15, weight: '15%' },
-    { label: 'Data Analysis',        score: m.d5 || 0, max: 15, weight: '15%' },
-    { label: 'Intervention Activity', score: m.d6 || 0, max: 20, weight: '20%' },
-    { label: 'Case Study Report',    score: m.d7 || 0, max: 20, weight: '20%' },
-    { label: 'Final Presentation',   score: m.finalPresentation || 0, max: 20, weight: '20%' },
+    { label: 'Day 1 — Problem Understanding', score: dm.d1 ?? null, max: 10  },
+    { label: 'Day 2 — Survey (Stakeholder 1)', score: dm.d2 ?? null, max: 5   },
+    { label: 'Day 3 — Survey (Stakeholder 2)', score: dm.d3 ?? null, max: 5   },
+    { label: 'Day 4 — Survey (Stakeholder 3)', score: dm.d4 ?? null, max: 5   },
+    { label: 'Day 5 — Data Analysis',          score: dm.d5 ?? null, max: 15  },
+    { label: 'Day 6 — Intervention Activity',  score: dm.d6 ?? null, max: 20  },
+    { label: 'Day 7 — Case Study & Presentation', score: dm.d7 ?? null, max: 40 },
   ];
 
-  const totalMarks = evalComponents.reduce((acc, c) => acc + Number(c.score), 0);
+  const totalMarks = evalComponents.reduce((acc, c) => acc + (c.score !== null ? Number(c.score) : 0), 0);
+  const hasAnyMarks = evalComponents.some(c => c.score !== null && c.score > 0);
 
   // Helper to calculate grade from marks
   const getGrade = (marks) => {
@@ -441,50 +443,65 @@ export default function Overview({ user, studentData }) {
           )}
         </div>
       )}
-      
+
       <div className="stats-grid">
         <div className="stat-card" style={{ gridColumn: '1 / -1', background: '#fff', border: '2px solid #014a01', padding: '24px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
           <div style={{ padding: '0' }}>
             <h3 style={{ color: '#014a01', fontSize: '1.2rem', marginBottom: '20px', borderBottom: '2px solid #e8f5e9', paddingBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '700' }}>
-              <TrophyOutlined /> Performance Overview (100 Marks Rubric)
+              <TrophyOutlined /> Performance Overview (100 Marks)
             </h3>
             
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
-              {evalComponents.map((c, idx) => (
-                <div key={idx} style={{ background: '#f9f9f9', padding: '15px', borderRadius: '10px', border: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <p style={{ margin: 0, fontSize: '0.85rem', color: '#666', fontWeight: '600' }}>{c.label}</p>
-                    <p style={{ margin: '4px 0 0', fontSize: '0.75rem', color: '#999' }}>Weightage: {c.weight}</p>
+              {evalComponents.map((c, idx) => {
+                const isEvaluated = c.score !== null;
+                const pct = isEvaluated ? Math.round((Number(c.score) / c.max) * 100) : 0;
+                const barColor = pct >= 80 ? '#014a01' : pct >= 50 ? '#e65100' : '#c62828';
+                return (
+                  <div key={idx} style={{ background: '#f9f9f9', padding: '15px', borderRadius: '10px', border: `1px solid ${isEvaluated ? '#e0e0e0' : '#ffe082'}`, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <p style={{ margin: 0, fontSize: '0.85rem', color: '#444', fontWeight: '600' }}>{c.label}</p>
+                      <div style={{ textAlign: 'right' }}>
+                        {isEvaluated ? (
+                          <>
+                            <span style={{ fontSize: '1.3rem', fontWeight: '800', color: '#014a01' }}>{c.score}</span>
+                            <span style={{ fontSize: '0.85rem', color: '#888' }}> / {c.max}</span>
+                          </>
+                        ) : (
+                          <span style={{ fontSize: '0.78rem', background: '#fff8e1', color: '#e65100', padding: '2px 8px', borderRadius: 12, fontWeight: 600, border: '1px solid #ffe082' }}>Pending</span>
+                        )}
+                      </div>
+                    </div>
+                    {isEvaluated && (
+                      <div style={{ height: 5, background: '#e8f5e9', borderRadius: 3, overflow: 'hidden' }}>
+                        <div style={{ width: `${pct}%`, height: '100%', background: barColor, borderRadius: 3 }} />
+                      </div>
+                    )}
                   </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <span style={{ fontSize: '1.4rem', fontWeight: '800', color: '#014a01' }}>{c.score}</span>
-                    <span style={{ fontSize: '0.9rem', color: '#888' }}> / {c.max}</span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '2px dashed #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '40px' }}>
-                {(m.completed === 'P' || m.completed === 1) ? (
+                {hasAnyMarks ? (
                   <>
                     <div>
                       <p style={{ margin: 0, fontSize: '0.9rem', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>Total Score</p>
                       <p style={{ margin: 0, fontSize: '2.5rem', fontWeight: '900', color: '#014a01' }}>{Math.round(totalMarks)}<span style={{ fontSize: '1.2rem', color: '#888', fontWeight: '400' }}> / 100</span></p>
                     </div>
                     <div>
-                      <p style={{ margin: 0, fontSize: '0.9rem', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>Final Grade</p>
-                      <p style={{ margin: 0, fontSize: '2.5rem', fontWeight: '900', color: totalMarks >= 50 ? '#014a01' : '#970003' }}>{getGrade(totalMarks)}</p>
+                      <p style={{ margin: 0, fontSize: '0.9rem', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>Grade</p>
+                      <p style={{ margin: 0, fontSize: '2.5rem', fontWeight: '900', color: totalMarks >= 60 ? '#014a01' : '#970003' }}>{getGrade(totalMarks)}</p>
                     </div>
                   </>
                 ) : (
                   <div>
                     <p style={{ margin: 0, fontSize: '0.9rem', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>Overall Status</p>
-                    <p style={{ margin: 0, fontSize: '1.2rem', fontWeight: '700', color: '#e65100', marginTop: '4px' }}>Evaluation Pending</p>
+                    <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: '700', color: '#e65100', marginTop: '4px' }}>Evaluation Pending — Marks will appear here once evaluated by admin.</p>
                   </div>
                 )}
               </div>
-              
+
               {eligibleSlot && (
                 <div style={{ background: '#fff8e1', padding: '15px 20px', borderRadius: '10px', border: '1px solid #ffe082', maxWidth: '350px' }}>
                   <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: '700', color: '#e65100' }}>Slot Registration Available!</p>
@@ -495,7 +512,9 @@ export default function Overview({ user, studentData }) {
             </div>
           </div>
         </div>
+      </div>
 
+      <div className="stats-grid">
         {studentData.certificate?.exists && (
           <div className="stat-card certificate-download-card">
             <div className="stat-content">
@@ -509,19 +528,9 @@ export default function Overview({ user, studentData }) {
                     <p style={{ fontSize: '0.9rem', marginTop: '8px' }}>
                       Please submit your problem statement to download your certificate.
                     </p>
-                    <button 
-                      type="primary"
-                      // onClick={handleProblemStatement}
-                      style={{
-                        outline:'none',
-                        border:'none',
-                        padding:'8px 16px',
-                        borderRadius:'4px',
-                        cursor:'pointer',
-                        fontWeight:'700',
-                        fontSize:'1rem',
-                        backgroundColor: '#1890ff'
-                      }}
+                    <button
+                      type="button"
+                      style={{ outline:'none', border:'none', padding:'8px 16px', borderRadius:'4px', cursor:'pointer', fontWeight:'700', fontSize:'1rem', backgroundColor: '#1890ff', color: '#fff' }}
                     >
                       Submit Problem Statement
                     </button>
@@ -529,22 +538,13 @@ export default function Overview({ user, studentData }) {
                 ) : (
                   <div>
                     <p style={{ fontSize: '1rem' }}>
-                      Your certificate is ready! Please download and print a <span style={{color:'#d4380d', fontWeight:'bold'}}>color copy</span>, 
+                      Your certificate is ready! Please download and print a <span style={{color:'#d4380d', fontWeight:'bold'}}>color copy</span>,
                       get it signed by the Director SAC, and store it safely.
                     </p>
                     <button
-                      type="primary"
+                      type="button"
                       onClick={handleDownloadCertificate}
-                      style={{
-                        outline:'none',
-                        border:'none',
-                        padding:'8px 16px',
-                        borderRadius:'4px',
-                        cursor:'pointer',
-                        fontWeight:'700',
-                        fontSize:'1rem',
-                        backgroundColor: '#1890ff'
-                      }}
+                      style={{ outline:'none', border:'none', padding:'8px 16px', borderRadius:'4px', cursor:'pointer', fontWeight:'700', fontSize:'1rem', backgroundColor: '#1890ff', color: '#fff' }}
                     >
                       Download Certificate
                     </button>
@@ -555,7 +555,6 @@ export default function Overview({ user, studentData }) {
           </div>
         )}
       </div>
-       
 
       <Modal
         title={`Slot ${selectedSlot} Registration Rules`}

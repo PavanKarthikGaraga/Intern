@@ -55,6 +55,8 @@ export async function GET(req) {
     const accommodation = searchParams.get('accommodation');
     const transportation = searchParams.get('transportation');
     const season = searchParams.get('season') || '2026';
+    const taskDay = searchParams.get('taskDay');       // '1'–'7'
+    const taskStatus = searchParams.get('taskStatus'); // 'submitted' | 'not_submitted'
     const itemsPerPage = 30;
     const offset = (page - 1) * itemsPerPage;
 
@@ -98,15 +100,34 @@ export async function GET(req) {
       params.push(season);
     }
 
+    // ── Task day/status filter ──
+    // Build the JOIN clause and extra condition based on taskDay + taskStatus
+    let taskJoin = '';
+    let taskParams = []; // separate params for the JOIN ON clause
+    if (taskDay && taskStatus === 'submitted') {
+      // Only students who HAVE a dailyTasks row for this day
+      taskJoin = 'INNER JOIN dailyTasks dt ON r.username = dt.username AND dt.day = ?';
+      taskParams.push(taskDay);
+    } else if (taskDay && taskStatus === 'not_submitted') {
+      // Students who do NOT have a dailyTasks row for this day
+      taskJoin = 'LEFT JOIN dailyTasks dt ON r.username = dt.username AND dt.day = ?';
+      taskParams.push(taskDay);
+      conditions.push('dt.username IS NULL');
+    }
+
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    // Merge taskParams before regular conditions params (JOIN ON comes before WHERE)
+    const allParams = [...taskParams, ...params];
 
     const countQuery = `
       SELECT COUNT(*) as total
       FROM registrations r
+      ${taskJoin}
       ${whereClause}
     `;
 
-    const [countResult] = await pool.query(countQuery, params);
+    const [countResult] = await pool.query(countQuery, allParams);
     const totalItems = countResult[0].total;
     const totalPages = Math.ceil(totalItems / itemsPerPage);
 
@@ -123,8 +144,10 @@ export async function GET(req) {
         f.completed,
         sl.name as leadName,
         fm.name as facultyName,
-        r.updatedAt
+        r.updatedAt,
+        dt.submittedAt as taskSubmittedAt
       FROM registrations r
+      ${taskJoin}
       LEFT JOIN final f ON r.username = f.username
       LEFT JOIN studentLeads sl ON r.studentLeadId = sl.username
       LEFT JOIN facultyMentors fm ON r.facultyMentorId = fm.username
@@ -133,7 +156,7 @@ export async function GET(req) {
       LIMIT ? OFFSET ?
     `;
 
-    const [students] = await pool.query(studentsQuery, [...params, itemsPerPage, offset]);
+    const [students] = await pool.query(studentsQuery, [...allParams, itemsPerPage, offset]);
 
     return NextResponse.json({
       success: true,

@@ -31,6 +31,7 @@ import SlotControl from './_components/slotControl/page';
 import RegistrationControl from './_components/registrationControl/page';
 import VideoDump from './_components/videoDump/page';
 import Announcements from './_components/announcements/page';
+import Evaluate from './_components/evaluate/page';
 
 
 export default function AdminDashboard() {
@@ -273,6 +274,13 @@ export default function AdminDashboard() {
           </button>
 
           <button
+            className={`sidebar-item ${activeSection === 'evaluate' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('evaluate')}
+          >
+            <span className="item-label">⭐ Evaluate</span>
+          </button>
+
+          <button
             className={`sidebar-item ${activeSection === 'daily-tasks' ? 'active' : ''}`}
             onClick={() => handleSectionClick('daily-tasks')}
           >
@@ -384,6 +392,7 @@ export default function AdminDashboard() {
            activeSection === 'registration-control' ? <RegistrationControl /> :
            activeSection === 'daily-tasks' ? <DailyTasksViewer /> :
            activeSection === 'task-unlocker' ? <TaskUnlocker /> :
+           activeSection === 'evaluate' ? <Evaluate /> :
            <ChangePassword />}
         </main>
       </div>
