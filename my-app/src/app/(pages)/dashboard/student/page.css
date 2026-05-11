@@ -1362,6 +1362,27 @@
   font-size: 18px;
 }
 
+.non-editable-notice {
+  margin-top: 20px;
+  padding: 10px 15px;
+  background-color: #fff9c4;
+  border-left: 4px solid #fbc02d;
+  color: #333;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  border-radius: 4px;
+}
+
+.non-editable-notice a {
+  color: rgb(151, 0, 3);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.non-editable-notice a:hover {
+  text-decoration: none;
+}
+
 @media (max-width: 768px) {
   .profile-tabs {
     flex-direction: column;

@@ -282,4 +282,81 @@ export async function DELETE(request) {
       { status: 500 }
     );
   }
-} 
+}
+export async function PATCH(request) {
+  try {
+    const cookieStore = await cookies();
+    const accessToken = await cookieStore.get('accessToken');
+
+    if (!accessToken?.value) {
+      return NextResponse.json({
+        success: false,
+        error: 'Authentication required. Please login again.',
+      }, { status: 401 });
+    }
+
+    const decoded = await verifyAccessToken(accessToken.value);
+    if (!decoded || decoded.role !== 'admin') {
+      return NextResponse.json({
+        success: false,
+        error: 'Access denied. Only admin members can perform this action.',
+      }, { status: 403 });
+    }
+
+    const { username, mode, slot } = await request.json();
+
+    if (!username) {
+      return NextResponse.json({ success: false, error: 'Username is required' }, { status: 400 });
+    }
+
+    const VALID_MODES = ['Remote', 'Incampus', 'InVillage'];
+    const VALID_SLOTS = ['1','2','3','4','5','6','7','8','9'];
+
+    if (mode && !VALID_MODES.includes(mode)) {
+      return NextResponse.json({ success: false, error: 'Invalid mode value' }, { status: 400 });
+    }
+    if (slot && !VALID_SLOTS.includes(String(slot))) {
+      return NextResponse.json({ success: false, error: 'Invalid slot value' }, { status: 400 });
+    }
+
+    const setClauses = [];
+    const params = [];
+
+    if (mode) { setClauses.push('mode = ?'); params.push(mode); }
+    if (slot) { setClauses.push('slot = ?'); params.push(String(slot)); }
+
+    if (setClauses.length === 0) {
+      return NextResponse.json({ success: false, error: 'Nothing to update' }, { status: 400 });
+    }
+
+    params.push(username);
+
+    const connection = await pool.getConnection();
+    try {
+      const [result] = await connection.query(
+        `UPDATE registrations SET ${setClauses.join(', ')} WHERE username = ?`,
+        params
+      );
+
+      if (result.affectedRows === 0) {
+        return NextResponse.json({ success: false, error: 'Student not found' }, { status: 404 });
+      }
+
+      logActivity({
+        action: 'ADMIN_UPDATE_STUDENT_MODE_SLOT',
+        actorUsername: decoded.username,
+        actorName: decoded.name,
+        actorRole: 'admin',
+        targetUsername: username,
+        details: { mode, slot },
+      }).catch(() => {});
+
+      return NextResponse.json({ success: true, message: 'Student updated successfully', mode, slot });
+    } finally {
+      connection.release();
+    }
+  } catch (error) {
+    console.error('Error in PATCH student API:', error);
+    return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
+  }
+}

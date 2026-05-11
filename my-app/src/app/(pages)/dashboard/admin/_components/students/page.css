@@ -5,6 +5,172 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+/* ── Inline-edit notice banner ── */
+.inline-edit-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 13px;
+  color: #5d4037;
+  margin-bottom: 12px;
+}
+
+/* ── Total students badge ── */
+.total-students-badge {
+  background: rgb(151,0,3);
+  color: #fff;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ── Editable column header hint ── */
+.editable-col-hint {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 12px;
+  color: rgb(151,0,3);
+  opacity: 0.7;
+}
+
+/* ── Mono ID ── */
+.mono-id {
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 13px;
+  color: #555;
+}
+
+/* ── Editable cell (view state) ── */
+.editable-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 3px 6px;
+  transition: background 0.15s ease;
+}
+
+.editable-cell:hover {
+  background: #f0f0f0;
+}
+
+.edit-hint-icon {
+  font-size: 11px;
+  color: #aaa;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.editable-cell:hover .edit-hint-icon {
+  opacity: 1;
+  color: rgb(151,0,3);
+}
+
+/* ── Mode badge ── */
+.mode-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ── Slot badge ── */
+.slot-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #ede7f6;
+  color: #4527a0;
+  white-space: nowrap;
+}
+
+/* ── Inline edit row (edit state) ── */
+.inline-edit-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.inline-select {
+  padding: 4px 8px;
+  border: 1.5px solid rgb(151,0,3);
+  border-radius: 5px;
+  font-size: 13px;
+  color: #333;
+  background: #fff;
+  cursor: pointer;
+  outline: none;
+  min-width: 110px;
+}
+
+.inline-select.slot-select {
+  min-width: 175px;
+}
+
+.inline-select:focus {
+  box-shadow: 0 0 0 2px rgba(151,0,3,0.15);
+}
+
+.inline-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+
+.confirm-btn {
+  background: rgb(151,0,3);
+  color: #fff;
+}
+
+.confirm-btn:hover:not(:disabled) {
+  background: rgb(120,0,2);
+}
+
+.confirm-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cancel-btn {
+  background: #e0e0e0;
+  color: #555;
+}
+
+.cancel-btn:hover {
+  background: #bdbdbd;
+}
+
+/* ── Mini spinner inside save button ── */
+.mini-spinner {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+
+
 .section-header {
   display: flex;
   justify-content: space-between;

@@ -79,14 +79,15 @@ export async function PUT(request) {
 
         try {
             // Full update allowed on first and only edit
+            // Removed mode, slot, and batch from update as they are read-only
             await db.execute(`
                 UPDATE registrations 
                 SET name = ?, gender = ?, branch = ?, email = ?, phoneNumber = ?, 
                     district = ?, state = ?, country = ?, pincode = ?, 
                     residenceType = ?, hostelName = ?, busRoute = ?, 
                     accommodation = ?, transportation = ?, 
-                    selectedDomain = ?, fieldOfInterest = ?, mode = ?, slot = ?, 
-                    year = ?, batch = ?, careerChoice = ?,
+                    selectedDomain = ?, fieldOfInterest = ?,
+                    year = ?, careerChoice = ?,
                     profileEdited = profileEdited + 1
                 WHERE username = ?
             `, [
@@ -96,8 +97,8 @@ export async function PUT(request) {
                 busRoute || null,
                 accommodation || null,
                 transportation || null,
-                selectedDomain, fieldOfInterest, mode, slot,
-                year, batch, careerChoice,
+                selectedDomain, fieldOfInterest,
+                year, careerChoice,
                 username
             ]);
 
@@ -114,8 +115,6 @@ export async function PUT(request) {
                 details: { 
                     editedFields: true,
                     domain: selectedDomain,
-                    mode: mode,
-                    slot: slot
                 }
             }).catch(() => {});
 

@@ -297,6 +297,9 @@ export default function Profile({ user, studentData: initialStudentData }) {
               <ViewField label="Batch" value={studentData.batch} />
 
             </div>
+            <p className="non-editable-notice">
+              * Mode, Slot, and Batch are non-editable fields. Please contact <a href="mailto:director_sac@kluniversity.in">director_sac@kluniversity.in</a> with valid reasons if you have any issues.
+            </p>
           </div>
         )}
 
@@ -468,27 +471,11 @@ export default function Profile({ user, studentData: initialStudentData }) {
                 <ViewField label="Field of Interest" value={studentData.fieldOfInterest} />
               )}
 
-              {/* Mode */}
-              {isEditing ? (
-                <EditSelect label="Internship Mode" name="mode" value={formData.mode} onChange={handleChange}>
-                  <option value="Remote">Remote</option>
-                  <option value="Incampus">In Campus</option>
-                  <option value="InVillage">In Village</option>
-                </EditSelect>
-              ) : (
-                <ViewField label="Internship Mode" value={studentData.mode} />
-              )}
+              {/* Mode — always read-only */}
+              <ViewField label="Internship Mode" value={studentData.mode} />
 
-              {/* Slot */}
-              {isEditing ? (
-                <EditSelect label="Slot" name="slot" value={formData.slot} onChange={handleChange}>
-                  {Object.entries(SLOT_LABELS).map(([v, l]) => (
-                    <option key={v} value={v}>{l}</option>
-                  ))}
-                </EditSelect>
-              ) : (
-                <ViewField label="Slot" value={SLOT_LABELS[String(studentData.slot)] || `Slot ${studentData.slot}`} />
-              )}
+              {/* Slot — always read-only */}
+              <ViewField label="Slot" value={SLOT_LABELS[String(studentData.slot)] || `Slot ${studentData.slot}`} />
 
               {/* Career Choice */}
               {isEditing ? (
@@ -508,6 +495,9 @@ export default function Profile({ user, studentData: initialStudentData }) {
               <ViewField label="Batch" value={studentData.batch} />
 
             </div>
+            <p className="non-editable-notice">
+              * Mode, Slot, and Batch are non-editable fields. Please contact <a href="mailto:director_sac@kluniversity.in">director_sac@kluniversity.in</a> with valid reasons if you have any issues.
+            </p>
           </div>
         )}
 
