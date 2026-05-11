@@ -125,19 +125,33 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 14px;
+  line-height: 1;
   transition: background 0.15s;
+  flex-shrink: 0;
+}
+
+/* Explicitly size SVG icons inside inline buttons */
+.inline-btn svg {
+  width: 13px !important;
+  height: 13px !important;
+  display: block;
   flex-shrink: 0;
 }
 
 .inline-edit-wrap .confirm-btn {
   background: rgb(151,0,3);
   color: #fff;
+}
+
+.inline-edit-wrap .confirm-btn svg {
+  color: #fff;
+  fill: #fff;
 }
 
 .inline-edit-wrap .confirm-btn:hover:not(:disabled) {
@@ -153,6 +167,15 @@
   background: #6c757d;
   color: #fff;
   border: none;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.inline-edit-wrap .cancel-btn svg {
+  color: #fff;
+  fill: #fff;
+  width: 13px !important;
+  height: 13px !important;
 }
 
 .inline-edit-wrap .cancel-btn:hover {

@@ -69,7 +69,7 @@ function ModeCell({ student, onSave }) {
           {saving ? <span className="mini-spinner" /> : <FaCheck />}
         </button>
         <button className="inline-btn cancel-btn" onClick={handleCancel} title="Cancel">
-          <FaTimes />
+          ✕
         </button>
       </div>
     );
@@ -125,7 +125,7 @@ function SlotCell({ student, onSave }) {
           {saving ? <span className="mini-spinner" /> : <FaCheck />}
         </button>
         <button className="inline-btn cancel-btn" onClick={handleCancel} title="Cancel">
-          <FaTimes />
+          ✕
         </button>
       </div>
     );
