@@ -59,7 +59,7 @@ function getDayStatus(dayNum, slot, saved, username, unlockedDays = [], slotEnab
   
   const { open, close } = dayWindow(slot, dayNum);
   const now = serverNow();   // ← server-authoritative IST time
-  const isSubmitted = saved[dayNum]?.data?.isFinal === true;
+  const isSubmitted = !!saved[dayNum] && saved[dayNum].data?.isFinal !== false;
   const isUnlocked = unlockedDays.includes(dayNum);
 
   if (isSubmitted) return 'submitted';
