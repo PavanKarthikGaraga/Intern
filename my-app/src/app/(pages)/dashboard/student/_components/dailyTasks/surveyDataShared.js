@@ -1196,7 +1196,7 @@ export const surveyData = {
     }
   ],
   // WOMEN EMPOWERMENT & GENDER EQUALITY
-  "Low Awareness of Women's Rights & Legal Protection": [
+  "Low Awareness of Women\u2019s Rights & Legal Protection": [
     { stakeholder: "Women", count: 8, questions: ["Are you aware of your legal rights? (Yes/No)","Do you know about women protection laws? (Yes/No)","Do you know where to report issues? (Yes/No)","Do you feel your rights are respected? (Yes/No)","Have you attended awareness programs? (Yes/No)","Do you feel confident to raise issues? (Yes/No)","Are support systems available? (Yes/No)","Do you believe awareness is low? (Yes/No)"] },
     { stakeholder: "Officials", count: 6, questions: ["Are awareness programs conducted? (Yes/No)","Is participation high? (Yes/No)","Are women aware of schemes? (Yes/No)","Are complaints increasing? (Yes/No)","Are systems accessible? (Yes/No)","Are improvements needed? (Yes/No)"] },
     { stakeholder: "NGOs", count: 6, questions: ["Are awareness drives conducted? (Yes/No)","Is awareness low? (Yes/No)","Are women participating? (Yes/No)","Are campaigns effective? (Yes/No)","Are challenges present? (Yes/No)","Are improvements visible? (Yes/No)"] }
@@ -1456,7 +1456,7 @@ export const surveyData = {
     { stakeholder: "Parents", count: 6, questions: ["Are you aware of your child's skills? (Yes/No)","Do you support skill development? (Yes/No)","Do you guide career choices? (Yes/No)","Are opportunities known? (Yes/No)","Are barriers present? (Yes/No)","Are improvements needed? (Yes/No)"] },
     { stakeholder: "Trainers", count: 6, questions: ["Are assessment programs conducted? (Yes/No)","Are students aware of skills? (Yes/No)","Are tools available? (Yes/No)","Are challenges present? (Yes/No)","Are improvements needed? (Yes/No)","Are outcomes effective? (Yes/No)"] }
   ],
-  "Skill-Career Mismatch": [
+  "Skill\u2013Career Mismatch": [
     { stakeholder: "Youth", count: 8, questions: ["Are your skills aligned with career goals? (Yes/No)","Do you know job requirements? (Yes/No)","Do you feel unprepared for jobs? (Yes/No)","Are training programs relevant? (Yes/No)","Do you face difficulty getting jobs? (Yes/No)","Are career options clear? (Yes/No)","Do you receive guidance? (Yes/No)","Is mismatch common? (Yes/No)"] },
     { stakeholder: "Employers", count: 6, questions: ["Are candidates skilled? (Yes/No)","Are skills industry-relevant? (Yes/No)","Do candidates need retraining? (Yes/No)","Are gaps present? (Yes/No)","Are improvements needed? (Yes/No)","Is demand unmet? (Yes/No)"] },
     { stakeholder: "Trainers", count: 6, questions: ["Are courses aligned with industry? (Yes/No)","Are updates frequent? (Yes/No)","Are students job-ready? (Yes/No)","Are challenges present? (Yes/No)","Are improvements needed? (Yes/No)","Are placements successful? (Yes/No)"] }
@@ -1955,7 +1955,7 @@ export const surveyData = {
     { stakeholder: "Officials", count: 6, questions: ["Are policies implemented? (Yes/No)","Is monitoring effective? (Yes/No)","Are violations penalized? (Yes/No)","Are programs active? (Yes/No)","Are systems digitized? (Yes/No)","Are improvements visible? (Yes/No)"] },
     { stakeholder: "Community Leaders", count: 6, questions: ["Are people aware of rules? (Yes/No)","Is community participation high? (Yes/No)","Are conflicts present? (Yes/No)","Are decisions transparent? (Yes/No)","Are issues reported? (Yes/No)","Are solutions discussed? (Yes/No)"] }
   ],
-  "Demand-Supply Gap in Water Resources": [
+  "Demand\u2013Supply Gap in Water Resources": [
     { stakeholder: "Households", count: 8, questions: ["Do you receive water daily? (Yes/No)","Is supply sufficient? (Yes/No)","Do you store water? (Yes/No)","Do you depend on tankers? (Yes/No)","Has supply reduced? (Yes/No)","Do you face summer shortage? (Yes/No)","Do you adjust usage? (Yes/No)","Do you pay extra for water? (Yes/No)"] },
     { stakeholder: "Panchayat", count: 7, questions: ["Does demand exceed supply? (Yes/No)","Are shortages seasonal? (Yes/No)","Are alternative sources available? (Yes/No)","Are tankers used? (Yes/No)","Is supply monitored? (Yes/No)","Are expansion plans available? (Yes/No)","Is data recorded? (Yes/No)"] },
     { stakeholder: "Officials", count: 6, questions: ["Is demand increasing? (Yes/No)","Are supply systems sufficient? (Yes/No)","Are projects ongoing? (Yes/No)","Is planning effective? (Yes/No)","Are shortages predicted? (Yes/No)","Are improvements planned? (Yes/No)"] }
