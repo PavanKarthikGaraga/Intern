@@ -63,7 +63,21 @@ function getDayStatus(dayNum, slot, saved, username, unlockedDays = [], slotEnab
   const s = saved[dayNum] || saved[String(dayNum)];
   const mark = dailyMarks[`d${dayNum}`];
   const isEvaluated = mark !== null && mark !== undefined && mark !== '';
-  const isSubmitted = isEvaluated || (!!s && (s.data?.isFinal === true || s.data?.isFinal === undefined));
+  
+  let isFinal = s?.data?.isFinal;
+  
+  // Recovery & Legacy Check: If it's marked as draft or legacy (undefined),
+  // but contains the core required fields, treat it as a final submission.
+  if (isFinal !== true && s?.data) {
+    const d = s.data;
+    // Day 1 used to only require inference before social links were added.
+    if (dayNum === 1) isFinal = !!d.inference;
+    else if ([2, 3, 4, 6, 7].includes(dayNum)) isFinal = !!d.driveLink;
+    else if (dayNum === 5) isFinal = !!(d.day2_topProblems || d.day3_topProblems || d.day4_topProblems);
+    else isFinal = false;
+  }
+  
+  const isSubmitted = isEvaluated || (!!s && isFinal === true);
   const isUnlocked = unlockedDays.includes(dayNum);
 
   if (isSubmitted) return 'submitted';
