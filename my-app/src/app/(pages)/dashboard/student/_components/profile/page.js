@@ -83,7 +83,7 @@ export default function Profile({ user, studentData: initialStudentData }) {
 
   /* Fetch domain list */
   useEffect(() => {
-    fetch('/api/dashboard/admin/domains')
+    fetch('/api/dashboard/student/domains')
       .then(r => r.json())
       .then(d => { if (d.success) setDomains(d.domains); })
       .catch(() => {});

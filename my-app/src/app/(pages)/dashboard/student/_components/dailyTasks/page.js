@@ -50,7 +50,7 @@ function dayLabel(slot, dayNum) {
 
 const DEMO_ID = '2500099999';
 
-function getDayStatus(dayNum, slot, saved, username, unlockedDays = [], slotEnabled = false) {
+function getDayStatus(dayNum, slot, saved, username, unlockedDays = [], slotEnabled = false, dailyMarks = {}) {
   // ── Demo bypass: all days open regardless of date ──
   if (username === DEMO_ID) {
     const s = saved[dayNum] || saved[String(dayNum)];
@@ -61,7 +61,9 @@ function getDayStatus(dayNum, slot, saved, username, unlockedDays = [], slotEnab
   const { open, close } = dayWindow(slot, dayNum);
   const now = serverNow();   // ← server-authoritative IST time
   const s = saved[dayNum] || saved[String(dayNum)];
-  const isSubmitted = !!s && (s.data?.isFinal === true || s.data?.isFinal === undefined);
+  const mark = dailyMarks[`d${dayNum}`];
+  const isEvaluated = mark !== null && mark !== undefined && mark !== '';
+  const isSubmitted = isEvaluated || (!!s && (s.data?.isFinal === true || s.data?.isFinal === undefined));
   const isUnlocked = unlockedDays.includes(dayNum);
 
   if (isSubmitted) return 'submitted';
@@ -69,7 +71,7 @@ function getDayStatus(dayNum, slot, saved, username, unlockedDays = [], slotEnab
 
   // Check previous days first to see if we should cascade lock
   if (dayNum > 1) {
-    const prevStatus = getDayStatus(dayNum - 1, slot, saved, username, unlockedDays, slotEnabled);
+    const prevStatus = getDayStatus(dayNum - 1, slot, saved, username, unlockedDays, slotEnabled, dailyMarks);
     if (prevStatus === 'missed' || prevStatus === 'locked') return 'locked';
   }
 
@@ -276,7 +278,7 @@ export default function DailyTasks({ studentData, onSectionChange }) {
         setUnlockedDays(unlocked);
         
         const firstOpen = [1,2,3,4,5,6,7].find(d => {
-          const st = getDayStatus(d, slot, tasks, username, unlocked, slotEnabled);
+          const st = getDayStatus(d, slot, tasks, username, unlocked, slotEnabled, dailyMarks);
           return st === 'open' || st === 'submitted' || st === 'unlocked' || st === 'preview';
         });
         setActiveDay(firstOpen || 1);
@@ -438,7 +440,7 @@ export default function DailyTasks({ studentData, onSectionChange }) {
 
   if (activeDay === null) return <div className="dt-wrap"><p style={{color:'#888'}}>Loading…</p></div>;
 
-  const statuses    = Object.fromEntries([1,2,3,4,5,6,7].map(d => [d, getDayStatus(d, slot, saved, username, unlockedDays, slotEnabled)]));
+  const statuses    = Object.fromEntries([1,2,3,4,5,6,7].map(d => [d, getDayStatus(d, slot, saved, username, unlockedDays, slotEnabled, dailyMarks)]));
   const meta        = DAY_META[activeDay - 1];
   const activeStatus = statuses[activeDay];
   const isSaved     = activeStatus === 'submitted' && !draft[activeDay];
