@@ -144,8 +144,8 @@ export async function GET(req) {
         f.completed,
         sl.name as leadName,
         fm.name as facultyName,
-        r.updatedAt,
-        dt.submittedAt as taskSubmittedAt
+        r.updatedAt
+        ${taskJoin ? ', dt.submittedAt as taskSubmittedAt' : ''}
       FROM registrations r
       ${taskJoin}
       LEFT JOIN final f ON r.username = f.username
