@@ -118,9 +118,11 @@ export async function GET(request) {
             if (dayNum === 5 && !(d.day2_topProblems || d.day3_topProblems || d.day4_topProblems)) isFinal = false;
           }
 
-          // Legacy recovery: only for old data that never had isFinal set (undefined)
-          // Never run for isFinal: false — those are explicit drafts
-          if (isFinal === undefined && d) {
+          // Legacy recovery:
+          // Day 1: isFinal !== true — recover old submissions saved as drafts with inference data
+          // Days 2/3/4: isFinal === undefined ONLY — never override explicit isFinal: false drafts
+          const legacyCondition = (dayNum === 1) ? (isFinal !== true) : (isFinal === undefined);
+          if (legacyCondition && d) {
             if (dayNum === 1 && d.inference) isFinal = true;
             else if (dayNum === 2 && d.driveLink && d.p1 && d.p2 && d.p3 && d.p4 && d.p5 && d.p6) isFinal = true;
             else if ((dayNum === 3 || dayNum === 4) && d.driveLink && d.p1 && d.p2 && d.p3) isFinal = true;

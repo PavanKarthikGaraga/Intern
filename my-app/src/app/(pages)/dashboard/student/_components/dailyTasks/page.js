@@ -93,10 +93,11 @@ function getDayStatus(dayNum, slot, saved, username, unlockedDays = [], slotEnab
     if (dayNum === 5 && !(d.day2_topProblems || d.day3_topProblems || d.day4_topProblems)) isFinal = false;
   }
 
-  // ── Legacy recovery: Only for truly OLD data that never had isFinal set ──
-  // IMPORTANT: only run when isFinal is undefined, NOT when it's explicitly false.
-  // This prevents drafts from being treated as submissions on page refresh.
-  if (isFinal === undefined && s?.data) {
+  // ── Legacy recovery ──
+  // For Day 1: use isFinal !== true to recover all old submissions that may have isFinal: false or undefined
+  // For Days 2/3/4: ONLY recover truly old data (isFinal === undefined) — never override explicit isFinal: false drafts
+  const legacyCondition = (dayNum === 1) ? (isFinal !== true) : (isFinal === undefined);
+  if (legacyCondition && s?.data) {
     const d = s.data;
     if (dayNum === 1 && d.inference) isFinal = true;
     else if (dayNum === 2 && d.driveLink && d.p1 && d.p2 && d.p3 && d.p4 && d.p5 && d.p6) isFinal = true;
