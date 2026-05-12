@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Image from 'next/image';
 import { surveyData as SURVEY } from './surveyDataShared';
 import { getTemplate } from './caseStudyTemplates';
@@ -270,7 +270,7 @@ export default function DailyTasks({ studentData, onSectionChange }) {
   const username = studentData?.username || null;
   const survey   = ps ? (SURVEY[ps] || null) : null;
   const DAY_META = getDaysMeta(studentData, survey);
-  const dailyMarks = studentData?.dailyMarks || {};
+  const dailyMarks = useMemo(() => studentData?.dailyMarks || {}, [studentData?.dailyMarks]);
 
   // Max marks per day (matches evaluation rubric)
   const DAY_MAX = { 1:10, 2:5, 3:5, 4:5, 5:15, 6:20, 7:40 };
