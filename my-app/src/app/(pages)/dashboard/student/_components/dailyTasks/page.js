@@ -53,13 +53,15 @@ const DEMO_ID = '2500099999';
 function getDayStatus(dayNum, slot, saved, username, unlockedDays = [], slotEnabled = false) {
   // ── Demo bypass: all days open regardless of date ──
   if (username === DEMO_ID) {
-    return saved[dayNum] ? 'submitted' : 'open';
+    const s = saved[dayNum] || saved[String(dayNum)];
+    return s ? 'submitted' : 'open';
   }
   if (!slot || !SLOT_START[slot]) return 'upcoming';
   
   const { open, close } = dayWindow(slot, dayNum);
   const now = serverNow();   // ← server-authoritative IST time
-  const isSubmitted = !!saved[dayNum] && saved[dayNum].data?.isFinal !== false;
+  const s = saved[dayNum] || saved[String(dayNum)];
+  const isSubmitted = !!s && s.data?.isFinal !== false;
   const isUnlocked = unlockedDays.includes(dayNum);
 
   if (isSubmitted) return 'submitted';
@@ -420,15 +422,7 @@ export default function DailyTasks({ studentData, onSectionChange }) {
     }
   }, [activeDay, latestDataRef, setSaved, setDraft, setMsg, setMsgType, survey, saved]);
 
-  // ── Debounced Auto-Save ──
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (Object.keys(draft).length > 0 && !saving) {
-        handleSave(true);
-      }
-    }, 3000); // Auto-save after 3 seconds of inactivity
-    return () => clearTimeout(timer);
-  }, [draft, saving, handleSave]);
+
 
   const handleSaveDraft = () => handleSave(true);
   const handleFinalSubmit = () => handleSave(false);
