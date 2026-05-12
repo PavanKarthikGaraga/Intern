@@ -75,7 +75,7 @@ export async function POST(req) {
     if (payload.role !== 'admin')
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-    const { username, day, unlock } = await req.json();
+    const { username, day, unlock, action } = await req.json();
     if (!username || !day) return NextResponse.json({ error: 'Username and day required' }, { status: 400 });
 
     const db = await pool.getConnection();
@@ -87,6 +87,17 @@ export async function POST(req) {
           PRIMARY KEY (username, day)
         )
       `);
+
+      // ── Allow Edit: reset isFinal and driveLink so student can re-submit ──
+      if (action === 'allowEdit') {
+        await db.query(`
+          UPDATE dailyTasks
+          SET data = JSON_SET(JSON_SET(data, '$.isFinal', false), '$.driveLink', NULL),
+              updatedAt = CURRENT_TIMESTAMP
+          WHERE username = ? AND day = ?
+        `, [username, day]);
+        return NextResponse.json({ success: true, action: 'allowEdit' });
+      }
 
       if (unlock) {
         await db.query('INSERT IGNORE INTO unlockedDays (username, day) VALUES (?, ?)', [username, day]);

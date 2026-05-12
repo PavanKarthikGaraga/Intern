@@ -2,12 +2,13 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import './page.css';
-import { FaSearch, FaUnlock, FaLock } from 'react-icons/fa';
+import { FaSearch, FaUnlock, FaLock, FaEdit } from 'react-icons/fa';
 
 export default function TaskUnlocker() {
   const [username, setUsername] = useState('');
   const [studentData, setStudentData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(null); // tracks which day is in-progress
   const [msg, setMsg] = useState('');
 
   const handleSearch = async (e) => {
@@ -31,6 +32,7 @@ export default function TaskUnlocker() {
   };
 
   const handleToggleUnlock = async (day, isUnlocked) => {
+    setActionLoading(day);
     try {
       const res = await fetch('/api/dashboard/admin/unlockedTasks', {
         method: 'POST',
@@ -40,7 +42,6 @@ export default function TaskUnlocker() {
       const data = await res.json();
       if (data.success) {
         toast.success(`Day ${day} ${!isUnlocked ? 'unlocked' : 'locked'} successfully`);
-        // Update local state
         setStudentData(prev => ({
           ...prev,
           unlockedDays: !isUnlocked 
@@ -53,6 +54,37 @@ export default function TaskUnlocker() {
     } catch (err) {
       toast.error('Network error');
     }
+    setActionLoading(null);
+  };
+
+  const handleAllowEdit = async (day) => {
+    const confirmed = window.confirm(
+      `Allow ${studentData.name} (${studentData.username}) to re-edit and re-submit Day ${day}?\n\nThis will reset their submission status. Their survey answers will be preserved, but their Drive link and final submission flag will be cleared.`
+    );
+    if (!confirmed) return;
+
+    setActionLoading(`edit-${day}`);
+    try {
+      const res = await fetch('/api/dashboard/admin/unlockedTasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: studentData.username, day, action: 'allowEdit' })
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(`Day ${day} reset — ${studentData.name} can now re-edit and re-submit.`);
+        // Remove from submittedDays in local state so UI updates immediately
+        setStudentData(prev => ({
+          ...prev,
+          submittedDays: prev.submittedDays.filter(d => d !== day)
+        }));
+      } else {
+        toast.error(data.error || 'Failed to reset submission');
+      }
+    } catch (err) {
+      toast.error('Network error');
+    }
+    setActionLoading(null);
   };
 
   return (
@@ -88,6 +120,7 @@ export default function TaskUnlocker() {
             {[1, 2, 3, 4, 5, 6, 7].map(day => {
               const isSubmitted = studentData.submittedDays.includes(day);
               const isUnlocked = studentData.unlockedDays.includes(day);
+              const isActing = actionLoading === day || actionLoading === `edit-${day}`;
               
               return (
                 <div key={day} className={`day-card ${isSubmitted ? 'submitted' : isUnlocked ? 'unlocked' : ''}`}>
@@ -101,14 +134,35 @@ export default function TaskUnlocker() {
                       <span className="status locked">🔒 Default / Locked</span>
                     )}
                   </div>
-                  {!isSubmitted && (
-                    <button 
-                      onClick={() => handleToggleUnlock(day, isUnlocked)}
-                      className={`toggle-btn ${isUnlocked ? 'lock-btn' : 'unlock-btn'}`}
-                    >
-                      {isUnlocked ? <><FaLock /> Re-Lock</> : <><FaUnlock /> Unlock Day {day}</>}
-                    </button>
-                  )}
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
+                    {/* Allow Edit — only for submitted days */}
+                    {isSubmitted && (
+                      <button
+                        onClick={() => handleAllowEdit(day)}
+                        disabled={isActing}
+                        style={{
+                          padding: '7px 14px', borderRadius: 8, border: 'none',
+                          background: isActing ? '#ccc' : '#f59e0b',
+                          color: '#fff', fontWeight: 600, cursor: isActing ? 'not-allowed' : 'pointer',
+                          fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: 6
+                        }}
+                      >
+                        <FaEdit /> {isActing ? 'Resetting...' : `Allow Re-edit Day ${day}`}
+                      </button>
+                    )}
+
+                    {/* Unlock / Re-lock — only for non-submitted days */}
+                    {!isSubmitted && (
+                      <button 
+                        onClick={() => handleToggleUnlock(day, isUnlocked)}
+                        disabled={isActing}
+                        className={`toggle-btn ${isUnlocked ? 'lock-btn' : 'unlock-btn'}`}
+                      >
+                        {isUnlocked ? <><FaLock /> Re-Lock</> : <><FaUnlock /> Unlock Day {day}</>}
+                      </button>
+                    )}
+                  </div>
                 </div>
               );
             })}
