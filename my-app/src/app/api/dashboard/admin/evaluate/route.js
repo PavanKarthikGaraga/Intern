@@ -139,6 +139,7 @@ export async function GET(request) {
             name: s.name,
             slot: s.slot,
             selectedDomain: s.selectedDomain,
+            mode: s.mode || null,
             submittedAt: sub.submittedAt,
             taskData: sub.taskData,
             dayMark: s.dayMark === null ? null : Number(s.dayMark),
@@ -150,6 +151,7 @@ export async function GET(request) {
             name: s.name,
             slot: s.slot,
             selectedDomain: s.selectedDomain,
+            mode: s.mode || null,
             dayMark: s.dayMark === null ? null : Number(s.dayMark),
             evaluated: s.dayMark !== null,
           });
