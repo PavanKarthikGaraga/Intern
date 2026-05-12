@@ -298,7 +298,7 @@ export default function DailyTasks({ studentData, onSectionChange }) {
         setActiveDay(firstOpen || 1);
       } catch { setActiveDay(1); }
     })();
-  }, [slot, username, slotEnabled]);
+  }, [slot, username, slotEnabled, dailyMarks]);
 
   const dayData = useCallback((day) => ({
     ...(saved[day]?.data || {}),
