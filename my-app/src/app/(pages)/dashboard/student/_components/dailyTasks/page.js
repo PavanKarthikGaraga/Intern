@@ -428,12 +428,24 @@ export default function DailyTasks({ studentData, onSectionChange }) {
     setSaving(true);
     setMsg('');
     try {
-      const res  = await fetch('/api/dashboard/student/daily-tasks', {
+      // Strip base64 images from reportSlots before saving — they can be 5–30 MB
+      // and cause Network errors/timeouts. Only persist text fields (name, description).
+      const dataToSave = { ...data, isFinal: !isDraft };
+      if (dataToSave.reportSlots && Array.isArray(dataToSave.reportSlots)) {
+        dataToSave.reportSlots = dataToSave.reportSlots.map(slot => ({
+          id: slot.id,
+          name: slot.name,
+          description: slot.description,
+          // image intentionally excluded — user re-uploads for PDF generation
+        }));
+      }
+
+      const res = await fetch('/api/dashboard/student/daily-tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           day: activeDay, 
-          data: { ...data, isFinal: !isDraft } 
+          data: dataToSave,
         }),
       });
       const json = await res.json();
@@ -460,8 +472,15 @@ export default function DailyTasks({ studentData, onSectionChange }) {
         setMsg(json.error || 'Save failed'); 
         setMsgType('err'); 
       }
-    } catch { 
-      setMsg('Network error'); 
+    } catch (err) { 
+      console.error('Save failed:', err);
+      if (err?.name === 'ChunkLoadError' || err?.message?.includes('Loading chunk')) {
+        setMsg('App updated — please refresh the page and try again.');
+      } else if (err?.message?.includes('payload') || err?.message?.includes('too large')) {
+        setMsg('Data too large to save. Please try again.');
+      } else {
+        setMsg(`Save failed: ${err?.message || 'Network error. Please check your connection and try again.'}`);
+      }
       setMsgType('err'); 
     } finally { 
       setSaving(false); 

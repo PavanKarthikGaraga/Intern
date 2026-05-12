@@ -33,6 +33,27 @@ export async function POST(request) {
         )
       `);
 
+      // Server-side safety: strip any base64 image data before persisting.
+      // Large base64 payloads can exceed MySQL max_allowed_packet and cause errors.
+      const sanitizedData = { ...data };
+
+      // Strip images from reportSlots (PDF generator photo slots)
+      if (sanitizedData.reportSlots && Array.isArray(sanitizedData.reportSlots)) {
+        sanitizedData.reportSlots = sanitizedData.reportSlots.map(slot => ({
+          id: slot.id,
+          name: slot.name,
+          description: slot.description,
+        }));
+      }
+
+      // Strip any base64 image fields (coverPhoto, photo2–photo5, etc.)
+      for (const key of Object.keys(sanitizedData)) {
+        const val = sanitizedData[key];
+        if (typeof val === 'string' && val.startsWith('data:image')) {
+          delete sanitizedData[key];
+        }
+      }
+
       await db.execute(
         `INSERT INTO dailyTasks (username, day, data)
          VALUES (?, ?, ?)
@@ -40,7 +61,7 @@ export async function POST(request) {
            data = VALUES(data),
            updatedAt = CURRENT_TIMESTAMP`,
         // submittedAt intentionally excluded from UPDATE — preserves original submission time
-        [payload.username, day, JSON.stringify(data)]
+        [payload.username, day, JSON.stringify(sanitizedData)]
       );
 
       return NextResponse.json({ success: true, message: `Day ${day} saved successfully.` });
