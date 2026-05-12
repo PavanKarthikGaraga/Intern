@@ -346,7 +346,7 @@ export async function POST(request) {
                 } : null,
                 certificate: certificate ? { exists: true, uid: certificate.uid } : { exists: false },
                 slotEnabled,
-                dailyMarks: dailyMarksRow ? {
+                dailyMarks: (dailyMarksRow && dailyMarksRow.evaluatedBy) ? {
                     d1: dailyMarksRow.day1 === null ? null : Number(dailyMarksRow.day1),
                     d2: dailyMarksRow.day2 === null ? null : Number(dailyMarksRow.day2),
                     d3: dailyMarksRow.day3 === null ? null : Number(dailyMarksRow.day3),

@@ -131,7 +131,8 @@ export default function Overview({ user, studentData }) {
   ];
 
   const totalMarks = evalComponents.reduce((acc, c) => acc + (c.score !== null ? Number(c.score) : 0), 0);
-  const allDaysEvaluated = evalComponents.every(c => c.score !== null);
+  // Robust check: all must be non-null, and specifically Day 7 must be graded
+  const allDaysEvaluated = evalComponents.every(c => c.score !== null) && dm.d7 !== null;
 
   // Helper to calculate grade from marks
   const getGrade = (marks) => {
