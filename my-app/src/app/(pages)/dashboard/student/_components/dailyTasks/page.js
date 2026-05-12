@@ -440,14 +440,34 @@ export default function DailyTasks({ studentData, onSectionChange }) {
         }));
       }
 
-      const res = await fetch('/api/dashboard/student/daily-tasks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          day: activeDay, 
-          data: dataToSave,
-        }),
-      });
+      const body = JSON.stringify({ day: activeDay, data: dataToSave });
+
+      // Retry up to 2 times on network failure (helps on weak mobile connections)
+      let res, lastErr;
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 30000); // 30s timeout
+          res = await fetch('/api/dashboard/student/daily-tasks', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body,
+            signal: controller.signal,
+          });
+          clearTimeout(timeout);
+          lastErr = null;
+          break; // success — exit retry loop
+        } catch (fetchErr) {
+          lastErr = fetchErr;
+          if (attempt < 3) {
+            setMsg(`Connection issue, retrying (${attempt}/3)…`);
+            await new Promise(r => setTimeout(r, 1500));
+          }
+        }
+      }
+
+      if (lastErr) throw lastErr; // All retries failed
+
       const json = await res.json();
       if (json.success) {
         setSaved(prev => ({ 
@@ -474,18 +494,21 @@ export default function DailyTasks({ studentData, onSectionChange }) {
       }
     } catch (err) { 
       console.error('Save failed:', err);
-      if (err?.name === 'ChunkLoadError' || err?.message?.includes('Loading chunk')) {
+      if (err?.name === 'AbortError') {
+        setMsg('Request timed out. Please check your connection and try again.');
+      } else if (err?.name === 'ChunkLoadError' || err?.message?.includes('Loading chunk')) {
         setMsg('App updated — please refresh the page and try again.');
       } else if (err?.message?.includes('payload') || err?.message?.includes('too large')) {
         setMsg('Data too large to save. Please try again.');
       } else {
-        setMsg(`Save failed: ${err?.message || 'Network error. Please check your connection and try again.'}`);
+        setMsg(`Save failed after 3 attempts. Please check your connection and try again.`);
       }
       setMsgType('err'); 
     } finally { 
       setSaving(false); 
     }
   }, [activeDay, latestDataRef, setSaved, setDraft, setMsg, setMsgType, survey, saved]);
+
 
 
 
@@ -1351,10 +1374,10 @@ function DaySurvey({ day, stakeholderIdx, survey, data, onChange, readOnly, onFi
 
       {!readOnly && (
         <div style={{ marginTop: '20px', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+          {/* For persons 1 to N-1: Save & advance to next person */}
           {activePerson < personCount && (
             <button className="dt-save-btn" onClick={async () => {
               if (isFilled(activePerson)) {
-                // Ensure we call onDraftSave BEFORE changing local UI state to avoid confusion
                 await onDraftSave(); 
                 setActivePerson(activePerson + 1);
               }
@@ -1363,25 +1386,53 @@ function DaySurvey({ day, stakeholderIdx, survey, data, onChange, readOnly, onFi
               {saving ? 'Saving...' : 'Save Person & Next'}
             </button>
           )}
-          {!allFilled && !readOnly && (
+
+          {/* For the LAST person: explicit Save button so their data isn't lost */}
+          {activePerson === personCount && !allFilled && (
+            <button className="dt-save-btn" onClick={async () => {
+              if (isFilled(activePerson)) {
+                await onDraftSave();
+                alert(`Person ${activePerson} saved! Please fill in all ${personCount} persons to unlock the report.`);
+              } else {
+                alert('Please complete all questions and the name for this person first.');
+              }
+            }} style={{ background: '#1a7a1a' }} disabled={saving}>
+              {saving ? 'Saving...' : `💾 Save Person ${activePerson}`}
+            </button>
+          )}
+
+          {/* Once last person is complete: save & unlock PDF generator */}
+          {activePerson === personCount && isFilled(activePerson) && !allFilled && (
+            <button className="dt-draft-btn" onClick={async () => {
+              await onDraftSave();
+            }} disabled={saving} style={{ background: '#475569' }}>
+              {saving ? 'Saving...' : '💾 Save Progress'}
+            </button>
+          )}
+
+          {!allFilled && activePerson < personCount && (
             <button className="dt-draft-btn" onClick={onDraftSave} disabled={saving} style={{ background: '#475569' }}>
               {saving ? 'Saving...' : '💾 Save Progress'}
             </button>
           )}
+
           {allFilled && (
-            <button className="dt-save-btn" onClick={async () => {
-              if (!data.driveLink || !data.driveLink.trim()) {
-                alert("Please provide the Google Drive Public Link of the generated report before submitting.");
-                return;
-              }
-              if (window.confirm("Are you sure you want to submit all responses for evaluation? This cannot be undone.")) {
-                // Save draft first to flush driveLink into latestDataRef before final submit
-                await onDraftSave();
-                onFinalSubmit();
-              }
-            }} disabled={saving}>
-              {saving ? 'Submitting...' : 'Submit All Responses & Report'}
-            </button>
+            <>
+              <button className="dt-draft-btn" onClick={onDraftSave} disabled={saving} style={{ background: '#475569' }}>
+                {saving ? 'Saving...' : '💾 Save Progress'}
+              </button>
+              <button className="dt-save-btn" onClick={async () => {
+                if (!data.driveLink || !data.driveLink.trim()) {
+                  alert("Please provide the Google Drive Public Link of the generated report before submitting.");
+                  return;
+                }
+                if (window.confirm("Are you sure you want to submit all responses for evaluation? This cannot be undone.")) {
+                  onFinalSubmit();
+                }
+              }} disabled={saving}>
+                {saving ? 'Submitting...' : 'Submit All Responses & Report'}
+              </button>
+            </>
           )}
           {errorMsg && (
             <div style={{ width: '100%', marginTop: 8, padding: '10px 14px', borderRadius: 8,
