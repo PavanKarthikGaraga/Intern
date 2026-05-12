@@ -20,6 +20,8 @@ const SLOT_START = {
   9: new Date('2026-07-06T00:00:00+05:30'),
 };
 
+const wc = (txt) => (txt || '').trim().split(/\s+/).filter(Boolean).length;
+
 /** Window for the Nth day of the slot */
 function dayWindow(slot, dayNum) {
   const start = SLOT_START[slot];
@@ -87,7 +89,7 @@ function pillClass(st, active) {
 function pillIcon(st) {
   return st === 'submitted' ? <FaCheck /> : st === 'locked' ? <FaLock /> : st === 'missed' ? <FaTimes /> : st === 'upcoming' ? <FaHourglassHalf /> : <FaPlay />;
 }
-function wc(text) { return text.trim() === '' ? 0 : text.trim().split(/\s+/).length; }
+
 
 const getDaysMeta = (studentData, survey) => {
   const s1 = survey?.[0]?.stakeholder || 'Stakeholder 1';
@@ -295,16 +297,6 @@ export default function DailyTasks({ studentData, onSectionChange }) {
     setMsg('');
   };
 
-  // ── Debounced Auto-Save ──
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (Object.keys(draft).length > 0 && !saving) {
-        handleSave(true);
-      }
-    }, 3000); // Auto-save after 3 seconds of inactivity
-    return () => clearTimeout(timer);
-  }, [draft, saving, handleSave]);
-
   const handleSave = useCallback(async (isDraft = false) => {
     const { saved: latestSaved, draft: latestDraft } = latestDataRef.current;
     const data = {
@@ -427,6 +419,16 @@ export default function DailyTasks({ studentData, onSectionChange }) {
       setSaving(false); 
     }
   }, [activeDay, latestDataRef, setSaved, setDraft, setMsg, setMsgType, survey, saved]);
+
+  // ── Debounced Auto-Save ──
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (Object.keys(draft).length > 0 && !saving) {
+        handleSave(true);
+      }
+    }, 3000); // Auto-save after 3 seconds of inactivity
+    return () => clearTimeout(timer);
+  }, [draft, saving, handleSave]);
 
   const handleSaveDraft = () => handleSave(true);
   const handleFinalSubmit = () => handleSave(false);
@@ -900,8 +902,6 @@ function Day1({ data, onChange, ps, readOnly, onSectionChange }) {
 
 /* ── Survey Report Generator (Days 2/3/4) ── */
 function SurveyReportGenerator({ day, stakeholder, persons, personData }) {
-  const wc = (txt) => (txt || '').trim().split(/\s+/).filter(Boolean).length;
-  
   const initSlots = () => persons.map(p => ({
     id: `person-${p}-${Date.now()}`,
     image: null,
@@ -1878,8 +1878,6 @@ function CaseStudyGenerator({ studentData, readOnly, survey, saved }) {
   }, [studentData, template, domain, survey]);
 
   const setAns = (key, val) => setAnswers(prev => ({ ...prev, [key]: val }));
-
-  const wc = (txt) => (txt || '').trim().split(/\s+/).filter(Boolean).length;
 
   const getMinWords = (heading, field) => {
     // Auto-filled / identity fields — no word count needed
