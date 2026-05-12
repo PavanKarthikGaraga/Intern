@@ -109,20 +109,18 @@ export async function GET(request) {
           let isFinal = d?.isFinal;
           const dayNum = Number(day);
 
-          if (d) {
+          // Strict validation: if isFinal is true but required data is missing, override to false
+          if (isFinal === true && d) {
             if (dayNum === 1 && !d.inference) isFinal = false;
-            else if ([2, 3, 4, 6, 7].includes(dayNum) && !d.driveLink) isFinal = false;
-            else if (dayNum === 5 && !(d.day2_topProblems || d.day3_topProblems || d.day4_topProblems)) isFinal = false;
-            
-            if (dayNum === 2) {
-              if (!d.driveLink || !d.p1 || !d.p2 || !d.p3 || !d.p4 || !d.p5 || !d.p6) isFinal = false;
-            }
-            if (dayNum === 3 || dayNum === 4) {
-              if (!d.driveLink || !d.p1 || !d.p2 || !d.p3) isFinal = false;
-            }
+            if (dayNum === 2 && (!d.driveLink || !d.p1 || !d.p2 || !d.p3 || !d.p4 || !d.p5 || !d.p6)) isFinal = false;
+            if ((dayNum === 3 || dayNum === 4) && (!d.driveLink || !d.p1 || !d.p2 || !d.p3)) isFinal = false;
+            if ([6, 7].includes(dayNum) && !d.driveLink) isFinal = false;
+            if (dayNum === 5 && !(d.day2_topProblems || d.day3_topProblems || d.day4_topProblems)) isFinal = false;
           }
 
-          if (isFinal !== true && d) {
+          // Legacy recovery: only for old data that never had isFinal set (undefined)
+          // Never run for isFinal: false — those are explicit drafts
+          if (isFinal === undefined && d) {
             if (dayNum === 1 && d.inference) isFinal = true;
             else if (dayNum === 2 && d.driveLink && d.p1 && d.p2 && d.p3 && d.p4 && d.p5 && d.p6) isFinal = true;
             else if ((dayNum === 3 || dayNum === 4) && d.driveLink && d.p1 && d.p2 && d.p3) isFinal = true;

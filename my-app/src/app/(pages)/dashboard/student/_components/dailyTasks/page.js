@@ -81,24 +81,22 @@ function getDayStatus(dayNum, slot, saved, username, unlockedDays = [], slotEnab
   const isEvaluated = mark !== null && mark !== undefined && mark !== '';
   
   let isFinal = s?.data?.isFinal;
-  
-  // Strict Enforcement: Validate core data presence
-  if (s?.data) {
+
+  // ── Strict validation: override to false if required data is missing ──
+  // This catches any case where isFinal is true but required fields are absent.
+  if (isFinal === true && s?.data) {
     const d = s.data;
     if (dayNum === 1 && !d.inference) isFinal = false;
-    else if ([2, 3, 4, 6, 7].includes(dayNum) && !d.driveLink) isFinal = false;
-    else if (dayNum === 5 && !(d.day2_topProblems || d.day3_topProblems || d.day4_topProblems)) isFinal = false;
-    
-    if (dayNum === 2) {
-      if (!d.driveLink || !d.p1 || !d.p2 || !d.p3 || !d.p4 || !d.p5 || !d.p6) isFinal = false;
-    }
-    if (dayNum === 3 || dayNum === 4) {
-      if (!d.driveLink || !d.p1 || !d.p2 || !d.p3) isFinal = false;
-    }
+    if (dayNum === 2 && (!d.driveLink || !d.p1 || !d.p2 || !d.p3 || !d.p4 || !d.p5 || !d.p6)) isFinal = false;
+    if ((dayNum === 3 || dayNum === 4) && (!d.driveLink || !d.p1 || !d.p2 || !d.p3)) isFinal = false;
+    if ([6, 7].includes(dayNum) && !d.driveLink) isFinal = false;
+    if (dayNum === 5 && !(d.day2_topProblems || d.day3_topProblems || d.day4_topProblems)) isFinal = false;
   }
 
-  // Legacy Check: If missing isFinal but has all required data, treat as submitted
-  if (isFinal !== true && s?.data) {
+  // ── Legacy recovery: Only for truly OLD data that never had isFinal set ──
+  // IMPORTANT: only run when isFinal is undefined, NOT when it's explicitly false.
+  // This prevents drafts from being treated as submissions on page refresh.
+  if (isFinal === undefined && s?.data) {
     const d = s.data;
     if (dayNum === 1 && d.inference) isFinal = true;
     else if (dayNum === 2 && d.driveLink && d.p1 && d.p2 && d.p3 && d.p4 && d.p5 && d.p6) isFinal = true;
@@ -575,9 +573,9 @@ export default function DailyTasks({ studentData, onSectionChange }) {
             : (
               <>
                 {activeDay === 1 && <Day1 data={dayData(1)} onChange={(f,v) => setDayField(1,f,v)} ps={ps} readOnly={isSaved || isPreview} onSectionChange={onSectionChange} />}
-                {activeDay === 2 && <DaySurvey day={2} stakeholderIdx={0} survey={survey} data={dayData(2)} onChange={(f,v) => setDayField(2,f,v)} readOnly={isSaved || isPreview} onFinalSubmit={handleFinalSubmit} onDraftSave={handleSaveDraft} saving={saving} minPersons={6} />}
-                {activeDay === 3 && <DaySurvey day={3} stakeholderIdx={1} survey={survey} data={dayData(3)} onChange={(f,v) => setDayField(3,f,v)} readOnly={isSaved || isPreview} onFinalSubmit={handleFinalSubmit} onDraftSave={handleSaveDraft} saving={saving} minPersons={3} />}
-                {activeDay === 4 && <DaySurvey day={4} stakeholderIdx={2} survey={survey} data={dayData(4)} onChange={(f,v) => setDayField(4,f,v)} readOnly={isSaved || isPreview} onFinalSubmit={handleFinalSubmit} onDraftSave={handleSaveDraft} saving={saving} minPersons={3} />}
+                {activeDay === 2 && <DaySurvey day={2} stakeholderIdx={0} survey={survey} data={dayData(2)} onChange={(f,v) => setDayField(2,f,v)} readOnly={isSaved || isPreview} onFinalSubmit={handleFinalSubmit} onDraftSave={handleSaveDraft} saving={saving} minPersons={6} errorMsg={msg} errorType={msgType} />}
+                {activeDay === 3 && <DaySurvey day={3} stakeholderIdx={1} survey={survey} data={dayData(3)} onChange={(f,v) => setDayField(3,f,v)} readOnly={isSaved || isPreview} onFinalSubmit={handleFinalSubmit} onDraftSave={handleSaveDraft} saving={saving} minPersons={3} errorMsg={msg} errorType={msgType} />}
+                {activeDay === 4 && <DaySurvey day={4} stakeholderIdx={2} survey={survey} data={dayData(4)} onChange={(f,v) => setDayField(4,f,v)} readOnly={isSaved || isPreview} onFinalSubmit={handleFinalSubmit} onDraftSave={handleSaveDraft} saving={saving} minPersons={3} errorMsg={msg} errorType={msgType} />}
                 {activeDay === 5 && <Day5 saved={saved} survey={survey} data={dayData(5)} onChange={(f,v) => setDayField(5,f,v)} readOnly={isSaved || isPreview} />}
                 {activeDay === 6 && <Day6 data={dayData(6)} onChange={(f,v) => setDayField(6,f,v)} readOnly={isSaved || isPreview} studentData={studentData} />}
                 {activeDay === 7 && <Day7 saved={saved} data={dayData(7)} onChange={(f,v) => setDayField(7,f,v)} readOnly={isSaved || isPreview} studentData={studentData} survey={survey} />}
@@ -1187,7 +1185,7 @@ function SurveyReportGenerator({ day, stakeholder, persons, personData, onChange
 }
 
 /* ── Days 2/3/4 – Survey ── */
-function DaySurvey({ day, stakeholderIdx, survey, data, onChange, readOnly, onFinalSubmit, onDraftSave, saving, minPersons = 3 }) {
+function DaySurvey({ day, stakeholderIdx, survey, data, onChange, readOnly, onFinalSubmit, onDraftSave, saving, minPersons = 3, errorMsg = '', errorType = 'err' }) {
   const [personCount, setPersonCount] = useState(Math.max(data.personCount || minPersons, minPersons));
   const [activePerson, setActivePerson] = useState(1);
 
@@ -1351,17 +1349,28 @@ function DaySurvey({ day, stakeholderIdx, survey, data, onChange, readOnly, onFi
             </button>
           )}
           {allFilled && (
-            <button className="dt-save-btn" onClick={() => {
+            <button className="dt-save-btn" onClick={async () => {
               if (!data.driveLink || !data.driveLink.trim()) {
                 alert("Please provide the Google Drive Public Link of the generated report before submitting.");
                 return;
               }
               if (window.confirm("Are you sure you want to submit all responses for evaluation? This cannot be undone.")) {
+                // Save draft first to flush driveLink into latestDataRef before final submit
+                await onDraftSave();
                 onFinalSubmit();
               }
             }} disabled={saving}>
               {saving ? 'Submitting...' : 'Submit All Responses & Report'}
             </button>
+          )}
+          {errorMsg && (
+            <div style={{ width: '100%', marginTop: 8, padding: '10px 14px', borderRadius: 8,
+              background: errorType === 'err' ? '#fef2f2' : '#f0fdf4',
+              border: `1px solid ${errorType === 'err' ? '#fca5a5' : '#86efac'}`,
+              color: errorType === 'err' ? '#dc2626' : '#16a34a',
+              fontSize: '0.88rem', fontWeight: 500 }}>
+              {errorType === 'err' ? '❌ ' : '✅ '}{errorMsg}
+            </div>
           )}
         </div>
       )}
