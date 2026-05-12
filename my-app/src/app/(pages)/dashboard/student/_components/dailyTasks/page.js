@@ -82,15 +82,29 @@ function getDayStatus(dayNum, slot, saved, username, unlockedDays = [], slotEnab
   
   let isFinal = s?.data?.isFinal;
   
-  // Recovery & Legacy Check: If it's marked as draft or legacy (undefined),
-  // but contains the core required fields, treat it as a final submission.
+  // Strict Enforcement: Validate core data presence
+  if (s?.data) {
+    const d = s.data;
+    if (dayNum === 1 && !d.inference) isFinal = false;
+    else if ([2, 3, 4, 6, 7].includes(dayNum) && !d.driveLink) isFinal = false;
+    else if (dayNum === 5 && !(d.day2_topProblems || d.day3_topProblems || d.day4_topProblems)) isFinal = false;
+    
+    if (dayNum === 2) {
+      if (!d.driveLink || !d.p1 || !d.p2 || !d.p3 || !d.p4 || !d.p5 || !d.p6) isFinal = false;
+    }
+    if (dayNum === 3 || dayNum === 4) {
+      if (!d.driveLink || !d.p1 || !d.p2 || !d.p3) isFinal = false;
+    }
+  }
+
+  // Legacy Check: If missing isFinal but has all required data, treat as submitted
   if (isFinal !== true && s?.data) {
     const d = s.data;
-    // Day 1 used to only require inference before social links were added.
-    if (dayNum === 1) isFinal = !!d.inference;
-    else if ([2, 3, 4, 6, 7].includes(dayNum)) isFinal = !!d.driveLink;
-    else if (dayNum === 5) isFinal = !!(d.day2_topProblems || d.day3_topProblems || d.day4_topProblems);
-    else isFinal = false;
+    if (dayNum === 1 && d.inference) isFinal = true;
+    else if (dayNum === 2 && d.driveLink && d.p1 && d.p2 && d.p3 && d.p4 && d.p5 && d.p6) isFinal = true;
+    else if ((dayNum === 3 || dayNum === 4) && d.driveLink && d.p1 && d.p2 && d.p3) isFinal = true;
+    else if ([6, 7].includes(dayNum) && d.driveLink) isFinal = true;
+    else if (dayNum === 5 && (d.day2_topProblems || d.day3_topProblems || d.day4_topProblems)) isFinal = true;
   }
   
   const isSubmitted = !!s && isFinal === true;
@@ -353,7 +367,8 @@ export default function DailyTasks({ studentData, onSectionChange }) {
       if (!ytValid) { setMsg('YouTube URL must start with https://www.youtube.com/@… or /channel/…'); setMsgType('err'); return; }
     }
     if (!isDraft && [2, 3, 4].includes(activeDay)) {
-      const pCount = data.personCount || 3;
+      const minP = activeDay === 2 ? 6 : 3;
+      const pCount = Math.max(data.personCount || minP, minP);
       const sh = survey[activeDay - 2];
       const qCount = sh?.questions?.length || 0;
       for (let p = 1; p <= pCount; p++) {
@@ -737,7 +752,11 @@ function ReportGenerator({ day, stakeholder, readOnly }) {
       doc.save(`Day_${day}_Report.pdf`);
     } catch (err) {
       console.error('Failed to generate PDF', err);
-      alert('Error generating PDF.');
+      if (err.name === 'ChunkLoadError' || err.message?.includes('Loading chunk')) {
+        alert('A new update was just released! Please hard refresh the page to generate your PDF.');
+      } else {
+        alert('Error generating PDF.');
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -1081,7 +1100,11 @@ function SurveyReportGenerator({ day, stakeholder, persons, personData, onChange
       doc.save(`Day${day}_${stakeholder.replace(/\s+/g, '_')}_Report.pdf`);
     } catch (err) {
       console.error(err);
-      alert('Failed to generate PDF.');
+      if (err.name === 'ChunkLoadError' || err.message?.includes('Loading chunk')) {
+        alert('A new update was just released! Please hard refresh the page to generate your PDF.');
+      } else {
+        alert('Failed to generate PDF.');
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -1637,7 +1660,11 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
       doc.save(`Day6_Intervention_${studentData?.rollNumber || 'Report'}.pdf`);
     } catch (e) {
       console.error(e);
-      alert('Failed to generate PDF. Ensure all uploaded photos are valid images.');
+      if (e.name === 'ChunkLoadError' || e.message?.includes('Loading chunk')) {
+        alert('A new update was just released! Please hard refresh the page to generate your PDF.');
+      } else {
+        alert('Failed to generate PDF. Ensure all uploaded photos are valid images.');
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -2312,7 +2339,11 @@ function CaseStudyGenerator({ studentData, readOnly, survey, saved }) {
       doc.save(`Case_Study_${domain.replace(/\s+/g, '_') || 'Report'}.pdf`);
     } catch (err) {
       console.error('PDF error', err);
-      alert('Failed to generate PDF. Please try again.');
+      if (err.name === 'ChunkLoadError' || err.message?.includes('Loading chunk')) {
+        alert('A new update was just released! Please hard refresh the page to generate your PDF.');
+      } else {
+        alert('Failed to generate PDF. Please try again.');
+      }
     } finally {
       setIsGenerating(false);
     }

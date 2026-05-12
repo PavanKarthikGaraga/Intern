@@ -102,7 +102,38 @@ export async function GET(request) {
 
       allStudents.forEach(s => {
         const sub = submittedMap[s.username];
+        let isValidFinal = false;
+
         if (sub) {
+          const d = sub.taskData;
+          let isFinal = d?.isFinal;
+          const dayNum = Number(day);
+
+          if (d) {
+            if (dayNum === 1 && !d.inference) isFinal = false;
+            else if ([2, 3, 4, 6, 7].includes(dayNum) && !d.driveLink) isFinal = false;
+            else if (dayNum === 5 && !(d.day2_topProblems || d.day3_topProblems || d.day4_topProblems)) isFinal = false;
+            
+            if (dayNum === 2) {
+              if (!d.driveLink || !d.p1 || !d.p2 || !d.p3 || !d.p4 || !d.p5 || !d.p6) isFinal = false;
+            }
+            if (dayNum === 3 || dayNum === 4) {
+              if (!d.driveLink || !d.p1 || !d.p2 || !d.p3) isFinal = false;
+            }
+          }
+
+          if (isFinal !== true && d) {
+            if (dayNum === 1 && d.inference) isFinal = true;
+            else if (dayNum === 2 && d.driveLink && d.p1 && d.p2 && d.p3 && d.p4 && d.p5 && d.p6) isFinal = true;
+            else if ((dayNum === 3 || dayNum === 4) && d.driveLink && d.p1 && d.p2 && d.p3) isFinal = true;
+            else if ([6, 7].includes(dayNum) && d.driveLink) isFinal = true;
+            else if (dayNum === 5 && (d.day2_topProblems || d.day3_topProblems || d.day4_topProblems)) isFinal = true;
+          }
+
+          isValidFinal = isFinal === true;
+        }
+
+        if (isValidFinal) {
           submitted.push({
             username: s.username,
             name: s.name,
@@ -119,8 +150,8 @@ export async function GET(request) {
             name: s.name,
             slot: s.slot,
             selectedDomain: s.selectedDomain,
-            dayMark: 0,
-            evaluated: false,
+            dayMark: s.dayMark === null ? null : Number(s.dayMark),
+            evaluated: s.dayMark !== null,
           });
         }
       });
