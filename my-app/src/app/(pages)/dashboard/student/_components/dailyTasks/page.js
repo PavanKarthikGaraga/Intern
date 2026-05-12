@@ -48,6 +48,22 @@ function dayLabel(slot, dayNum) {
   return close.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
 }
 
+function addProportionalImage(doc, base64, x, y, maxW, maxH) {
+  if (!base64) return maxH;
+  try {
+    const props = doc.getImageProperties(base64);
+    const ratio = Math.min(maxW / props.width, maxH / props.height);
+    const imgW = props.width * ratio;
+    const imgH = props.height * ratio;
+    const xPos = x + (maxW - imgW) / 2; // Center horizontally
+    doc.addImage(base64, props.fileType || 'JPEG', xPos, y, imgW, imgH);
+    return imgH;
+  } catch (e) {
+    doc.addImage(base64, 'JPEG', x, y, maxW, maxH);
+    return maxH;
+  }
+}
+
 const DEMO_ID = '2500099999';
 
 function getDayStatus(dayNum, slot, saved, username, unlockedDays = [], slotEnabled = false, dailyMarks = {}) {
@@ -689,7 +705,7 @@ function ReportGenerator({ day, stakeholder, readOnly }) {
         }
 
         if (entry.image) {
-          doc.addImage(entry.image, 'JPEG', 25, yOffset, 160, 80);
+          addProportionalImage(doc, entry.image, 25, yOffset, 160, 80);
         }
         
         yOffset += 88;
@@ -1012,7 +1028,7 @@ function SurveyReportGenerator({ day, stakeholder, persons, personData }) {
 
         pair.forEach((slot, si) => {
           if (slot.image) {
-            doc.addImage(slot.image, 'JPEG', margin, y, contentW, 65);
+            addProportionalImage(doc, slot.image, margin, y, contentW, 65);
             y += 70;
           }
           doc.setFontSize(11); doc.setFont('times', 'bold'); doc.setTextColor(0,0,0);
@@ -1519,7 +1535,7 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
       y += titleLines.length * 8 + 10;
 
       if (data.coverPhoto) {
-        doc.addImage(data.coverPhoto, 'JPEG', margin, y, contentW, 95);
+        addProportionalImage(doc, data.coverPhoto, margin, y, contentW, 95);
         y += 105;
       }
 
@@ -1530,7 +1546,7 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
       drawBorder();
       y = margin + 10;
       if (data.photo2) {
-        doc.addImage(data.photo2, 'JPEG', margin, y, contentW, 80);
+        addProportionalImage(doc, data.photo2, margin, y, contentW, 80);
         y += 85;
       }
       const desc2Lines = doc.splitTextToSize(data.photo2Desc || '', contentW);
@@ -1539,7 +1555,7 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
       y += desc2Lines.length * 6 + 12;
 
       if (data.photo3) {
-        doc.addImage(data.photo3, 'JPEG', margin, y, contentW, 80);
+        addProportionalImage(doc, data.photo3, margin, y, contentW, 80);
         y += 85;
       }
       const desc3Lines = doc.splitTextToSize(data.photo3Desc || '', contentW);
@@ -1551,7 +1567,7 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
       drawBorder();
       y = margin + 10;
       if (data.photo4) {
-        doc.addImage(data.photo4, 'JPEG', margin, y, contentW, 80);
+        addProportionalImage(doc, data.photo4, margin, y, contentW, 80);
         y += 85;
       }
       const desc4Lines = doc.splitTextToSize(data.photo4Desc || '', contentW);
@@ -1560,7 +1576,7 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
       y += desc4Lines.length * 6 + 12;
 
       if (data.photo5) {
-        doc.addImage(data.photo5, 'JPEG', margin, y, contentW, 80);
+        addProportionalImage(doc, data.photo5, margin, y, contentW, 80);
         y += 85;
       }
       const desc5Lines = doc.splitTextToSize(data.photo5Desc || '', contentW);
@@ -2216,7 +2232,7 @@ function CaseStudyGenerator({ studentData, readOnly, survey, saved }) {
               checkNewPage(120);
               doc.setFontSize(11); doc.setFont('times', 'bold'); doc.setTextColor(20, 60, 20);
               doc.text(`${field} - Photo ${i}:`, margin, y); y += 6;
-              try { doc.addImage(answers[`${key}__photo${i}`], 'JPEG', margin, y, contentW, 90); } catch(e) { console.error(e); }
+              try { addProportionalImage(doc, answers[`${key}__photo${i}`], margin, y, contentW, 90); } catch(e) { console.error(e); }
               y += 95;
               doc.setFont('times', 'normal'); doc.setTextColor(20, 20, 20);
               const lines = doc.splitTextToSize(answers[`${key}__desc${i}`] || '', contentW);
