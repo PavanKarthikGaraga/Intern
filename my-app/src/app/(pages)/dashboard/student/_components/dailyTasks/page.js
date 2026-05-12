@@ -61,7 +61,7 @@ function getDayStatus(dayNum, slot, saved, username, unlockedDays = [], slotEnab
   const { open, close } = dayWindow(slot, dayNum);
   const now = serverNow();   // ← server-authoritative IST time
   const s = saved[dayNum] || saved[String(dayNum)];
-  const isSubmitted = !!s && s.data?.isFinal !== false;
+  const isSubmitted = !!s && (s.data?.isFinal === true || s.data?.isFinal === undefined);
   const isUnlocked = unlockedDays.includes(dayNum);
 
   if (isSubmitted) return 'submitted';
@@ -217,7 +217,7 @@ function LockedView({ status, dayNum, slot }) {
     <div className="dt-locked-overlay missed-lock">
       <div className="lock-icon" style={{ fontSize: '2.5rem', marginBottom: '10px' }}><FaLock /></div>
       <h3>Day {dayNum} Locked</h3>
-      <p>A previous day was not submitted in time. All subsequent days are locked.<br/>Please contact your mentor.</p>
+      <p>This day is locked because a previous task was not submitted within the deadline.<br/><strong>Please contact your admin/mentor to unlock this task for you.</strong></p>
     </div>
   );
   return (
