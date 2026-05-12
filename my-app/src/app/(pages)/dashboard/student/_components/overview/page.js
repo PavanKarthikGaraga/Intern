@@ -482,26 +482,33 @@ export default function Overview({ user, studentData }) {
               })}
             </div>
 
-            <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '2px dashed #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '40px' }}>
-                {allDaysEvaluated ? (
-                  <>
+              <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '2px dashed #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '40px' }}>
+                  {/* Total Score and Grade are hidden until explicitly requested to be unhidden */}
+                  {/* 
+                  {allDaysEvaluated ? (
+                    <>
+                      <div>
+                        <p style={{ margin: 0, fontSize: '0.9rem', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>Total Score</p>
+                        <p style={{ margin: 0, fontSize: '2.5rem', fontWeight: '900', color: '#014a01' }}>{Math.round(totalMarks)}<span style={{ fontSize: '1.2rem', color: '#888', fontWeight: '400' }}> / 100</span></p>
+                      </div>
+                      <div>
+                        <p style={{ margin: 0, fontSize: '0.9rem', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>Grade</p>
+                        <p style={{ margin: 0, fontSize: '2.5rem', fontWeight: '900', color: totalMarks >= 60 ? '#014a01' : '#970003' }}>{getGrade(totalMarks)}</p>
+                      </div>
+                    </>
+                  ) : (
                     <div>
-                      <p style={{ margin: 0, fontSize: '0.9rem', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>Total Score</p>
-                      <p style={{ margin: 0, fontSize: '2.5rem', fontWeight: '900', color: '#014a01' }}>{Math.round(totalMarks)}<span style={{ fontSize: '1.2rem', color: '#888', fontWeight: '400' }}> / 100</span></p>
+                      <p style={{ margin: 0, fontSize: '0.9rem', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>Overall Status</p>
+                      <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: '700', color: '#e65100', marginTop: '4px' }}>Evaluation Pending — Marks and Grade will appear here once all 7 days are evaluated by admin.</p>
                     </div>
-                    <div>
-                      <p style={{ margin: 0, fontSize: '0.9rem', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>Grade</p>
-                      <p style={{ margin: 0, fontSize: '2.5rem', fontWeight: '900', color: totalMarks >= 60 ? '#014a01' : '#970003' }}>{getGrade(totalMarks)}</p>
-                    </div>
-                  </>
-                ) : (
+                  )}
+                  */}
                   <div>
                     <p style={{ margin: 0, fontSize: '0.9rem', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>Overall Status</p>
-                    <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: '700', color: '#e65100', marginTop: '4px' }}>Evaluation Pending — Marks and Grade will appear here once all 7 days are evaluated by admin.</p>
+                    <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: '700', color: '#e65100', marginTop: '4px' }}>Evaluation In Progress — Your daily marks are being updated as they are evaluated.</p>
                   </div>
-                )}
-              </div>
+                </div>
 
               {eligibleSlot && (
                 <div style={{ background: '#fff8e1', padding: '15px 20px', borderRadius: '10px', border: '1px solid #ffe082', maxWidth: '350px' }}>
