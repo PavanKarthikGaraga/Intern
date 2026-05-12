@@ -311,8 +311,8 @@ export default function DailyTasks({ studentData, onSectionChange }) {
           const st = getDayStatus(d, slot, tasks, username, unlocked, slotEnabled, dailyMarks);
           return st === 'open' || st === 'submitted' || st === 'unlocked' || st === 'preview';
         });
-        setActiveDay(firstOpen || 1);
-      } catch { setActiveDay(1); }
+        setActiveDay(prev => prev === null ? (firstOpen || 1) : prev);
+      } catch { setActiveDay(prev => prev === null ? 1 : prev); }
     })();
   }, [slot, username, slotEnabled, dailyMarks]);
 
@@ -927,18 +927,31 @@ function Day1({ data, onChange, ps, readOnly, onSectionChange }) {
 }
 
 /* ── Survey Report Generator (Days 2/3/4) ── */
-function SurveyReportGenerator({ day, stakeholder, persons, personData }) {
-  const initSlots = () => persons.map(p => ({
-    id: `person-${p}-${Date.now()}`,
-    image: null,
-    name: personData[`p${p}`]?.name || `Person ${p}`,
-    description: '',
-  }));
+function SurveyReportGenerator({ day, stakeholder, persons, personData, onChange, readOnly }) {
+  const initSlots = () => {
+    if (personData.reportSlots && personData.reportSlots.length > 0) {
+      return personData.reportSlots;
+    }
+    return persons.map(p => ({
+      id: `person-${p}-${Date.now()}`,
+      image: null,
+      name: personData[`p${p}`]?.name || `Person ${p}`,
+      description: '',
+    }));
+  };
   
   const [slots, setSlots] = useState(initSlots);
   const [isGenerating, setIsGenerating] = useState(false);
 
+  // Sync slots to parent
+  useEffect(() => {
+    if (onChange && !readOnly) {
+      onChange('reportSlots', slots);
+    }
+  }, [slots, onChange, readOnly]);
+
   const handleImageUpload = (index, e) => {
+    if (readOnly) return;
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
@@ -949,14 +962,17 @@ function SurveyReportGenerator({ day, stakeholder, persons, personData }) {
   };
 
   const handleFieldChange = (index, field, val) => {
+    if (readOnly) return;
     setSlots(prev => prev.map((s, i) => i === index ? { ...s, [field]: val } : s));
   };
 
   const addSlot = () => {
+    if (readOnly) return;
     setSlots(prev => [...prev, { id: `extra-${Date.now()}`, image: null, name: '', description: '' }]);
   };
 
   const removeSlot = (index) => {
+    if (readOnly) return;
     if (slots.length <= 1) return;
     setSlots(prev => prev.filter((_, i) => i !== index));
   };
@@ -1099,6 +1115,7 @@ function SurveyReportGenerator({ day, stakeholder, persons, personData }) {
                     type="text"
                     value={slot.name}
                     onChange={e => handleFieldChange(index, 'name', e.target.value)}
+                    disabled={readOnly}
                     style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid #cbd5e1', marginBottom: 10, outline: 'none', fontSize: '0.88rem' }}
                   />
                   
@@ -1109,6 +1126,7 @@ function SurveyReportGenerator({ day, stakeholder, persons, personData }) {
                   <textarea
                     value={slot.description}
                     onChange={e => handleFieldChange(index, 'description', e.target.value)}
+                    disabled={readOnly}
                     placeholder="Describe this photo/interaction..."
                     style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid #cbd5e1', minHeight: 70, resize: 'none', outline: 'none', fontSize: '0.88rem' }}
                   />
@@ -1120,9 +1138,11 @@ function SurveyReportGenerator({ day, stakeholder, persons, personData }) {
       </div>
 
       <div style={{ display: 'flex', gap: 12, marginTop: 20, flexWrap: 'wrap' }}>
-        <button onClick={addSlot} style={{ padding: '10px 18px', borderRadius: 8, border: '1px solid #014a01', background: '#fff', color: '#014a01', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
-          + Add Photo Slot
-        </button>
+        {!readOnly && (
+          <button onClick={addSlot} style={{ padding: '10px 18px', borderRadius: 8, border: '1px solid #014a01', background: '#fff', color: '#014a01', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+            + Add Photo Slot
+          </button>
+        )}
         <button onClick={generatePDF} disabled={isGenerating} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: '#16a34a', color: '#fff', fontWeight: 600, cursor: isGenerating ? 'not-allowed' : 'pointer', opacity: isGenerating ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 8 }}>
           <FaFilePdf /> {isGenerating ? 'Generating...' : `Download Day-${day} PDF`}
         </button>
@@ -1254,6 +1274,28 @@ function DaySurvey({ day, stakeholderIdx, survey, data, onChange, readOnly, onFi
         })}
       </ul>
 
+      {/* PDF Report Generator — shown once all persons are filled */}
+      {allFilled && (
+        <>
+          <SurveyReportGenerator
+            day={day}
+            stakeholder={sh.stakeholder}
+            persons={persons}
+            personData={data}
+            onChange={onChange}
+            readOnly={readOnly}
+          />
+          <div className="dt-warning-box" style={{marginTop: 30}}>⚠️ Set sharing to <strong>&quot;Anyone with the link can view&quot;</strong>. Private links will NOT be evaluated.</div>
+          <div className="dt-link-section">
+            <label htmlFor={`d${day}-link`}>Google Drive Public Link</label>
+            <p>Paste the shareable link to your generated report here.</p>
+            <input id={`d${day}-link`} type="url" className="dt-link-input" placeholder="https://drive.google.com/…"
+              value={data.driveLink||''} readOnly={readOnly} style={readOnly ? {background:'#f9f9f9'} : {}}
+              onChange={e => !readOnly && onChange('driveLink', e.target.value)} />
+          </div>
+        </>
+      )}
+
       {!readOnly && (
         <div style={{ marginTop: '20px', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
           {activePerson < personCount && (
@@ -1275,34 +1317,18 @@ function DaySurvey({ day, stakeholderIdx, survey, data, onChange, readOnly, onFi
           )}
           {allFilled && (
             <button className="dt-save-btn" onClick={() => {
+              if (!data.driveLink || !data.driveLink.trim()) {
+                alert("Please provide the Google Drive Public Link of the generated report before submitting.");
+                return;
+              }
               if (window.confirm("Are you sure you want to submit all responses for evaluation? This cannot be undone.")) {
                 onFinalSubmit();
               }
             }} disabled={saving}>
-              {saving ? 'Submitting...' : 'Submit All Responses for Evaluation'}
+              {saving ? 'Submitting...' : 'Submit All Responses & Report'}
             </button>
           )}
         </div>
-      )}
-
-      {/* PDF Report Generator — shown once all persons are filled */}
-      {allFilled && (
-        <>
-          <SurveyReportGenerator
-            day={day}
-            stakeholder={sh.stakeholder}
-            persons={persons}
-            personData={data}
-          />
-          <div className="dt-warning-box" style={{marginTop: 30}}>⚠️ Set sharing to <strong>&quot;Anyone with the link can view&quot;</strong>. Private links will NOT be evaluated.</div>
-          <div className="dt-link-section">
-            <label htmlFor={`d${day}-link`}>Google Drive Public Link</label>
-            <p>Paste the shareable link to your generated report here.</p>
-            <input id={`d${day}-link`} type="url" className="dt-link-input" placeholder="https://drive.google.com/…"
-              value={data.driveLink||''} readOnly={readOnly} style={readOnly ? {background:'#f9f9f9'} : {}}
-              onChange={e => !readOnly && onChange('driveLink', e.target.value)} />
-          </div>
-        </>
       )}
     </div>
   );
