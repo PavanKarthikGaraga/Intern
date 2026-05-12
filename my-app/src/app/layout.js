@@ -3,6 +3,7 @@ import "./globals.css";
 import { AuthProvider } from "../context/AuthContext";
 import { Toaster } from 'react-hot-toast';
 import { Lexend } from 'next/font/google';
+import ChunkErrorGuard from './components/ChunkErrorGuard';
 
 const lexend = Lexend({
   subsets: ['latin'],
@@ -23,6 +24,7 @@ export default function RootLayout({ children }) {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </head>
       <body suppressHydrationWarning>
+        <ChunkErrorGuard />
         <AuthProvider>
           {children}
         </AuthProvider>
