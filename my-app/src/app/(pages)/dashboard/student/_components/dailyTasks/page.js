@@ -943,12 +943,11 @@ function SurveyReportGenerator({ day, stakeholder, persons, personData, onChange
   const [slots, setSlots] = useState(initSlots);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // Sync slots to parent
-  useEffect(() => {
+  const pushSlots = (newSlots) => {
     if (onChange && !readOnly) {
-      onChange('reportSlots', slots);
+      onChange('reportSlots', newSlots);
     }
-  }, [slots, onChange, readOnly]);
+  };
 
   const handleImageUpload = (index, e) => {
     if (readOnly) return;
@@ -956,7 +955,9 @@ function SurveyReportGenerator({ day, stakeholder, persons, personData, onChange
     if (!file) return;
     const reader = new FileReader();
     reader.onloadend = () => {
-      setSlots(prev => prev.map((s, i) => i === index ? { ...s, image: reader.result } : s));
+      const newSlots = slots.map((s, i) => i === index ? { ...s, image: reader.result } : s);
+      setSlots(newSlots);
+      pushSlots(newSlots);
     };
     reader.readAsDataURL(file);
   };
@@ -966,15 +967,24 @@ function SurveyReportGenerator({ day, stakeholder, persons, personData, onChange
     setSlots(prev => prev.map((s, i) => i === index ? { ...s, [field]: val } : s));
   };
 
+  const handleBlur = () => {
+    if (readOnly) return;
+    pushSlots(slots);
+  };
+
   const addSlot = () => {
     if (readOnly) return;
-    setSlots(prev => [...prev, { id: `extra-${Date.now()}`, image: null, name: '', description: '' }]);
+    const newSlots = [...slots, { id: `extra-${Date.now()}`, image: null, name: '', description: '' }];
+    setSlots(newSlots);
+    pushSlots(newSlots);
   };
 
   const removeSlot = (index) => {
     if (readOnly) return;
     if (slots.length <= 1) return;
-    setSlots(prev => prev.filter((_, i) => i !== index));
+    const newSlots = slots.filter((_, i) => i !== index);
+    setSlots(newSlots);
+    pushSlots(newSlots);
   };
 
   const generatePDF = async () => {
@@ -1115,6 +1125,7 @@ function SurveyReportGenerator({ day, stakeholder, persons, personData, onChange
                     type="text"
                     value={slot.name}
                     onChange={e => handleFieldChange(index, 'name', e.target.value)}
+                    onBlur={handleBlur}
                     disabled={readOnly}
                     style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid #cbd5e1', marginBottom: 10, outline: 'none', fontSize: '0.88rem' }}
                   />
@@ -1126,6 +1137,7 @@ function SurveyReportGenerator({ day, stakeholder, persons, personData, onChange
                   <textarea
                     value={slot.description}
                     onChange={e => handleFieldChange(index, 'description', e.target.value)}
+                    onBlur={handleBlur}
                     disabled={readOnly}
                     placeholder="Describe this photo/interaction..."
                     style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid #cbd5e1', minHeight: 70, resize: 'none', outline: 'none', fontSize: '0.88rem' }}
