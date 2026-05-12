@@ -77,7 +77,7 @@ function getDayStatus(dayNum, slot, saved, username, unlockedDays = [], slotEnab
     else isFinal = false;
   }
   
-  const isSubmitted = isEvaluated || (!!s && isFinal === true);
+  const isSubmitted = !!s && isFinal === true;
   const isUnlocked = unlockedDays.includes(dayNum);
 
   if (isSubmitted) return 'submitted';
