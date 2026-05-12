@@ -57,7 +57,7 @@ function getDayStatus(dayNum, slot, saved, username, unlockedDays = [], slotEnab
   
   const { open, close } = dayWindow(slot, dayNum);
   const now = serverNow();   // ← server-authoritative IST time
-  const isSubmitted = !!saved[dayNum];
+  const isSubmitted = saved[dayNum]?.data?.isFinal === true;
   const isUnlocked = unlockedDays.includes(dayNum);
 
   if (isSubmitted) return 'submitted';
@@ -234,6 +234,14 @@ export default function DailyTasks({ studentData, onSectionChange }) {
   const [saving, setSaving]   = useState(false);
   const [msg, setMsg]         = useState('');
   const [msgType, setMsgType] = useState('ok');
+  
+  // Use a Ref to always have the latest state for the async handleSave function
+  // and for synchronous updates during input changes
+  const latestDataRef = useRef({ saved: {}, draft: {} });
+  
+  useEffect(() => {
+    latestDataRef.current.saved = saved;
+  }, [saved]);
 
   const slotEnabled = studentData?.slotEnabled || false;
 
@@ -278,17 +286,37 @@ export default function DailyTasks({ studentData, onSectionChange }) {
   }), [saved, draft]);
 
   const setDayField = (day, field, value) => {
-    setDraft(prev => ({ ...prev, [day]: { ...(prev[day] || {}), [field]: value } }));
+    const newDraft = { ...(latestDataRef.current.draft[day] || {}), [field]: value };
+    setDraft(prev => {
+      const updated = { ...prev, [day]: newDraft };
+      latestDataRef.current.draft = updated; // Synchronous update
+      return updated;
+    });
     setMsg('');
   };
 
-  const handleSave = async () => {
-    const data = dayData(activeDay);
-    if (activeDay === 1 && wc(data.inference || '') < 100) {
+  // ── Debounced Auto-Save ──
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (Object.keys(draft).length > 0 && !saving) {
+        handleSave(true);
+      }
+    }, 3000); // Auto-save after 3 seconds of inactivity
+    return () => clearTimeout(timer);
+  }, [draft, saving, handleSave]);
+
+  const handleSave = useCallback(async (isDraft = false) => {
+    const { saved: latestSaved, draft: latestDraft } = latestDataRef.current;
+    const data = {
+      ...(latestSaved[activeDay]?.data || {}),
+      ...(latestDraft[activeDay] || {}),
+    };
+
+    if (!isDraft && activeDay === 1 && wc(data.inference || '') < 100) {
       setMsg(`Need at least 100 words (currently ${wc(data.inference||'')})`);
       setMsgType('err'); return;
     }
-    if (activeDay === 1) {
+    if (!isDraft && activeDay === 1) {
       const li = (data.linkedinUrl || '').trim();
       const yt = (data.youtubeUrl  || '').trim();
       const liValid = li.startsWith('https://www.linkedin.com/') || li.startsWith('https://linkedin.com/');
@@ -298,7 +326,7 @@ export default function DailyTasks({ studentData, onSectionChange }) {
       if (!yt) { setMsg('Please provide your YouTube channel URL.'); setMsgType('err'); return; }
       if (!ytValid) { setMsg('YouTube URL must start with https://www.youtube.com/@… or /channel/…'); setMsgType('err'); return; }
     }
-    if ([2, 3, 4].includes(activeDay)) {
+    if (!isDraft && [2, 3, 4].includes(activeDay)) {
       const pCount = data.personCount || 3;
       const sh = survey[activeDay - 2];
       const qCount = sh?.questions?.length || 0;
@@ -316,7 +344,7 @@ export default function DailyTasks({ studentData, onSectionChange }) {
         setMsgType('err'); return;
       }
     }
-    if (activeDay === 6) {
+    if (!isDraft && activeDay === 6) {
       if (!data.activityTitle || (data.activityTitle === 'Other' && !data.customTitle)) {
         setMsg("Please select an activity title."); setMsgType('err'); return;
       }
@@ -339,7 +367,7 @@ export default function DailyTasks({ studentData, onSectionChange }) {
         setMsgType('err'); return;
       }
     }
-    if (activeDay === 5) {
+    if (!isDraft && activeDay === 5) {
       const activeDays = [2, 3, 4].filter(d => {
         const sh = survey && survey[d - 2];
         if (!sh) return false;
@@ -358,21 +386,50 @@ export default function DailyTasks({ studentData, onSectionChange }) {
       }
     }
     setSaving(true);
+    setMsg('');
     try {
       const res  = await fetch('/api/dashboard/student/daily-tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ day: activeDay, data }),
+        body: JSON.stringify({ 
+          day: activeDay, 
+          data: { ...data, isFinal: !isDraft } 
+        }),
       });
       const json = await res.json();
       if (json.success) {
-        setSaved(prev => ({ ...prev, [activeDay]: { data, submittedAt: new Date().toISOString() } }));
-        setDraft(prev => { const n = { ...prev }; delete n[activeDay]; return n; });
-        setMsg('✓ Saved successfully!'); setMsgType('ok');
-      } else { setMsg(json.error || 'Save failed'); setMsgType('err'); }
-    } catch { setMsg('Network error'); setMsgType('err'); }
-    finally { setSaving(false); }
-  };
+        setSaved(prev => ({ 
+          ...prev, 
+          [activeDay]: { 
+            data: { ...data, isFinal: !isDraft }, 
+            submittedAt: prev[activeDay]?.submittedAt || (isDraft ? null : new Date().toISOString()) 
+          } 
+        }));
+        if (!isDraft) {
+          setDraft(prev => { 
+            const n = { ...prev }; 
+            delete n[activeDay]; 
+            latestDataRef.current.draft = n;
+            return n; 
+          });
+        }
+        setMsg(isDraft ? '✓ Progress saved' : '✓ Saved successfully!'); 
+        setMsgType('ok');
+        if (isDraft) setTimeout(() => setMsg(''), 2000);
+      } else { 
+        setMsg(json.error || 'Save failed'); 
+        setMsgType('err'); 
+      }
+    } catch { 
+      setMsg('Network error'); 
+      setMsgType('err'); 
+    } finally { 
+      setSaving(false); 
+    }
+  }, [activeDay, latestDataRef, setSaved, setDraft, setMsg, setMsgType, survey, saved]);
+
+  const handleSaveDraft = () => handleSave(true);
+  const handleFinalSubmit = () => handleSave(false);
 
   if (!ps) return (
     <div className="dt-wrap">
@@ -475,18 +532,23 @@ export default function DailyTasks({ studentData, onSectionChange }) {
             : (
               <>
                 {activeDay === 1 && <Day1 data={dayData(1)} onChange={(f,v) => setDayField(1,f,v)} ps={ps} readOnly={isSaved || isPreview} onSectionChange={onSectionChange} />}
-                {activeDay === 2 && <DaySurvey day={2} stakeholderIdx={0} survey={survey} data={dayData(2)} onChange={(f,v) => setDayField(2,f,v)} readOnly={isSaved || isPreview} onFinalSubmit={handleSave} saving={saving} minPersons={6} />}
-                {activeDay === 3 && <DaySurvey day={3} stakeholderIdx={1} survey={survey} data={dayData(3)} onChange={(f,v) => setDayField(3,f,v)} readOnly={isSaved || isPreview} onFinalSubmit={handleSave} saving={saving} minPersons={3} />}
-                {activeDay === 4 && <DaySurvey day={4} stakeholderIdx={2} survey={survey} data={dayData(4)} onChange={(f,v) => setDayField(4,f,v)} readOnly={isSaved || isPreview} onFinalSubmit={handleSave} saving={saving} minPersons={3} />}
+                {activeDay === 2 && <DaySurvey day={2} stakeholderIdx={0} survey={survey} data={dayData(2)} onChange={(f,v) => setDayField(2,f,v)} readOnly={isSaved || isPreview} onFinalSubmit={handleFinalSubmit} onDraftSave={handleSaveDraft} saving={saving} minPersons={6} />}
+                {activeDay === 3 && <DaySurvey day={3} stakeholderIdx={1} survey={survey} data={dayData(3)} onChange={(f,v) => setDayField(3,f,v)} readOnly={isSaved || isPreview} onFinalSubmit={handleFinalSubmit} onDraftSave={handleSaveDraft} saving={saving} minPersons={3} />}
+                {activeDay === 4 && <DaySurvey day={4} stakeholderIdx={2} survey={survey} data={dayData(4)} onChange={(f,v) => setDayField(4,f,v)} readOnly={isSaved || isPreview} onFinalSubmit={handleFinalSubmit} onDraftSave={handleSaveDraft} saving={saving} minPersons={3} />}
                 {activeDay === 5 && <Day5 saved={saved} survey={survey} data={dayData(5)} onChange={(f,v) => setDayField(5,f,v)} readOnly={isSaved || isPreview} />}
                 {activeDay === 6 && <Day6 data={dayData(6)} onChange={(f,v) => setDayField(6,f,v)} readOnly={isSaved || isPreview} studentData={studentData} />}
                 {activeDay === 7 && <Day7 saved={saved} data={dayData(7)} onChange={(f,v) => setDayField(7,f,v)} readOnly={isSaved || isPreview} studentData={studentData} survey={survey} />}
 
                 {activeDay !== 2 && activeDay !== 3 && activeDay !== 4 && (
                   <div className="dt-save-row">
-                    <button className="dt-save-btn" onClick={handleSave} disabled={saving || isSaved || !isEditable}>
-                      {saving ? 'Saving…' : isSaved ? '✓ Submitted' : isPreview ? '🔒 Submission Not Open Yet' : '💾 Save & Submit'}
+                    <button className="dt-save-btn" onClick={handleFinalSubmit} disabled={saving || isSaved || !isEditable}>
+                      {saving ? 'Saving…' : isSaved ? '✓ Submitted' : isPreview ? '🔒 Submission Not Open Yet' : '💾 Final Submit for Evaluation'}
                     </button>
+                    {!isSaved && isEditable && (
+                      <button className="dt-draft-btn" onClick={handleSaveDraft} disabled={saving}>
+                        {saving ? 'Saving...' : '💾 Save Progress'}
+                      </button>
+                    )}
                     {isSaved && (() => {
                       const mark = dailyMarks[`d${activeDay}`];
                       const max  = DAY_MAX[activeDay];
@@ -1044,10 +1106,16 @@ function SurveyReportGenerator({ day, stakeholder, persons, personData }) {
 }
 
 /* ── Days 2/3/4 – Survey ── */
-function DaySurvey({ day, stakeholderIdx, survey, data, onChange, readOnly, onFinalSubmit, saving, minPersons = 3 }) {
-  const initCount = Math.max(data.personCount || minPersons, minPersons);
-  const [personCount, setPersonCount] = useState(initCount);
+function DaySurvey({ day, stakeholderIdx, survey, data, onChange, readOnly, onFinalSubmit, onDraftSave, saving, minPersons = 3 }) {
+  const [personCount, setPersonCount] = useState(Math.max(data.personCount || minPersons, minPersons));
   const [activePerson, setActivePerson] = useState(1);
+
+  // Sync personCount when data loads
+  useEffect(() => {
+    if (data.personCount && data.personCount !== personCount) {
+      setPersonCount(data.personCount);
+    }
+  }, [data.personCount, personCount]);
 
   if (!survey) return <div className="dt-info-box"><h4>Survey data not available</h4><p>No questions found for your problem statement. Contact admin.</p></div>;
 
@@ -1093,7 +1161,7 @@ function DaySurvey({ day, stakeholderIdx, survey, data, onChange, readOnly, onFi
     <div>
       <div className="dt-sh-banner">
         <span className="sh-tag">{sh.stakeholder}</span>
-        <p>Record your interviews for this stakeholder group.</p>
+        <p>Take photos along with stakeholders while performing the surveys and generate the document at last and upload in the drive and submit the public link.</p>
         <p style={{ fontSize: '0.8rem', color: '#555', marginTop: 4 }}>Minimum {minPersons} persons required.</p>
       </div>
 
@@ -1163,11 +1231,20 @@ function DaySurvey({ day, stakeholderIdx, survey, data, onChange, readOnly, onFi
       {!readOnly && (
         <div style={{ marginTop: '20px', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
           {activePerson < personCount && (
-            <button className="dt-save-btn" onClick={() => {
-              if (isFilled(activePerson)) setActivePerson(activePerson + 1);
+            <button className="dt-save-btn" onClick={async () => {
+              if (isFilled(activePerson)) {
+                // Ensure we call onDraftSave BEFORE changing local UI state to avoid confusion
+                await onDraftSave(); 
+                setActivePerson(activePerson + 1);
+              }
               else alert('Please complete all questions and the name for this person first.');
             }} style={{ background: '#1a7a1a' }}>
-              Save Person &amp; Next
+              {saving ? 'Saving...' : 'Save Person & Next'}
+            </button>
+          )}
+          {!allFilled && !readOnly && (
+            <button className="dt-draft-btn" onClick={onDraftSave} disabled={saving} style={{ background: '#475569' }}>
+              {saving ? 'Saving...' : '💾 Save Progress'}
             </button>
           )}
           {allFilled && (

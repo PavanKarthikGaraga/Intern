@@ -203,6 +203,23 @@
 .dt-save-msg.ok { color: #014a01; font-weight: 600; }
 .dt-save-msg.err { color: #c62828; font-weight: 600; }
 
+.dt-draft-btn {
+  padding: 10px 22px; 
+  background: #475569; 
+  color: #fff; 
+  border: none;
+  border-radius: 8px; 
+  font-size: 0.9rem; 
+  font-weight: 600; 
+  cursor: pointer; 
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dt-draft-btn:hover:not(:disabled) { background: #334155; transform: translateY(-1px); }
+.dt-draft-btn:disabled { background: #cbd5e1; cursor: not-allowed; }
+
 /* No PS warning */
 .dt-no-ps {
   text-align: center; padding: 40px 20px; background: #fff8e1;
