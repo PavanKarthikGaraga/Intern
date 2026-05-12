@@ -169,6 +169,24 @@ function TaskPreview({ day, data }) {
   return null;
 }
 
+/* ── Mode tag helper ── */
+function ModeTag({ mode }) {
+  if (!mode) return null;
+  const m = mode.toLowerCase();
+  const cfg = m.includes('remote')
+    ? { label: 'Remote', bg: '#dbeafe', color: '#1e40af', border: '#93c5fd' }
+    : m.includes('village')
+    ? { label: 'In-Village', bg: '#fef3c7', color: '#92400e', border: '#fcd34d' }
+    : { label: 'In-Campus', bg: '#dcfce7', color: '#14532d', border: '#86efac' };
+  return (
+    <span style={{
+      display: 'inline-block', padding: '1px 8px', borderRadius: 12,
+      background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}`,
+      fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.02em', whiteSpace: 'nowrap'
+    }}>{cfg.label}</span>
+  );
+}
+
 /* ── Single student evaluation row ── */
 function EvalRow({ student, day, maxMarks, onSave }) {
   const [expanded, setExpanded] = useState(false);
@@ -227,7 +245,12 @@ function EvalRow({ student, day, maxMarks, onSave }) {
           <div className="ev-avatar">{student.name?.[0]?.toUpperCase() || '?'}</div>
           <div>
             <div className="ev-student-name">{student.name}</div>
-            <div className="ev-student-meta">{student.username} · {student.selectedDomain}</div>
+            <div className="ev-student-meta" style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+              <span>{student.username}</span>
+              <span>·</span>
+              <span>{student.selectedDomain}</span>
+              {student.mode && <ModeTag mode={student.mode} />}
+            </div>
           </div>
         </div>
         <div className="ev-row-right">
@@ -293,6 +316,7 @@ export default function Evaluate() {
   const [search, setSearch]   = useState('');
   const [tab, setTab]         = useState('submitted');  // 'submitted' | 'not_submitted'
   const [subTab, setSubTab]   = useState('pending_eval'); // 'pending_eval' | 'evaluated'
+  const [modeFilter, setModeFilter] = useState('all'); // 'all' | 'remote' | 'incampus' | 'invillage'
 
   const fetchData = useCallback(async () => {
     if (!slot || !day) return;
@@ -346,14 +370,18 @@ export default function Evaluate() {
 
   const filterStudents = (list) =>
     (list || []).filter(s =>
-      !search ||
-      s.name?.toLowerCase().includes(search.toLowerCase()) ||
-      s.username?.includes(search)
+      (!search ||
+        s.name?.toLowerCase().includes(search.toLowerCase()) ||
+        s.username?.includes(search))
     );
 
+  const filterByMode = (list) =>
+    modeFilter === 'all' ? list :
+    (list || []).filter(s => (s.mode || '').toLowerCase().replace(/[^a-z]/g, '') === modeFilter.replace(/[^a-z]/g, ''));
+
   const allSubmitted  = filterStudents(data?.submitted);
-  const evalDone      = allSubmitted.filter(s => s.evaluated);
-  const evalPending   = allSubmitted.filter(s => !s.evaluated);
+  const evalDone      = filterByMode(allSubmitted.filter(s => s.evaluated));
+  const evalPending   = filterByMode(allSubmitted.filter(s => !s.evaluated));
   const notSubmitted  = filterStudents(data?.notSubmitted);
 
   return (
@@ -472,14 +500,39 @@ export default function Evaluate() {
                   className={`ev-sub-tab ${subTab === 'pending_eval' ? 'active' : ''}`}
                   onClick={() => setSubTab('pending_eval')}
                 >
-                  ⏳ Pending Evaluation ({evalPending.length})
+                  ⏳ Pending Evaluation ({allSubmitted.filter(s => !s.evaluated).length})
                 </button>
                 <button
                   className={`ev-sub-tab ${subTab === 'evaluated' ? 'active' : ''}`}
                   onClick={() => setSubTab('evaluated')}
                 >
-                  ✅ Evaluated ({evalDone.length})
+                  ✅ Evaluated ({allSubmitted.filter(s => s.evaluated).length})
                 </button>
+              </div>
+
+              {/* Mode filter */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#475569' }}>Filter by Mode:</span>
+                {['all', 'remote', 'incampus', 'invillage'].map(m => {
+                  const labels = { all: 'All', remote: 'Remote', incampus: 'In-Campus', invillage: 'In-Village' };
+                  const colors = { all: '#6366f1', remote: '#1e40af', incampus: '#14532d', invillage: '#92400e' };
+                  const bgs = { all: '#eef2ff', remote: '#dbeafe', incampus: '#dcfce7', invillage: '#fef3c7' };
+                  const isActive = modeFilter === m;
+                  return (
+                    <button key={m} onClick={() => setModeFilter(m)} style={{
+                      padding: '4px 14px', borderRadius: 20, border: `1.5px solid ${isActive ? colors[m] : '#e2e8f0'}`,
+                      background: isActive ? bgs[m] : '#fff',
+                      color: isActive ? colors[m] : '#64748b',
+                      fontWeight: isActive ? 700 : 500, fontSize: '0.8rem', cursor: 'pointer',
+                      transition: 'all 0.15s'
+                    }}>{labels[m]}</button>
+                  );
+                })}
+                {modeFilter !== 'all' && (
+                  <span style={{ fontSize: '0.78rem', color: '#64748b' }}>
+                    Showing {subTab === 'pending_eval' ? evalPending.length : evalDone.length} students
+                  </span>
+                )}
               </div>
 
               {/* Pending Evaluation list */}
@@ -530,7 +583,12 @@ export default function Evaluate() {
                       <div className="ev-avatar ev-avatar-missing">{s.name?.[0]?.toUpperCase() || '?'}</div>
                       <div>
                         <div className="ev-student-name">{s.name}</div>
-                        <div className="ev-student-meta">{s.username} · {s.selectedDomain}</div>
+                        <div className="ev-student-meta" style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                          <span>{s.username}</span>
+                          <span>·</span>
+                          <span>{s.selectedDomain}</span>
+                          {s.mode && <ModeTag mode={s.mode} />}
+                        </div>
                       </div>
                     </div>
                     <div className="ev-row-right">

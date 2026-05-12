@@ -71,7 +71,7 @@ export async function GET(request) {
 
       // All students in this slot
       const [allStudents] = await db.execute(
-        `SELECT r.username, r.name, r.slot, r.selectedDomain,
+        `SELECT r.username, r.name, r.slot, r.selectedDomain, r.mode,
                 dm.day${day} AS dayMark
          FROM registrations r
          LEFT JOIN dailyMarks dm ON r.username = dm.username
