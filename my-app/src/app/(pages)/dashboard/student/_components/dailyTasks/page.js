@@ -468,6 +468,35 @@ export default function DailyTasks({ studentData, onSectionChange }) {
 
       if (lastErr) throw lastErr; // All retries failed
 
+      // ── Auto-refresh on 401 Unauthorized ──────────────────────────────────
+      // If token expired mid-session, silently refresh and retry once
+      if (res.status === 401) {
+        try {
+          setMsg('Session refreshing, please wait…');
+          const refreshRes = await fetch('/api/auth/refresh', { method: 'POST' });
+          if (refreshRes.ok) {
+            // Token refreshed — retry the original save
+            const retryRes = await fetch('/api/dashboard/student/daily-tasks', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body,
+            });
+            res = retryRes;
+          } else {
+            // Refresh failed — session truly expired
+            setMsg('Your session has expired. Please refresh the page and log in again.');
+            setMsgType('err');
+            setSaving(false);
+            return;
+          }
+        } catch {
+          setMsg('Your session has expired. Please refresh the page and log in again.');
+          setMsgType('err');
+          setSaving(false);
+          return;
+        }
+      }
+
       const json = await res.json();
       if (json.success) {
         setSaved(prev => ({ 
@@ -488,6 +517,9 @@ export default function DailyTasks({ studentData, onSectionChange }) {
         setMsg(isDraft ? '✓ Progress saved' : '✓ Saved successfully!'); 
         setMsgType('ok');
         if (isDraft) setTimeout(() => setMsg(''), 2000);
+      } else if (res.status === 401 || json.error?.toLowerCase().includes('unauthorized')) {
+        setMsg('Session expired. Please refresh the page and log in again.');
+        setMsgType('err');
       } else { 
         setMsg(json.error || 'Save failed'); 
         setMsgType('err'); 

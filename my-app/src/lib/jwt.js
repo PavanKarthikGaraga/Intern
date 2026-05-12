@@ -14,14 +14,14 @@ const refreshSecret = new TextEncoder().encode(REFRESH_TOKEN);
 export const generateAccessToken = async (payload) => {
   return await new jose.SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
-    .setExpirationTime('10m')
+    .setExpirationTime('8h')
     .sign(accessSecret);
 };
 
 export const generateRefreshToken = async (payload) => {
   return await new jose.SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
-    .setExpirationTime('40m')
+    .setExpirationTime('7d')
     .sign(refreshSecret);
 };
 
