@@ -58,9 +58,9 @@ export async function POST(request) {
         `INSERT INTO dailyTasks (username, day, data)
          VALUES (?, ?, ?)
          ON DUPLICATE KEY UPDATE
+           submittedAt = IF(JSON_EXTRACT(VALUES(data), '$.isFinal') = true AND JSON_EXTRACT(dailyTasks.data, '$.isFinal') IS NOT TRUE, CURRENT_TIMESTAMP, dailyTasks.submittedAt),
            data = VALUES(data),
            updatedAt = CURRENT_TIMESTAMP`,
-        // submittedAt intentionally excluded from UPDATE — preserves original submission time
         [payload.username, day, JSON.stringify(sanitizedData)]
       );
 
