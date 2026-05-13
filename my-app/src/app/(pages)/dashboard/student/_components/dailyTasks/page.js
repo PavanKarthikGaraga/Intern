@@ -80,6 +80,9 @@ function getDayStatus(dayNum, slot, saved, username, unlockedDays = [], slotEnab
   const mark = dailyMarks[`d${dayNum}`];
   const isEvaluated = mark !== null && mark !== undefined && mark !== '';
   
+  // If the admin has already evaluated this day, it is definitely submitted.
+  if (isEvaluated) return 'submitted';
+  
   let isFinal = s?.data?.isFinal;
 
   // ── Strict validation: override to false if required data is missing ──
