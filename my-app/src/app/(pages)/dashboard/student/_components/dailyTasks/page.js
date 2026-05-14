@@ -231,7 +231,9 @@ function TimerBar({ openTime, closeTime, status }) {
 
 /* ── Completed bar component ── */
 function CompletedBar({ deadline, submittedAt }) {
-  const diff = deadline.getTime() - new Date(submittedAt).getTime();
+  // Prefer finalSubmittedAt stored in data (accurate), fall back to DB submittedAt
+  const displayTime = submittedAt;
+  const diff = deadline.getTime() - new Date(displayTime).getTime();
   let text = '';
   if (diff < 0) {
     text = 'Submitted late';
@@ -244,7 +246,7 @@ function CompletedBar({ deadline, submittedAt }) {
     <div className="dt-timer-bar" style={{ background: '#e8f5e9', borderColor: '#c8e6c9' }}>
       <span className="dt-timer-label" style={{ color: '#2e7d32', display: 'flex', alignItems: 'center', gap: '6px' }}><FaCheckCircle /> {text}</span>
       <span className="dt-timer-date">
-        Submitted: {new Date(submittedAt).toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit', hour12:true })}
+        Submitted: {new Date(displayTime).toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit', hour12:true })}
       </span>
     </div>
   );
@@ -434,6 +436,11 @@ export default function DailyTasks({ studentData, onSectionChange }) {
       // Strip base64 images from reportSlots before saving — they can be 5–30 MB
       // and cause Network errors/timeouts. Only persist text fields (name, description).
       const dataToSave = { ...data, isFinal: !isDraft };
+      // Stamp the exact final submission time — do NOT overwrite if already set
+      // (so re-saves after the initial submit don't reset the timestamp)
+      if (!isDraft && !dataToSave.finalSubmittedAt) {
+        dataToSave.finalSubmittedAt = new Date().toISOString();
+      }
       if (dataToSave.reportSlots && Array.isArray(dataToSave.reportSlots)) {
         dataToSave.reportSlots = dataToSave.reportSlots.map(slot => ({
           id: slot.id,
@@ -583,7 +590,10 @@ export default function DailyTasks({ studentData, onSectionChange }) {
       {/* Timer / status bar */}
       {isSaved ? (
         <>
-          <CompletedBar deadline={slot ? dayWindow(slot, activeDay).close : new Date()} submittedAt={saved[activeDay]?.submittedAt} />
+          <CompletedBar 
+            deadline={slot ? dayWindow(slot, activeDay).close : new Date()} 
+            submittedAt={saved[activeDay]?.data?.finalSubmittedAt || saved[activeDay]?.submittedAt} 
+          />
           {/* Evaluated marks banner */}
           {(() => {
             const mark = dailyMarks[`d${activeDay}`];
