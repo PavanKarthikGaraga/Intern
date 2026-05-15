@@ -107,15 +107,18 @@ function Day5Preview({ data, surveyDays }) {
     if (!dayData) return null;
     const personCount = Number(dayData.personCount) || 6;
     const groups = [];
-    let idx = 1;
     for (let p = 1; p <= personCount; p++) {
       const person = dayData[`p${p}`];
       if (!person) continue;
-      groups.push({ name: person.name || `Person ${p}`, answers: person.answers || [] });
+      // answers may be stored as JSON string — safely parse it
+      let answers = person.answers ?? [];
+      if (typeof answers === 'string') {
+        try { answers = JSON.parse(answers); } catch { answers = []; }
+      }
+      if (!Array.isArray(answers)) answers = [];
+      groups.push({ name: person.name || `Person ${p}`, answers });
     }
     if (!groups.length) return null;
-    // Compute per-question Yes% across all persons in same stakeholder (by name grouping)
-    // Simple: list per person
     return groups;
   };
 
