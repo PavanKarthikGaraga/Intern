@@ -216,7 +216,97 @@ function TableView({ dayData }) {
   );
 }
 
-/* ─── Analysis Text Section ─── */
+/* ─── Smart Text Summarizer ─────────────────────────────────────────────────
+ * Extracts the most common phrases/themes from all student submissions
+ * and presents them as clean ranked bullet points with mention counts.
+ */
+const STOP_WORDS = new Set([
+  'a','an','the','and','or','but','in','on','at','to','for','of','with',
+  'is','are','was','were','be','been','being','have','has','had','do','does',
+  'did','will','would','could','should','may','might','shall','can','need',
+  'that','this','these','those','it','its','they','their','them','we','our',
+  'you','your','i','my','he','she','his','her','by','from','as','so','also',
+  'not','no','more','most','some','all','many','much','very','too','such',
+  'which','who','what','when','where','how','if','then','than','after','before',
+  'about','through','into','during','between','because','while','since','until',
+  'students','student','survey','people','community','area','local','village',
+  'respondents','respondent','data','result','results','show','shows','found',
+  'indicates','indicate','reported','report','identified','identify',
+]);
+
+function extractThemes(texts, topN = 7) {
+  if (!texts || texts.length === 0) return [];
+
+  // Build a map of phrase → set of submission indices mentioning it
+  const phraseMap = {};
+
+  texts.forEach((text, idx) => {
+    if (!text) return;
+    // Split into sentences
+    const sentences = text.split(/[.!?;]+/).map(s => s.trim()).filter(s => s.length > 10);
+
+    sentences.forEach(sentence => {
+      // Extract bigrams and trigrams of meaningful words
+      const words = sentence
+        .toLowerCase()
+        .replace(/[^a-z\s'-]/g, ' ')
+        .split(/\s+/)
+        .filter(w => w.length > 3 && !STOP_WORDS.has(w));
+
+      // Single meaningful words (length > 5)
+      words.filter(w => w.length > 5).forEach(w => {
+        if (!phraseMap[w]) phraseMap[w] = new Set();
+        phraseMap[w].add(idx);
+      });
+
+      // Bigrams
+      for (let i = 0; i < words.length - 1; i++) {
+        if (words[i].length > 3 && words[i+1].length > 3) {
+          const bigram = `${words[i]} ${words[i+1]}`;
+          if (!phraseMap[bigram]) phraseMap[bigram] = new Set();
+          phraseMap[bigram].add(idx);
+        }
+      }
+
+      // Trigrams
+      for (let i = 0; i < words.length - 2; i++) {
+        if (words[i].length > 3 && words[i+1].length > 3 && words[i+2].length > 3) {
+          const trigram = `${words[i]} ${words[i+1]} ${words[i+2]}`;
+          if (!phraseMap[trigram]) phraseMap[trigram] = new Set();
+          phraseMap[trigram].add(idx);
+        }
+      }
+    });
+  });
+
+  // Score: prefer longer phrases with higher mention count
+  const scored = Object.entries(phraseMap)
+    .map(([phrase, set]) => ({ phrase, count: set.size, wordCount: phrase.split(' ').length }))
+    .filter(item => item.count >= Math.max(2, Math.floor(texts.length * 0.15))) // min 15% of students
+    .sort((a, b) => {
+      // Prefer trigrams > bigrams > words; then by count
+      const scoreFn = x => x.count * (x.wordCount === 3 ? 1.6 : x.wordCount === 2 ? 1.3 : 1);
+      return scoreFn(b) - scoreFn(a);
+    });
+
+  // Deduplicate: remove phrases that are sub-phrases of a higher-ranked phrase
+  const selected = [];
+  for (const item of scored) {
+    const dominated = selected.some(s => s.phrase.includes(item.phrase) || item.phrase.includes(s.phrase));
+    if (!dominated) selected.push(item);
+    if (selected.length >= topN) break;
+  }
+
+  // Capitalise each phrase nicely
+  return selected.map(item => ({
+    phrase: item.phrase.charAt(0).toUpperCase() + item.phrase.slice(1),
+    count: item.count,
+    total: texts.length,
+    pct: Math.round((item.count / texts.length) * 100),
+  }));
+}
+
+/* ─── Analysis Text Section (smart summarized) ─── */
 function AnalysisSection({ analysis }) {
   if (!analysis) return null;
 
@@ -226,21 +316,20 @@ function AnalysisSection({ analysis }) {
     { key: 'day4', label: 'Day 4 — Stakeholder 3' },
   ];
   const fields = [
-    { key: 'topProblems',    label: 'Top Problems Identified',     icon: '🎯' },
-    { key: 'rootCauses',     label: 'Root Causes',                  icon: '🔍' },
-    { key: 'recommendations',label: 'Recommendations',              icon: '💡' },
+    { key: 'topProblems',    label: 'Common Problems Identified', icon: '🎯', color: '#dc2626' },
+    { key: 'rootCauses',     label: 'Common Root Causes',         icon: '🔍', color: '#7c3aed' },
+    { key: 'recommendations',label: 'Common Recommendations',     icon: '💡', color: '#059669' },
   ];
 
   const hasAnyData = days.some(d =>
     fields.some(f => (analysis[`${d.key}_${f.key}`] || []).length > 0)
   );
-
   if (!hasAnyData) return null;
 
   return (
     <div className="sa-analysis-section">
       <div className="sa-analysis-header">
-        <FaLightbulb /> Student Analysis Submissions (Day 5)
+        <FaLightbulb /> Student Analysis Summary (Day 5) — Common Themes Across All Submissions
       </div>
       <div className="sa-analysis-body">
         {days.map(({ key: dk, label: dlabel }) => {
@@ -251,24 +340,38 @@ function AnalysisSection({ analysis }) {
               <div className="sa-analysis-day-label">
                 <FaFileAlt /> {dlabel}
               </div>
-              <div className="sa-analysis-fields">
-                {fields.map(({ key: fk, label, icon }) => {
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
+                {fields.map(({ key: fk, label, icon, color }) => {
                   const entries = analysis[`${dk}_${fk}`] || [];
+                  const themes  = extractThemes(entries);
                   return (
-                    <div key={fk} className="sa-analysis-field">
-                      <label>{icon} {label} ({entries.length} student{entries.length !== 1 ? 's' : ''})</label>
-                      {entries.length === 0 ? (
-                        <span className="sa-analysis-empty">No submissions for this field.</span>
+                    <div key={fk} className="sa-analysis-field" style={{ flex: 1, minWidth: 220 }}>
+                      <label style={{ color }}>
+                        {icon} {label}
+                        <span style={{ fontWeight: 400, color: '#94a3b8', marginLeft: 6, fontSize: '0.68rem' }}>
+                          ({entries.length} student{entries.length !== 1 ? 's' : ''})
+                        </span>
+                      </label>
+                      {themes.length === 0 ? (
+                        <span className="sa-analysis-empty">
+                          {entries.length === 0
+                            ? 'No submissions yet.'
+                            : 'Not enough data for pattern detection (need ≥2 students with common themes).'}
+                        </span>
                       ) : (
-                        <div className="sa-analysis-quotes">
-                          {entries.slice(0, 3).map((e, i) => (
-                            <div key={i} className="sa-analysis-quote">{e.slice(0, 400)}{e.length > 400 ? '…' : ''}</div>
-                          ))}
-                          {entries.length > 3 && (
-                            <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontStyle: 'italic' }}>
-                              + {entries.length - 3} more submission{entries.length - 3 !== 1 ? 's' : ''}
+                        <div className="sa-theme-list">
+                          {themes.map((t, i) => (
+                            <div key={i} className="sa-theme-item">
+                              <div className="sa-theme-rank" style={{ background: color }}>{i + 1}</div>
+                              <div className="sa-theme-text">{t.phrase}</div>
+                              <div className="sa-theme-bar-wrap">
+                                <div className="sa-theme-bar" style={{ width: `${t.pct}%`, background: color }} />
+                              </div>
+                              <div className="sa-theme-count" style={{ color }}>
+                                {t.count}/{t.total}
+                              </div>
                             </div>
-                          )}
+                          ))}
                         </div>
                       )}
                     </div>

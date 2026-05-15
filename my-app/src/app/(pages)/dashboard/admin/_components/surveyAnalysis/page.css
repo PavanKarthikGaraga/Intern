@@ -472,6 +472,56 @@
   padding: 6px 0;
 }
 
+/* ── Theme ranked list ── */
+.sa-theme-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.sa-theme-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sa-theme-rank {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.sa-theme-text {
+  flex: 1;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1e293b;
+  min-width: 0;
+}
+.sa-theme-bar-wrap {
+  width: 60px;
+  height: 6px;
+  background: #f1f5f9;
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.sa-theme-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+.sa-theme-count {
+  font-size: 0.72rem;
+  font-weight: 800;
+  min-width: 32px;
+  text-align: right;
+}
+
 /* ── No Data states ── */
 .sa-no-data {
   padding: 20px;
