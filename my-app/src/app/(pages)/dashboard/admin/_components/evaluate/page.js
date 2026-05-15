@@ -124,12 +124,16 @@ function Day5Preview({ data, surveyDays, ps }) {
   };
 
   // Build aggregated Yes/No per question grouped by stakeholder
+  // Day 2 → survey[0], Day 3 → survey[1], Day 4 → survey[2]
   const buildStakeholderGroups = (dayData, dayIdx) => {
     if (!dayData) return null;
-    const stakeholders = survey || null;
 
-    if (!stakeholders) {
-      // No survey structure — scan all pX keys that exist
+    // Each day interviews ONE stakeholder group — pick it by day index
+    const shIndex = dayIdx - 2; // Day2→0, Day3→1, Day4→2
+    const sh = survey ? survey[shIndex] : null;
+
+    if (!sh) {
+      // No survey structure or missing entry — scan all pX keys that exist
       const persons = [];
       for (let p = 1; p <= 20; p++) {
         const person = dayData[`p${p}`];
@@ -140,17 +144,15 @@ function Day5Preview({ data, surveyDays, ps }) {
       return [{ stakeholder: `Day ${dayIdx} Responses`, persons, questions: [] }];
     }
 
-    // Map persons to stakeholder groups using survey structure counts (no hard personCount cap)
-    let pIdx = 1;
-    return stakeholders.map(sh => {
-      const persons = [];
-      for (let i = 0; i < sh.count; i++, pIdx++) {
-        const person = dayData[`p${pIdx}`];
-        if (!person) continue;  // slot empty, pIdx already advances in for loop
-        persons.push({ name: person.name || `Person ${pIdx}`, answers: getAnswers(person) });
-      }
-      return { stakeholder: sh.stakeholder, persons, questions: sh.questions || [] };
-    }).filter(g => g.persons.length > 0);
+    // Collect all persons p1..pN for this day's stakeholder group
+    const persons = [];
+    for (let pIdx = 1; pIdx <= sh.count; pIdx++) {
+      const person = dayData[`p${pIdx}`];
+      if (!person) continue;
+      persons.push({ name: person.name || `Person ${pIdx}`, answers: getAnswers(person) });
+    }
+    if (!persons.length) return null;
+    return [{ stakeholder: sh.stakeholder, persons, questions: sh.questions || [] }];
   };
 
   return (
