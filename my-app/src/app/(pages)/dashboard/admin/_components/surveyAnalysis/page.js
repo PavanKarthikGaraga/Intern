@@ -1,9 +1,9 @@
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import {
-  FaChartPie, FaChevronDown, FaChevronUp, FaSearch,
+  FaChartPie, FaChevronDown, FaSearch,
   FaTable, FaChartBar, FaSyncAlt, FaLayerGroup,
-  FaLightbulb, FaUsers, FaListUl, FaFileAlt,
+  FaUsers, FaListUl,
 } from 'react-icons/fa';
 import './page.css';
 
@@ -13,11 +13,11 @@ const PALETTE = [
   '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6',
 ];
 
-/* ─── Severity helper ─── */
-function getSeverity(pct) {
-  if (pct >= 70) return { label: 'High', cls: 'high' };
-  if (pct >= 40) return { label: 'Moderate', cls: 'medium' };
-  return { label: 'Low', cls: 'low' };
+/* ─── Bar colour: green = more Yes, orange = moderate, red = low Yes ─── */
+function barColor(pct) {
+  if (pct >= 60) return '#16a34a'; // green — majority says Yes
+  if (pct >= 35) return '#d97706'; // amber — roughly half
+  return '#dc2626';                // red   — minority says Yes
 }
 
 /* ─── Mini Pie Chart (Canvas-based, no lib needed) ─── */
@@ -84,9 +84,8 @@ function PieChart({ segments, size = 160 }) {
 
 /* ─── Single Question Bar ─── */
 function QuestionBar({ qi, question, yes, no, total }) {
-  const pct = total > 0 ? Math.round((yes / total) * 100) : 0;
-  const sev = getSeverity(pct);
-  const barColor = pct >= 70 ? '#ef4444' : pct >= 40 ? '#f59e0b' : '#10b981';
+  const pct   = total > 0 ? Math.round((yes / total) * 100) : 0;
+  const color = barColor(pct);
 
   return (
     <div className="sa-q-row">
@@ -95,11 +94,10 @@ function QuestionBar({ qi, question, yes, no, total }) {
       </div>
       <div className="sa-q-bar-row">
         <div className="sa-q-bar-wrap">
-          <div className="sa-q-bar-yes" style={{ width: `${pct}%`, background: barColor }} />
+          <div className="sa-q-bar-yes" style={{ width: `${pct}%`, background: color }} />
         </div>
-        <span className="sa-q-pct" style={{ color: barColor }}>{pct}%</span>
+        <span className="sa-q-pct" style={{ color }}>{pct}%</span>
         <span className="sa-q-counts">({yes}Y / {no}N)</span>
-        <span className={`sa-severity ${sev.cls}`}>{sev.label}</span>
       </div>
     </div>
   );
@@ -108,10 +106,11 @@ function QuestionBar({ qi, question, yes, no, total }) {
 /* ─── Stakeholder Group ─── */
 function StakeholderGroup({ sh }) {
   const { stakeholder, totalPersons, questions, yesCount, noCount } = sh;
-  const overallYes = yesCount.reduce((a, b) => a + b, 0);
-  const overallNo  = noCount.reduce((a, b) => a + b, 0);
+  const overallYes   = yesCount.reduce((a, b) => a + b, 0);
+  const overallNo    = noCount.reduce((a, b) => a + b, 0);
   const overallTotal = overallYes + overallNo;
   const overallPct   = overallTotal > 0 ? Math.round((overallYes / overallTotal) * 100) : 0;
+  const overallColor = barColor(overallPct);
 
   return (
     <div className="sa-sh-group">
@@ -120,9 +119,9 @@ function StakeholderGroup({ sh }) {
           <FaUsers /> {stakeholder}
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-          <span className="sa-sh-count">{totalPersons} person{totalPersons !== 1 ? 's' : ''}</span>
+          <span className="sa-sh-count">{totalPersons} person{totalPersons !== 1 ? 's' : ''} surveyed</span>
           <span className="sa-sh-count">{questions.length} question{questions.length !== 1 ? 's' : ''}</span>
-          <span className={`sa-severity ${getSeverity(overallPct).cls}`} style={{ fontSize: '0.75rem' }}>
+          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: overallColor, background: 'rgba(255,255,255,0.15)', padding: '2px 8px', borderRadius: 10 }}>
             Overall: {overallPct}% Yes
           </span>
         </div>
@@ -508,8 +507,6 @@ function PSCard({ ps, psData }) {
             <TableView dayData={days[activeDay] || []} />
           )}
 
-          {/* Analysis Text */}
-          <AnalysisSection analysis={analysis} />
         </div>
       )}
     </div>

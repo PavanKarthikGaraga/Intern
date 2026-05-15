@@ -159,12 +159,14 @@ export async function GET(request) {
         }
 
         const shEntry = psEntry[dayKey][shKey];
-        shEntry.totalPersons += 1;
 
         // Aggregate answers across all p1..pN persons in this student's submission
+        // totalPersons counts actual people interviewed, not number of student submitters
         for (let pIdx = 1; pIdx <= 30; pIdx++) {
           const person = data[`p${pIdx}`];
           if (!person) break;
+
+          shEntry.totalPersons += 1; // ← inside loop: 1 per actual person surveyed
 
           const answers = parseAnswers(person.answers);
           answers.forEach((ans, qi) => {
