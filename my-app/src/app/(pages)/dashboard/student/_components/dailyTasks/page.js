@@ -554,7 +554,7 @@ export default function DailyTasks({ studentData, onSectionChange }) {
     } finally { 
       setSaving(false); 
     }
-  }, [activeDay, latestDataRef, setSaved, setDraft, setMsg, setMsgType, survey, saved]);
+  }, [activeDay, latestDataRef, setSaved, setDraft, setMsg, setMsgType, survey, saved, studentData?.slot]);
 
 
 
@@ -1657,14 +1657,14 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
     if (!data.coverPhoto || !data.photo2 || !data.photo3 || !data.photo4 || !data.photo5) {
       alert("Please upload all 5 photos before generating the report."); return;
     }
-    if (wc(data.coverDesc || '') < 180) {
-      alert(`Cover photo description needs at least 180 words (current: ${wc(data.coverDesc||'')})`); return;
+    if (wc(data.coverDesc || '') < 120) {
+      alert(`Cover photo description needs at least 120 words (current: ${wc(data.coverDesc||'')})`); return;
     }
     const otherKeys = ['photo2Desc', 'photo3Desc', 'photo4Desc', 'photo5Desc'];
     for (let k of otherKeys) {
       const count = wc(data[k] || '');
-      if (count < 60) {
-        alert(`Each photo description needs at least 60 words (current: ${count} words)`); return;
+      if (count < 40) {
+        alert(`Each photo description needs at least 40 words (current: ${count} words)`); return;
       }
     }
 
@@ -1692,6 +1692,23 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
         const lines = doc.splitTextToSize(text, contentW);
         doc.text(lines, align === 'center' ? PW / 2 : margin, yPos, { align });
         return lines.length * (fontSize * 0.4);
+      };
+
+      const writeDynamicText = (text, yStart, maxHeight, baseFontSize) => {
+        let size = baseFontSize;
+        let lines = [];
+        doc.setFont('times', 'normal');
+        doc.setTextColor(0, 0, 0);
+        while (size >= 8) {
+          doc.setFontSize(size);
+          lines = doc.splitTextToSize(text, contentW);
+          if (lines.length * (size * 0.4) <= maxHeight) {
+            break;
+          }
+          size -= 0.5;
+        }
+        doc.text(lines, margin, yStart);
+        return lines.length * (size * 0.4);
       };
 
       // Page 1
@@ -1727,52 +1744,42 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
 
       if (data.coverPhoto) {
         addProportionalImage(doc, data.coverPhoto, margin, y, contentW, 95);
-        y += 105;
+        y += 100;
       }
 
-      y += writeText(data.coverDesc || '', 13, 'normal', [0,0,0], 'left', y);
+      writeDynamicText(data.coverDesc || '', y, PH - margin - 15 - y, 13);
 
       // Page 2: Photo 2 + Photo 3 (2 images stacked)
       doc.addPage();
       drawBorder();
       y = margin + 10;
       if (data.photo2) {
-        addProportionalImage(doc, data.photo2, margin, y, contentW, 80);
-        y += 85;
+        addProportionalImage(doc, data.photo2, margin, y, contentW, 75);
+        y += 80;
       }
-      const desc2Lines = doc.splitTextToSize(data.photo2Desc || '', contentW);
-      doc.setFontSize(12); doc.setFont('times', 'normal'); doc.setTextColor(0, 0, 0);
-      doc.text(desc2Lines, margin, y);
-      y += desc2Lines.length * 6 + 12;
+      y += writeDynamicText(data.photo2Desc || '', y, 40, 12) + 5;
 
       if (data.photo3) {
-        addProportionalImage(doc, data.photo3, margin, y, contentW, 80);
-        y += 85;
+        addProportionalImage(doc, data.photo3, margin, y, contentW, 75);
+        y += 80;
       }
-      const desc3Lines = doc.splitTextToSize(data.photo3Desc || '', contentW);
-      doc.setFontSize(12); doc.setFont('times', 'normal'); doc.setTextColor(0, 0, 0);
-      doc.text(desc3Lines, margin, y);
+      writeDynamicText(data.photo3Desc || '', y, PH - margin - 15 - y, 12);
 
       // Page 3: Photo 4 + Photo 5 (2 images stacked — same structure as Page 2)
       doc.addPage();
       drawBorder();
       y = margin + 10;
       if (data.photo4) {
-        addProportionalImage(doc, data.photo4, margin, y, contentW, 80);
-        y += 85;
+        addProportionalImage(doc, data.photo4, margin, y, contentW, 75);
+        y += 80;
       }
-      const desc4Lines = doc.splitTextToSize(data.photo4Desc || '', contentW);
-      doc.setFontSize(12); doc.setFont('times', 'normal'); doc.setTextColor(0, 0, 0);
-      doc.text(desc4Lines, margin, y);
-      y += desc4Lines.length * 6 + 12;
+      y += writeDynamicText(data.photo4Desc || '', y, 40, 12) + 5;
 
       if (data.photo5) {
-        addProportionalImage(doc, data.photo5, margin, y, contentW, 80);
-        y += 85;
+        addProportionalImage(doc, data.photo5, margin, y, contentW, 75);
+        y += 80;
       }
-      const desc5Lines = doc.splitTextToSize(data.photo5Desc || '', contentW);
-      doc.setFontSize(12); doc.setFont('times', 'normal'); doc.setTextColor(0, 0, 0);
-      doc.text(desc5Lines, margin, y);
+      writeDynamicText(data.photo5Desc || '', y, PH - margin - 15 - y, 12);
 
       // Footer on all pages
       const totalPages = doc.internal.getNumberOfPages();
@@ -1834,53 +1841,53 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
       <div style={{ marginBottom: '15px', padding: '15px', backgroundColor: '#fff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
         <div style={{ marginBottom: '10px' }}>
           <h4 style={{ margin: 0, fontSize: '0.95rem', display: 'inline-block' }}>📄 Page 1: Cover Photo &amp; Description</h4>
-          <WordCountLabel count={wc(data.coverDesc || '')} min={180} />
+          <WordCountLabel count={wc(data.coverDesc || '')} min={120} />
         </div>
         <input type="file" accept="image/*" onChange={e => handlePhotoUpload(e, 'coverPhoto')} disabled={readOnly} style={{ marginBottom: '10px', fontSize: '0.8rem' }} />
         {data.coverPhoto && <div style={{ marginBottom: '10px', fontSize: '0.75rem', color: '#16a34a' }}>✅ Cover Photo Uploaded</div>}
-        <textarea placeholder="Description of the activity (Min 180 words)..." value={data.coverDesc || ''} onChange={e => !readOnly && onChange('coverDesc', e.target.value)} style={{...inputStyle(readOnly), minHeight: '100px'}} readOnly={readOnly} />
+        <textarea placeholder="Description of the activity (Min 120 words)..." value={data.coverDesc || ''} onChange={e => !readOnly && onChange('coverDesc', e.target.value)} style={{...inputStyle(readOnly), minHeight: '100px'}} readOnly={readOnly} />
       </div>
 
       {/* Page 2 Details: Photo 2 + Photo 3 */}
       <div style={{ marginBottom: '15px', padding: '15px', backgroundColor: '#fff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
         <div style={{ marginBottom: '10px' }}>
           <h4 style={{ margin: 0, fontSize: '0.95rem', display: 'inline-block' }}>📄 Page 2: Photo 2 &amp; Description</h4>
-          <WordCountLabel count={wc(data.photo2Desc || '')} min={60} />
+          <WordCountLabel count={wc(data.photo2Desc || '')} min={40} />
         </div>
         <input type="file" accept="image/*" onChange={e => handlePhotoUpload(e, 'photo2')} disabled={readOnly} style={{ marginBottom: '10px', fontSize: '0.8rem' }} />
         {data.photo2 && <div style={{ marginBottom: '10px', fontSize: '0.75rem', color: '#16a34a' }}>✅ Photo 2 Uploaded</div>}
-        <textarea placeholder="Description of this photo (Min 60 words)..." value={data.photo2Desc || ''} onChange={e => !readOnly && onChange('photo2Desc', e.target.value)} style={{...inputStyle(readOnly), minHeight: '80px'}} readOnly={readOnly} />
+        <textarea placeholder="Description of this photo (Min 40 words)..." value={data.photo2Desc || ''} onChange={e => !readOnly && onChange('photo2Desc', e.target.value)} style={{...inputStyle(readOnly), minHeight: '80px'}} readOnly={readOnly} />
       </div>
 
       <div style={{ marginBottom: '15px', padding: '15px', backgroundColor: '#fff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
         <div style={{ marginBottom: '10px' }}>
           <h4 style={{ margin: 0, fontSize: '0.95rem', display: 'inline-block' }}>📄 Page 2: Photo 3 &amp; Description</h4>
-          <WordCountLabel count={wc(data.photo3Desc || '')} min={60} />
+          <WordCountLabel count={wc(data.photo3Desc || '')} min={40} />
         </div>
         <input type="file" accept="image/*" onChange={e => handlePhotoUpload(e, 'photo3')} disabled={readOnly} style={{ marginBottom: '10px', fontSize: '0.8rem' }} />
         {data.photo3 && <div style={{ marginBottom: '10px', fontSize: '0.75rem', color: '#16a34a' }}>✅ Photo 3 Uploaded</div>}
-        <textarea placeholder="Description of this photo (Min 60 words)..." value={data.photo3Desc || ''} onChange={e => !readOnly && onChange('photo3Desc', e.target.value)} style={{...inputStyle(readOnly), minHeight: '80px'}} readOnly={readOnly} />
+        <textarea placeholder="Description of this photo (Min 40 words)..." value={data.photo3Desc || ''} onChange={e => !readOnly && onChange('photo3Desc', e.target.value)} style={{...inputStyle(readOnly), minHeight: '80px'}} readOnly={readOnly} />
       </div>
 
       {/* Page 3 Details: Photo 4 + Photo 5 */}
       <div style={{ marginBottom: '15px', padding: '15px', backgroundColor: '#fff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
         <div style={{ marginBottom: '10px' }}>
           <h4 style={{ margin: 0, fontSize: '0.95rem', display: 'inline-block' }}>📄 Page 3: Photo 4 &amp; Description</h4>
-          <WordCountLabel count={wc(data.photo4Desc || '')} min={60} />
+          <WordCountLabel count={wc(data.photo4Desc || '')} min={40} />
         </div>
         <input type="file" accept="image/*" onChange={e => handlePhotoUpload(e, 'photo4')} disabled={readOnly} style={{ marginBottom: '10px', fontSize: '0.8rem' }} />
         {data.photo4 && <div style={{ marginBottom: '10px', fontSize: '0.75rem', color: '#16a34a' }}>✅ Photo 4 Uploaded</div>}
-        <textarea placeholder="Description of this photo (Min 60 words)..." value={data.photo4Desc || ''} onChange={e => !readOnly && onChange('photo4Desc', e.target.value)} style={{...inputStyle(readOnly), minHeight: '80px'}} readOnly={readOnly} />
+        <textarea placeholder="Description of this photo (Min 40 words)..." value={data.photo4Desc || ''} onChange={e => !readOnly && onChange('photo4Desc', e.target.value)} style={{...inputStyle(readOnly), minHeight: '80px'}} readOnly={readOnly} />
       </div>
 
       <div style={{ marginBottom: '15px', padding: '15px', backgroundColor: '#fff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
         <div style={{ marginBottom: '10px' }}>
           <h4 style={{ margin: 0, fontSize: '0.95rem', display: 'inline-block' }}>📄 Page 3: Photo 5 &amp; Description</h4>
-          <WordCountLabel count={wc(data.photo5Desc || '')} min={60} />
+          <WordCountLabel count={wc(data.photo5Desc || '')} min={40} />
         </div>
         <input type="file" accept="image/*" onChange={e => handlePhotoUpload(e, 'photo5')} disabled={readOnly} style={{ marginBottom: '10px', fontSize: '0.8rem' }} />
         {data.photo5 && <div style={{ marginBottom: '10px', fontSize: '0.75rem', color: '#16a34a' }}>✅ Photo 5 Uploaded</div>}
-        <textarea placeholder="Description of this photo (Min 60 words)..." value={data.photo5Desc || ''} onChange={e => !readOnly && onChange('photo5Desc', e.target.value)} style={{...inputStyle(readOnly), minHeight: '80px'}} readOnly={readOnly} />
+        <textarea placeholder="Description of this photo (Min 40 words)..." value={data.photo5Desc || ''} onChange={e => !readOnly && onChange('photo5Desc', e.target.value)} style={{...inputStyle(readOnly), minHeight: '80px'}} readOnly={readOnly} />
       </div>
 
       <button onClick={generatePDF} disabled={isGenerating} style={{
@@ -1923,7 +1930,7 @@ function Day6({ data, onChange, readOnly, studentData }) {
       {isSlot1 && (
         <div style={{ marginBottom: 28, border: '2px solid #1e40af', borderRadius: 12, overflow: 'hidden' }}>
           <div style={{ background: '#1e40af', padding: '12px 18px', color: '#fff', fontWeight: 700, fontSize: '1rem' }}>
-            🇮🇳 MyGov India Task (Mandatory for Slot 1)
+            🇮🇳 MyGov India Task
           </div>
           <div style={{ padding: '16px 18px', background: '#eff6ff' }}>
             <p style={{ margin: '0 0 12px', color: '#1e3a8a', fontWeight: 600 }}>Dear Students,</p>
@@ -1976,7 +1983,7 @@ function Day6({ data, onChange, readOnly, studentData }) {
               style={{ ...ro, marginBottom: 4 }}
               onChange={e => !readOnly && onChange('mygovDriveLink', e.target.value)}
             />
-            <p style={{ fontSize: '0.78rem', color: '#6b7280', margin: '4px 0 0' }}>Make sure the link is set to "Anyone with the link can view".</p>
+            <p style={{ fontSize: '0.78rem', color: '#6b7280', margin: '4px 0 0' }}>Make sure the link is set to &quot;Anyone with the link can view&quot;.</p>
           </div>
         </div>
       )}
