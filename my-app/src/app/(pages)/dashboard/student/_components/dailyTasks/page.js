@@ -411,6 +411,11 @@ export default function DailyTasks({ studentData, onSectionChange }) {
         setMsg("Please provide the Google Drive Public Link for your intervention report.");
         setMsgType('err'); return;
       }
+      // Slot 1: MyGov certificates drive link is mandatory
+      if (studentData?.slot === 1 && !data.mygovDriveLink?.trim()) {
+        setMsg("Please provide the MyGov Certificates Google Drive link.");
+        setMsgType('err'); return;
+      }
     }
     if (!isDraft && activeDay === 5) {
       const activeDays = [2, 3, 4].filter(d => {
@@ -1892,9 +1897,90 @@ function Day6({ data, onChange, readOnly, studentData }) {
   const ro = { background: readOnly ? '#f9f9f9' : undefined };
   const domain = studentData?.selectedDomain || '';
   const template = getInterventionTemplate(domain);
+  const isSlot1 = Number(studentData?.slot) === 1;
+
+  const QUIZZES = [
+    { title: 'Bharat GI Quiz – Celebrate India’s Heritage', url: 'https://quiz.mygov.in/quiz/bharat-gi-quiz-celebrate-indias-heritage/' },
+    { title: 'Commonwealth Games 2030 Quiz', url: 'https://quiz.mygov.in/quiz/commonwealth-games-2030-quiz/' },
+    { title: 'MOHFW Fire Safety Quiz 2026', url: 'https://quiz.mygov.in/quiz/mohfw-fire-safety-quiz-2026/' },
+    { title: 'Quiz on Our Exam Warriors – Celebrating Exams', url: 'https://quiz.mygov.in/quiz/quiz-on-our-exam-warriors-celebrating-exams/' },
+    { title: 'Dr. B.R. Ambedkar’s Life and Contributions Quiz Competition 2026', url: 'https://quiz.mygov.in/quiz/dr-b-r-ambedkars-life-and-contributions-quiz-competition-2026/' },
+    { title: 'Vande Mataram 150 Years Quiz', url: 'https://quiz.mygov.in/quiz/vande-mataram-150-years-quiz/' },
+  ];
+  const PLEDGES = [
+    { title: 'Mother Earth 2026 Pledge', url: 'https://pledge.mygov.in/mother-earth-2026/' },
+    { title: 'Social Justice Pledge', url: 'https://pledge.mygov.in/social-justice/' },
+    { title: 'Eat Right 2026 Pledge', url: 'https://pledge.mygov.in/eat-right-2026/' },
+    { title: 'Constitution Day 2025 Pledge', url: 'https://pledge.mygov.in/constitution-day-2025/' },
+    { title: 'Bharat Vikas 2025 Pledge', url: 'https://pledge.mygov.in/bharat-vikas-2025/' },
+    { title: 'National Technology Day 2026 Pledge', url: 'https://pledge.mygov.in/national-technology-day-2026/' },
+  ];
 
   return (
     <div>
+
+      {/* ── MyGov India Task (Slot 1 only) ── */}
+      {isSlot1 && (
+        <div style={{ marginBottom: 28, border: '2px solid #1e40af', borderRadius: 12, overflow: 'hidden' }}>
+          <div style={{ background: '#1e40af', padding: '12px 18px', color: '#fff', fontWeight: 700, fontSize: '1rem' }}>
+            🇮🇳 MyGov India Task (Mandatory for Slot 1)
+          </div>
+          <div style={{ padding: '16px 18px', background: '#eff6ff' }}>
+            <p style={{ margin: '0 0 12px', color: '#1e3a8a', fontWeight: 600 }}>Dear Students,</p>
+            <p style={{ margin: '0 0 12px', color: '#334155' }}>Please create your account on <a href="https://www.mygov.in/" target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8', fontWeight: 600 }}>MyGov India</a> by following these simple steps:</p>
+            <ol style={{ margin: '0 0 16px', paddingLeft: 20, color: '#334155', lineHeight: 1.8 }}>
+              <li>Open the website: <a href="https://www.mygov.in/" target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8' }}>https://www.mygov.in/</a></li>
+              <li>Click on <strong>Register</strong></li>
+              <li>Enter your details (Name, Email, Mobile Number, Password)</li>
+              <li>Verify OTP</li>
+              <li>Login to your account</li>
+            </ol>
+            <p style={{ margin: '0 0 10px', color: '#1e3a8a', fontWeight: 700 }}>After creating the account, complete the below tasks:</p>
+
+            {/* Quizzes */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontWeight: 700, color: '#1e40af', marginBottom: 8, fontSize: '0.95rem' }}>🧠 QUIZZES (Complete all 6):</div>
+              {QUIZZES.map((q, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
+                  <span style={{ color: '#1e40af', fontWeight: 700, minWidth: 20 }}>•</span>
+                  <a href={q.url} target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8', fontSize: '0.88rem', wordBreak: 'break-all' }}>{q.title}</a>
+                </div>
+              ))}
+            </div>
+
+            {/* Pledges */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontWeight: 700, color: '#15803d', marginBottom: 8, fontSize: '0.95rem' }}>🤝 PLEDGES (Complete all 6):</div>
+              {PLEDGES.map((p, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
+                  <span style={{ color: '#15803d', fontWeight: 700, minWidth: 20 }}>•</span>
+                  <a href={p.url} target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8', fontSize: '0.88rem', wordBreak: 'break-all' }}>{p.title}</a>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: 8, padding: '10px 14px', fontSize: '0.87rem', color: '#78350f', marginBottom: 14 }}>
+              ⚠️ After completing all <strong>6 quizzes</strong> and <strong>6 pledges</strong>, save all 12 certificates in a folder, upload to Google Drive, make the link <strong>public (anyone can view)</strong>, and submit the URL below.
+            </div>
+
+            {/* MyGov Drive Link */}
+            <label style={{ fontWeight: 700, color: '#1e3a8a', display: 'block', marginBottom: 6 }}>
+              📁 MyGov Certificates Google Drive URL <span style={{ color: '#dc2626' }}>*</span>
+            </label>
+            <input
+              type="url"
+              className="dt-link-input"
+              placeholder="https://drive.google.com/…"
+              value={data.mygovDriveLink || ''}
+              readOnly={readOnly}
+              style={{ ...ro, marginBottom: 4 }}
+              onChange={e => !readOnly && onChange('mygovDriveLink', e.target.value)}
+            />
+            <p style={{ fontSize: '0.78rem', color: '#6b7280', margin: '4px 0 0' }}>Make sure the link is set to "Anyone with the link can view".</p>
+          </div>
+        </div>
+      )}
+
       <div className="dt-info-box" style={{marginBottom:18}}>
         <h4>Task: Intervention Activity Documentation</h4>
         <ul>
