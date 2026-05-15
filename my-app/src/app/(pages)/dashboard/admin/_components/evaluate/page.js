@@ -6,7 +6,7 @@ import {
   FaStar, FaUserGraduate,
 } from 'react-icons/fa';
 import toast from 'react-hot-toast';
-import { surveyData as SURVEY } from '../../../../../../(pages)/dashboard/student/_components/dailyTasks/surveyDataShared';
+import { surveyData as SURVEY } from '../../../student/_components/dailyTasks/surveyDataShared';
 import './page.css';
 
 const SLOT_LABELS = {
