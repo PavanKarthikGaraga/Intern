@@ -105,38 +105,48 @@ function Day5Preview({ data, surveyDays, ps }) {
     { key: 'recommendations',label: 'Recommendations'  },
   ];
 
-  // Safely get answers array from a person object
+  // Safely get answers array — handles: true array, JSON string, or {0:'Yes',1:'No'} object
   const getAnswers = (person) => {
     let ans = person?.answers ?? [];
-    if (typeof ans === 'string') { try { ans = JSON.parse(ans); } catch { ans = []; } }
-    return Array.isArray(ans) ? ans : [];
+    // Parse JSON string
+    if (typeof ans === 'string') {
+      try { ans = JSON.parse(ans); } catch { ans = []; }
+    }
+    // Already an array
+    if (Array.isArray(ans)) return ans;
+    // Object with numeric keys: {0:'Yes', 1:'No', ...}
+    if (ans && typeof ans === 'object') {
+      return Object.keys(ans)
+        .sort((a, b) => Number(a) - Number(b))
+        .map(k => ans[k]);
+    }
+    return [];
   };
 
   // Build aggregated Yes/No per question grouped by stakeholder
   const buildStakeholderGroups = (dayData, dayIdx) => {
     if (!dayData) return null;
-    const dayNum = dayIdx; // 2, 3, or 4
     const stakeholders = survey || null;
-    const personCount = Number(dayData.personCount) || 6;
 
     if (!stakeholders) {
-      // No survey structure — fall back to per-person display
+      // No survey structure — scan all pX keys that exist
       const persons = [];
-      for (let p = 1; p <= personCount; p++) {
+      for (let p = 1; p <= 20; p++) {
         const person = dayData[`p${p}`];
-        if (!person) continue;
+        if (!person) break;
         persons.push({ name: person.name || `Person ${p}`, answers: getAnswers(person) });
       }
-      return [{ stakeholder: `Day ${dayNum} Responses`, persons, questions: [] }];
+      if (!persons.length) return null;
+      return [{ stakeholder: `Day ${dayIdx} Responses`, persons, questions: [] }];
     }
 
-    // Map persons to stakeholder groups by count
+    // Map persons to stakeholder groups using survey structure counts (no hard personCount cap)
     let pIdx = 1;
     return stakeholders.map(sh => {
       const persons = [];
-      for (let i = 0; i < sh.count && pIdx <= personCount; i++, pIdx++) {
+      for (let i = 0; i < sh.count; i++, pIdx++) {
         const person = dayData[`p${pIdx}`];
-        if (!person) continue;
+        if (!person) continue;  // slot empty, pIdx already advances in for loop
         persons.push({ name: person.name || `Person ${pIdx}`, answers: getAnswers(person) });
       }
       return { stakeholder: sh.stakeholder, persons, questions: sh.questions || [] };
