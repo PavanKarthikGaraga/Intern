@@ -183,7 +183,6 @@ function TableView({ dayData }) {
             <th>Yes</th>
             <th>No</th>
             <th>% Yes</th>
-            <th>Severity</th>
           </tr>
         </thead>
         <tbody>
@@ -193,7 +192,7 @@ function TableView({ dayData }) {
               const no    = sh.noCount[qi]  || 0;
               const total = yes + no;
               const pct   = total > 0 ? Math.round((yes / total) * 100) : 0;
-              const sev   = getSeverity(pct);
+              const color = barColor(pct);
               return (
                 <tr key={`${sh.stakeholder}-${qi}`}>
                   {qi === 0 && <td rowSpan={sh.questions.length} style={{ fontWeight: 700, background: '#f0f4ff', color: '#3730a3' }}>{sh.stakeholder}</td>}
@@ -201,10 +200,7 @@ function TableView({ dayData }) {
                   <td>{q.replace(' (Yes/No)', '')}</td>
                   <td style={{ textAlign: 'center', color: '#16a34a', fontWeight: 700 }}>{yes}</td>
                   <td style={{ textAlign: 'center', color: '#dc2626', fontWeight: 700 }}>{no}</td>
-                  <td style={{ textAlign: 'center', fontWeight: 800 }}>{pct}%</td>
-                  <td>
-                    <span className={`sa-severity ${sev.cls}`}>{sev.label}</span>
-                  </td>
+                  <td style={{ textAlign: 'center', fontWeight: 800, color }}>{pct}%</td>
                 </tr>
               );
             })
