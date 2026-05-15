@@ -97,6 +97,23 @@ export async function GET(request) {
         };
       });
 
+      // For Day 5: also fetch Day 2, 3, 4 survey data so admin can see Yes/No responses
+      let surveyDaysMap = {};
+      if (Number(day) === 5) {
+        const [surveyRows] = await db.execute(
+          `SELECT dt.username, dt.day, dt.data
+           FROM dailyTasks dt
+           JOIN registrations r ON dt.username = r.username
+           WHERE r.slot = ? AND dt.day IN (2, 3, 4) AND r.season = '2026'`,
+          [slot]
+        );
+        surveyRows.forEach(row => {
+          if (!surveyDaysMap[row.username]) surveyDaysMap[row.username] = {};
+          surveyDaysMap[row.username][`day${row.day}`] =
+            typeof row.data === 'string' ? JSON.parse(row.data) : row.data;
+        });
+      }
+
       const submitted    = [];
       const notSubmitted = [];
 
@@ -142,6 +159,7 @@ export async function GET(request) {
             mode: s.mode || null,
             submittedAt: sub.submittedAt,
             taskData: sub.taskData,
+            surveyDays: surveyDaysMap[s.username] || null,
             dayMark: s.dayMark === null ? null : Number(s.dayMark),
             evaluated: s.dayMark !== null,
           });

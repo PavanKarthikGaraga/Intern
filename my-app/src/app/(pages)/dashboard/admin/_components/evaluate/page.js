@@ -94,33 +94,85 @@ function SurveyDayPreview({ data, day }) {
 }
 
 /* ── Day 5 preview ── */
-function Day5Preview({ data }) {
+function Day5Preview({ data, surveyDays }) {
   if (!data) return <p className="ev-no-data">No task data available.</p>;
   const sections = [
     { key: 'topProblems',    label: 'Top Problems'     },
     { key: 'rootCauses',     label: 'Root Causes'      },
     { key: 'recommendations',label: 'Recommendations'  },
   ];
+
+  // Build Yes/No analysis from p1-p6 in a given day's data
+  const buildAnalysis = (dayData) => {
+    if (!dayData) return null;
+    const personCount = Number(dayData.personCount) || 6;
+    const groups = [];
+    let idx = 1;
+    for (let p = 1; p <= personCount; p++) {
+      const person = dayData[`p${p}`];
+      if (!person) continue;
+      groups.push({ name: person.name || `Person ${p}`, answers: person.answers || [] });
+    }
+    if (!groups.length) return null;
+    // Compute per-question Yes% across all persons in same stakeholder (by name grouping)
+    // Simple: list per person
+    return groups;
+  };
+
   return (
     <div className="ev-task-preview">
-      {[2, 3, 4].map(d => (
-        <div key={d} style={{ marginBottom: 18, border: '1px solid #e2e8f0', borderRadius: 10, overflow: 'hidden' }}>
-          {/* Day header */}
-          <div style={{ background: '#f1f5f9', padding: '8px 14px', fontWeight: 700, fontSize: '0.88rem', color: '#1e40af', borderBottom: '1px solid #e2e8f0' }}>
-            Day {d} Analysis — {wc(data[`day${d}_topProblems`])} + {wc(data[`day${d}_rootCauses`])} + {wc(data[`day${d}_recommendations`])} words
-          </div>
-          {sections.map(({ key, label }) => (
-            <div key={key} className="ev-field" style={{ borderBottom: '1px solid #f1f5f9', marginBottom: 0 }}>
-              <span className="ev-field-label" style={{ fontSize: '0.78rem', color: '#64748b' }}>
-                {label} ({wc(data[`day${d}_${key}`])} words)
-              </span>
-              <div className="ev-field-value ev-scrollable" style={{ maxHeight: 160, whiteSpace: 'pre-wrap', fontSize: '0.83rem', lineHeight: 1.6 }}>
-                {data[`day${d}_${key}`] || <em>Not provided</em>}
-              </div>
+      {[2, 3, 4].map(d => {
+        const surveyDayData = surveyDays?.[`day${d}`];
+        const groups = buildAnalysis(surveyDayData);
+        return (
+          <div key={d} style={{ marginBottom: 18, border: '1px solid #e2e8f0', borderRadius: 10, overflow: 'hidden' }}>
+            {/* Day header */}
+            <div style={{ background: '#1e40af', padding: '8px 14px', fontWeight: 700, fontSize: '0.88rem', color: '#fff', borderBottom: '1px solid #e2e8f0' }}>
+              Day {d} — {wc(data[`day${d}_topProblems`])} + {wc(data[`day${d}_rootCauses`])} + {wc(data[`day${d}_recommendations`])} words
             </div>
-          ))}
-        </div>
-      ))}
+
+            {/* Yes/No survey responses */}
+            {groups && groups.length > 0 && (
+              <div style={{ padding: '10px 14px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                <div style={{ fontWeight: 600, fontSize: '0.8rem', color: '#475569', marginBottom: 8 }}>Survey Responses ({groups.length} persons)</div>
+                {groups.map((g, gi) => (
+                  <div key={gi} style={{ marginBottom: 10 }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.78rem', color: '#1e40af', marginBottom: 4 }}>{g.name}</div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 8px' }}>
+                      {g.answers.map((ans, qi) => {
+                        const isYes = ans === 'Yes';
+                        return (
+                          <span key={qi} style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 4,
+                            padding: '2px 8px', borderRadius: 12, fontSize: '0.72rem', fontWeight: 600,
+                            background: isYes ? '#dcfce7' : '#fee2e2',
+                            color: isYes ? '#14532d' : '#991b1b',
+                            border: `1px solid ${isYes ? '#86efac' : '#fca5a5'}`
+                          }}>
+                            Q{qi + 1}: {ans}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Text analysis sections */}
+            {sections.map(({ key, label }) => (
+              <div key={key} className="ev-field" style={{ borderBottom: '1px solid #f1f5f9', marginBottom: 0 }}>
+                <span className="ev-field-label" style={{ fontSize: '0.78rem', color: '#64748b' }}>
+                  {label} ({wc(data[`day${d}_${key}`])} words)
+                </span>
+                <div className="ev-field-value ev-scrollable" style={{ maxHeight: 160, whiteSpace: 'pre-wrap', fontSize: '0.83rem', lineHeight: 1.6 }}>
+                  {data[`day${d}_${key}`] || <em>Not provided</em>}
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -175,10 +227,10 @@ function Day7Preview({ data }) {
   );
 }
 
-function TaskPreview({ day, data }) {
+function TaskPreview({ day, data, surveyDays }) {
   if (day === 1) return <Day1Preview data={data} />;
   if (day === 2 || day === 3 || day === 4) return <SurveyDayPreview data={data} day={day} />;
-  if (day === 5) return <Day5Preview data={data} />;
+  if (day === 5) return <Day5Preview data={data} surveyDays={surveyDays} />;
   if (day === 6) return <Day6Preview data={data} />;
   if (day === 7) return <Day7Preview data={data} />;
   return null;
@@ -315,7 +367,7 @@ function EvalRow({ student, day, maxMarks, onSave }) {
       {/* Expanded task preview */}
       {expanded && (
         <div className="ev-task-body">
-          <TaskPreview day={day} data={student.taskData} />
+          <TaskPreview day={day} data={student.taskData} surveyDays={student.surveyDays} />
         </div>
       )}
     </div>
