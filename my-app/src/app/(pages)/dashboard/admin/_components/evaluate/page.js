@@ -96,14 +96,29 @@ function SurveyDayPreview({ data, day }) {
 /* ── Day 5 preview ── */
 function Day5Preview({ data }) {
   if (!data) return <p className="ev-no-data">No task data available.</p>;
+  const sections = [
+    { key: 'topProblems',    label: 'Top Problems'     },
+    { key: 'rootCauses',     label: 'Root Causes'      },
+    { key: 'recommendations',label: 'Recommendations'  },
+  ];
   return (
     <div className="ev-task-preview">
       {[2, 3, 4].map(d => (
-        <div key={d} className="ev-field">
-          <span className="ev-field-label">Day {d} Analysis Summary ({wc(data[`day${d}_topProblems`])} + {wc(data[`day${d}_rootCauses`])} + {wc(data[`day${d}_recommendations`])} words)</span>
-          <div className="ev-field-value ev-scrollable" style={{ maxHeight: 80 }}>
-            {data[`day${d}_topProblems`]?.slice(0, 200) || <em>Not provided</em>}…
+        <div key={d} style={{ marginBottom: 18, border: '1px solid #e2e8f0', borderRadius: 10, overflow: 'hidden' }}>
+          {/* Day header */}
+          <div style={{ background: '#f1f5f9', padding: '8px 14px', fontWeight: 700, fontSize: '0.88rem', color: '#1e40af', borderBottom: '1px solid #e2e8f0' }}>
+            Day {d} Analysis — {wc(data[`day${d}_topProblems`])} + {wc(data[`day${d}_rootCauses`])} + {wc(data[`day${d}_recommendations`])} words
           </div>
+          {sections.map(({ key, label }) => (
+            <div key={key} className="ev-field" style={{ borderBottom: '1px solid #f1f5f9', marginBottom: 0 }}>
+              <span className="ev-field-label" style={{ fontSize: '0.78rem', color: '#64748b' }}>
+                {label} ({wc(data[`day${d}_${key}`])} words)
+              </span>
+              <div className="ev-field-value ev-scrollable" style={{ maxHeight: 160, whiteSpace: 'pre-wrap', fontSize: '0.83rem', lineHeight: 1.6 }}>
+                {data[`day${d}_${key}`] || <em>Not provided</em>}
+              </div>
+            </div>
+          ))}
         </div>
       ))}
     </div>
