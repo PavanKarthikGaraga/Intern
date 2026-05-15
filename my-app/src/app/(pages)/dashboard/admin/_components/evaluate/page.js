@@ -6,6 +6,7 @@ import {
   FaStar, FaUserGraduate,
 } from 'react-icons/fa';
 import toast from 'react-hot-toast';
+import { surveyData as SURVEY } from '../../../../../../(pages)/dashboard/student/_components/dailyTasks/surveyDataShared';
 import './page.css';
 
 const SLOT_LABELS = {
@@ -94,76 +95,99 @@ function SurveyDayPreview({ data, day }) {
 }
 
 /* ── Day 5 preview ── */
-function Day5Preview({ data, surveyDays }) {
+function Day5Preview({ data, surveyDays, ps }) {
   if (!data) return <p className="ev-no-data">No task data available.</p>;
-  const sections = [
+
+  const survey = ps ? (SURVEY[ps] || null) : null;
+  const textSections = [
     { key: 'topProblems',    label: 'Top Problems'     },
     { key: 'rootCauses',     label: 'Root Causes'      },
     { key: 'recommendations',label: 'Recommendations'  },
   ];
 
-  // Build Yes/No analysis from p1-p6 in a given day's data
-  const buildAnalysis = (dayData) => {
+  // Safely get answers array from a person object
+  const getAnswers = (person) => {
+    let ans = person?.answers ?? [];
+    if (typeof ans === 'string') { try { ans = JSON.parse(ans); } catch { ans = []; } }
+    return Array.isArray(ans) ? ans : [];
+  };
+
+  // Build aggregated Yes/No per question grouped by stakeholder
+  const buildStakeholderGroups = (dayData, dayIdx) => {
     if (!dayData) return null;
+    const dayNum = dayIdx; // 2, 3, or 4
+    const stakeholders = survey || null;
     const personCount = Number(dayData.personCount) || 6;
-    const groups = [];
-    for (let p = 1; p <= personCount; p++) {
-      const person = dayData[`p${p}`];
-      if (!person) continue;
-      // answers may be stored as JSON string — safely parse it
-      let answers = person.answers ?? [];
-      if (typeof answers === 'string') {
-        try { answers = JSON.parse(answers); } catch { answers = []; }
+
+    if (!stakeholders) {
+      // No survey structure — fall back to per-person display
+      const persons = [];
+      for (let p = 1; p <= personCount; p++) {
+        const person = dayData[`p${p}`];
+        if (!person) continue;
+        persons.push({ name: person.name || `Person ${p}`, answers: getAnswers(person) });
       }
-      if (!Array.isArray(answers)) answers = [];
-      groups.push({ name: person.name || `Person ${p}`, answers });
+      return [{ stakeholder: `Day ${dayNum} Responses`, persons, questions: [] }];
     }
-    if (!groups.length) return null;
-    return groups;
+
+    // Map persons to stakeholder groups by count
+    let pIdx = 1;
+    return stakeholders.map(sh => {
+      const persons = [];
+      for (let i = 0; i < sh.count && pIdx <= personCount; i++, pIdx++) {
+        const person = dayData[`p${pIdx}`];
+        if (!person) continue;
+        persons.push({ name: person.name || `Person ${pIdx}`, answers: getAnswers(person) });
+      }
+      return { stakeholder: sh.stakeholder, persons, questions: sh.questions || [] };
+    }).filter(g => g.persons.length > 0);
   };
 
   return (
     <div className="ev-task-preview">
       {[2, 3, 4].map(d => {
         const surveyDayData = surveyDays?.[`day${d}`];
-        const groups = buildAnalysis(surveyDayData);
+        const groups = buildStakeholderGroups(surveyDayData, d);
         return (
-          <div key={d} style={{ marginBottom: 18, border: '1px solid #e2e8f0', borderRadius: 10, overflow: 'hidden' }}>
+          <div key={d} style={{ marginBottom: 20, border: '1px solid #e2e8f0', borderRadius: 10, overflow: 'hidden' }}>
             {/* Day header */}
-            <div style={{ background: '#1e40af', padding: '8px 14px', fontWeight: 700, fontSize: '0.88rem', color: '#fff', borderBottom: '1px solid #e2e8f0' }}>
-              Day {d} — {wc(data[`day${d}_topProblems`])} + {wc(data[`day${d}_rootCauses`])} + {wc(data[`day${d}_recommendations`])} words
+            <div style={{ background: '#1e40af', padding: '8px 14px', fontWeight: 700, fontSize: '0.88rem', color: '#fff' }}>
+              Day {d} Analysis — {wc(data[`day${d}_topProblems`])} + {wc(data[`day${d}_rootCauses`])} + {wc(data[`day${d}_recommendations`])} words
             </div>
 
-            {/* Yes/No survey responses */}
-            {groups && groups.length > 0 && (
-              <div style={{ padding: '10px 14px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                <div style={{ fontWeight: 600, fontSize: '0.8rem', color: '#475569', marginBottom: 8 }}>Survey Responses ({groups.length} persons)</div>
-                {groups.map((g, gi) => (
-                  <div key={gi} style={{ marginBottom: 10 }}>
-                    <div style={{ fontWeight: 600, fontSize: '0.78rem', color: '#1e40af', marginBottom: 4 }}>{g.name}</div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 8px' }}>
-                      {g.answers.map((ans, qi) => {
-                        const isYes = ans === 'Yes';
-                        return (
-                          <span key={qi} style={{
-                            display: 'inline-flex', alignItems: 'center', gap: 4,
-                            padding: '2px 8px', borderRadius: 12, fontSize: '0.72rem', fontWeight: 600,
-                            background: isYes ? '#dcfce7' : '#fee2e2',
-                            color: isYes ? '#14532d' : '#991b1b',
-                            border: `1px solid ${isYes ? '#86efac' : '#fca5a5'}`
-                          }}>
-                            Q{qi + 1}: {ans}
-                          </span>
-                        );
-                      })}
-                    </div>
+            {/* Survey Yes/No by stakeholder */}
+            {groups && groups.map((grp, gi) => {
+              const total = grp.persons.length;
+              if (total === 0) return null;
+              const numQ = grp.questions.length || (grp.persons[0]?.answers.length || 0);
+              return (
+                <div key={gi} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                  <div style={{ background: '#f1f5f9', padding: '6px 14px', fontWeight: 700, fontSize: '0.82rem', color: '#1e293b' }}>
+                    Day {d} Responses — {grp.stakeholder} ({total} person{total !== 1 ? 's' : ''})
                   </div>
-                ))}
-              </div>
-            )}
+                  <div style={{ padding: '8px 14px' }}>
+                    {Array.from({ length: numQ }, (_, qi) => {
+                      const yesCount = grp.persons.filter(p => p.answers[qi] === 'Yes').length;
+                      const pct = total > 0 ? Math.round((yesCount / total) * 100) : 0;
+                      const question = grp.questions[qi] || `Q${qi + 1}`;
+                      return (
+                        <div key={qi} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 7, fontSize: '0.8rem' }}>
+                          <span style={{ flex: '0 0 300px', color: '#374151', minWidth: 0 }}>{qi + 1}. {question}</span>
+                          <div style={{ flex: 1, background: '#e5e7eb', borderRadius: 6, height: 10, minWidth: 80 }}>
+                            <div style={{ width: `${pct}%`, background: pct >= 60 ? '#15803d' : '#dc2626', height: '100%', borderRadius: 6, transition: 'width 0.3s' }} />
+                          </div>
+                          <span style={{ fontWeight: 700, color: pct >= 60 ? '#15803d' : '#dc2626', minWidth: 70 }}>{pct}% Yes</span>
+                          <span style={{ color: '#6b7280', fontSize: '0.75rem', minWidth: 70 }}>({yesCount}Y / {total - yesCount}N)</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
 
             {/* Text analysis sections */}
-            {sections.map(({ key, label }) => (
+            {textSections.map(({ key, label }) => (
               <div key={key} className="ev-field" style={{ borderBottom: '1px solid #f1f5f9', marginBottom: 0 }}>
                 <span className="ev-field-label" style={{ fontSize: '0.78rem', color: '#64748b' }}>
                   {label} ({wc(data[`day${d}_${key}`])} words)
@@ -230,10 +254,10 @@ function Day7Preview({ data }) {
   );
 }
 
-function TaskPreview({ day, data, surveyDays }) {
+function TaskPreview({ day, data, surveyDays, ps }) {
   if (day === 1) return <Day1Preview data={data} />;
   if (day === 2 || day === 3 || day === 4) return <SurveyDayPreview data={data} day={day} />;
-  if (day === 5) return <Day5Preview data={data} surveyDays={surveyDays} />;
+  if (day === 5) return <Day5Preview data={data} surveyDays={surveyDays} ps={ps} />;
   if (day === 6) return <Day6Preview data={data} />;
   if (day === 7) return <Day7Preview data={data} />;
   return null;
@@ -370,7 +394,7 @@ function EvalRow({ student, day, maxMarks, onSave }) {
       {/* Expanded task preview */}
       {expanded && (
         <div className="ev-task-body">
-          <TaskPreview day={day} data={student.taskData} surveyDays={student.surveyDays} />
+          <TaskPreview day={day} data={student.taskData} surveyDays={student.surveyDays} ps={student.ps} />
         </div>
       )}
     </div>

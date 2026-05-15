@@ -72,9 +72,11 @@ export async function GET(request) {
       // All students in this slot
       const [allStudents] = await db.execute(
         `SELECT r.username, r.name, r.slot, r.selectedDomain, r.mode,
-                dm.day${day} AS dayMark
+                dm.day${day} AS dayMark,
+                ps.problem_statement AS ps
          FROM registrations r
          LEFT JOIN dailyMarks dm ON r.username = dm.username
+         LEFT JOIN problemStatements ps ON r.username = ps.username
          WHERE r.slot = ? AND r.season = '2026'
          ORDER BY r.name ASC`,
         [slot]
@@ -157,6 +159,7 @@ export async function GET(request) {
             slot: s.slot,
             selectedDomain: s.selectedDomain,
             mode: s.mode || null,
+            ps: s.ps || null,
             submittedAt: sub.submittedAt,
             taskData: sub.taskData,
             surveyDays: surveyDaysMap[s.username] || null,
@@ -170,6 +173,7 @@ export async function GET(request) {
             slot: s.slot,
             selectedDomain: s.selectedDomain,
             mode: s.mode || null,
+            ps: s.ps || null,
             dayMark: s.dayMark === null ? null : Number(s.dayMark),
             evaluated: s.dayMark !== null,
           });
