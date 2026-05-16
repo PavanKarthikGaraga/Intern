@@ -390,30 +390,31 @@ export default function DailyTasks({ studentData, onSectionChange }) {
       }
     }
     if (!isDraft && activeDay === 6) {
+      const isSlot1 = Number(studentData?.slot) === 1;
       if (!data.activityTitle || (data.activityTitle === 'Other' && !data.customTitle)) {
         setMsg("Please select an activity title."); setMsgType('err'); return;
       }
       if (!data.coverPhoto || !data.photo2 || !data.photo3 || !data.photo4 || !data.photo5) {
-        setMsg("Please upload all 5 photos in the generator."); setMsgType('err'); return;
+        setMsg("Please upload all 5 photos in the Intervention Activity Report generator."); setMsgType('err'); return;
       }
-      if (wc(data.coverDesc || '') < 180) {
-        setMsg(`Cover photo description must be at least 180 words (currently ${wc(data.coverDesc||'')}).`);
+      if (wc(data.coverDesc || '') < 120) {
+        setMsg(`Cover photo description must be at least 120 words (currently ${wc(data.coverDesc||'')}).`);
         setMsgType('err'); return;
       }
       const otherDescs = ['photo2Desc', 'photo3Desc', 'photo4Desc', 'photo5Desc'];
       for (let k of otherDescs) {
-        if (wc(data[k] || '') < 60) {
-          setMsg(`Photo descriptions must be at least 60 words (currently ${wc(data[k]||'')}).`);
+        if (wc(data[k] || '') < 40) {
+          setMsg(`Each photo description must be at least 40 words (${k} has ${wc(data[k]||'')}).`);
           setMsgType('err'); return;
         }
       }
       if (!data.driveLink?.trim()) {
-        setMsg("Please provide the Google Drive Public Link for your intervention report.");
+        setMsg("Please upload your intervention report to Google Drive and paste the public link.");
         setMsgType('err'); return;
       }
-      // Slot 1: MyGov certificates drive link is mandatory
-      if (studentData?.slot === 1 && !data.mygovDriveLink?.trim()) {
-        setMsg("Please provide the MyGov Certificates Google Drive link.");
+      // Slot 1: both MyGov + intervention drive link are required
+      if (isSlot1 && !data.mygovDriveLink?.trim()) {
+        setMsg("Please complete the MyGov quizzes/pledges, upload your certificates to Google Drive, and paste the link before submitting.");
         setMsgType('err'); return;
       }
     }
@@ -446,6 +447,11 @@ export default function DailyTasks({ studentData, onSectionChange }) {
       if (!isDraft && !dataToSave.finalSubmittedAt) {
         dataToSave.finalSubmittedAt = new Date().toISOString();
       }
+      // Strip base64 images before saving to prevent payload-too-large / network errors.
+      // coverPhoto and photo2-5 can be 3-10 MB each; strip them the same way as reportSlots.
+      const PHOTO_FIELDS = ['coverPhoto','photo2','photo3','photo4','photo5'];
+      PHOTO_FIELDS.forEach(f => { if (dataToSave[f]) delete dataToSave[f]; });
+
       if (dataToSave.reportSlots && Array.isArray(dataToSave.reportSlots)) {
         dataToSave.reportSlots = dataToSave.reportSlots.map(slot => ({
           id: slot.id,
@@ -673,31 +679,102 @@ export default function DailyTasks({ studentData, onSectionChange }) {
                 {activeDay === 6 && <Day6 data={dayData(6)} onChange={(f,v) => setDayField(6,f,v)} readOnly={isSaved || isPreview} studentData={studentData} />}
                 {activeDay === 7 && <Day7 saved={saved} data={dayData(7)} onChange={(f,v) => setDayField(7,f,v)} readOnly={isSaved || isPreview} studentData={studentData} survey={survey} />}
 
-                {activeDay !== 2 && activeDay !== 3 && activeDay !== 4 && (
-                  <div className="dt-save-row">
-                    <button className="dt-save-btn" onClick={handleFinalSubmit} disabled={saving || isSaved || !isEditable}>
-                      {saving ? 'Saving…' : isSaved ? '✓ Submitted' : isPreview ? '🔒 Submission Not Open Yet' : '💾 Final Submit for Evaluation'}
-                    </button>
-                    {!isSaved && isEditable && (
-                      <button className="dt-draft-btn" onClick={handleSaveDraft} disabled={saving}>
-                        {saving ? 'Saving...' : '💾 Save Progress'}
+                {activeDay !== 2 && activeDay !== 3 && activeDay !== 4 && (() => {
+                  // ── Day 6 specific save row ──────────────────────────────────
+                  if (activeDay === 6) {
+                    const d6   = dayData(6);
+                    const isS1 = Number(studentData?.slot) === 1;
+                    const hasDriveLink  = !!d6?.driveLink?.trim();
+                    const hasMygovLink  = !!d6?.mygovDriveLink?.trim();
+                    const canFinalSubmit = hasDriveLink && (!isS1 || hasMygovLink);
+
+                    // Inline message for incomplete state
+                    let blockMsg = '';
+                    if (!canFinalSubmit && !isSaved && isEditable) {
+                      if (isS1 && !hasDriveLink && !hasMygovLink)
+                        blockMsg = '⚠️ Please save your Intervention Report Drive link and your MyGov Certificates Drive link before final submission.';
+                      else if (!hasDriveLink)
+                        blockMsg = '⚠️ Please upload your intervention report to Google Drive and save the link before final submission.';
+                      else if (isS1 && !hasMygovLink)
+                        blockMsg = '⚠️ Please complete MyGov quizzes & pledges, upload certificates to Google Drive, and save the link before final submission.';
+                    }
+
+                    return (
+                      <div className="dt-save-row">
+                        {/* Save drive links as draft */}
+                        {!isSaved && isEditable && (
+                          <button className="dt-draft-btn" onClick={handleSaveDraft} disabled={saving}>
+                            {saving ? 'Saving…' : '💾 Save Links & Progress'}
+                          </button>
+                        )}
+
+                        {/* Final Submit — always shown, disabled if incomplete */}
+                        <button
+                          className="dt-save-btn"
+                          onClick={() => {
+                            if (!canFinalSubmit && isEditable && !isSaved) {
+                              setMsg(blockMsg || '⚠️ Complete all required fields first.');
+                              setMsgType('err');
+                              return;
+                            }
+                            handleFinalSubmit();
+                          }}
+                          disabled={saving || isSaved || !isEditable}
+                          title={!canFinalSubmit ? blockMsg : ''}
+                        >
+                          {saving ? 'Saving…' : isSaved ? '✓ Submitted' : isPreview ? '🔒 Submission Not Open Yet' : '✅ Final Submit for Evaluation'}
+                        </button>
+
+                        {/* Evaluation result */}
+                        {isSaved && (() => {
+                          const mark = dailyMarks[`d${activeDay}`];
+                          const max  = DAY_MAX[activeDay];
+                          if (typeof mark === 'number' || (typeof mark === 'string' && mark !== '')) return (
+                            <span style={{ display:'flex', alignItems:'center', gap:6, background:'#e8f5e9', border:'1px solid #a5d6a7', borderRadius:8, padding:'4px 12px', fontSize:'0.85rem', fontWeight:700, color:'#2e7d32' }}>
+                              <FaCheckCircle /> Evaluated: {mark}/{max}
+                            </span>
+                          );
+                          return <span style={{fontSize:'0.82rem',color:'#e65100', fontWeight:600}}>⏳ Evaluation Pending</span>;
+                        })()}
+
+                        {isPreview && <span style={{fontSize:'0.82rem',color:'#1d4ed8'}}>Submission opens {new Date(dayWindow(slot, activeDay).open).toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit', hour12:true })}</span>}
+
+                        {/* Inline blocking message */}
+                        {blockMsg && !msg && !isSaved && isEditable && (
+                          <span className="dt-save-msg err" style={{ display:'block', marginTop:6 }}>{blockMsg}</span>
+                        )}
+                        {msg && <span className={`dt-save-msg ${msgType}`}>{msg}</span>}
+                      </div>
+                    );
+                  }
+
+                  // ── Default save row (all other days) ──────────────────────
+                  return (
+                    <div className="dt-save-row">
+                      <button className="dt-save-btn" onClick={handleFinalSubmit} disabled={saving || isSaved || !isEditable}>
+                        {saving ? 'Saving…' : isSaved ? '✓ Submitted' : isPreview ? '🔒 Submission Not Open Yet' : '💾 Final Submit for Evaluation'}
                       </button>
-                    )}
-                    {isSaved && (() => {
-                      const mark = dailyMarks[`d${activeDay}`];
-                      const max  = DAY_MAX[activeDay];
-                      // Show if mark is a number (including 0)
-                      if (typeof mark === 'number' || (typeof mark === 'string' && mark !== '')) return (
-                        <span style={{ display:'flex', alignItems:'center', gap:6, background:'#e8f5e9', border:'1px solid #a5d6a7', borderRadius:8, padding:'4px 12px', fontSize:'0.85rem', fontWeight:700, color:'#2e7d32' }}>
-                          <FaCheckCircle /> Evaluated: {mark}/{max}
-                        </span>
-                      );
-                      return <span style={{fontSize:'0.82rem',color:'#e65100', fontWeight:600}}>⏳ Evaluation Pending</span>;
-                    })()}
-                    {isPreview && <span style={{fontSize:'0.82rem',color:'#1d4ed8'}}>Submission opens {new Date(dayWindow(slot, activeDay).open).toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit', hour12:true })}</span>}
-                    {msg && <span className={`dt-save-msg ${msgType}`}>{msg}</span>}
-                  </div>
-                )}
+                      {!isSaved && isEditable && (
+                        <button className="dt-draft-btn" onClick={handleSaveDraft} disabled={saving}>
+                          {saving ? 'Saving...' : '💾 Save Progress'}
+                        </button>
+                      )}
+                      {isSaved && (() => {
+                        const mark = dailyMarks[`d${activeDay}`];
+                        const max  = DAY_MAX[activeDay];
+                        if (typeof mark === 'number' || (typeof mark === 'string' && mark !== '')) return (
+                          <span style={{ display:'flex', alignItems:'center', gap:6, background:'#e8f5e9', border:'1px solid #a5d6a7', borderRadius:8, padding:'4px 12px', fontSize:'0.85rem', fontWeight:700, color:'#2e7d32' }}>
+                            <FaCheckCircle /> Evaluated: {mark}/{max}
+                          </span>
+                        );
+                        return <span style={{fontSize:'0.82rem',color:'#e65100', fontWeight:600}}>⏳ Evaluation Pending</span>;
+                      })()}
+                      {isPreview && <span style={{fontSize:'0.82rem',color:'#1d4ed8'}}>Submission opens {new Date(dayWindow(slot, activeDay).open).toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit', hour12:true })}</span>}
+                      {msg && <span className={`dt-save-msg ${msgType}`}>{msg}</span>}
+                    </div>
+                  );
+                })()}
+
               </>
             )
           }
