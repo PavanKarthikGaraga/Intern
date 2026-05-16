@@ -394,8 +394,17 @@ export default function DailyTasks({ studentData, onSectionChange }) {
       if (!data.activityTitle || (data.activityTitle === 'Other' && !data.customTitle)) {
         setMsg("Please select an activity title."); setMsgType('err'); return;
       }
-      if (!data.coverPhoto || !data.photo2 || !data.photo3 || !data.photo4 || !data.photo5) {
-        setMsg("Please upload all 5 photos in the Intervention Activity Report generator."); setMsgType('err'); return;
+      // Photos may have been stripped after a draft save/page-refresh.
+      // Accept if:
+      //   1. photos are live in memory (same session), OR
+      //   2. photosProvided flag was persisted to DB, OR
+      //   3. driveLink is already saved — can't have the PDF link without uploading via the generator
+      const photosOk = data.photosProvided ||
+        data.driveLink?.trim() ||
+        (data.coverPhoto && data.photo2 && data.photo3 && data.photo4 && data.photo5);
+      if (!photosOk) {
+        setMsg("Please open the Intervention Activity Report generator, upload all 5 photos, generate & download the PDF, then upload it to Google Drive and paste the link.");
+        setMsgType('err'); return;
       }
       if (wc(data.coverDesc || '') < 120) {
         setMsg(`Cover photo description must be at least 120 words (currently ${wc(data.coverDesc||'')}).`);
@@ -449,7 +458,11 @@ export default function DailyTasks({ studentData, onSectionChange }) {
       }
       // Strip base64 images before saving to prevent payload-too-large / network errors.
       // coverPhoto and photo2-5 can be 3-10 MB each; strip them the same way as reportSlots.
+      // Persist a flag so future sessions know photos were previously provided.
       const PHOTO_FIELDS = ['coverPhoto','photo2','photo3','photo4','photo5'];
+      if (PHOTO_FIELDS.every(f => !!dataToSave[f])) {
+        dataToSave.photosProvided = true; // ← survives page refresh; used by validation
+      }
       PHOTO_FIELDS.forEach(f => { if (dataToSave[f]) delete dataToSave[f]; });
 
       if (dataToSave.reportSlots && Array.isArray(dataToSave.reportSlots)) {
