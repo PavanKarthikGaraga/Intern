@@ -1,0 +1,238 @@
+/* ══ Slot Report ══════════════════════════════════════════════════════════ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+.sr-root {
+  font-family: 'Inter', sans-serif;
+  padding: 24px 28px;
+  background: #f8fafc;
+  min-height: 100vh;
+  color: #0f172a;
+}
+
+/* ── Toolbar ── */
+.sr-toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.sr-page-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #1e3a8a;
+  margin: 0 0 4px;
+}
+.sr-page-sub {
+  font-size: 0.82rem;
+  color: #64748b;
+  margin: 0;
+}
+.sr-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.sr-slot-pills {
+  display: flex;
+  gap: 6px;
+}
+.sr-slot-pill {
+  padding: 6px 16px;
+  border-radius: 20px;
+  border: 2px solid #c7d2fe;
+  background: #fff;
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: #3730a3;
+  cursor: pointer;
+  transition: all .2s;
+}
+.sr-slot-pill.active,
+.sr-slot-pill:hover {
+  background: #1e3a8a;
+  color: #fff;
+  border-color: #1e3a8a;
+}
+.sr-pdf-btn {
+  background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 22px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .2s;
+  box-shadow: 0 2px 8px rgba(30,58,138,.25);
+}
+.sr-pdf-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(30,58,138,.35); }
+.sr-pdf-btn:disabled { opacity: .55; cursor: not-allowed; }
+
+/* ── Loading / Error ── */
+.sr-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 60px 0;
+  color: #64748b;
+  font-weight: 600;
+}
+.sr-spinner {
+  width: 28px; height: 28px;
+  border: 3px solid #c7d2fe;
+  border-top-color: #1e3a8a;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.sr-error { background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 14px 18px; color: #dc2626; font-weight: 600; }
+.sr-no-data { text-align: center; padding: 60px 0; color: #94a3b8; font-size: 1rem; font-weight: 600; }
+
+/* ── Summary Banner ── */
+.sr-summary-banner {
+  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 60%, #1d4ed8 100%);
+  border-radius: 16px;
+  padding: 22px 24px;
+  margin-bottom: 20px;
+  color: #fff;
+}
+.sr-banner-title {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+.sr-banner-flag { font-size: 2.5rem; }
+.sr-banner-title h2 { margin: 0 0 4px; font-size: 1.2rem; font-weight: 800; }
+.sr-banner-title p  { margin: 0; font-size: 0.8rem; opacity: .85; }
+.sr-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+}
+.sr-stat-card {
+  background: rgba(255,255,255,.12);
+  backdrop-filter: blur(6px);
+  border-radius: 10px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255,255,255,.2);
+}
+.sr-stat-num { font-size: 1.9rem; font-weight: 800; }
+.sr-stat-lbl { font-size: 0.72rem; opacity: .85; margin-top: 2px; font-weight: 600; }
+
+/* ── Mode Distribution Cards ── */
+.sr-mode-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.sr-mode-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 18px 20px;
+  box-shadow: 0 2px 10px rgba(0,0,0,.06);
+  border: 1px solid #e2e8f0;
+}
+.sr-mode-card h3 { margin: 0 0 4px; font-size: 0.95rem; font-weight: 700; color: #1e293b; }
+.sr-legend-item { font-size: 0.82rem; font-weight: 600; margin-bottom: 4px; }
+
+/* ── Domain block ── */
+.sr-domain-block {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px 22px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 12px rgba(0,0,0,.07);
+  border: 1px solid #e2e8f0;
+}
+.sr-domain-header { margin-bottom: 16px; }
+.sr-domain-title  { margin: 0; font-size: 1.1rem; font-weight: 800; }
+
+/* ── Problem Statement ── */
+.sr-ps-block {
+  background: #f8faff;
+  border-radius: 12px;
+  border: 1px solid #c7d2fe;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+}
+.sr-ps-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.sr-ps-title { font-size: 0.9rem; font-weight: 700; color: #1e3a8a; flex: 1; min-width: 200px; }
+.sr-ps-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.sr-chip {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 12px;
+}
+.sr-chip.blue   { background: #eff6ff; color: #1d4ed8; }
+.sr-chip.green  { background: #dcfce7; color: #15803d; }
+.sr-chip.amber  { background: #fef3c7; color: #b45309; }
+
+/* ── Day block ── */
+.sr-day-block { margin-bottom: 14px; }
+.sr-day-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #b45309;
+  background: #fef3c7;
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+/* ── Stakeholder block ── */
+.sr-sh-block { margin-bottom: 16px; }
+.sr-sh-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  background: #1e3a8a;
+  border-radius: 8px;
+  color: #fff;
+}
+.sr-sh-name { font-weight: 700; font-size: 0.88rem; }
+.sr-sh-meta { font-size: 0.78rem; opacity: .85; }
+
+/* ── Question Table ── */
+.sr-q-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+.sr-q-table thead tr { background: #1e3a8a; color: #fff; }
+.sr-q-table th {
+  padding: 7px 8px;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-align: left;
+}
+.sr-q-table tbody tr:nth-child(even) { background: #f0f4ff; }
+.sr-q-table tbody tr:hover { background: #e0e7ff; }
+.sr-q-table td {
+  padding: 6px 8px;
+  vertical-align: middle;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+@media (max-width: 700px) {
+  .sr-mode-section { grid-template-columns: 1fr; }
+  .sr-stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .sr-q-table th:nth-child(6), .sr-q-table td:nth-child(6),
+  .sr-q-table th:nth-child(7), .sr-q-table td:nth-child(7) { display: none; }
+}

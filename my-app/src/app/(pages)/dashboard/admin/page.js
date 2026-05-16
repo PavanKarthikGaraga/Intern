@@ -33,6 +33,7 @@ import VideoDump from './_components/videoDump/page';
 import Announcements from './_components/announcements/page';
 import Evaluate from './_components/evaluate/page';
 import SurveyAnalysis from './_components/surveyAnalysis/page';
+import SlotReport from './_components/slotReport/page';
 
 
 export default function AdminDashboard() {
@@ -289,6 +290,13 @@ export default function AdminDashboard() {
           </button>
 
           <button
+            className={`sidebar-item ${activeSection === 'slot-report' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('slot-report')}
+          >
+            <span className="item-label">🇮🇳 Slot-wise Report</span>
+          </button>
+
+          <button
             className={`sidebar-item ${activeSection === 'daily-tasks' ? 'active' : ''}`}
             onClick={() => handleSectionClick('daily-tasks')}
           >
@@ -402,6 +410,7 @@ export default function AdminDashboard() {
            activeSection === 'task-unlocker' ? <TaskUnlocker /> :
            activeSection === 'evaluate' ? <Evaluate /> :
            activeSection === 'survey-analysis' ? <SurveyAnalysis /> :
+           activeSection === 'slot-report' ? <SlotReport /> :
            <ChangePassword />}
         </main>
       </div>
