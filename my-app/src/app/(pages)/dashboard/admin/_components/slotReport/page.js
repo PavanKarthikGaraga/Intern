@@ -78,7 +78,7 @@ function StakeholderTable({ sh }) {
     <div className="sr-sh-block">
       <div className="sr-sh-header">
         <span className="sr-sh-name">{stakeholder}</span>
-        <span className="sr-sh-meta">{totalPersons} persons surveyed · Overall Yes: <b style={{ color: barColor(overallPct) }}>{overallPct}%</b></span>
+        <span className="sr-sh-meta">{totalPersons} stakeholders surveyed · Overall Yes: <b style={{ color: barColor(overallPct) }}>{overallPct}%</b></span>
       </div>
       <table className="sr-q-table">
         <thead>
@@ -170,7 +170,7 @@ async function generatePDF(reportData, slot) {
   };
 
   const { slotInfo, totalStudents, totalIncampus, totalInvillage, totalRemote,
-          surveyedIncampus, surveyedInvillage, villages, domains } = reportData;
+          totalSurveyed, domains } = reportData;
 
   // ── PAGE 1: Cover ──────────────────────────────────────────────────────
   fillRect(0, 0, PW, 60, '#1e3a8a');
@@ -192,8 +192,7 @@ async function generatePDF(reportData, slot) {
     ['In-Campus Students', String(totalIncampus)],
     ['In-Village Students', String(totalInvillage)],
     ['Remote Students', String(totalRemote)],
-    ['Persons Surveyed (Campus)', String(surveyedIncampus)],
-    ['Persons Surveyed (Village)', String(surveyedInvillage)],
+    ['Total Stakeholders Surveyed', String(totalSurveyed)],
     ['Domains Covered', String(Object.keys(domains).length)],
   ];
 
@@ -244,7 +243,7 @@ async function generatePDF(reportData, slot) {
         shArr.forEach(sh => {
           checkY(28);
           doc.setFontSize(8); doc.setFont(undefined,'bold'); doc.setTextColor(30,30,30);
-          doc.text(`${sh.stakeholder}  (${sh.totalPersons} persons surveyed)`, M, y); y += 5;
+          doc.text(`${sh.stakeholder}  (${sh.totalPersons} stakeholders surveyed)`, M, y); y += 5;
 
           // Table header
           fillRect(M, y - 1, PW - 2*M, 6, '#1e3a8a');
@@ -372,8 +371,7 @@ export default function SlotReport() {
                 { label: 'Total Students', val: data.totalStudents, color: ACCENT },
                 { label: 'In-Campus', val: data.totalIncampus, color: GREEN },
                 { label: 'In-Village', val: data.totalInvillage, color: GOLD },
-                { label: 'Persons Surveyed (Campus)', val: data.surveyedIncampus, color: '#0891b2' },
-                { label: 'Persons Surveyed (Village)', val: data.surveyedInvillage, color: ORANGE },
+                { label: 'Total Stakeholders Surveyed', val: data.totalSurveyed, color: ORANGE },
                 { label: 'Domains', val: Object.keys(data.domains).length, color: '#7c3aed' },
               ].map(({ label, val, color }) => (
                 <div key={label} className="sr-stat-card">
@@ -394,17 +392,6 @@ export default function SlotReport() {
                   <div className="sr-legend-item" style={{color:GREEN}}>● In-Campus: <b>{data.totalIncampus}</b></div>
                   <div className="sr-legend-item" style={{color:GOLD}}>● In-Village: <b>{data.totalInvillage}</b></div>
                   {data.totalRemote > 0 && <div className="sr-legend-item" style={{color:'#6b7280'}}>● Remote: <b>{data.totalRemote}</b></div>}
-                </div>
-              </div>
-            </div>
-            <div className="sr-mode-card">
-              <h3>Persons Surveyed Distribution</h3>
-              <div style={{ display:'flex', gap:24, alignItems:'center', marginTop:12 }}>
-                <DonutChart yes={data.surveyedIncampus} no={data.surveyedInvillage} size={100} />
-                <div>
-                  <div className="sr-legend-item" style={{color:'#0891b2'}}>● In-Campus: <b>{data.surveyedIncampus}</b></div>
-                  <div className="sr-legend-item" style={{color:ORANGE}}>● In-Village: <b>{data.surveyedInvillage}</b></div>
-                  <div className="sr-legend-item" style={{color:'#64748b'}}>Total: <b>{data.surveyedIncampus + data.surveyedInvillage}</b></div>
                 </div>
               </div>
             </div>

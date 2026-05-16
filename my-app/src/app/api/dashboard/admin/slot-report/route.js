@@ -144,17 +144,15 @@ export async function GET(request) {
         else totalRemote++;
       });
 
-      // Total persons surveyed per category (village vs campus)
-      let surveyedIncampus = 0, surveyedInvillage = 0;
+      // Total persons surveyed
+      let totalSurveyed = 0;
       students.forEach(student => {
-        const mode = (student.mode || '').toLowerCase();
         [2,3,4].forEach(day => {
           const td = taskIndex[student.username]?.[day];
           if (!td || td.isFinal === false) return;
           for (let pi = 1; pi <= 30; pi++) {
             const p = td[`p${pi}`]; if (!p) break;
-            if (mode.includes('village')) surveyedInvillage++;
-            else surveyedIncampus++;
+            totalSurveyed++;
           }
         });
       });
@@ -174,26 +172,36 @@ export async function GET(request) {
       // Serialize
       const domainsOut = {};
       Object.entries(domainMap).forEach(([domain, psMap]) => {
-        domainsOut[domain] = {};
+        const psMapOut = {};
         Object.entries(psMap).forEach(([ps, psEntry]) => {
           const days = {};
+          let hasAnalysis = false;
           ['day2','day3','day4'].forEach(dk => {
-            days[dk] = Object.values(psEntry[dk]).map(sh => ({
+            const shData = Object.values(psEntry[dk]).map(sh => ({
               stakeholder: sh.stakeholder,
               questions:   sh.questions,
               yesCount:    sh.yesCount,
               noCount:     sh.noCount,
               totalPersons: sh.totalPersons,
             }));
+            if (shData.length > 0) hasAnalysis = true;
+            days[dk] = shData;
           });
-          domainsOut[domain][ps] = {
-            studentCount: psEntry.students.length,
-            incampus: psEntry.incampus,
-            invillage: psEntry.invillage,
-            remote: psEntry.remote,
-            days,
-          };
+          
+          if (hasAnalysis) {
+            psMapOut[ps] = {
+              studentCount: psEntry.students.length,
+              incampus: psEntry.incampus,
+              invillage: psEntry.invillage,
+              remote: psEntry.remote,
+              days,
+            };
+          }
         });
+        
+        if (Object.keys(psMapOut).length > 0) {
+          domainsOut[domain] = psMapOut;
+        }
       });
 
       return NextResponse.json({
@@ -205,8 +213,8 @@ export async function GET(request) {
           totalIncampus,
           totalInvillage,
           totalRemote,
-          surveyedIncampus,
-          surveyedInvillage,
+          totalRemote,
+          totalSurveyed,
           domainStats,
           domains: domainsOut,
         },
