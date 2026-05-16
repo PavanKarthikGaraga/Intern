@@ -20,7 +20,7 @@ const SLOT_DATES = {
   3: { start: '2026-05-25', end: '2026-05-31', label: 'Slot 3 (May 25 – 31, 2026)' },
 };
 
-const VILLAGES = ['Revendrapadu', 'Kolanukonda'];
+
 
 export async function GET(request) {
   try {
@@ -200,7 +200,7 @@ export async function GET(request) {
         success: true,
         data: {
           slotInfo: SLOT_DATES[slot] || { label: `Slot ${slot}`, start: '', end: '' },
-          villages: VILLAGES,
+
           totalStudents: students.length,
           totalIncampus,
           totalInvillage,

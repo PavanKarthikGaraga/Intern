@@ -157,7 +157,7 @@ async function generatePDF(reportData, slot) {
     y = M;
     // footer
     doc.setFontSize(8); doc.setTextColor(120,120,120);
-    doc.text(`Page ${pageNum} | Confidential — Government of India Report`, PW/2, PH - 8, { align: 'center' });
+    doc.text(`Page ${pageNum}`, PW/2, PH - 8, { align: 'center' });
   };
   const checkY = (needed) => { if (y + needed > PH - 20) addPage(); };
   const setColor = (hex) => {
@@ -174,23 +174,14 @@ async function generatePDF(reportData, slot) {
 
   // ── PAGE 1: Cover ──────────────────────────────────────────────────────
   fillRect(0, 0, PW, 60, '#1e3a8a');
-  doc.setFontSize(9); doc.setTextColor(255,255,255);
-  doc.text('GOVERNMENT OF INDIA — SOCIAL INTERNSHIP PROGRAMME 2026', PW/2, 18, { align: 'center' });
-  doc.setFontSize(18); doc.setFont(undefined, 'bold');
-  doc.text('Social Internship Survey', PW/2, 32, { align: 'center' });
-  doc.setFontSize(14);
+  doc.setFontSize(18); doc.setFont(undefined, 'bold'); doc.setTextColor(255,255,255);
+  doc.text('Social Internship Survey', PW/2, 30, { align: 'center' });
+  doc.setFontSize(14); doc.setFont(undefined, 'normal');
   doc.text('Slot-wise Analysis Report', PW/2, 42, { align: 'center' });
-  doc.setFontSize(10); doc.setFont(undefined, 'normal');
+  doc.setFontSize(10);
   doc.text(slotInfo.label, PW/2, 53, { align: 'center' });
 
   y = 72;
-  doc.setFontSize(10); doc.setTextColor(60,60,60);
-  doc.setFont(undefined, 'bold');
-  doc.text('Villages Covered:', M, y); y += 7;
-  doc.setFont(undefined, 'normal');
-  villages.forEach(v => { doc.text(`• ${v}`, M + 4, y); y += 6; });
-
-  y += 4;
   doc.setDrawColor(180,180,180); doc.line(M, y, PW-M, y); y += 8;
 
   doc.setFont(undefined, 'bold'); doc.setFontSize(11); setColor('#1e3a8a');
@@ -217,11 +208,10 @@ async function generatePDF(reportData, slot) {
   y += 6;
   doc.setFontSize(8); doc.setTextColor(100,100,100);
   doc.text(`Report generated on ${new Date().toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' })}`, M, y);
-  doc.text(`Confidential | Social Internship Cell | RGUKT Basar`, PW - M, y, { align: 'right' });
 
   // Footer page 1
   doc.setFontSize(8); doc.setTextColor(120,120,120);
-  doc.text(`Page 1 | Confidential — Government of India Report`, PW/2, PH - 8, { align: 'center' });
+  doc.text(`Page 1`, PW/2, PH - 8, { align: 'center' });
 
   // ── Subsequent pages: domain-wise ────────────────────────────────────
   Object.entries(domains).forEach(([domain, psMap], di) => {
@@ -340,7 +330,7 @@ export default function SlotReport() {
       <div className="sr-toolbar">
         <div className="sr-toolbar-left">
           <h1 className="sr-page-title">📊 Slot-wise Survey Report</h1>
-          <p className="sr-page-sub">Government of India — Social Internship Programme 2026</p>
+          <p className="sr-page-sub">Social Internship Programme 2026 — Survey Analysis</p>
         </div>
         <div className="sr-toolbar-right">
           <div className="sr-slot-pills">
@@ -374,7 +364,7 @@ export default function SlotReport() {
               <span className="sr-banner-flag">🇮🇳</span>
               <div>
                 <h2>{data.slotInfo.label}</h2>
-                <p>Villages: {data.villages.join(' · ')} &nbsp;|&nbsp; Generated: {new Date().toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' })}</p>
+                <p>Generated: {new Date().toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' })}</p>
               </div>
             </div>
             <div className="sr-stat-grid">
