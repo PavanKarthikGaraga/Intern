@@ -227,17 +227,20 @@ function Day6Preview({ data }) {
       </div>
       {data.driveLink && (
         <div className="ev-field">
-          <span className="ev-field-label">Drive Report</span>
+          <span className="ev-field-label">Intervention Report (Drive)</span>
           <a href={data.driveLink} target="_blank" rel="noopener noreferrer" className="ev-link">{data.driveLink}</a>
         </div>
       )}
-      <div className="ev-field">
-        <span className="ev-field-label">Cover Description ({wc(data.coverDesc)} words)</span>
-        <div className="ev-field-value ev-scrollable">{data.coverDesc?.slice(0, 300) || <em>Not provided</em>}</div>
-      </div>
+      {data.mygovDriveLink && (
+        <div className="ev-field">
+          <span className="ev-field-label">MyGov Certificates (Drive)</span>
+          <a href={data.mygovDriveLink} target="_blank" rel="noopener noreferrer" className="ev-link">{data.mygovDriveLink}</a>
+        </div>
+      )}
     </div>
   );
 }
+
 
 /* ── Day 7 preview ── */
 function Day7Preview({ data }) {
