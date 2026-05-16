@@ -2236,7 +2236,10 @@ function CaseStudyGenerator({ studentData, readOnly, survey, saved }) {
 
     if (pieData.length > 0 && pieChartRef.current) {
       const ctx = pieChartRef.current.getContext('2d');
-      ctx.clearRect(0, 0, 400, 400);
+      // Set background to white to avoid transparent PNG issues in PDF
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, 600, 400);
+
       let total = pieData.reduce((acc, d) => acc + d.val, 0);
       let startAngle = 0;
       const colors = ['#2e7d32', '#1565c0', '#e65100', '#d32f2f', '#6a1b9a'];
@@ -2244,19 +2247,23 @@ function CaseStudyGenerator({ studentData, readOnly, survey, saved }) {
       pieData.forEach((d, i) => {
         const sliceAngle = (d.val / total) * 2 * Math.PI;
         ctx.fillStyle = colors[i % colors.length];
+        
+        // Draw pie slice
         ctx.beginPath();
         ctx.moveTo(200, 200);
         ctx.arc(200, 200, 150, startAngle, startAngle + sliceAngle);
         ctx.fill();
         
-        // label
-        const midAngle = startAngle + sliceAngle / 2;
-        const lx = 200 + 170 * Math.cos(midAngle);
-        const ly = 200 + 170 * Math.sin(midAngle);
+        // Draw legend
+        const legendY = 120 + i * 45;
+        ctx.fillRect(400, legendY - 16, 22, 22);
         ctx.fillStyle = '#333';
         ctx.font = 'bold 16px Arial';
-        ctx.textAlign = lx > 200 ? 'left' : 'right';
-        ctx.fillText(`${d.label} (${d.val})`, lx, ly);
+        ctx.textAlign = 'left';
+        
+        let label = `${d.label} (${d.val})`;
+        if (label.length > 25) label = label.substring(0, 22) + '...';
+        ctx.fillText(label, 435, legendY);
         
         startAngle += sliceAngle;
       });
@@ -2583,7 +2590,7 @@ function CaseStudyGenerator({ studentData, readOnly, survey, saved }) {
             // Add Pie Chart below distribution
             if (field === 'Stakeholder-wise distribution' && answers['PIE_CHART_IMG']) {
               checkNewPage(80);
-              doc.addImage(answers['PIE_CHART_IMG'], 'PNG', margin + 30, y, 70, 70);
+              doc.addImage(answers['PIE_CHART_IMG'], 'PNG', margin + 15, y, 120, 80);
               y += 75;
             }
           } else {
@@ -2674,7 +2681,7 @@ function CaseStudyGenerator({ studentData, readOnly, survey, saved }) {
         <strong> Download PDF</strong> to generate your professionally formatted case study report.
       </p>
       
-      <canvas ref={pieChartRef} width="400" height="400" style={{ display: 'none' }} />
+      <canvas ref={pieChartRef} width="600" height="400" style={{ display: 'none' }} />
 
       {/* Sections */}
       {template.sections.map((section) => (
@@ -2789,7 +2796,7 @@ function CaseStudyGenerator({ studentData, readOnly, survey, saved }) {
                         {field === 'Stakeholder-wise distribution' && answers['PIE_CHART_IMG'] && (
                           <div style={{ marginTop: 12, padding: 12, background: '#f5f5f5', borderRadius: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                             <h6 style={{ margin: '0 0 10px 0', color: '#333' }}>Auto-Generated Stakeholder Distribution</h6>
-                            <Image src={answers['PIE_CHART_IMG']} alt="Distribution Pie Chart" width={250} height={250} unoptimized style={{ width: 250, height: 250 }} />
+                            <Image src={answers['PIE_CHART_IMG']} alt="Distribution Pie Chart" width={375} height={250} unoptimized style={{ width: 375, height: 250 }} />
                           </div>
                         )}
                       </>

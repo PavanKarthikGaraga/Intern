@@ -8,10 +8,10 @@ export default function Hero() {
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const slides = [
-    { image: "/hero/hero_1_1778952286105.png" },
-    { image: "/hero/hero_2_1778952309423.png" },
-    { image: "/hero/hero_3_1778952331515.png" },
-    { image: "/hero/hero_4_1778952354682.png" }
+    { image: "/hero/20230516_113003AMByGPSMapCamera.jpeg" },
+    { image: "/hero/20230516_30205PMByGPSMapCamera.jpeg" },
+    { image: "/hero/20230517_34912PMByGPSMapCamera.jpeg" },
+    { image: "/hero/IMG-20250102-WA0166 (1).jpeg" }
   ];
 
   useEffect(() => {
