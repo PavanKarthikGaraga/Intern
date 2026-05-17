@@ -1756,7 +1756,31 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        onChange(key, reader.result);
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          const MAX_SIZE = 800; // Cap at 800px to prevent OOM
+          
+          if (width > height && width > MAX_SIZE) {
+            height = Math.round(height * (MAX_SIZE / width));
+            width = MAX_SIZE;
+          } else if (height > MAX_SIZE) {
+            width = Math.round(width * (MAX_SIZE / height));
+            height = MAX_SIZE;
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          // Output as compressed JPEG
+          const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
+          onChange(key, compressedBase64);
+        };
+        img.src = reader.result;
       };
       reader.readAsDataURL(file);
     }
@@ -2359,7 +2383,31 @@ function CaseStudyGenerator({ studentData, readOnly, survey, saved, data, onChan
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setAns(key, reader.result);
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          const MAX_SIZE = 800; // Cap at 800px to prevent OOM
+          
+          if (width > height && width > MAX_SIZE) {
+            height = Math.round(height * (MAX_SIZE / width));
+            width = MAX_SIZE;
+          } else if (height > MAX_SIZE) {
+            width = Math.round(width * (MAX_SIZE / height));
+            height = MAX_SIZE;
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          // Output as compressed JPEG
+          const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
+          setAns(key, compressedBase64);
+        };
+        img.src = reader.result;
       };
       reader.readAsDataURL(file);
     }
