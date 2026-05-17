@@ -1751,36 +1751,53 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
     background: ro ? '#f9f9f9' : '#fff', resize: 'vertical',
   });
 
+  const [uploadingImages, setUploadingImages] = useState({});
+
   const handlePhotoUpload = (e, key) => {
     const file = e.target.files[0];
     if (file) {
+      setUploadingImages(prev => ({ ...prev, [key]: true }));
       const reader = new FileReader();
       reader.onloadend = () => {
         const img = new Image();
         img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
-          const MAX_SIZE = 800; // Cap at 800px to prevent OOM
-          
-          if (width > height && width > MAX_SIZE) {
-            height = Math.round(height * (MAX_SIZE / width));
-            width = MAX_SIZE;
-          } else if (height > MAX_SIZE) {
-            width = Math.round(width * (MAX_SIZE / height));
-            height = MAX_SIZE;
+          try {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            const MAX_SIZE = 800;
+            
+            if (width > height && width > MAX_SIZE) {
+              height = Math.round(height * (MAX_SIZE / width));
+              width = MAX_SIZE;
+            } else if (height > MAX_SIZE) {
+              width = Math.round(width * (MAX_SIZE / height));
+              height = MAX_SIZE;
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
+            onChange(key, compressedBase64);
+          } catch (err) {
+            console.error(err);
+            alert('Failed to process image. Please try a different or smaller photo.');
+          } finally {
+            setUploadingImages(prev => ({ ...prev, [key]: false }));
           }
-          
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
-          
-          // Output as compressed JPEG
-          const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
-          onChange(key, compressedBase64);
+        };
+        img.onerror = () => {
+          alert('Failed to load image. If using an iPhone, try changing your camera settings to "Most Compatible" or try a different photo.');
+          setUploadingImages(prev => ({ ...prev, [key]: false }));
         };
         img.src = reader.result;
+      };
+      reader.onerror = () => {
+        alert('Failed to read file from your device.');
+        setUploadingImages(prev => ({ ...prev, [key]: false }));
       };
       reader.readAsDataURL(file);
     }
@@ -1983,8 +2000,10 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
           <h4 style={{ margin: 0, fontSize: '0.95rem', display: 'inline-block' }}>📄 Page 1: Cover Photo &amp; Description</h4>
           <WordCountLabel count={wc(data.coverDesc || '')} min={120} />
         </div>
-        <input type="file" accept="image/*" onChange={e => handlePhotoUpload(e, 'coverPhoto')} disabled={readOnly} style={{ marginBottom: '10px', fontSize: '0.8rem' }} />
-        {data.coverPhoto && <div style={{ marginBottom: '10px', fontSize: '0.75rem', color: '#16a34a' }}>✅ Cover Photo Uploaded</div>}
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+          <input type="file" accept="image/*" onChange={e => handlePhotoUpload(e, 'coverPhoto')} disabled={readOnly || uploadingImages['coverPhoto']} style={{ fontSize: '0.8rem' }} />
+          {uploadingImages['coverPhoto'] ? <span style={{ fontSize: '0.75rem', color: '#d97706', marginLeft: 10 }}>⏳ Processing...</span> : data.coverPhoto ? <span style={{ fontSize: '0.75rem', color: '#16a34a', marginLeft: 10 }}>✅ Uploaded</span> : null}
+        </div>
         <textarea placeholder="Description of the activity (Min 120 words)..." value={data.coverDesc || ''} onChange={e => !readOnly && onChange('coverDesc', e.target.value)} style={{...inputStyle(readOnly), minHeight: '100px'}} readOnly={readOnly} />
       </div>
 
@@ -1994,8 +2013,10 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
           <h4 style={{ margin: 0, fontSize: '0.95rem', display: 'inline-block' }}>📄 Page 2: Photo 2 &amp; Description</h4>
           <WordCountLabel count={wc(data.photo2Desc || '')} min={40} />
         </div>
-        <input type="file" accept="image/*" onChange={e => handlePhotoUpload(e, 'photo2')} disabled={readOnly} style={{ marginBottom: '10px', fontSize: '0.8rem' }} />
-        {data.photo2 && <div style={{ marginBottom: '10px', fontSize: '0.75rem', color: '#16a34a' }}>✅ Photo 2 Uploaded</div>}
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+          <input type="file" accept="image/*" onChange={e => handlePhotoUpload(e, 'photo2')} disabled={readOnly || uploadingImages['photo2']} style={{ fontSize: '0.8rem' }} />
+          {uploadingImages['photo2'] ? <span style={{ fontSize: '0.75rem', color: '#d97706', marginLeft: 10 }}>⏳ Processing...</span> : data.photo2 ? <span style={{ fontSize: '0.75rem', color: '#16a34a', marginLeft: 10 }}>✅ Uploaded</span> : null}
+        </div>
         <textarea placeholder="Description of this photo (Min 40 words)..." value={data.photo2Desc || ''} onChange={e => !readOnly && onChange('photo2Desc', e.target.value)} style={{...inputStyle(readOnly), minHeight: '80px'}} readOnly={readOnly} />
       </div>
 
@@ -2004,8 +2025,10 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
           <h4 style={{ margin: 0, fontSize: '0.95rem', display: 'inline-block' }}>📄 Page 2: Photo 3 &amp; Description</h4>
           <WordCountLabel count={wc(data.photo3Desc || '')} min={40} />
         </div>
-        <input type="file" accept="image/*" onChange={e => handlePhotoUpload(e, 'photo3')} disabled={readOnly} style={{ marginBottom: '10px', fontSize: '0.8rem' }} />
-        {data.photo3 && <div style={{ marginBottom: '10px', fontSize: '0.75rem', color: '#16a34a' }}>✅ Photo 3 Uploaded</div>}
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+          <input type="file" accept="image/*" onChange={e => handlePhotoUpload(e, 'photo3')} disabled={readOnly || uploadingImages['photo3']} style={{ fontSize: '0.8rem' }} />
+          {uploadingImages['photo3'] ? <span style={{ fontSize: '0.75rem', color: '#d97706', marginLeft: 10 }}>⏳ Processing...</span> : data.photo3 ? <span style={{ fontSize: '0.75rem', color: '#16a34a', marginLeft: 10 }}>✅ Uploaded</span> : null}
+        </div>
         <textarea placeholder="Description of this photo (Min 40 words)..." value={data.photo3Desc || ''} onChange={e => !readOnly && onChange('photo3Desc', e.target.value)} style={{...inputStyle(readOnly), minHeight: '80px'}} readOnly={readOnly} />
       </div>
 
@@ -2015,8 +2038,10 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
           <h4 style={{ margin: 0, fontSize: '0.95rem', display: 'inline-block' }}>📄 Page 3: Photo 4 &amp; Description</h4>
           <WordCountLabel count={wc(data.photo4Desc || '')} min={40} />
         </div>
-        <input type="file" accept="image/*" onChange={e => handlePhotoUpload(e, 'photo4')} disabled={readOnly} style={{ marginBottom: '10px', fontSize: '0.8rem' }} />
-        {data.photo4 && <div style={{ marginBottom: '10px', fontSize: '0.75rem', color: '#16a34a' }}>✅ Photo 4 Uploaded</div>}
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+          <input type="file" accept="image/*" onChange={e => handlePhotoUpload(e, 'photo4')} disabled={readOnly || uploadingImages['photo4']} style={{ fontSize: '0.8rem' }} />
+          {uploadingImages['photo4'] ? <span style={{ fontSize: '0.75rem', color: '#d97706', marginLeft: 10 }}>⏳ Processing...</span> : data.photo4 ? <span style={{ fontSize: '0.75rem', color: '#16a34a', marginLeft: 10 }}>✅ Uploaded</span> : null}
+        </div>
         <textarea placeholder="Description of this photo (Min 40 words)..." value={data.photo4Desc || ''} onChange={e => !readOnly && onChange('photo4Desc', e.target.value)} style={{...inputStyle(readOnly), minHeight: '80px'}} readOnly={readOnly} />
       </div>
 
@@ -2025,8 +2050,10 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
           <h4 style={{ margin: 0, fontSize: '0.95rem', display: 'inline-block' }}>📄 Page 3: Photo 5 &amp; Description</h4>
           <WordCountLabel count={wc(data.photo5Desc || '')} min={40} />
         </div>
-        <input type="file" accept="image/*" onChange={e => handlePhotoUpload(e, 'photo5')} disabled={readOnly} style={{ marginBottom: '10px', fontSize: '0.8rem' }} />
-        {data.photo5 && <div style={{ marginBottom: '10px', fontSize: '0.75rem', color: '#16a34a' }}>✅ Photo 5 Uploaded</div>}
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+          <input type="file" accept="image/*" onChange={e => handlePhotoUpload(e, 'photo5')} disabled={readOnly || uploadingImages['photo5']} style={{ fontSize: '0.8rem' }} />
+          {uploadingImages['photo5'] ? <span style={{ fontSize: '0.75rem', color: '#d97706', marginLeft: 10 }}>⏳ Processing...</span> : data.photo5 ? <span style={{ fontSize: '0.75rem', color: '#16a34a', marginLeft: 10 }}>✅ Uploaded</span> : null}
+        </div>
         <textarea placeholder="Description of this photo (Min 40 words)..." value={data.photo5Desc || ''} onChange={e => !readOnly && onChange('photo5Desc', e.target.value)} style={{...inputStyle(readOnly), minHeight: '80px'}} readOnly={readOnly} />
       </div>
 
@@ -2378,36 +2405,53 @@ function CaseStudyGenerator({ studentData, readOnly, survey, saved, data, onChan
     return 30; // All analytical/descriptive fields need ≥ 30 words
   };
 
+  const [uploadingImages, setUploadingImages] = useState({});
+
   const handlePhotoUpload = (e, key) => {
     const file = e.target.files[0];
     if (file) {
+      setUploadingImages(prev => ({ ...prev, [key]: true }));
       const reader = new FileReader();
       reader.onloadend = () => {
         const img = new Image();
         img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
-          const MAX_SIZE = 800; // Cap at 800px to prevent OOM
-          
-          if (width > height && width > MAX_SIZE) {
-            height = Math.round(height * (MAX_SIZE / width));
-            width = MAX_SIZE;
-          } else if (height > MAX_SIZE) {
-            width = Math.round(width * (MAX_SIZE / height));
-            height = MAX_SIZE;
+          try {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            const MAX_SIZE = 800;
+            
+            if (width > height && width > MAX_SIZE) {
+              height = Math.round(height * (MAX_SIZE / width));
+              width = MAX_SIZE;
+            } else if (height > MAX_SIZE) {
+              width = Math.round(width * (MAX_SIZE / height));
+              height = MAX_SIZE;
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
+            setAns(key, compressedBase64);
+          } catch (err) {
+            console.error(err);
+            alert('Failed to process image. Please try a different or smaller photo.');
+          } finally {
+            setUploadingImages(prev => ({ ...prev, [key]: false }));
           }
-          
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
-          
-          // Output as compressed JPEG
-          const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
-          setAns(key, compressedBase64);
+        };
+        img.onerror = () => {
+          alert('Failed to load image. If using an iPhone, try changing your camera settings to "Most Compatible" or try a different photo.');
+          setUploadingImages(prev => ({ ...prev, [key]: false }));
         };
         img.src = reader.result;
+      };
+      reader.onerror = () => {
+        alert('Failed to read file from your device.');
+        setUploadingImages(prev => ({ ...prev, [key]: false }));
       };
       reader.readAsDataURL(file);
     }
@@ -2430,8 +2474,12 @@ function CaseStudyGenerator({ studentData, readOnly, survey, saved, data, onChan
           </span>
         </div>
         <div style={{ marginBottom: 10, display: 'flex', alignItems: 'center' }}>
-          <input type="file" accept="image/*" onChange={e => handlePhotoUpload(e, photoKey)} disabled={readOnly} style={{ fontSize: '0.8rem' }} />
-          {answers[photoKey] && <span style={{ fontSize: '0.8rem', color: '#388e3c', marginLeft: 10, fontWeight: 600 }}>✓ Image Selected</span>}
+          <input type="file" accept="image/*" onChange={e => handlePhotoUpload(e, photoKey)} disabled={readOnly || uploadingImages[photoKey]} style={{ fontSize: '0.8rem' }} />
+          {uploadingImages[photoKey] ? (
+            <span style={{ fontSize: '0.8rem', color: '#d97706', marginLeft: 10, fontWeight: 600 }}>⏳ Processing...</span>
+          ) : answers[photoKey] ? (
+            <span style={{ fontSize: '0.8rem', color: '#388e3c', marginLeft: 10, fontWeight: 600 }}>✓ Image Selected</span>
+          ) : null}
         </div>
         <textarea
           rows={3}
