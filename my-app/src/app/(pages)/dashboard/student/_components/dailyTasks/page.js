@@ -2300,6 +2300,7 @@ function CaseStudyGenerator({ studentData, readOnly, survey, saved, data, onChan
         if (onChange) onChange('generatorAnswers', updated);
         return updated;
       }
+      return prev;
     });
   }, [studentData, template, domain, survey, onChange]);
 
