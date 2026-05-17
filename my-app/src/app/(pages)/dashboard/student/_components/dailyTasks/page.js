@@ -620,7 +620,7 @@ export default function DailyTasks({ studentData, onSectionChange }) {
   const statuses    = Object.fromEntries([1,2,3,4,5,6,7].map(d => [d, getDayStatus(d, slot, saved, username, unlockedDays, slotEnabled, dailyMarks)]));
   const meta        = DAY_META[activeDay - 1];
   const activeStatus = statuses[activeDay];
-  const isSaved     = activeStatus === 'submitted' && !draft[activeDay];
+  const isSaved     = activeStatus === 'submitted';
   // Editable if open or unlocked; preview = view only
   const isEditable  = activeStatus === 'open' || activeStatus === 'unlocked';
   const isPreview   = activeStatus === 'preview';

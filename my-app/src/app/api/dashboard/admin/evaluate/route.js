@@ -119,7 +119,12 @@ export async function GET(request) {
       const submitted    = [];
       const notSubmitted = [];
 
+      const processedUsernames = new Set();
+
       allStudents.forEach(s => {
+        if (processedUsernames.has(s.username)) return;
+        processedUsernames.add(s.username);
+        
         const sub = submittedMap[s.username];
         let isValidFinal = false;
 
