@@ -2237,18 +2237,24 @@ function CaseStudyGenerator({ studentData, readOnly, survey, saved, data, onChan
   const savedRef = useRef(saved);
   savedRef.current = saved; // keep ref current on every render without adding to dep array
 
-  // Sync internal state if DB data loads late
+  // Sync internal state if DB data loads late.
+  // IMPORTANT: Never overwrite a locally-set value with null/empty from DB.
+  // The DB strips base64 images, so photo keys will always be null on the server.
+  // We only merge values that are truthy in the DB (text fields, numbers etc.)
+  // and only if the local state has nothing set for that key yet.
   useEffect(() => {
     if (data?.generatorAnswers) {
       setAnswers(prev => {
-        // Only update if there's actual new data to merge in to avoid destroying current typing
         const next = { ...prev };
         let changed = false;
         Object.entries(data.generatorAnswers).forEach(([k, v]) => {
-          if (next[k] !== v) {
-            next[k] = v;
-            changed = true;
-          }
+          // Skip null/undefined/empty DB values — never overwrite local data with nothing
+          if (v === null || v === undefined || v === '') return;
+          // Skip if local already has a value (local is always more recent than DB for photos)
+          if (next[k] !== undefined && next[k] !== null && next[k] !== '') return;
+          // Only merge genuinely new non-empty DB values into empty local slots
+          next[k] = v;
+          changed = true;
         });
         return changed ? next : prev;
       });
