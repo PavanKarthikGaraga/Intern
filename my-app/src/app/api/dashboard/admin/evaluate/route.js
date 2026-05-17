@@ -133,19 +133,21 @@ export async function GET(request) {
             if (dayNum === 1 && !d.inference) isFinal = false;
             if (dayNum === 2 && (!d.driveLink || !d.p1 || !d.p2 || !d.p3 || !d.p4 || !d.p5 || !d.p6)) isFinal = false;
             if ((dayNum === 3 || dayNum === 4) && (!d.driveLink || !d.p1 || !d.p2 || !d.p3)) isFinal = false;
-            if ([6, 7].includes(dayNum) && !d.driveLink) isFinal = false;
+            if (dayNum === 6 && !d.driveLink) isFinal = false;
+            if (dayNum === 7 && (!d.caseStudyLink || !d.youtubeLink || !d.linkedinLink)) isFinal = false;
             if (dayNum === 5 && !(d.day2_topProblems || d.day3_topProblems || d.day4_topProblems)) isFinal = false;
           }
 
           // Legacy recovery:
           // Day 1: isFinal !== true — recover old submissions saved as drafts with inference data
           // Days 2/3/4: isFinal === undefined ONLY — never override explicit isFinal: false drafts
-          const legacyCondition = (dayNum === 1) ? (isFinal !== true) : (isFinal === undefined);
+          const legacyCondition = (isFinal === undefined);
           if (legacyCondition && d) {
             if (dayNum === 1 && d.inference) isFinal = true;
             else if (dayNum === 2 && d.driveLink && d.p1 && d.p2 && d.p3 && d.p4 && d.p5 && d.p6) isFinal = true;
             else if ((dayNum === 3 || dayNum === 4) && d.driveLink && d.p1 && d.p2 && d.p3) isFinal = true;
-            else if ([6, 7].includes(dayNum) && d.driveLink) isFinal = true;
+            else if (dayNum === 6 && d.driveLink) isFinal = true;
+            else if (dayNum === 7 && d.caseStudyLink && d.youtubeLink && d.linkedinLink) isFinal = true;
             else if (dayNum === 5 && (d.day2_topProblems || d.day3_topProblems || d.day4_topProblems)) isFinal = true;
           }
 

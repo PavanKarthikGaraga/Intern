@@ -259,10 +259,10 @@ function Day7Preview({ data }) {
           <a href={data.linkedinPost} target="_blank" rel="noopener noreferrer" className="ev-link">{data.linkedinPost}</a>
         </div>
       )}
-      {data.driveLink && (
+      {data.caseStudyLink && (
         <div className="ev-field">
           <span className="ev-field-label">Case Study Report</span>
-          <a href={data.driveLink} target="_blank" rel="noopener noreferrer" className="ev-link">{data.driveLink}</a>
+          <a href={data.caseStudyLink} target="_blank" rel="noopener noreferrer" className="ev-link">{data.caseStudyLink}</a>
         </div>
       )}
     </div>
