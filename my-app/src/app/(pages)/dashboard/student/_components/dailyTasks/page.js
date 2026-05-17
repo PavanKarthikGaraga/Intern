@@ -98,9 +98,8 @@ function getDayStatus(dayNum, slot, saved, username, unlockedDays = [], slotEnab
   }
 
   // ── Legacy recovery ──
-  // For Day 1: use isFinal !== true to recover all old submissions that may have isFinal: false or undefined
-  // For Days 2/3/4: ONLY recover truly old data (isFinal === undefined) — never override explicit isFinal: false drafts
-  const legacyCondition = (dayNum === 1) ? (isFinal !== true) : (isFinal === undefined);
+  // ONLY recover truly old data (isFinal === undefined) — never override explicit isFinal: false drafts
+  const legacyCondition = (isFinal === undefined);
   if (legacyCondition && s?.data) {
     const d = s.data;
     if (dayNum === 1 && d.inference) isFinal = true;
@@ -2337,7 +2336,7 @@ function CaseStudyGenerator({ studentData, readOnly, survey, saved, data, onChan
     background: ro ? '#f9f9f9' : '#fff', resize: 'vertical',
   });
 
-  const PhotoUploadField = ({ label, photoKey, descKey, minWords }) => {
+  const renderPhotoUploadField = ({ label, photoKey, descKey, minWords }) => {
     const count = wc(answers[descKey] || '');
     return (
       <div style={{ marginTop: 10, padding: 12, border: '1px dashed #a5d6a7', borderRadius: 8, background: '#fcfdfc' }}>
@@ -2832,8 +2831,8 @@ function CaseStudyGenerator({ studentData, readOnly, survey, saved, data, onChan
                     {/* Render photo upload fields for Stakeholders */}
                     {section.isStakeholderCount && (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 12, marginBottom: 8 }}>
-                        <PhotoUploadField label={`${field} - Photo 1`} photoKey={`${key}__photo1`} descKey={`${key}__desc1`} minWords={20} />
-                        <PhotoUploadField label={`${field} - Photo 2`} photoKey={`${key}__photo2`} descKey={`${key}__desc2`} minWords={20} />
+                        {renderPhotoUploadField({ label: `${field} - Photo 1`, photoKey: `${key}__photo1`, descKey: `${key}__desc1`, minWords: 20 })}
+                        {renderPhotoUploadField({ label: `${field} - Photo 2`, photoKey: `${key}__photo2`, descKey: `${key}__desc2`, minWords: 20 })}
                       </div>
                     )}
                   </div>
@@ -2844,8 +2843,8 @@ function CaseStudyGenerator({ studentData, readOnly, survey, saved, data, onChan
               {section.heading.includes('Intervention') && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 16, paddingTop: 16, borderTop: '2px solid #e8f5e9' }}>
                   <h6 style={{ margin: 0, color: '#2e7d32', fontSize: '0.95rem' }}>Intervention Photos &amp; Descriptions</h6>
-                  <PhotoUploadField label="Intervention Photo 1" photoKey={`${section.heading}__InterventionPhotos__photo1`} descKey={`${section.heading}__InterventionPhotos__desc1`} minWords={20} />
-                  <PhotoUploadField label="Intervention Photo 2" photoKey={`${section.heading}__InterventionPhotos__photo2`} descKey={`${section.heading}__InterventionPhotos__desc2`} minWords={20} />
+                  {renderPhotoUploadField({ label: "Intervention Photo 1", photoKey: `${section.heading}__InterventionPhotos__photo1`, descKey: `${section.heading}__InterventionPhotos__desc1`, minWords: 20 })}
+                  {renderPhotoUploadField({ label: "Intervention Photo 2", photoKey: `${section.heading}__InterventionPhotos__photo2`, descKey: `${section.heading}__InterventionPhotos__desc2`, minWords: 20 })}
                 </div>
               )}
             </div>
