@@ -96,7 +96,7 @@ function getDayStatus(dayNum, slot, saved, username, unlockedDays = [], slotEnab
 
   // ── Legacy recovery ──
   // ONLY recover truly old data (isFinal === undefined) — never override explicit isFinal: false drafts
-  const legacyCondition = (isFinal === undefined);
+  const legacyCondition = (dayNum === 1) ? (isFinal !== true) : (isFinal === undefined);
   if (legacyCondition && s?.data) {
     const d = s.data;
     if (dayNum === 1 && d.inference) isFinal = true;
