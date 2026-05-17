@@ -92,7 +92,8 @@ function getDayStatus(dayNum, slot, saved, username, unlockedDays = [], slotEnab
     if (dayNum === 1 && !d.inference) isFinal = false;
     if (dayNum === 2 && (!d.driveLink || !d.p1 || !d.p2 || !d.p3 || !d.p4 || !d.p5 || !d.p6)) isFinal = false;
     if ((dayNum === 3 || dayNum === 4) && (!d.driveLink || !d.p1 || !d.p2 || !d.p3)) isFinal = false;
-    if ([6, 7].includes(dayNum) && !d.driveLink) isFinal = false;
+    if (dayNum === 6 && !d.driveLink) isFinal = false;
+    if (dayNum === 7 && (!d.caseStudyLink || !d.youtubeLink || !d.linkedinLink)) isFinal = false;
     if (dayNum === 5 && !(d.day2_topProblems || d.day3_topProblems || d.day4_topProblems)) isFinal = false;
   }
 
@@ -105,7 +106,8 @@ function getDayStatus(dayNum, slot, saved, username, unlockedDays = [], slotEnab
     if (dayNum === 1 && d.inference) isFinal = true;
     else if (dayNum === 2 && d.driveLink && d.p1 && d.p2 && d.p3 && d.p4 && d.p5 && d.p6) isFinal = true;
     else if ((dayNum === 3 || dayNum === 4) && d.driveLink && d.p1 && d.p2 && d.p3) isFinal = true;
-    else if ([6, 7].includes(dayNum) && d.driveLink) isFinal = true;
+    else if (dayNum === 6 && d.driveLink) isFinal = true;
+    else if (dayNum === 7 && d.caseStudyLink && d.youtubeLink && d.linkedinLink) isFinal = true;
     else if (dayNum === 5 && (d.day2_topProblems || d.day3_topProblems || d.day4_topProblems)) isFinal = true;
   }
   
@@ -427,6 +429,20 @@ export default function DailyTasks({ studentData, onSectionChange }) {
         setMsgType('err'); return;
       }
     }
+    if (!isDraft && activeDay === 7) {
+      if (!data.caseStudyLink?.trim()) {
+        setMsg("Please provide your Case Study Document Public Link.");
+        setMsgType('err'); return;
+      }
+      if (!data.youtubeLink?.trim()) {
+        setMsg("Please provide your Presentation Video YouTube Link.");
+        setMsgType('err'); return;
+      }
+      if (!data.linkedinLink?.trim()) {
+        setMsg("Please provide your LinkedIn Article Link.");
+        setMsgType('err'); return;
+      }
+    }
     if (!isDraft && activeDay === 5) {
       const activeDays = [2, 3, 4].filter(d => {
         const sh = survey && survey[d - 2];
@@ -716,13 +732,14 @@ export default function DailyTasks({ studentData, onSectionChange }) {
                       <div className="dt-save-row">
                         {/* Save drive links as draft */}
                         {!isSaved && isEditable && (
-                          <button className="dt-draft-btn" onClick={handleSaveDraft} disabled={saving}>
+                          <button type="button" className="dt-draft-btn" onClick={handleSaveDraft} disabled={saving}>
                             {saving ? 'Saving…' : '💾 Save Links & Progress'}
                           </button>
                         )}
 
                         {/* Final Submit — always shown, disabled if incomplete */}
                         <button
+                          type="button"
                           className="dt-save-btn"
                           onClick={() => {
                             if (!canFinalSubmit && isEditable && !isSaved) {
@@ -764,11 +781,11 @@ export default function DailyTasks({ studentData, onSectionChange }) {
                   // ── Default save row (all other days) ──────────────────────
                   return (
                     <div className="dt-save-row">
-                      <button className="dt-save-btn" onClick={handleFinalSubmit} disabled={saving || isSaved || !isEditable}>
+                      <button type="button" className="dt-save-btn" onClick={handleFinalSubmit} disabled={saving || isSaved || !isEditable}>
                         {saving ? 'Saving…' : isSaved ? '✓ Submitted' : isPreview ? '🔒 Submission Not Open Yet' : '💾 Final Submit for Evaluation'}
                       </button>
                       {!isSaved && isEditable && (
-                        <button className="dt-draft-btn" onClick={handleSaveDraft} disabled={saving}>
+                        <button type="button" className="dt-draft-btn" onClick={handleSaveDraft} disabled={saving}>
                           {saving ? 'Saving...' : '💾 Save Progress'}
                         </button>
                       )}
@@ -2111,7 +2128,7 @@ function Day6({ data, onChange, readOnly, studentData }) {
 }
 
 /* ── Case Study Generator ── */
-function CaseStudyGenerator({ studentData, readOnly, survey, saved }) {
+function CaseStudyGenerator({ studentData, readOnly, survey, saved, data, onChange }) {
   const domain   = studentData?.selectedDomain || '';
   const baseTemplate = getTemplate(domain);
   const template = JSON.parse(JSON.stringify(baseTemplate)); // deep copy for mutation
@@ -2151,7 +2168,7 @@ function CaseStudyGenerator({ studentData, readOnly, survey, saved }) {
     });
   }
 
-  const [answers, setAnswers] = useState({});
+  const [answers, setAnswers] = useState(data?.generatorAnswers || {});
   const [isGenerating, setIsGenerating] = useState(false);
   const pieChartRef = useRef(null);
   const savedRef = useRef(saved);
@@ -2279,11 +2296,20 @@ function CaseStudyGenerator({ studentData, readOnly, survey, saved }) {
           changed = true;
         }
       });
-      return changed ? updated : prev;
+      if (changed) {
+        if (onChange) onChange('generatorAnswers', updated);
+        return updated;
+      }
     });
-  }, [studentData, template, domain, survey]);
+  }, [studentData, template, domain, survey, onChange]);
 
-  const setAns = (key, val) => setAnswers(prev => ({ ...prev, [key]: val }));
+  const setAns = (key, val) => {
+    setAnswers(prev => {
+      const next = { ...prev, [key]: val };
+      if (onChange) onChange('generatorAnswers', next);
+      return next;
+    });
+  };
 
   const getMinWords = (heading, field) => {
     // Auto-filled / identity fields — no word count needed
@@ -2828,6 +2854,7 @@ function CaseStudyGenerator({ studentData, readOnly, survey, saved }) {
 
       {!readOnly && (
         <button
+          type="button"
           onClick={generatePDF}
           disabled={isGenerating}
           style={{
@@ -2863,7 +2890,7 @@ function Day7({ saved, data, onChange, readOnly, studentData, survey }) {
       </div>
 
       {/* Case Study Generator */}
-      <CaseStudyGenerator saved={saved} studentData={studentData} readOnly={readOnly} survey={survey} />
+      <CaseStudyGenerator saved={saved} studentData={studentData} readOnly={readOnly} survey={survey} data={data} onChange={onChange} />
 
       <div className="dt-link-section" style={{marginTop: 28}}>
         <label htmlFor="d7-cs">Case Study Document Public Link</label>
