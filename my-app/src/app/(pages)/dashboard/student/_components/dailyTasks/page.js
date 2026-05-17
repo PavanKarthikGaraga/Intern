@@ -80,9 +80,6 @@ function getDayStatus(dayNum, slot, saved, username, unlockedDays = [], slotEnab
   const mark = dailyMarks[`d${dayNum}`];
   const isEvaluated = mark !== null && mark !== undefined && mark !== '';
   
-  // If the admin has already evaluated this day, it is definitely submitted.
-  if (isEvaluated) return 'submitted';
-  
   let isFinal = s?.data?.isFinal;
 
   // ── Strict validation: override to false if required data is missing ──
@@ -488,6 +485,19 @@ export default function DailyTasks({ studentData, onSectionChange }) {
           // image intentionally excluded — user re-uploads for PDF generation
         }));
       }
+
+      // Deep strip all base64 images from any nested objects (like generatorAnswers)
+      const stripBase64 = (obj) => {
+        for (const key of Object.keys(obj)) {
+          const val = obj[key];
+          if (typeof val === 'string' && val.startsWith('data:image')) {
+            delete obj[key];
+          } else if (val && typeof val === 'object' && !Array.isArray(val)) {
+            stripBase64(val);
+          }
+        }
+      };
+      stripBase64(dataToSave);
 
       const body = JSON.stringify({ day: activeDay, data: dataToSave });
 
@@ -2129,43 +2139,46 @@ function Day6({ data, onChange, readOnly, studentData }) {
 /* ── Case Study Generator ── */
 function CaseStudyGenerator({ studentData, readOnly, survey, saved, data, onChange }) {
   const domain   = studentData?.selectedDomain || '';
-  const baseTemplate = getTemplate(domain);
-  const template = JSON.parse(JSON.stringify(baseTemplate)); // deep copy for mutation
-  
-  if (template && template.sections) {
-    template.sections.forEach(section => {
-      if (section.heading.includes('Stakeholders Covered')) {
-        section.heading = '3. Number of Stakeholders Covered';
-        const dynamicFields = [];
-        if (survey && survey.length > 0) {
-          survey.forEach((s, idx) => {
-            if (s.stakeholder) {
-              dynamicFields.push(`Stakeholder ${idx + 1} (${s.stakeholder})`);
-            }
-          });
-        }
-        if (dynamicFields.length === 0) {
-          dynamicFields.push('Stakeholder 1', 'Stakeholder 2', 'Stakeholder 3');
-        }
-        section.fields = dynamicFields;
-        section.isStakeholderCount = true;
-      }
-      if (section.heading.includes('Data Analysis')) {
-        if (section.tableRows) {
-          const dynamicRows = [];
+  const template = useMemo(() => {
+    const baseTemplate = getTemplate(domain);
+    const tmpl = JSON.parse(JSON.stringify(baseTemplate)); // deep copy for mutation
+    
+    if (tmpl && tmpl.sections) {
+      tmpl.sections.forEach(section => {
+        if (section.heading.includes('Stakeholders Covered')) {
+          section.heading = '3. Number of Stakeholders Covered';
+          const dynamicFields = [];
           if (survey && survey.length > 0) {
-            survey.forEach(s => {
-              if (s.stakeholder) dynamicRows.push(s.stakeholder);
+            survey.forEach((s, idx) => {
+              if (s.stakeholder) {
+                dynamicFields.push(`Stakeholder ${idx + 1} (${s.stakeholder})`);
+              }
             });
           }
-          if (dynamicRows.length === 0) {
-            dynamicRows.push('Stakeholder 1', 'Stakeholder 2', 'Stakeholder 3');
+          if (dynamicFields.length === 0) {
+            dynamicFields.push('Stakeholder 1', 'Stakeholder 2', 'Stakeholder 3');
           }
-          section.tableRows = dynamicRows;
+          section.fields = dynamicFields;
+          section.isStakeholderCount = true;
         }
-      }
-    });
-  }
+        if (section.heading.includes('Data Analysis')) {
+          if (section.tableRows) {
+            const dynamicRows = [];
+            if (survey && survey.length > 0) {
+              survey.forEach(s => {
+                if (s.stakeholder) dynamicRows.push(s.stakeholder);
+              });
+            }
+            if (dynamicRows.length === 0) {
+              dynamicRows.push('Stakeholder 1', 'Stakeholder 2', 'Stakeholder 3');
+            }
+            section.tableRows = dynamicRows;
+          }
+        }
+      });
+    }
+    return tmpl;
+  }, [domain, survey]);
 
   const [answers, setAnswers] = useState(data?.generatorAnswers || {});
   const [isGenerating, setIsGenerating] = useState(false);
@@ -2296,12 +2309,16 @@ function CaseStudyGenerator({ studentData, readOnly, survey, saved, data, onChan
         }
       });
       if (changed) {
-        if (onChange) onChange('generatorAnswers', updated);
+        // Use setTimeout to avoid synchronous update during render loop
+        setTimeout(() => {
+          if (onChange) onChange('generatorAnswers', updated);
+        }, 0);
         return updated;
       }
       return prev;
     });
-  }, [studentData, template, domain, survey, onChange]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [studentData, template, domain, survey]); // removed onChange to prevent continuous re-renders
 
   const setAns = (key, val) => {
     setAnswers(prev => {

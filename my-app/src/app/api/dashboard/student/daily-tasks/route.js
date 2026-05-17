@@ -46,13 +46,18 @@ export async function POST(request) {
         }));
       }
 
-      // Strip any base64 image fields (coverPhoto, photo2–photo5, etc.)
-      for (const key of Object.keys(sanitizedData)) {
-        const val = sanitizedData[key];
-        if (typeof val === 'string' && val.startsWith('data:image')) {
-          delete sanitizedData[key];
+      // Recursively strip any base64 image fields
+      const stripImages = (obj) => {
+        for (const key of Object.keys(obj)) {
+          const val = obj[key];
+          if (typeof val === 'string' && val.startsWith('data:image')) {
+            delete obj[key];
+          } else if (val && typeof val === 'object' && !Array.isArray(val)) {
+            stripImages(val);
+          }
         }
-      }
+      };
+      stripImages(sanitizedData);
 
       await db.execute(
         `INSERT INTO dailyTasks (username, day, data)
