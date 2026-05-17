@@ -2186,6 +2186,24 @@ function CaseStudyGenerator({ studentData, readOnly, survey, saved, data, onChan
   const savedRef = useRef(saved);
   savedRef.current = saved; // keep ref current on every render without adding to dep array
 
+  // Sync internal state if DB data loads late
+  useEffect(() => {
+    if (data?.generatorAnswers) {
+      setAnswers(prev => {
+        // Only update if there's actual new data to merge in to avoid destroying current typing
+        const next = { ...prev };
+        let changed = false;
+        Object.entries(data.generatorAnswers).forEach(([k, v]) => {
+          if (next[k] !== v) {
+            next[k] = v;
+            changed = true;
+          }
+        });
+        return changed ? next : prev;
+      });
+    }
+  }, [data?.generatorAnswers]);
+
   // Auto-populate basic info and survey summaries
   useEffect(() => {
     if (!studentData || !template) return;
@@ -2502,11 +2520,12 @@ function CaseStudyGenerator({ studentData, readOnly, survey, saved, data, onChan
       y += 14;
 
       // Basic student info from auto-fill
+      const basicHeading = template.sections[0]?.heading || '1. Basic Details';
       const infoItems = [
-        ['Student Name', studentData?.name || answers['Student Name'] || '________________'],
-        ['Roll Number',  studentData?.username || answers['Roll Number'] || '________________'],
-        ['Village/Area', answers['Village/Area'] || answers['Village/Area:'] || '________________'],
-        ['District',     answers['District'] || '________________'],
+        ['Student Name', studentData?.name || answers[`${basicHeading}__Student Name`] || '________________'],
+        ['Roll Number',  studentData?.username || answers[`${basicHeading}__Roll Number`] || '________________'],
+        ['Village/Area', answers[`${basicHeading}__Village/Area`] || answers[`${basicHeading}__Village/Area:`] || '________________'],
+        ['District',     answers[`${basicHeading}__District`] || '________________'],
         ['Domain',       domain || '________________'],
         ['Problem Statement', studentData?.problemStatementData?.problem_statement || '________________'],
         ['Duration',     '7 Days'],

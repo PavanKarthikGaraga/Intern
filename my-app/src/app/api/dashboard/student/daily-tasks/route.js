@@ -3,6 +3,8 @@ import pool from '@/lib/db';
 import { cookies } from 'next/headers';
 import { verifyAccessToken } from '@/lib/jwt';
 
+export const dynamic = 'force-dynamic';
+
 // POST — save/update a specific day's task data
 export async function POST(request) {
   try {

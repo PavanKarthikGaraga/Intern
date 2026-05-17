@@ -247,16 +247,16 @@ function Day7Preview({ data }) {
   if (!data) return <p className="ev-no-data">No task data available.</p>;
   return (
     <div className="ev-task-preview">
-      {data.youtubeUrl && (
+      {data.youtubeLink && (
         <div className="ev-field">
           <span className="ev-field-label">YouTube Presentation</span>
-          <a href={data.youtubeUrl} target="_blank" rel="noopener noreferrer" className="ev-link">{data.youtubeUrl}</a>
+          <a href={data.youtubeLink} target="_blank" rel="noopener noreferrer" className="ev-link">{data.youtubeLink}</a>
         </div>
       )}
-      {data.linkedinPost && (
+      {data.linkedinLink && (
         <div className="ev-field">
           <span className="ev-field-label">LinkedIn Article</span>
-          <a href={data.linkedinPost} target="_blank" rel="noopener noreferrer" className="ev-link">{data.linkedinPost}</a>
+          <a href={data.linkedinLink} target="_blank" rel="noopener noreferrer" className="ev-link">{data.linkedinLink}</a>
         </div>
       )}
       {data.caseStudyLink && (
