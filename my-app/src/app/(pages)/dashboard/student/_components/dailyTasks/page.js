@@ -2409,52 +2409,82 @@ function CaseStudyGenerator({ studentData, readOnly, survey, saved, data, onChan
 
   const handlePhotoUpload = (e, key) => {
     const file = e.target.files[0];
-    if (file) {
-      setUploadingImages(prev => ({ ...prev, [key]: true }));
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const img = new Image();
-        img.onload = () => {
-          try {
-            const canvas = document.createElement('canvas');
-            let width = img.width;
-            let height = img.height;
-            const MAX_SIZE = 800;
-            
-            if (width > height && width > MAX_SIZE) {
-              height = Math.round(height * (MAX_SIZE / width));
-              width = MAX_SIZE;
-            } else if (height > MAX_SIZE) {
-              width = Math.round(width * (MAX_SIZE / height));
-              height = MAX_SIZE;
-            }
-            
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-            
-            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
-            setAns(key, compressedBase64);
-          } catch (err) {
-            console.error(err);
-            alert('Failed to process image. Please try a different or smaller photo.');
-          } finally {
+    if (!file) return;
+
+    setUploadingImages(prev => ({ ...prev, [key]: true }));
+
+    // Use createImageBitmap which handles HEIC/HEIF from iPhones natively
+    const processWithBitmap = async () => {
+      try {
+        const bitmap = await createImageBitmap(file);
+        const canvas = document.createElement('canvas');
+        let width = bitmap.width;
+        let height = bitmap.height;
+        const MAX_SIZE = 800;
+
+        if (width > height && width > MAX_SIZE) {
+          height = Math.round(height * (MAX_SIZE / width));
+          width = MAX_SIZE;
+        } else if (height > MAX_SIZE) {
+          width = Math.round(width * (MAX_SIZE / height));
+          height = MAX_SIZE;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(bitmap, 0, 0, width, height);
+        bitmap.close();
+
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.65);
+        setAns(key, compressedBase64);
+      } catch (err) {
+        console.warn('createImageBitmap failed, falling back to FileReader:', err);
+        // Fallback: FileReader + Image element
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const img = new Image();
+          const timeout = setTimeout(() => {
+            // If onload never fires after 15s, clear stuck state
             setUploadingImages(prev => ({ ...prev, [key]: false }));
-          }
+            alert('Image took too long to process. If using an iPhone, go to Settings → Camera → Formats → Most Compatible, then try again.');
+          }, 15000);
+          img.onload = () => {
+            clearTimeout(timeout);
+            try {
+              const canvas = document.createElement('canvas');
+              let width = img.width;
+              let height = img.height;
+              const MAX_SIZE = 800;
+              if (width > height && width > MAX_SIZE) { height = Math.round(height * MAX_SIZE / width); width = MAX_SIZE; }
+              else if (height > MAX_SIZE) { width = Math.round(width * MAX_SIZE / height); height = MAX_SIZE; }
+              canvas.width = width; canvas.height = height;
+              canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+              setAns(key, canvas.toDataURL('image/jpeg', 0.65));
+            } catch (e2) {
+              alert('Failed to compress image. Please try a smaller or different photo.');
+            } finally {
+              setUploadingImages(prev => ({ ...prev, [key]: false }));
+            }
+          };
+          img.onerror = () => {
+            clearTimeout(timeout);
+            setUploadingImages(prev => ({ ...prev, [key]: false }));
+            alert('Could not read this image. If using an iPhone, go to Settings → Camera → Formats → Most Compatible and try again.');
+          };
+          img.src = reader.result;
         };
-        img.onerror = () => {
-          alert('Failed to load image. If using an iPhone, try changing your camera settings to "Most Compatible" or try a different photo.');
+        reader.onerror = () => {
           setUploadingImages(prev => ({ ...prev, [key]: false }));
+          alert('Failed to read file.');
         };
-        img.src = reader.result;
-      };
-      reader.onerror = () => {
-        alert('Failed to read file from your device.');
-        setUploadingImages(prev => ({ ...prev, [key]: false }));
-      };
-      reader.readAsDataURL(file);
-    }
+        reader.readAsDataURL(file);
+        return; // Don't clear uploading state here — the reader callbacks will
+      }
+      setUploadingImages(prev => ({ ...prev, [key]: false }));
+    };
+
+    processWithBitmap();
   };
 
   const inputStyle = (ro) => ({
@@ -2494,13 +2524,18 @@ function CaseStudyGenerator({ studentData, readOnly, survey, saved, data, onChan
   };
 
   const generatePDF = async () => {
+    // Block if any images are still being processed
+    if (Object.values(uploadingImages).some(v => v)) {
+      alert('Please wait for all images to finish processing before generating the PDF.');
+      return;
+    }
     // Validation
     for (const section of template.sections) {
       if (section.isStakeholderCount) {
         for (const field of section.fields) {
           const key = `${section.heading}__${field}`;
           if (!answers[`${key}__photo1`] || !answers[`${key}__photo2`]) {
-            alert(`Please upload 2 photos for ${field}.`); return;
+            alert(`Please upload 2 photos for ${field}. If you already selected a photo and it shows "Processing...", please wait or try a different image.`); return;
           }
           if (wc(answers[`${key}__desc1`]) < 20 || wc(answers[`${key}__desc2`]) < 20) {
             alert(`Description for ${field} photos must be at least 20 words.`); return;
