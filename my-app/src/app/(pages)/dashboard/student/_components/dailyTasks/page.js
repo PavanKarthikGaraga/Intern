@@ -1741,15 +1741,45 @@ function Day5({ saved, survey, data, onChange, readOnly }) {
 
 /* ── Intervention Generator ── */
 function InterventionGenerator({ studentData, readOnly, data, onChange }) {
-  const domain = studentData?.selectedDomain || '';
+  const domain   = studentData?.selectedDomain || '';
+  const username = studentData?.username || studentData?.rollNumber || 'unknown';
+  const LS_KEY   = `day6_generator_${username}`;
   const template = getInterventionTemplate(domain);
   const [isGenerating, setIsGenerating] = useState(false);
+
+  // Wrap onChange to also persist to localStorage immediately
+  const onChangeWithPersist = (key, val) => {
+    onChange(key, val);
+    // Read current localStorage state and merge this update
+    try {
+      const existing = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
+      existing[key] = val;
+      localStorage.setItem(LS_KEY, JSON.stringify(existing));
+    } catch (e) {}
+  };
 
   const inputStyle = (ro) => ({
     width: '100%', padding: '7px 10px', borderRadius: 6,
     border: '1px solid #cbd5e1', outline: 'none', fontSize: '0.88rem',
     background: ro ? '#f9f9f9' : '#fff', resize: 'vertical',
   });
+
+  // Merge localStorage data with DB data on mount
+  const localData = (() => {
+    try {
+      const stored = localStorage.getItem(LS_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        // DB text values win, localStorage photo values win
+        const merged = { ...parsed };
+        Object.entries(data || {}).forEach(([k, v]) => {
+          if (v !== null && v !== undefined && v !== '') merged[k] = v;
+        });
+        return merged;
+      }
+    } catch (e) {}
+    return data || {};
+  })();
 
   const [uploadingImages, setUploadingImages] = useState({});
 
@@ -1781,7 +1811,7 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
             ctx.drawImage(img, 0, 0, width, height);
             
             const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
-            onChange(key, compressedBase64);
+            onChangeWithPersist(key, compressedBase64);
           } catch (err) {
             console.error(err);
             alert('Failed to process image. Please try a different or smaller photo.');
@@ -1805,21 +1835,21 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
 
   const generatePDF = async () => {
     // ── Pre-generation validation ──
-    if (!data.activityTitle) {
+    if (!localData.activityTitle) {
       alert("Please select an activity title."); return;
     }
-    if (data.activityTitle === 'Other' && !data.customTitle?.trim()) {
+    if (localData.activityTitle === 'Other' && !localData.customTitle?.trim()) {
       alert("Please specify the custom activity title."); return;
     }
-    if (!data.coverPhoto || !data.photo2 || !data.photo3 || !data.photo4 || !data.photo5) {
+    if (!localData.coverPhoto || !localData.photo2 || !localData.photo3 || !localData.photo4 || !localData.photo5) {
       alert("Please upload all 5 photos before generating the report."); return;
     }
-    if (wc(data.coverDesc || '') < 120) {
-      alert(`Cover photo description needs at least 120 words (current: ${wc(data.coverDesc||'')})`); return;
+    if (wc(localData.coverDesc || '') < 120) {
+      alert(`Cover photo description needs at least 120 words (current: ${wc(localData.coverDesc||'')})`); return;
     }
     const otherKeys = ['photo2Desc', 'photo3Desc', 'photo4Desc', 'photo5Desc'];
     for (let k of otherKeys) {
-      const count = wc(data[k] || '');
+      const count = wc(localData[k] || '');
       if (count < 40) {
         alert(`Each photo description needs at least 40 words (current: ${count} words)`); return;
       }
@@ -1952,6 +1982,8 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
       }
 
       doc.save(`Day6_Intervention_${studentData?.rollNumber || 'Report'}.pdf`);
+      // Clear localStorage after successful download
+      try { localStorage.removeItem(LS_KEY); } catch (e) {}
     } catch (e) {
       console.error(e);
       if (e.name === 'ChunkLoadError' || e.message?.includes('Loading chunk')) {
@@ -2190,6 +2222,9 @@ function Day6({ data, onChange, readOnly, studentData }) {
 /* ── Case Study Generator ── */
 function CaseStudyGenerator({ studentData, readOnly, survey, saved, data, onChange }) {
   const domain   = studentData?.selectedDomain || '';
+  const username = studentData?.username || studentData?.rollNumber || 'unknown';
+  const LS_KEY   = `day7_generator_${username}`;
+
   const template = useMemo(() => {
     const baseTemplate = getTemplate(domain);
     const tmpl = JSON.parse(JSON.stringify(baseTemplate)); // deep copy for mutation
@@ -2231,11 +2266,38 @@ function CaseStudyGenerator({ studentData, readOnly, survey, saved, data, onChan
     return tmpl;
   }, [domain, survey]);
 
-  const [answers, setAnswers] = useState(data?.generatorAnswers || {});
+  // Initialize from localStorage first (survives app-switching), then DB
+  const [answers, setAnswers] = useState(() => {
+    try {
+      const saved = localStorage.getItem(LS_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Merge DB text fields on top (DB is source of truth for text, localStorage for photos)
+        const dbData = data?.generatorAnswers || {};
+        const merged = { ...parsed };
+        Object.entries(dbData).forEach(([k, v]) => {
+          if (v !== null && v !== undefined && v !== '') {
+            merged[k] = v; // DB text values win over stale localStorage text
+          }
+        });
+        return merged;
+      }
+    } catch (e) { /* localStorage unavailable */ }
+    return data?.generatorAnswers || {};
+  });
   const [isGenerating, setIsGenerating] = useState(false);
   const pieChartRef = useRef(null);
   const savedRef = useRef(saved);
   savedRef.current = saved; // keep ref current on every render without adding to dep array
+
+  // Persist answers to localStorage on every change (survives app-switching / page eviction)
+  useEffect(() => {
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify(answers));
+    } catch (e) {
+      // localStorage full (rare) — silently ignore
+    }
+  }, [answers, LS_KEY]);
 
   // Sync internal state if DB data loads late.
   // IMPORTANT: Never overwrite a locally-set value with null/empty from DB.
@@ -2399,6 +2461,8 @@ function CaseStudyGenerator({ studentData, readOnly, survey, saved, data, onChan
     setAnswers(prev => {
       const next = { ...prev, [key]: val };
       if (onChange) onChange('generatorAnswers', next);
+      // Also persist to localStorage immediately for photo resilience
+      try { localStorage.setItem(LS_KEY, JSON.stringify(next)); } catch (e) {}
       return next;
     });
   };
@@ -2734,34 +2798,50 @@ function CaseStudyGenerator({ studentData, readOnly, survey, saved, data, onChan
           });
           y += cellH;
 
-          // Data rows
+          // Data rows — dynamic height to accommodate wrapped Key Issue text
           for (const row of section.tableRows) {
-            checkNewPage(cellH + 1);
+            // Pre-calculate all cell values and their wrapped lines
+            const cellValues = section.tableHeaders.map((h, i) => {
+              if (i === 0) return { lines: [row], isHeader: true };
+              const val = answers[`${section.heading}__${row}__${h}`] || '';
+              const w = colWidths[i];
+              // Use splitTextToSize so text wraps within the column width
+              const lines = doc.splitTextToSize(val, w - 4);
+              return { lines, isHeader: false };
+            });
+
+            // Row height = tallest column (min 8mm)
+            const lineH = 5;
+            const maxLines = Math.max(...cellValues.map(c => c.lines.length));
+            const rowH = Math.max(8, maxLines * lineH + 3);
+
+            checkNewPage(rowH + 1);
             doc.setFillColor(250, 255, 250);
-            doc.rect(margin, y, contentW, cellH, 'F');
-            
+            doc.rect(margin, y, contentW, rowH, 'F');
+
             currentX = margin;
-            section.tableHeaders.forEach((h, i) => {
+            cellValues.forEach((cell, i) => {
               const w = colWidths[i];
               doc.setDrawColor(160, 200, 160);
-              doc.rect(currentX, y, w, cellH);
+              doc.setLineWidth(0.3);
+              doc.rect(currentX, y, w, rowH);
               doc.setFontSize(9);
-              
-              if (i === 0) {
+
+              if (cell.isHeader) {
                 doc.setFont('times', 'bold');
                 doc.setTextColor(40, 40, 40);
-                doc.text(row, currentX + 2, y + 5.5);
+                doc.text(cell.lines[0], currentX + 2, y + 5.5);
               } else {
                 doc.setFont('times', 'normal');
                 doc.setTextColor(20, 20, 20);
-                let val = answers[`${section.heading}__${row}__${h}`] || '';
-                // Extremely basic clipping so it doesn't bleed too far
-                if (val.length > w / 1.5) val = val.substring(0, Math.floor(w / 1.5)) + '...';
-                doc.text(val, currentX + 2, y + 5.5);
+                // Print each wrapped line
+                cell.lines.forEach((line, li) => {
+                  doc.text(line, currentX + 2, y + 5 + li * lineH);
+                });
               }
               currentX += w;
             });
-            y += cellH;
+            y += rowH;
           }
           y += 5;
           continue;
@@ -2851,6 +2931,8 @@ function CaseStudyGenerator({ studentData, readOnly, survey, saved, data, onChan
       }
 
       doc.save(`Case_Study_${domain.replace(/\s+/g, '_') || 'Report'}.pdf`);
+      // Clear localStorage after successful download — data is no longer needed
+      try { localStorage.removeItem(LS_KEY); } catch (e) {}
     } catch (err) {
       console.error('PDF error', err);
       if (err.name === 'ChunkLoadError' || err.message?.includes('Loading chunk')) {
