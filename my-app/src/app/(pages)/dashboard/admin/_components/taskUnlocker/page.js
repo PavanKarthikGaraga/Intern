@@ -10,6 +10,7 @@ export default function TaskUnlocker() {
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(null); // tracks which day is in-progress
   const [msg, setMsg] = useState('');
+  const [draftDays, setDraftDays] = useState([]);
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -21,6 +22,7 @@ export default function TaskUnlocker() {
       const data = await res.json();
       if (data.success) {
         setStudentData(data);
+        setDraftDays(data.draftDays || []);
       } else {
         setStudentData(null);
         setMsg(data.error || 'Student not found');
@@ -58,8 +60,12 @@ export default function TaskUnlocker() {
   };
 
   const handleAllowEdit = async (day) => {
+    const isDay1 = day === 1;
     const confirmed = window.confirm(
-      `Allow ${studentData.name} (${studentData.username}) to re-edit and re-submit Day ${day}?\n\nThis will reset their submission status. Their survey answers will be preserved, but their Drive link and final submission flag will be cleared.`
+      `Allow ${studentData.name} (${studentData.username}) to re-edit and re-submit Day ${day}?\n\n` +
+      (isDay1
+        ? `This will clear their LinkedIn & YouTube URLs so they can re-enter them. Their problem statement text will be preserved.`
+        : `This will reset their submission status. Their answers will be preserved, but their Drive link and final submission flag will be cleared.`)
     );
     if (!confirmed) return;
 
@@ -73,11 +79,13 @@ export default function TaskUnlocker() {
       const data = await res.json();
       if (data.success) {
         toast.success(`Day ${day} reset — ${studentData.name} can now re-edit and re-submit.`);
-        // Remove from submittedDays in local state so UI updates immediately
+        // Remove from submittedDays and draftDays; add to unlockedDays so student can access it
         setStudentData(prev => ({
           ...prev,
-          submittedDays: prev.submittedDays.filter(d => d !== day)
+          submittedDays: prev.submittedDays.filter(d => d !== day),
+          unlockedDays: prev.unlockedDays.includes(day) ? prev.unlockedDays : [...prev.unlockedDays, day],
         }));
+        setDraftDays(prev => prev.filter(d => d !== day));
       } else {
         toast.error(data.error || 'Failed to reset submission');
       }
@@ -119,15 +127,19 @@ export default function TaskUnlocker() {
           <div className="days-grid">
             {[1, 2, 3, 4, 5, 6, 7].map(day => {
               const isSubmitted = studentData.submittedDays.includes(day);
+              const isDraft = draftDays.includes(day);
               const isUnlocked = studentData.unlockedDays.includes(day);
               const isActing = actionLoading === day || actionLoading === `edit-${day}`;
+              const canAllowEdit = isSubmitted || isDraft; // allow edit for both submitted and draft states
               
               return (
-                <div key={day} className={`day-card ${isSubmitted ? 'submitted' : isUnlocked ? 'unlocked' : ''}`}>
+                <div key={day} className={`day-card ${isSubmitted ? 'submitted' : isDraft ? 'unlocked' : isUnlocked ? 'unlocked' : ''}`}>
                   <div className="day-info">
                     <h4 style={{ margin: '0 0 4px 0' }}>Day {day}</h4>
                     {isSubmitted ? (
                       <span className="status submitted">✓ Submitted</span>
+                    ) : isDraft ? (
+                      <span className="status unlocked" style={{ background: '#fff3e0', color: '#e65100', border: '1px solid #ffb74d' }}>📝 Draft / In Progress</span>
                     ) : isUnlocked ? (
                       <span className="status unlocked">🔓 Unlocked by Admin</span>
                     ) : (
@@ -136,14 +148,14 @@ export default function TaskUnlocker() {
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
-                    {/* Allow Edit — only for submitted days */}
-                    {isSubmitted && (
+                    {/* Allow Edit — for submitted OR draft days */}
+                    {canAllowEdit && (
                       <button
                         onClick={() => handleAllowEdit(day)}
                         disabled={isActing}
                         style={{
                           padding: '7px 14px', borderRadius: 8, border: 'none',
-                          background: isActing ? '#ccc' : '#f59e0b',
+                          background: isActing ? '#ccc' : isSubmitted ? '#f59e0b' : '#3b82f6',
                           color: '#fff', fontWeight: 600, cursor: isActing ? 'not-allowed' : 'pointer',
                           fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: 6
                         }}

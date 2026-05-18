@@ -20,6 +20,31 @@ export async function POST(request) {
     if (!day || !data)
       return NextResponse.json({ error: 'Missing day or data' }, { status: 400 });
 
+    // ── Server-side validation for final submissions ──
+    if (data.isFinal === true) {
+      const wc = (txt) => (txt || '').trim().split(/\s+/).filter(Boolean).length;
+      if (Number(day) === 1) {
+        if (wc(data.inference || '') < 100) {
+          return NextResponse.json(
+            { error: `Your understanding must be at least 100 words (currently ${wc(data.inference || '')} words).` },
+            { status: 422 }
+          );
+        }
+        if (!data.linkedinUrl?.trim()) {
+          return NextResponse.json(
+            { error: 'Please provide your LinkedIn profile URL before submitting.' },
+            { status: 422 }
+          );
+        }
+        if (!data.youtubeUrl?.trim()) {
+          return NextResponse.json(
+            { error: 'Please provide your YouTube channel URL before submitting.' },
+            { status: 422 }
+          );
+        }
+      }
+    }
+
     const db = await pool.getConnection();
     try {
       // Ensure table exists

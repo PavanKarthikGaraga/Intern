@@ -35,8 +35,18 @@ export async function GET(req) {
           UNIQUE KEY uq_user_day (username, day)
         )
       `);
-      const [tasksRows] = await db.query('SELECT day FROM dailyTasks WHERE username = ?', [username]);
+      const [tasksRows] = await db.query(
+        "SELECT day FROM dailyTasks WHERE username = ? AND JSON_EXTRACT(data, '$.isFinal') = true",
+        [username]
+      );
       const submittedDays = tasksRows.map(r => r.day);
+
+      // Also fetch draft days (saved but not final) so admin can see the full picture
+      const [draftRows] = await db.query(
+        "SELECT day FROM dailyTasks WHERE username = ? AND (JSON_EXTRACT(data, '$.isFinal') IS NULL OR JSON_EXTRACT(data, '$.isFinal') != true)",
+        [username]
+      );
+      const draftDays = draftRows.map(r => r.day);
 
       // Get unlocked days
       await db.execute(`
@@ -55,6 +65,7 @@ export async function GET(req) {
         name: userRows[0].name,
         slot,
         submittedDays,
+        draftDays,
         unlockedDays
       });
     } finally {
@@ -88,14 +99,36 @@ export async function POST(req) {
         )
       `);
 
-      // ── Allow Edit: reset isFinal and driveLink so student can re-submit ──
+      // ── Allow Edit: reset isFinal so student can re-submit ──
       if (action === 'allowEdit') {
-        await db.query(`
-          UPDATE dailyTasks
-          SET data = JSON_SET(JSON_SET(data, '$.isFinal', false), '$.driveLink', NULL),
-              updatedAt = CURRENT_TIMESTAMP
-          WHERE username = ? AND day = ?
-        `, [username, day]);
+        // For Day 1: also clear URL fields so student can re-enter them cleanly
+        if (Number(day) === 1) {
+          await db.query(`
+            UPDATE dailyTasks
+            SET data = JSON_SET(JSON_SET(JSON_SET(data,
+              '$.isFinal', false),
+              '$.linkedinUrl', NULL),
+              '$.youtubeUrl', NULL),
+                updatedAt = CURRENT_TIMESTAMP
+            WHERE username = ? AND day = ?
+          `, [username, day]);
+        } else {
+          await db.query(`
+            UPDATE dailyTasks
+            SET data = JSON_SET(JSON_SET(data, '$.isFinal', false), '$.driveLink', NULL),
+                updatedAt = CURRENT_TIMESTAMP
+            WHERE username = ? AND day = ?
+          `, [username, day]);
+        }
+        // Also add to unlockedDays so the student can submit even if the deadline has passed
+        await db.execute(`
+          CREATE TABLE IF NOT EXISTS unlockedDays (
+            username VARCHAR(255) NOT NULL, day TINYINT NOT NULL,
+            unlockedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (username, day)
+          )
+        `);
+        await db.query('INSERT IGNORE INTO unlockedDays (username, day) VALUES (?, ?)', [username, day]);
         return NextResponse.json({ success: true, action: 'allowEdit' });
       }
 

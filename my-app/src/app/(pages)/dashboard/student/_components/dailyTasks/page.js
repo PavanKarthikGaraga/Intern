@@ -86,7 +86,7 @@ function getDayStatus(dayNum, slot, saved, username, unlockedDays = [], slotEnab
   // This catches any case where isFinal is true but required fields are absent.
   if (isFinal === true && s?.data) {
     const d = s.data;
-    if (dayNum === 1 && !d.inference) isFinal = false;
+    if (dayNum === 1 && (!d.inference || !d.linkedinUrl || !d.youtubeUrl)) isFinal = false;
     if (dayNum === 2 && (!d.driveLink || !d.p1 || !d.p2 || !d.p3 || !d.p4 || !d.p5 || !d.p6)) isFinal = false;
     if ((dayNum === 3 || dayNum === 4) && (!d.driveLink || !d.p1 || !d.p2 || !d.p3)) isFinal = false;
     if (dayNum === 6 && !d.driveLink) isFinal = false;
@@ -96,10 +96,10 @@ function getDayStatus(dayNum, slot, saved, username, unlockedDays = [], slotEnab
 
   // ── Legacy recovery ──
   // ONLY recover truly old data (isFinal === undefined) — never override explicit isFinal: false drafts
-  const legacyCondition = (dayNum === 1) ? (isFinal !== true) : (isFinal === undefined);
+  const legacyCondition = (isFinal === undefined);
   if (legacyCondition && s?.data) {
     const d = s.data;
-    if (dayNum === 1 && d.inference) isFinal = true;
+    if (dayNum === 1 && d.inference && d.linkedinUrl && d.youtubeUrl) isFinal = true;
     else if (dayNum === 2 && d.driveLink && d.p1 && d.p2 && d.p3 && d.p4 && d.p5 && d.p6) isFinal = true;
     else if ((dayNum === 3 || dayNum === 4) && d.driveLink && d.p1 && d.p2 && d.p3) isFinal = true;
     else if (dayNum === 6 && d.driveLink) isFinal = true;
@@ -307,7 +307,25 @@ export default function DailyTasks({ studentData, onSectionChange }) {
   // Max marks per day (matches evaluation rubric)
   const DAY_MAX = { 1:10, 2:5, 3:5, 4:5, 5:15, 6:20, 7:40 };
 
+  // Store slot/username/slotEnabled/dailyMarks in refs so the fetch effect can
+  // read their current values without re-running every time they change.
+  const slotRef         = useRef(slot);
+  const usernameRef     = useRef(username);
+  const slotEnabledRef  = useRef(slotEnabled);
+  const dailyMarksRef   = useRef(dailyMarks);
+  useEffect(() => { slotRef.current        = slot;        }, [slot]);
+  useEffect(() => { usernameRef.current    = username;    }, [username]);
+  useEffect(() => { slotEnabledRef.current = slotEnabled; }, [slotEnabled]);
+  useEffect(() => { dailyMarksRef.current  = dailyMarks;  }, [dailyMarks]);
+
+  const hasFetchedRef = useRef(false);
+
   useEffect(() => {
+    // Only fetch once on mount — re-fetching on dependency changes caused
+    // mid-session overwrites of in-progress draft state (auto-reload bug).
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
+
     (async () => {
       try {
         // 1. Fetch server time first to anchor all deadline checks
@@ -318,19 +336,24 @@ export default function DailyTasks({ studentData, onSectionChange }) {
         // 2. Fetch saved tasks
         const res  = await fetch('/api/dashboard/student/daily-tasks');
         const json = await res.json();
-        const tasks = (json.success && json.tasks) ? json.tasks : {};
+        const tasks    = (json.success && json.tasks)       ? json.tasks       : {};
         const unlocked = (json.success && json.unlockedDays) ? json.unlockedDays : [];
         setSaved(tasks);
+        latestDataRef.current.saved = tasks; // sync ref immediately
         setUnlockedDays(unlocked);
-        
+
+        const sl  = slotRef.current;
+        const un  = usernameRef.current;
+        const se  = slotEnabledRef.current;
+        const dm  = dailyMarksRef.current;
         const firstOpen = [1,2,3,4,5,6,7].find(d => {
-          const st = getDayStatus(d, slot, tasks, username, unlocked, slotEnabled, dailyMarks);
+          const st = getDayStatus(d, sl, tasks, un, unlocked, se, dm);
           return st === 'open' || st === 'submitted' || st === 'unlocked' || st === 'preview';
         });
         setActiveDay(prev => prev === null ? (firstOpen || 1) : prev);
       } catch { setActiveDay(prev => prev === null ? 1 : prev); }
     })();
-  }, [slot, username, slotEnabled, dailyMarks]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const dayData = useCallback((day) => ({
     ...(saved[day]?.data || {}),
