@@ -353,7 +353,7 @@ export default function DailyTasks({ studentData, onSectionChange }) {
         setActiveDay(prev => prev === null ? (firstOpen || 1) : prev);
       } catch { setActiveDay(prev => prev === null ? 1 : prev); }
     })();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   const dayData = useCallback((day) => ({
     ...(saved[day]?.data || {}),
