@@ -19,16 +19,16 @@ function getGrade(marks) {
 // Helper to get slot dates
 function getSlotDates(slot) {
   switch (Number(slot)) {
-    case 1:
-      return { start: '11/05/2025', end: '17/05/2025' };
-    case 2:
-      return { start: '18/05/2025', end: '24/05/2025' };
-    case 3:
-      return { start: '25/05/2025', end: '31/05/2025' };
-    case 4:
-      return { start: '01/06/2025', end: '07/06/2025' };
-    default:
-      return { start: '', end: '' };
+    case 1: return { start: '11/05/2026', end: '17/05/2026' };
+    case 2: return { start: '18/05/2026', end: '24/05/2026' };
+    case 3: return { start: '25/05/2026', end: '31/05/2026' };
+    case 4: return { start: '01/06/2026', end: '07/06/2026' };
+    case 5: return { start: '08/06/2026', end: '14/06/2026' };
+    case 6: return { start: '15/06/2026', end: '21/06/2026' };
+    case 7: return { start: '22/06/2026', end: '28/06/2026' };
+    case 8: return { start: '29/06/2026', end: '05/07/2026' };
+    case 9: return { start: '06/07/2026', end: '12/07/2026' };
+    default: return { start: '', end: '' };
   }
 }
 
@@ -312,8 +312,9 @@ export async function POST(request) {
           const time = `${day}/${month}/${year}`;
 
           // Draw student details at appropriate positions
+          const grd = getgrd(totalMarks);
           drawCertificateFields(firstPage, {
-            grade,
+            grd,
             name,
             branch,
             idNumber,
@@ -323,6 +324,7 @@ export async function POST(request) {
             mode,
             domain,
             totalMarks,
+            grade,
             time,
             uid,
           }, font);
