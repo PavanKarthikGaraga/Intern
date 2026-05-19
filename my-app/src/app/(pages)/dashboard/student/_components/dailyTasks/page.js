@@ -1972,49 +1972,68 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
 
   const handlePhotoUpload = (e, key) => {
     const file = e.target.files[0];
-    if (file) {
-      setUploadingImages(prev => ({ ...prev, [key]: true }));
+    if (!file) return;
+
+    setUploadingImages(prev => ({ ...prev, [key]: true }));
+
+    // Safety timeout: always clear the spinner after 20s even if something silently fails
+    const safetyTimer = setTimeout(() => {
+      setUploadingImages(prev => ({ ...prev, [key]: false }));
+    }, 20000);
+
+    const clearUploading = () => {
+      clearTimeout(safetyTimer);
+      setUploadingImages(prev => ({ ...prev, [key]: false }));
+    };
+
+    const compressAndStore = (bitmap, width, height) => {
+      try {
+        const MAX_SIZE = 800;
+        let w = width, h = height;
+        if (w > h && w > MAX_SIZE) { h = Math.round(h * (MAX_SIZE / w)); w = MAX_SIZE; }
+        else if (h > MAX_SIZE) { w = Math.round(w * (MAX_SIZE / h)); h = MAX_SIZE; }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(bitmap, 0, 0, w, h);
+        const compressed = canvas.toDataURL('image/jpeg', 0.6);
+        onChangeWithPersist(key, compressed);
+      } catch (err) {
+        console.error('Image compression error:', err);
+        alert('Failed to process image. Please try a different or smaller photo.');
+      } finally {
+        clearUploading();
+      }
+    };
+
+    // Prefer createImageBitmap (faster, better mobile/format support incl. WhatsApp JPEGs)
+    if (typeof createImageBitmap === 'function') {
+      createImageBitmap(file)
+        .then(bitmap => compressAndStore(bitmap, bitmap.width, bitmap.height))
+        .catch(() => {
+          // Fallback to FileReader + Image if createImageBitmap fails
+          fallbackToFileReader();
+        });
+    } else {
+      fallbackToFileReader();
+    }
+
+    function fallbackToFileReader() {
       const reader = new FileReader();
       reader.onloadend = () => {
         const img = new Image();
-        img.onload = () => {
-          try {
-            const canvas = document.createElement('canvas');
-            let width = img.width;
-            let height = img.height;
-            const MAX_SIZE = 800;
-            
-            if (width > height && width > MAX_SIZE) {
-              height = Math.round(height * (MAX_SIZE / width));
-              width = MAX_SIZE;
-            } else if (height > MAX_SIZE) {
-              width = Math.round(width * (MAX_SIZE / height));
-              height = MAX_SIZE;
-            }
-            
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-            
-            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
-            onChangeWithPersist(key, compressedBase64);
-          } catch (err) {
-            console.error(err);
-            alert('Failed to process image. Please try a different or smaller photo.');
-          } finally {
-            setUploadingImages(prev => ({ ...prev, [key]: false }));
-          }
-        };
+        img.onload = () => compressAndStore(img, img.width, img.height);
         img.onerror = () => {
-          alert('Failed to load image. If using an iPhone, try changing your camera settings to "Most Compatible" or try a different photo.');
-          setUploadingImages(prev => ({ ...prev, [key]: false }));
+          alert('Failed to load image. Try converting to JPG or use a different photo.');
+          clearUploading();
         };
         img.src = reader.result;
       };
       reader.onerror = () => {
         alert('Failed to read file from your device.');
-        setUploadingImages(prev => ({ ...prev, [key]: false }));
+        clearUploading();
       };
       reader.readAsDataURL(file);
     }
