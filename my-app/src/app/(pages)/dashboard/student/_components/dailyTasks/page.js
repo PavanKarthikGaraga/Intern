@@ -409,6 +409,21 @@ export default function DailyTasks({ studentData, onSectionChange }) {
         setMsg("Please provide the Google Drive Public Link for your report.");
         setMsgType('err'); return;
       }
+      // Slot 2: MyGov Drive Link is mandatory for days 3 and 4
+      const isSlot2 = Number(studentData?.slot) === 2;
+      if (isSlot2 && (activeDay === 3 || activeDay === 4)) {
+        if (!data.mygovDriveLink?.trim()) {
+          setMsg(`Please complete the MyGov quizzes & pledges for Day ${activeDay}, upload certificates to Google Drive, and paste the link before submitting.`);
+          setMsgType('err'); return;
+        }
+      }
+    }
+    // Slot 2: MyGov Drive Link mandatory for Day 5
+    if (!isDraft && activeDay === 5 && Number(studentData?.slot) === 2) {
+      if (!data.mygovDriveLink?.trim()) {
+        setMsg('Please complete the Day 5 MyGov quizzes & pledges, upload certificates to Google Drive, and paste the link before submitting.');
+        setMsgType('err'); return;
+      }
     }
     if (!isDraft && activeDay === 6) {
       const isSlot1 = Number(studentData?.slot) === 1;
@@ -733,10 +748,10 @@ export default function DailyTasks({ studentData, onSectionChange }) {
             : (
               <>
                 {activeDay === 1 && <Day1 data={dayData(1)} onChange={(f,v) => setDayField(1,f,v)} ps={ps} readOnly={isSaved || isPreview} onSectionChange={onSectionChange} />}
-                {activeDay === 2 && <DaySurvey day={2} stakeholderIdx={0} survey={survey} data={dayData(2)} onChange={(f,v) => setDayField(2,f,v)} readOnly={isSaved || isPreview} onFinalSubmit={handleFinalSubmit} onDraftSave={handleSaveDraft} saving={saving} minPersons={6} errorMsg={msg} errorType={msgType} />}
-                {activeDay === 3 && <DaySurvey day={3} stakeholderIdx={1} survey={survey} data={dayData(3)} onChange={(f,v) => setDayField(3,f,v)} readOnly={isSaved || isPreview} onFinalSubmit={handleFinalSubmit} onDraftSave={handleSaveDraft} saving={saving} minPersons={3} errorMsg={msg} errorType={msgType} />}
-                {activeDay === 4 && <DaySurvey day={4} stakeholderIdx={2} survey={survey} data={dayData(4)} onChange={(f,v) => setDayField(4,f,v)} readOnly={isSaved || isPreview} onFinalSubmit={handleFinalSubmit} onDraftSave={handleSaveDraft} saving={saving} minPersons={3} errorMsg={msg} errorType={msgType} />}
-                {activeDay === 5 && <Day5 saved={saved} survey={survey} data={dayData(5)} onChange={(f,v) => setDayField(5,f,v)} readOnly={isSaved || isPreview} />}
+                {activeDay === 2 && <DaySurvey day={2} stakeholderIdx={0} survey={survey} data={dayData(2)} onChange={(f,v) => setDayField(2,f,v)} readOnly={isSaved || isPreview} onFinalSubmit={handleFinalSubmit} onDraftSave={handleSaveDraft} saving={saving} minPersons={6} errorMsg={msg} errorType={msgType} studentData={studentData} />}
+                {activeDay === 3 && <DaySurvey day={3} stakeholderIdx={1} survey={survey} data={dayData(3)} onChange={(f,v) => setDayField(3,f,v)} readOnly={isSaved || isPreview} onFinalSubmit={handleFinalSubmit} onDraftSave={handleSaveDraft} saving={saving} minPersons={3} errorMsg={msg} errorType={msgType} studentData={studentData} />}
+                {activeDay === 4 && <DaySurvey day={4} stakeholderIdx={2} survey={survey} data={dayData(4)} onChange={(f,v) => setDayField(4,f,v)} readOnly={isSaved || isPreview} onFinalSubmit={handleFinalSubmit} onDraftSave={handleSaveDraft} saving={saving} minPersons={3} errorMsg={msg} errorType={msgType} studentData={studentData} />}
+                {activeDay === 5 && <Day5 saved={saved} survey={survey} data={dayData(5)} onChange={(f,v) => setDayField(5,f,v)} readOnly={isSaved || isPreview} studentData={studentData} />}
                 {activeDay === 6 && <Day6 data={dayData(6)} onChange={(f,v) => setDayField(6,f,v)} readOnly={isSaved || isPreview} studentData={studentData} />}
                 {activeDay === 7 && <Day7 saved={saved} data={dayData(7)} onChange={(f,v) => setDayField(7,f,v)} readOnly={isSaved || isPreview} studentData={studentData} survey={survey} />}
 
@@ -1417,7 +1432,7 @@ function SurveyReportGenerator({ day, stakeholder, persons, personData, onChange
 }
 
 /* ── Days 2/3/4 – Survey ── */
-function DaySurvey({ day, stakeholderIdx, survey, data, onChange, readOnly, onFinalSubmit, onDraftSave, saving, minPersons = 3, errorMsg = '', errorType = 'err' }) {
+function DaySurvey({ day, stakeholderIdx, survey, data, onChange, readOnly, onFinalSubmit, onDraftSave, saving, minPersons = 3, errorMsg = '', errorType = 'err', studentData }) {
   const [personCount, setPersonCount] = useState(Math.max(data.personCount || minPersons, minPersons));
   const [activePerson, setActivePerson] = useState(1);
 
@@ -1468,8 +1483,90 @@ function DaySurvey({ day, stakeholderIdx, survey, data, onChange, readOnly, onFi
   if (!data.personCount) onChange('personCount', personCount);
 
   const cur = pd(activePerson);
+  const isSlot2 = Number(studentData?.slot) === 2;
+
+  // MyGov quizzes/pledges split per day for Slot 2 (Days 3, 4, 5)
+  const SLOT2_MYGOV = {
+    3: {
+      quizzes: [
+        { title: 'Bharat GI Quiz – Celebrate India\'s Heritage', url: 'https://quiz.mygov.in/quiz/bharat-gi-quiz-celebrate-indias-heritage/' },
+        { title: 'Commonwealth Games 2030 Quiz', url: 'https://quiz.mygov.in/quiz/commonwealth-games-2030-quiz/' },
+      ],
+      pledges: [
+        { title: 'Mother Earth 2026 Pledge', url: 'https://pledge.mygov.in/mother-earth-2026/' },
+        { title: 'Social Justice Pledge', url: 'https://pledge.mygov.in/social-justice/' },
+      ],
+    },
+    4: {
+      quizzes: [
+        { title: 'MOHFW Fire Safety Quiz 2026', url: 'https://quiz.mygov.in/quiz/mohfw-fire-safety-quiz-2026/' },
+        { title: 'Quiz on Our Exam Warriors – Celebrating Exams', url: 'https://quiz.mygov.in/quiz/quiz-on-our-exam-warriors-celebrating-exams/' },
+      ],
+      pledges: [
+        { title: 'Eat Right 2026 Pledge', url: 'https://pledge.mygov.in/eat-right-2026/' },
+        { title: 'Constitution Day 2025 Pledge', url: 'https://pledge.mygov.in/constitution-day-2025/' },
+      ],
+    },
+  };
+
   return (
     <div>
+      {/* ── MyGov India Task (Slot 2, Days 3 & 4 only) ── */}
+      {isSlot2 && (day === 3 || day === 4) && (() => {
+        const mg = SLOT2_MYGOV[day];
+        return (
+          <div style={{ marginBottom: 28, border: '2px solid #1e40af', borderRadius: 12, overflow: 'hidden' }}>
+            <div style={{ background: '#1e40af', padding: '12px 18px', color: '#fff', fontWeight: 700, fontSize: '1rem' }}>
+              🇮🇳 MyGov India Task – Day {day}
+            </div>
+            <div style={{ padding: '16px 18px', background: '#eff6ff' }}>
+              <p style={{ margin: '0 0 12px', color: '#1e3a8a', fontWeight: 600 }}>Dear Students,</p>
+              <p style={{ margin: '0 0 12px', color: '#334155' }}>Please create your account on <a href="https://www.mygov.in/" target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8', fontWeight: 600 }}>MyGov India</a> (if not already done) and complete today's tasks:</p>
+
+              {/* Quizzes */}
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontWeight: 700, color: '#1e40af', marginBottom: 8, fontSize: '0.95rem' }}>🧠 QUIZZES (Complete both):</div>
+                {mg.quizzes.map((q, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
+                    <span style={{ color: '#1e40af', fontWeight: 700, minWidth: 20 }}>•</span>
+                    <a href={q.url} target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8', fontSize: '0.88rem', wordBreak: 'break-all' }}>{q.title}</a>
+                  </div>
+                ))}
+              </div>
+
+              {/* Pledges */}
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontWeight: 700, color: '#15803d', marginBottom: 8, fontSize: '0.95rem' }}>🤝 PLEDGES (Complete both):</div>
+                {mg.pledges.map((p, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
+                    <span style={{ color: '#15803d', fontWeight: 700, minWidth: 20 }}>•</span>
+                    <a href={p.url} target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8', fontSize: '0.88rem', wordBreak: 'break-all' }}>{p.title}</a>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: 8, padding: '10px 14px', fontSize: '0.87rem', color: '#78350f', marginBottom: 14 }}>
+                ⚠️ After completing <strong>2 quizzes</strong> and <strong>2 pledges</strong> today, save all 4 certificates in a folder, upload to Google Drive, make the link <strong>public (anyone can view)</strong>, and submit the URL below.
+              </div>
+
+              <label style={{ fontWeight: 700, color: '#1e3a8a', display: 'block', marginBottom: 6 }}>
+                📁 MyGov Certificates Google Drive URL – Day {day} <span style={{ color: '#dc2626' }}>*</span>
+              </label>
+              <input
+                type="url"
+                className="dt-link-input"
+                placeholder="https://drive.google.com/…"
+                value={data.mygovDriveLink || ''}
+                readOnly={readOnly}
+                style={{ marginBottom: 4, background: readOnly ? '#f9f9f9' : undefined }}
+                onChange={e => !readOnly && onChange('mygovDriveLink', e.target.value)}
+              />
+              <p style={{ fontSize: '0.78rem', color: '#6b7280', margin: '4px 0 0' }}>Make sure the link is set to &quot;Anyone with the link can view&quot;.</p>
+            </div>
+          </div>
+        );
+      })()}
+
       <div className="dt-sh-banner">
         <span className="sh-tag">{sh.stakeholder}</span>
         <p>Take photos along with stakeholders while performing the surveys and generate the document at last and upload in the drive and submit the public link.</p>
@@ -1615,6 +1712,10 @@ function DaySurvey({ day, stakeholderIdx, survey, data, onChange, readOnly, onFi
                   alert("Please provide the Google Drive Public Link of the generated report before submitting.");
                   return;
                 }
+                if (isSlot2 && (day === 3 || day === 4) && !data.mygovDriveLink?.trim()) {
+                  alert(`Please submit the MyGov certificates Google Drive link for Day ${day} before submitting.`);
+                  return;
+                }
                 if (window.confirm("Are you sure you want to submit all responses for evaluation? This cannot be undone.")) {
                   onFinalSubmit();
                 }
@@ -1639,7 +1740,7 @@ function DaySurvey({ day, stakeholderIdx, survey, data, onChange, readOnly, onFi
 }
 
 /* ── Day 5 – Analysis ── */
-function Day5({ saved, survey, data, onChange, readOnly }) {
+function Day5({ saved, survey, data, onChange, readOnly, studentData }) {
   if (!survey) return <div className="dt-info-box"><h4>Survey data unavailable</h4></div>;
   const analyses = [2,3,4].map(day => {
     const sh = survey[day-2];
@@ -1662,8 +1763,71 @@ function Day5({ saved, survey, data, onChange, readOnly }) {
     </div>
   );
 
+  const isSlot2 = Number(studentData?.slot) === 2;
+
+  const DAY5_MYGOV = {
+    quizzes: [
+      { title: 'Dr. B.R. Ambedkar\'s Life and Contributions Quiz Competition 2026', url: 'https://quiz.mygov.in/quiz/dr-b-r-ambedkars-life-and-contributions-quiz-competition-2026/' },
+      { title: 'Vande Mataram 150 Years Quiz', url: 'https://quiz.mygov.in/quiz/vande-mataram-150-years-quiz/' },
+    ],
+    pledges: [
+      { title: 'Bharat Vikas 2025 Pledge', url: 'https://pledge.mygov.in/bharat-vikas-2025/' },
+      { title: 'National Technology Day 2026 Pledge', url: 'https://pledge.mygov.in/national-technology-day-2026/' },
+    ],
+  };
+
   return (
     <div>
+      {/* ── MyGov India Task (Slot 2, Day 5 only) ── */}
+      {isSlot2 && (
+        <div style={{ marginBottom: 28, border: '2px solid #1e40af', borderRadius: 12, overflow: 'hidden' }}>
+          <div style={{ background: '#1e40af', padding: '12px 18px', color: '#fff', fontWeight: 700, fontSize: '1rem' }}>
+            🇮🇳 MyGov India Task – Day 5
+          </div>
+          <div style={{ padding: '16px 18px', background: '#eff6ff' }}>
+            <p style={{ margin: '0 0 12px', color: '#1e3a8a', fontWeight: 600 }}>Dear Students,</p>
+            <p style={{ margin: '0 0 12px', color: '#334155' }}>Complete today's final MyGov tasks (if not already done, create your account on <a href="https://www.mygov.in/" target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8', fontWeight: 600 }}>MyGov India</a>):</p>
+
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontWeight: 700, color: '#1e40af', marginBottom: 8, fontSize: '0.95rem' }}>🧠 QUIZZES (Complete both):</div>
+              {DAY5_MYGOV.quizzes.map((q, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
+                  <span style={{ color: '#1e40af', fontWeight: 700, minWidth: 20 }}>•</span>
+                  <a href={q.url} target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8', fontSize: '0.88rem', wordBreak: 'break-all' }}>{q.title}</a>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontWeight: 700, color: '#15803d', marginBottom: 8, fontSize: '0.95rem' }}>🤝 PLEDGES (Complete both):</div>
+              {DAY5_MYGOV.pledges.map((p, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
+                  <span style={{ color: '#15803d', fontWeight: 700, minWidth: 20 }}>•</span>
+                  <a href={p.url} target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8', fontSize: '0.88rem', wordBreak: 'break-all' }}>{p.title}</a>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: 8, padding: '10px 14px', fontSize: '0.87rem', color: '#78350f', marginBottom: 14 }}>
+              ⚠️ After completing <strong>2 quizzes</strong> and <strong>2 pledges</strong> today, save all 4 certificates in a folder, upload to Google Drive, make the link <strong>public (anyone can view)</strong>, and submit the URL below.
+            </div>
+
+            <label style={{ fontWeight: 700, color: '#1e3a8a', display: 'block', marginBottom: 6 }}>
+              📁 MyGov Certificates Google Drive URL – Day 5 <span style={{ color: '#dc2626' }}>*</span>
+            </label>
+            <input
+              type="url"
+              className="dt-link-input"
+              placeholder="https://drive.google.com/…"
+              value={data.mygovDriveLink || ''}
+              readOnly={readOnly}
+              style={{ marginBottom: 4, background: readOnly ? '#f9f9f9' : undefined }}
+              onChange={e => !readOnly && onChange('mygovDriveLink', e.target.value)}
+            />
+            <p style={{ fontSize: '0.78rem', color: '#6b7280', margin: '4px 0 0' }}>Make sure the link is set to &quot;Anyone with the link can view&quot;.</p>
+          </div>
+        </div>
+      )}
       <div className="dt-analysis-info" style={{ marginBottom: 24, padding: 16, background: '#e3f2fd', color: '#0d47a1', borderRadius: 8 }}>
         <h4 style={{ margin: '0 0 10px 0', color: '#0d47a1', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <FaClipboardList /> Objective
