@@ -1521,7 +1521,7 @@ function DaySurvey({ day, stakeholderIdx, survey, data, onChange, readOnly, onFi
             </div>
             <div style={{ padding: '16px 18px', background: '#eff6ff' }}>
               <p style={{ margin: '0 0 12px', color: '#1e3a8a', fontWeight: 600 }}>Dear Students,</p>
-              <p style={{ margin: '0 0 12px', color: '#334155' }}>Please create your account on <a href="https://www.mygov.in/" target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8', fontWeight: 600 }}>MyGov India</a> (if not already done) and complete today's tasks:</p>
+              <p style={{ margin: '0 0 12px', color: '#334155' }}>Please create your account on <a href="https://www.mygov.in/" target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8', fontWeight: 600 }}>MyGov India</a> (if not already done) and complete today&apos;s tasks:</p>
 
               {/* Quizzes */}
               <div style={{ marginBottom: 16 }}>
@@ -1786,7 +1786,7 @@ function Day5({ saved, survey, data, onChange, readOnly, studentData }) {
           </div>
           <div style={{ padding: '16px 18px', background: '#eff6ff' }}>
             <p style={{ margin: '0 0 12px', color: '#1e3a8a', fontWeight: 600 }}>Dear Students,</p>
-            <p style={{ margin: '0 0 12px', color: '#334155' }}>Complete today's final MyGov tasks (if not already done, create your account on <a href="https://www.mygov.in/" target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8', fontWeight: 600 }}>MyGov India</a>):</p>
+            <p style={{ margin: '0 0 12px', color: '#334155' }}>Complete today&apos;s final MyGov tasks (if not already done, create your account on <a href="https://www.mygov.in/" target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8', fontWeight: 600 }}>MyGov India</a>):</p>
 
             <div style={{ marginBottom: 16 }}>
               <div style={{ fontWeight: 700, color: '#1e40af', marginBottom: 8, fontSize: '0.95rem' }}>🧠 QUIZZES (Complete both):</div>
