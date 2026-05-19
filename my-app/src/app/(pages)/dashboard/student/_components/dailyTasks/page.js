@@ -86,7 +86,7 @@ function getDayStatus(dayNum, slot, saved, username, unlockedDays = [], slotEnab
   // This catches any case where isFinal is true but required fields are absent.
   if (isFinal === true && s?.data) {
     const d = s.data;
-    if (dayNum === 1 && (!d.inference || !d.linkedinUrl || !d.youtubeUrl)) isFinal = false;
+    if (dayNum === 1 && !d.inference) isFinal = false;
     if (dayNum === 2 && (!d.driveLink || !d.p1 || !d.p2 || !d.p3 || !d.p4 || !d.p5 || !d.p6)) isFinal = false;
     if ((dayNum === 3 || dayNum === 4) && (!d.driveLink || !d.p1 || !d.p2 || !d.p3)) isFinal = false;
     if (dayNum === 6 && !d.driveLink) isFinal = false;
@@ -99,7 +99,7 @@ function getDayStatus(dayNum, slot, saved, username, unlockedDays = [], slotEnab
   const legacyCondition = (isFinal === undefined);
   if (legacyCondition && s?.data) {
     const d = s.data;
-    if (dayNum === 1 && d.inference && d.linkedinUrl && d.youtubeUrl) isFinal = true;
+    if (dayNum === 1 && d.inference) isFinal = true;
     else if (dayNum === 2 && d.driveLink && d.p1 && d.p2 && d.p3 && d.p4 && d.p5 && d.p6) isFinal = true;
     else if ((dayNum === 3 || dayNum === 4) && d.driveLink && d.p1 && d.p2 && d.p3) isFinal = true;
     else if (dayNum === 6 && d.driveLink) isFinal = true;
