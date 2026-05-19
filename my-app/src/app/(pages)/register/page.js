@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import axios from "axios";
+import { BLOCKED_PBL_IDS } from '../../../lib/blockedPblIds';
 
 import { DOMAINS } from '../../Data/domains';
 import { RULES, UNDERTAKING_POINTS } from '../../Data/rules';
@@ -244,6 +245,12 @@ export default function Register() {
 
         if (!/^(24|25)\d{8}$/.test(formData.studentInfo.idNumber)) {
           toast.error('Please enter a valid 10-digit ID number starting with 24 or 25');
+          return;
+        }
+
+        const studentId = formData.studentInfo.idNumber.trim();
+        if (BLOCKED_PBL_IDS.has(studentId)) {
+          toast.error('PBL students are not eligible for social internship.');
           return;
         }
 

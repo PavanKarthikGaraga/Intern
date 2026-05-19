@@ -39,22 +39,51 @@ function getgrd(totalMarks){
   return 'Fail';
 }
 
-// Helper to draw certificate fields at the correct positions
-export function drawCertificateFields(page, { grd, name, branch, idNumber, start, end, slot, mode, domain, totalMarks,grade, time, uid }, font) {
-  page.drawText(grd, { x: 340.29, y: 701.27, size: 16, font, color: rgb(0, 0, 0) });
-  page.drawText(name, {  x: 90.35, y: 637.49, size: 11, font, color: rgb(0, 0, 0) });
-  page.drawText(branch, { x: 103.27, y: 622.49, size: 11, font, color: rgb(0, 0, 0) });
-  page.drawText(`${idNumber},`, { x: 282.2, y: 622.49, size: 11, font, color: rgb(0, 0, 0) });
-  page.drawText(start, {x: 239.66, y: 562.46, size: 10, font, color: rgb(0, 0, 0) });
-  page.drawText(`${end},`, { x: 316.73, y: 562.46, size: 10, font, color: rgb(0, 0, 0) });
-  page.drawText(`${slot} ,`, { x: 228.94, y: 547.46, size: 11, font, color: rgb(0, 0, 0) });
-  page.drawText(`${mode}`, { x: 92.82, y: 532.45  , size: 11, font, color: rgb(0, 0, 0) });
-  page.drawText(`${domain}.`, { x: 144.93, y: 517.44 , size: 11, font, color: rgb(0, 0, 0) });
-  page.drawText(`${totalMarks}`, {  x: 133.51, y: 262.33, size: 11, font, color: rgb(0, 0, 0) });
-  page.drawText(grade, {  x: 88.32, y: 247.33 , size: 11, font, color: rgb(0, 0, 0) });
-  page.drawText(time, {  x: 438.18, y: 98.01 , size: 10, font, color: rgb(0, 0, 0) });
-  page.drawText(uid, {  x: 431.13, y: 83.01 , size: 10, font, color: rgb(0, 0, 0) });
+// Draw certificate fields — positions from precise Poppins font measurements
+// Blank spaces (pt): grd:227, branch:499, mode:154, startDate:~175
+export function drawCertificateFields(page, { grd, name, branch, idNumber, start, end, slot, mode, domain, totalMarks, grade, time, uid }, font) {
+  // 1. Grade word — centered in 227pt blank between x:1080 and x:1307
+  const grdW = font.widthOfTextAtSize(grd, 34);
+  const grdX = 1080 + Math.max(0, (227 - grdW) / 2);
+  page.drawText(grd,            { x: grdX,  y: 2186.31, size: 34, font, color: rgb(0,0,0) });
+
+  // 2. Name — after "Mr./Ms." ends at x:415.53
+  page.drawText(name,           { x: 420,   y: 1991.95, size: 34, font, color: rgb(0,0,0) });
+
+  // 3. Branch — after "of Branch" ends at x:455.95  (max 499pt → use 24pt)
+  page.drawText(branch,         { x: 460,   y: 1948.53, size: 24, font, color: rgb(0,0,0) });
+
+  // 4. Student ID — after "bearing Student ID" ends at x:1298.04
+  page.drawText(idNumber,       { x: 1302,  y: 1948.53, size: 32, font, color: rgb(0,0,0) });
+
+  // 5. Start date — placed at x:714 (inside blank underline before "to" at x:906), size 26pt
+  page.drawText(start,          { x: 714,   y: 1774.85, size: 26, font, color: rgb(0,0,0) });
+
+  // 6. End date — after "to" ends at x:943.68
+  page.drawText(`${end},`,      { x: 950,   y: 1774.85, size: 30, font, color: rgb(0,0,0) });
+
+  // 7. Slot — after "for a period of 7 days, in Slot No" ends at x:850.60
+  page.drawText(`${slot}`,      { x: 858,   y: 1731.43, size: 34, font, color: rgb(0,0,0) });
+
+  // 8. Mode — between "through" end (x:427.76) and "mode," start (x:581.99) = 154pt gap
+  page.drawText(mode,           { x: 432,   y: 1688.01, size: 30, font, color: rgb(0,0,0) });
+
+  // 9. Domain — after "under the domain" ends at x:610.58 (use 24pt for long domain names)
+  page.drawText(`${domain}.`,   { x: 618,   y: 1644.58, size: 24, font, color: rgb(0,0,0) });
+
+  // 10. Marks — after "Marks Awarded:" ends at x:577.37, before "/ 100" at x:599.51
+  page.drawText(`${totalMarks}`, { x: 580,  y: 689.34,  size: 28, font, color: rgb(0,0,0) });
+
+  // 11. Grade letter — after "Grade:" ends at x:403.05
+  page.drawText(grade,          { x: 407,   y: 645.91,  size: 34, font, color: rgb(0,0,0) });
+
+  // 12. Certificate Date — after "Certificate Date:" ends at x:1508.05
+  page.drawText(time,           { x: 1512,  y: 157.89,  size: 26, font, color: rgb(0,0,0) });
+
+  // 13. Certificate No — after "Certificate No:" ends at x:1479.30
+  page.drawText(uid,            { x: 1483,  y: 124.29,  size: 26, font, color: rgb(0,0,0) });
 }
+
 
 export async function GET(req) {
   const cookieStore = await cookies();
