@@ -69,19 +69,28 @@ function getShortBranch(branch) {
     'aids': 'AI&DS',
     'bio-technology': 'BT',
     'biotechnology': 'BT',
-    'computer science and information technology': 'CSIT',
-    'electronics and computer engineering': 'ECM'
+    'computer science and information technology': 'CS&IT',
+    'electronics and computer engineering': 'ECS',
+    'internet of things': 'IOT',
+    'iot': 'IOT'
   };
   
-  if (map[b]) return map[b];
-  
-  // Fallback: create acronym for long names, keeping it under ~5 letters
-  const words = b.split(/[\s&]+/).filter(w => !['and', 'of', 'the', 'in'].includes(w));
-  if (words.length > 1) {
-    return words.map(w => w[0]?.toUpperCase()).join('');
+  let result = map[b];
+  if (!result) {
+    const words = b.split(/[\s&]+/).filter(w => !['and', 'of', 'the', 'in'].includes(w));
+    if (words.length > 1) {
+      result = words.map(w => w[0]?.toUpperCase()).join('');
+    } else {
+      result = branch.length > 15 ? branch.substring(0, 15) : branch;
+    }
   }
   
-  return branch.length > 15 ? branch.substring(0, 15) : branch;
+  // Prepend B.Tech if not present
+  if (!result.toLowerCase().startsWith('b.tech') && !result.toLowerCase().startsWith('b.e')) {
+    result = 'B.Tech ' + result;
+  }
+  
+  return result;
 }
 
 // Helper to get formatted mode
@@ -104,12 +113,10 @@ export function drawCertificateFields(page, { grd, name, branch, idNumber, start
   // 2. Name — after "Mr./Ms." starts at 216.
   page.drawText(name,           { x: 365,   y: 2008.15, size: 34, font, color: rgb(0,0,0) });
 
-  // 3. Branch — dynamically centered between "of Branch" (266) and "bearing" (523)
+  // 3. Branch — Left-aligned at 385 (shifted slightly left) with smaller font to fit B.Tech
   const shortBranch = getShortBranch(branch);
-  const branchSize = 32;
-  const branchW = font.widthOfTextAtSize(shortBranch, branchSize);
-  const branchCenterX = (266 + 523) / 2;
-  page.drawText(shortBranch,    { x: branchCenterX - (branchW / 2),   y: 1962.85, size: branchSize, font, color: rgb(0,0,0) });
+  const branchSize = 26; // Reduced from 28
+  page.drawText(shortBranch,    { x: 385, y: 1962.85, size: branchSize, font, color: rgb(0,0,0) });
 
   // 4. Student ID — after "Student ID" at x:783
   page.drawText(idNumber,       { x: 830,  y: 1962.85, size: 32, font, color: rgb(0,0,0) });
@@ -126,22 +133,18 @@ export function drawCertificateFields(page, { grd, name, branch, idNumber, start
   // 7. Slot — after "Slot No" at 684
   page.drawText(`${slot}`,      { x: 740,   y: 1736.35, size: 34, font, color: rgb(0,0,0) });
 
-  // 8. Mode — dynamically centered between "through" (216) and "mode," (531)
+  // 8. Mode — Left-aligned at 390 (shifted right)
   const displayMode = getDisplayMode(mode);
   const modeSize = 28; 
-  const modeW = font.widthOfTextAtSize(displayMode, modeSize);
-  const modeCenterX = (216 + 531) / 2;
-  page.drawText(displayMode,    { x: modeCenterX - (modeW / 2), y: 1691.05, size: modeSize, font, color: rgb(0,0,0) }); 
+  page.drawText(displayMode,    { x: 390, y: 1691.05, size: modeSize, font, color: rgb(0,0,0) }); 
 
   // 9. Domain — after "domain" at 392.
   page.drawText(`${domain}.`,   { x: 510,   y: 1645.76, size: 32, font, color: rgb(0,0,0) });
 
-  // 10. Marks — dynamically centered between "Awarded:" (323) and "/" (549)
+  // 10. Marks — Left-aligned at 475 (shifted slightly left)
   const marksStr = `${totalMarks}`;
-  const marksSize = 34; // Reduced slightly to ensure it doesn't overlap
-  const marksW = font.widthOfTextAtSize(marksStr, marksSize);
-  const marksCenterX = (323 + 549) / 2;
-  page.drawText(marksStr,       { x: marksCenterX - (marksW / 2), y: 649.18, size: marksSize, font, color: rgb(0,0,0) }); 
+  const marksSize = 34;
+  page.drawText(marksStr,       { x: 475, y: 649.18, size: marksSize, font, color: rgb(0,0,0) }); 
 
   // 11. Grade letter — after "Grade:" at 216
   page.drawText(grade,          { x: 320,   y: 603.88,  size: 34, font, color: rgb(0,0,0) });
