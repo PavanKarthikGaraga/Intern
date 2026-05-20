@@ -163,13 +163,22 @@ export async function GET(req) {
   }
 
   try {
-    // Fetch student marks
-    const [marksRows] = await db.query(
-      'SELECT totalMarks FROM marks WHERE username = ?',
-      [username]
-    );
+    // Fetch student marks from both legacy marks and dailyMarks
+    const [marksRows] = await db.query(`
+      SELECT 
+        m.totalMarks as mTotal,
+        (COALESCE(dm.day1, 0) + COALESCE(dm.day2, 0) + COALESCE(dm.day3, 0) + 
+         COALESCE(dm.day4, 0) + COALESCE(dm.day5, 0) + COALESCE(dm.day6, 0) + COALESCE(dm.day7, 0)) AS dmTotal
+      FROM registrations r
+      LEFT JOIN marks m ON r.username = m.username
+      LEFT JOIN dailyMarks dm ON r.username = dm.username
+      WHERE r.username = ?
+    `, [username]);
+    
     const marksRow = marksRows[0];
-    if (!marksRow || marksRow.totalMarks < 60) {
+    const calculatedTotal = marksRow ? Math.max(Number(marksRow.mTotal) || 0, Number(marksRow.dmTotal) || 0) : 0;
+
+    if (!marksRow || calculatedTotal < 60) {
       return NextResponse.json({ success: false, error: 'Student not qualified for certificate.' }, { status: 403 });
     }
 
@@ -184,7 +193,7 @@ export async function GET(req) {
     }
 
     const { name, branch, username: idNumber, slot, mode, selectedDomain: domain, season } = regRow;
-    const { totalMarks } = marksRow;
+    const totalMarks = calculatedTotal;
     const grade = getGrade(totalMarks);
     const { start, end } = getSlotDates(slot, season);
 

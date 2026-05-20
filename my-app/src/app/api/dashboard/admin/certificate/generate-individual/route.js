@@ -101,16 +101,25 @@ export async function POST(request) {
       }, { status: 409 });
     }
 
-    // Fetch student marks
-    const [marksRows] = await db.query(
-      'SELECT internalMarks, finalReport, finalPresentation, completed, (internalMarks + finalReport + finalPresentation) as totalMarks FROM marks WHERE username = ?',
-      [username]
-    );
+    // Fetch student marks from both legacy marks and dailyMarks
+    const [marksRows] = await db.query(`
+      SELECT 
+        m.totalMarks as mTotal,
+        (COALESCE(dm.day1, 0) + COALESCE(dm.day2, 0) + COALESCE(dm.day3, 0) + 
+         COALESCE(dm.day4, 0) + COALESCE(dm.day5, 0) + COALESCE(dm.day6, 0) + COALESCE(dm.day7, 0)) AS dmTotal
+      FROM registrations r
+      LEFT JOIN marks m ON r.username = m.username
+      LEFT JOIN dailyMarks dm ON r.username = dm.username
+      WHERE r.username = ?
+    `, [username]);
+    
     const marksRow = marksRows[0];
-    if (!marksRow || Number(marksRow.totalMarks) < 60) {
+    const calculatedTotal = marksRow ? Math.max(Number(marksRow.mTotal) || 0, Number(marksRow.dmTotal) || 0) : 0;
+
+    if (!marksRow || calculatedTotal < 60) {
       return NextResponse.json({ 
         success: false, 
-        error: `Student ${username} is not qualified for certificate (marks: ${marksRow?.totalMarks || 0})` 
+        error: `Student ${username} is not qualified for certificate (marks: ${calculatedTotal})` 
       }, { status: 403 });
     }
 
@@ -128,7 +137,7 @@ export async function POST(request) {
     }
 
     const { name, branch, username: idNumber, slot, mode, selectedDomain: domain } = regRow;
-    const totalMarks = Number(marksRow.totalMarks);
+    const totalMarks = calculatedTotal;
     const grade = getGrade(totalMarks);
     const { start, end } = getSlotDates(slot);
 
