@@ -453,11 +453,14 @@ export async function POST(request) {
           // Convert Uint8Array to Buffer for MySQL BLOB storage
           const pdfBuffer = Buffer.from(pdfBytes);
 
+          // Caps totalMarks to 99.99 for database entry to prevent DECIMAL(4,2) overflow
+          const dbTotalMarks = Math.min(Number(totalMarks) || 0, 99.99);
+
           // Save certificate info to database with PDF as BLOB
           await db.query(`
             INSERT INTO certificates (username, uid, pdf_data, slot, totalMarks)
             VALUES (?, ?, ?, ?, ?)
-          `, [student.username, uid, pdfBuffer, studentSlot, totalMarks]);
+          `, [student.username, uid, pdfBuffer, studentSlot, dbTotalMarks]);
 
           generatedCertificates.push({
             username: student.username,
