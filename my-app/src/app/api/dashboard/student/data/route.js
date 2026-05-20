@@ -156,6 +156,15 @@ export async function POST(request) {
                 dailyMarksRow = dmRows[0] || null;
             } catch (e) { console.warn('dailyMarks table missing or error:', e.message); }
 
+            let reportBookRow = null;
+            try {
+                const [rbRows] = await db.execute(
+                    'SELECT reportLink, status, adminRemarks, utrId FROM reportBooks WHERE username = ?',
+                    [username]
+                );
+                reportBookRow = rbRows[0] || null;
+            } catch (e) { console.warn('reportBooks table missing or error:', e.message); }
+
             // Check if student is registered in sstudents (safe fallback if table missing)
             let sstudentRows = [[]];
             try {
@@ -362,6 +371,12 @@ export async function POST(request) {
                     r6: dailyMarksRow.remark6 || '',
                     r7: dailyMarksRow.remark7 || '',
                     total: [1,2,3,4,5,6,7].reduce((s, i) => s + (Number(dailyMarksRow[`day${i}`]) || 0), 0),
+                } : null,
+                reportBook: reportBookRow ? {
+                    reportLink: reportBookRow.reportLink,
+                    status: reportBookRow.status,
+                    adminRemarks: reportBookRow.adminRemarks,
+                    utrId: reportBookRow.utrId
                 } : null,
             };
 

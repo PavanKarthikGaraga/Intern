@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { FaHome, FaUser, FaTasks, FaClipboardList, FaUserTie, FaLock } from 'react-icons/fa';
+import { FaHome, FaUser, FaTasks, FaClipboardList, FaUserTie, FaLock, FaBook } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import './page.css';
 import Loader from '@/app/components/loader/loader';
@@ -14,6 +14,7 @@ import Lead from './_components/Lead/page';
 import Reports from './_components/submissions/reports';
 import FinalReport from './_components/finalReport/page';
 import ProblemStatement from './_components/problemStatment/page';
+import ReportBook from './_components/reportBook/page';
 
 import DailyTasks from './_components/dailyTasks/page';
 import EvaluationPlan from './_components/evaluationPlan/page';
@@ -79,6 +80,13 @@ export default function StudentDashboard() {
     setIsSidebarOpen(false);
   };
 
+  // Check Report Book eligibility
+  const dm = studentData?.dailyMarks || {};
+  const allDaysEvaluated = [1, 2, 3, 4, 5, 6, 7].every(d => dm[`d${d}`] !== null && dm[`d${d}`] !== undefined);
+  const totalMarks = dm.total || 0;
+  const isSlot1 = Number(studentData?.slot) === 1;
+  const showReportBook = isSlot1 && allDaysEvaluated && totalMarks >= 60;
+
   // Whether this student's mentor is assigned
   const hasMentor = Boolean(studentData?.facultyMentorId || studentData?.mentor);
 
@@ -126,6 +134,14 @@ export default function StudentDashboard() {
             <span className="item-label">Change Password</span>
           </button>
 
+          {showReportBook && (
+            <button className={`sidebar-item ${activeSection === 'report-book' ? 'active' : ''}`}
+              onClick={() => handleSectionClick('report-book')}>
+              <FaBook className="sidebar-icon" />
+              <span className="item-label">Report Book</span>
+            </button>
+          )}
+
           {/* Locked notice */}
           {!slotEnabled && (
             <div style={{
@@ -150,6 +166,7 @@ export default function StudentDashboard() {
            activeSection === 'evaluation-plan'   ? <EvaluationPlan /> :
            activeSection === 'lead'             ? <Lead studentData={studentData} /> :
            activeSection === 'survey-questions' ? <SurveyQuestions studentData={studentData} /> :
+           activeSection === 'report-book' && showReportBook ? <ReportBook studentData={studentData} /> :
            // Slot-gated
            activeSection === 'daily-tasks' && slotEnabled  ? <DailyTasks studentData={studentData} onSectionChange={setActiveSection} /> :
            !slotEnabled && (activeSection === 'daily-tasks') ? (

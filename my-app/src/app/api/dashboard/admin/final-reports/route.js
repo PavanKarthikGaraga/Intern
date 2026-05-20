@@ -1,0 +1,60 @@
+import { NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+import { assertAdmin } from '@/lib/auth';
+
+export async function GET(request) {
+  try {
+    const decoded = await assertAdmin(request);
+    if (!decoded) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const slot = searchParams.get('slot');
+
+    if (!slot) {
+      return NextResponse.json({ success: false, error: 'Slot is required' }, { status: 400 });
+    }
+
+    const [rows] = await db.execute(
+      `SELECT r.username, r.name, r.slot, rb.reportLink, rb.status, rb.adminRemarks, rb.utrId, rb.id as rbId,
+              (COALESCE(dm.day1,0) + COALESCE(dm.day2,0) + COALESCE(dm.day3,0) + COALESCE(dm.day4,0) + COALESCE(dm.day5,0) + COALESCE(dm.day6,0) + COALESCE(dm.day7,0)) AS totalMarks
+       FROM registrations r
+       JOIN reportBooks rb ON r.username = rb.username
+       LEFT JOIN dailyMarks dm ON r.username = dm.username
+       WHERE r.slot = ?
+       ORDER BY rb.updatedAt DESC`,
+      [slot]
+    );
+
+    return NextResponse.json({ success: true, reports: rows });
+  } catch (error) {
+    console.error('Error fetching final reports:', error);
+    return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+export async function POST(request) {
+  try {
+    const decoded = await assertAdmin(request);
+    if (!decoded) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { username, status, adminRemarks } = await request.json();
+
+    if (!username || !status) {
+      return NextResponse.json({ success: false, error: 'Username and status are required' }, { status: 400 });
+    }
+
+    await db.execute(
+      'UPDATE reportBooks SET status = ?, adminRemarks = ? WHERE username = ?',
+      [status, adminRemarks || null, username]
+    );
+
+    return NextResponse.json({ success: true, message: 'Status updated successfully' });
+  } catch (error) {
+    console.error('Error updating final report status:', error);
+    return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
+  }
+}

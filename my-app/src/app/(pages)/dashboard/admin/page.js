@@ -34,6 +34,7 @@ import Announcements from './_components/announcements/page';
 import Evaluate from './_components/evaluate/page';
 import SurveyAnalysis from './_components/surveyAnalysis/page';
 import SlotReport from './_components/slotReport/page';
+import FinalReports from './_components/finalReports/page';
 
 
 export default function AdminDashboard() {
@@ -297,6 +298,13 @@ export default function AdminDashboard() {
           </button>
 
           <button
+            className={`sidebar-item ${activeSection === 'final-reports' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('final-reports')}
+          >
+            <span className="item-label">📘 Final Reports</span>
+          </button>
+
+          <button
             className={`sidebar-item ${activeSection === 'daily-tasks' ? 'active' : ''}`}
             onClick={() => handleSectionClick('daily-tasks')}
           >
@@ -411,6 +419,7 @@ export default function AdminDashboard() {
            activeSection === 'evaluate' ? <Evaluate /> :
            activeSection === 'survey-analysis' ? <SurveyAnalysis /> :
            activeSection === 'slot-report' ? <SlotReport /> :
+           activeSection === 'final-reports' ? <FinalReports /> :
            <ChangePassword />}
         </main>
       </div>
