@@ -484,8 +484,6 @@ export default function Overview({ user, studentData }) {
 
               <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '2px dashed #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '40px' }}>
-                  {/* Total Score and Grade are hidden until explicitly requested to be unhidden */}
-                  {/* 
                   {allDaysEvaluated ? (
                     <>
                       <div>
@@ -500,14 +498,9 @@ export default function Overview({ user, studentData }) {
                   ) : (
                     <div>
                       <p style={{ margin: 0, fontSize: '0.9rem', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>Overall Status</p>
-                      <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: '700', color: '#e65100', marginTop: '4px' }}>Evaluation Pending — Marks and Grade will appear here once all 7 days are evaluated by admin.</p>
+                      <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: '700', color: '#e65100', marginTop: '4px' }}>Evaluation In Progress — Your daily marks are being updated as they are evaluated.</p>
                     </div>
                   )}
-                  */}
-                  <div>
-                    <p style={{ margin: 0, fontSize: '0.9rem', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>Overall Status</p>
-                    <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: '700', color: '#e65100', marginTop: '4px' }}>Evaluation In Progress — Your daily marks are being updated as they are evaluated.</p>
-                  </div>
                 </div>
 
               {eligibleSlot && (

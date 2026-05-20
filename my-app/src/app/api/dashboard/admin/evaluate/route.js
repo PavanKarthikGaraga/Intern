@@ -69,14 +69,14 @@ export async function GET(request) {
         )
       `);
 
-      // Migration: If columns are still DEFAULT 0, change them to NULL; add remark columns if missing
+      // Migration: If columns are still DEFAULT 0, change them to NULL
       for (let i = 1; i <= 7; i++) {
         try {
           await db.execute(`ALTER TABLE dailyMarks MODIFY COLUMN day${i} DECIMAL(5,2) DEFAULT NULL`);
-        } catch (e) { /* ignore */ }
+        } catch (e) { /* ignore if already null or fail */ }
         try {
           await db.execute(`ALTER TABLE dailyMarks ADD COLUMN remark${i} TEXT DEFAULT NULL`);
-        } catch (e) { /* column already exists — ignore */ }
+        } catch (e) { /* ignore if already exists */ }
       }
 
       // All students in this slot
@@ -182,8 +182,8 @@ export async function GET(request) {
             taskData: sub.taskData,
             surveyDays: surveyDaysMap[s.username] || null,
             dayMark: s.dayMark === null ? null : Number(s.dayMark),
+            remark: s.remark || '',
             evaluated: s.dayMark !== null,
-            remark: s.remark || null,
           });
         } else {
           notSubmitted.push({
@@ -194,6 +194,7 @@ export async function GET(request) {
             mode: s.mode || null,
             ps: s.ps || null,
             dayMark: s.dayMark === null ? null : Number(s.dayMark),
+            remark: s.remark || '',
             evaluated: s.dayMark !== null,
           });
         }
@@ -226,7 +227,7 @@ export async function POST(request) {
     const decoded = await assertAdmin(request);
     if (!decoded) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
-    const { username, day, marks, remarks } = await request.json();
+    const { username, day, marks, remark } = await request.json();
 
     if (!username || !day || marks === undefined) {
       return NextResponse.json({ success: false, error: 'username, day and marks are required' }, { status: 400 });
@@ -237,7 +238,7 @@ export async function POST(request) {
 
     const db = await pool.getConnection();
     try {
-      // Upsert dailyMarks row (with optional remarks)
+      // Upsert dailyMarks row
       await db.execute(
         `INSERT INTO dailyMarks (username, day${day}, remark${day}, evaluatedBy)
          VALUES (?, ?, ?, ?)
@@ -246,7 +247,7 @@ export async function POST(request) {
            remark${day}  = VALUES(remark${day}),
            evaluatedBy   = VALUES(evaluatedBy),
            updatedAt     = CURRENT_TIMESTAMP`,
-        [username, mark, remarks || null, decoded.username]
+        [username, mark, remark || null, decoded.username]
       );
 
       logActivity({

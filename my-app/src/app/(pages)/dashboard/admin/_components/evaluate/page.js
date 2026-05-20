@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   FaSearch, FaClipboardList, FaCheck, FaTimes, FaChevronDown,
   FaChevronUp, FaEdit, FaSave, FaExclamationTriangle, FaCheckCircle,
-  FaStar, FaUserGraduate, FaCommentAlt,
+  FaStar, FaUserGraduate,
 } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import { surveyData as SURVEY } from '../../../student/_components/dailyTasks/surveyDataShared';
@@ -78,6 +78,12 @@ function SurveyDayPreview({ data, day }) {
         <div className="ev-field">
           <span className="ev-field-label">Google Drive Report</span>
           <a href={data.driveLink} target="_blank" rel="noopener noreferrer" className="ev-link">{data.driveLink}</a>
+        </div>
+      )}
+      {data.mygovDriveLink && (
+        <div className="ev-field">
+          <span className="ev-field-label">MyGov Certificates (Drive)</span>
+          <a href={data.mygovDriveLink} target="_blank" rel="noopener noreferrer" className="ev-link">{data.mygovDriveLink}</a>
         </div>
       )}
       <div className="ev-field">
@@ -157,6 +163,12 @@ function Day5Preview({ data, surveyDays, ps }) {
 
   return (
     <div className="ev-task-preview">
+      {data.mygovDriveLink && (
+        <div className="ev-field" style={{ marginBottom: 16 }}>
+          <span className="ev-field-label">MyGov Certificates (Drive)</span>
+          <a href={data.mygovDriveLink} target="_blank" rel="noopener noreferrer" className="ev-link">{data.mygovDriveLink}</a>
+        </div>
+      )}
       {[2, 3, 4].map(d => {
         const surveyDayData = surveyDays?.[`day${d}`];
         const groups = buildStakeholderGroups(surveyDayData, d);
@@ -300,7 +312,7 @@ function ModeTag({ mode }) {
 function EvalRow({ student, day, maxMarks, onSave }) {
   const [expanded, setExpanded] = useState(false);
   const [editMark, setEditMark] = useState(String(student.dayMark ?? 0));
-  const [remarks, setRemarks]   = useState(student.remark || '');
+  const [remark, setRemark]     = useState(student.remark || '');
   const [saving, setSaving]     = useState(false);
   const [saved, setSaved]       = useState(student.evaluated);
 
@@ -339,7 +351,7 @@ function EvalRow({ student, day, maxMarks, onSave }) {
       return;
     }
     setSaving(true);
-    const ok = await onSave(student.username, numVal, remarks.trim() || null);
+    const ok = await onSave(student.username, numVal, remark);
     setSaving(false);
     if (ok) setSaved(true);
   };
@@ -388,6 +400,27 @@ function EvalRow({ student, day, maxMarks, onSave }) {
         </div>
       </div>
 
+      {/* Remarks input */}
+      {expanded && (
+        <div style={{ padding: '0 16px 12px 16px' }}>
+          <textarea
+            placeholder="Add optional remarks for the student..."
+            value={remark}
+            onChange={(e) => { setRemark(e.target.value); setSaved(false); }}
+            style={{
+              width: '100%',
+              padding: '8px 12px',
+              borderRadius: '6px',
+              border: '1px solid #cbd5e1',
+              fontSize: '0.85rem',
+              minHeight: '60px',
+              resize: 'vertical',
+              fontFamily: 'inherit'
+            }}
+          />
+        </div>
+      )}
+
       {/* Validation error message */}
       {inputErr && (
         <div className="ev-err-msg">
@@ -406,30 +439,6 @@ function EvalRow({ student, day, maxMarks, onSave }) {
           Submitted: {new Date(student.submittedAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true })}
         </div>
       )}
-
-      {/* Remarks — editable textarea for admin, shown read-only when saved */}
-      <div style={{ padding: '8px 16px 6px', borderTop: '1px solid #f1f5f9' }}>
-        <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'flex', alignItems: 'center', gap: 5, marginBottom: 5 }}>
-          <FaCommentAlt style={{ fontSize: '0.72rem', color: '#6366f1' }} /> Remarks
-          <span style={{ fontWeight: 400, color: '#94a3b8' }}>(optional)</span>
-        </label>
-        <textarea
-          rows={2}
-          placeholder="Add feedback or remarks for the student…"
-          value={remarks}
-          onChange={e => { setRemarks(e.target.value); setSaved(false); }}
-          onClick={e => e.stopPropagation()}
-          style={{
-            width: '100%', resize: 'vertical', borderRadius: 8,
-            border: '1.5px solid #e2e8f0', padding: '7px 10px',
-            fontSize: '0.84rem', fontFamily: 'inherit', outline: 'none',
-            background: '#f8fafc', color: '#1e293b', boxSizing: 'border-box',
-            transition: 'border 0.15s',
-          }}
-          onFocus={e => e.target.style.borderColor = '#6366f1'}
-          onBlur={e => e.target.style.borderColor = '#e2e8f0'}
-        />
-      </div>
 
       {/* Expanded task preview */}
       {expanded && (
@@ -469,12 +478,12 @@ export default function Evaluate() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const handleSave = async (username, marks, remarks) => {
+  const handleSave = async (username, marks, remark) => {
     try {
       const res  = await fetch('/api/dashboard/admin/evaluate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, day: Number(day), marks, remarks }),
+        body: JSON.stringify({ username, day: Number(day), marks, remark }),
       });
       const json = await res.json();
       if (json.success) {
@@ -486,7 +495,7 @@ export default function Evaluate() {
             ...prev,
             submitted: prev.submitted.map(s =>
               s.username === username
-                ? { ...s, dayMark: marks, evaluated: true, remark: remarks }
+                ? { ...s, dayMark: marks, remark: remark, evaluated: true }
                 : s
             ),
           };
