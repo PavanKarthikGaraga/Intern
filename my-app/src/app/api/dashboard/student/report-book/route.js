@@ -1,11 +1,17 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { assertStudent } from '@/lib/auth';
+import db from '@/lib/db';
+import { verifyAccessToken } from '@/lib/jwt';
+import { cookies } from 'next/headers';
 
 export async function POST(request) {
   try {
-    const decoded = await assertStudent(request);
-    if (!decoded) {
+    const cookieStore = await cookies();
+    const accessToken = cookieStore.get('accessToken');
+    if (!accessToken?.value) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+    const decoded = await verifyAccessToken(accessToken.value);
+    if (!decoded || decoded.role !== 'student') {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
