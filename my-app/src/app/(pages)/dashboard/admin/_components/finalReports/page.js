@@ -170,7 +170,7 @@ export default function FinalReports() {
         <div style={{ textAlign: 'center', padding: '60px 20px', background: '#f8fafc', borderRadius: '12px', border: '1px dashed #cbd5e1' }}>
           <FaSearch style={{ fontSize: '2.5rem', color: '#94a3b8', marginBottom: '16px' }} />
           <h3 style={{ margin: '0 0 8px 0', color: '#334155' }}>No Search Matches</h3>
-          <p style={{ margin: 0, color: '#64748b' }}>No reports match your search query "{searchQuery}".</p>
+          <p style={{ margin: 0, color: '#64748b' }}>No reports match your search query &quot;{searchQuery}&quot;.</p>
         </div>
       ) : (
         <div style={{ overflowX: 'auto' }}>
