@@ -42,34 +42,46 @@ function getgrd(totalMarks){
 // Helper to get short branch name
 function getShortBranch(branch) {
   if (!branch) return '';
+  
+  // Strip common prefixes
+  let b = branch.toLowerCase().trim();
+  b = b.replace(/^(b\.?tech|b\.?e\.?|bachelor of technology|bachelor of engineering)[\s-x]*/i, '').trim();
+  
   const map = {
     'computer science and engineering': 'CSE',
     'computer science & engineering': 'CSE',
+    'computer science': 'CSE',
+    'cse': 'CSE',
     'electronics and communication engineering': 'ECE',
     'electronics & communication engineering': 'ECE',
+    'ece': 'ECE',
     'electrical and electronics engineering': 'EEE',
     'electrical & electronics engineering': 'EEE',
+    'eee': 'EEE',
     'mechanical engineering': 'ME',
+    'mech': 'ME',
     'civil engineering': 'CE',
+    'civil': 'CE',
     'information technology': 'IT',
+    'it': 'IT',
     'artificial intelligence and data science': 'AI&DS',
+    'artificial intelligence & data science': 'AI&DS',
+    'aids': 'AI&DS',
     'bio-technology': 'BT',
     'biotechnology': 'BT',
     'computer science and information technology': 'CSIT',
     'electronics and computer engineering': 'ECM'
   };
-  const key = branch.toLowerCase().trim();
-  if (map[key]) return map[key];
+  
+  if (map[b]) return map[b];
   
   // Fallback: create acronym for long names, keeping it under ~5 letters
-  if (branch.split(' ').length > 1) {
-    return branch
-      .split(/[\s&]+/)
-      .filter(w => !['and', 'of', 'the', 'in'].includes(w.toLowerCase()))
-      .map(w => w[0]?.toUpperCase())
-      .join('');
+  const words = b.split(/[\s&]+/).filter(w => !['and', 'of', 'the', 'in'].includes(w));
+  if (words.length > 1) {
+    return words.map(w => w[0]?.toUpperCase()).join('');
   }
-  return branch;
+  
+  return branch.length > 15 ? branch.substring(0, 15) : branch;
 }
 
 // Helper to get formatted mode
@@ -82,21 +94,22 @@ function getDisplayMode(m) {
 }
 
 // Draw certificate fields — positions from precise Poppins font measurements
-// Blank spaces (pt): grd:227, branch:499, mode:154, startDate:~175
 export function drawCertificateFields(page, { grd, name, branch, idNumber, start, end, slot, mode, domain, totalMarks, grade, time, uid }, font) {
   // 1. Grade word
   const grdSize = 48;
   const grdW = font.widthOfTextAtSize(grd, grdSize);
   const grdCenterX = (995 + 1307) / 2;
-  const grdX = grdCenterX - (grdW / 2);
-  page.drawText(grd,            { x: grdX,  y: 2186.31, size: grdSize, font, color: rgb(0,0,0) });
+  page.drawText(grd,            { x: grdCenterX - (grdW / 2),  y: 2186.31, size: grdSize, font, color: rgb(0,0,0) });
 
-  // 2. Name — after "Mr./Ms." starts at 216. Reduced gap to sit closer to the prefix.
+  // 2. Name — after "Mr./Ms." starts at 216.
   page.drawText(name,           { x: 365,   y: 2008.15, size: 34, font, color: rgb(0,0,0) });
 
-  // 3. Branch — after "of Branch" at x:266. "bearing" is at 523. Used shortened branch name.
+  // 3. Branch — dynamically centered between "of Branch" (266) and "bearing" (523)
   const shortBranch = getShortBranch(branch);
-  page.drawText(shortBranch,    { x: 390,   y: 1962.85, size: 32, font, color: rgb(0,0,0) });
+  const branchSize = 32;
+  const branchW = font.widthOfTextAtSize(shortBranch, branchSize);
+  const branchCenterX = (266 + 523) / 2;
+  page.drawText(shortBranch,    { x: branchCenterX - (branchW / 2),   y: 1962.85, size: branchSize, font, color: rgb(0,0,0) });
 
   // 4. Student ID — after "Student ID" at x:783
   page.drawText(idNumber,       { x: 830,  y: 1962.85, size: 32, font, color: rgb(0,0,0) });
@@ -107,24 +120,28 @@ export function drawCertificateFields(page, { grd, name, branch, idNumber, start
   const startCenterX = (771 + 945) / 2;
   page.drawText(start,          { x: startCenterX - (startW / 2),   y: 1781.65, size: dateSize, font, color: rgb(0,0,0) });
 
-  // 6. End date — "to" ends at ~970, placing at 985 for a smaller gap
+  // 6. End date — "to" ends at ~970
   page.drawText(`${end},`,      { x: 985,   y: 1781.65, size: dateSize, font, color: rgb(0,0,0) });
 
   // 7. Slot — after "Slot No" at 684
   page.drawText(`${slot}`,      { x: 740,   y: 1736.35, size: 34, font, color: rgb(0,0,0) });
 
-  // 8. Mode — between "through" at 216 and "mode," at 531
+  // 8. Mode — dynamically centered between "through" (216) and "mode," (531)
   const displayMode = getDisplayMode(mode);
-  const modeSize = 28; // reduced from 32 to avoid overlap
-  page.drawText(displayMode,    { x: 350, y: 1691.05, size: modeSize, font, color: rgb(0,0,0) }); // Shifted left per request
+  const modeSize = 28; 
+  const modeW = font.widthOfTextAtSize(displayMode, modeSize);
+  const modeCenterX = (216 + 531) / 2;
+  page.drawText(displayMode,    { x: modeCenterX - (modeW / 2), y: 1691.05, size: modeSize, font, color: rgb(0,0,0) }); 
 
-  // 9. Domain — after "domain" at 392. Shifted right to avoid overlap
+  // 9. Domain — after "domain" at 392.
   page.drawText(`${domain}.`,   { x: 510,   y: 1645.76, size: 32, font, color: rgb(0,0,0) });
 
-  // 10. Marks — after "Awarded:" at 323, before "/" at 549
+  // 10. Marks — dynamically centered between "Awarded:" (323) and "/" (549)
   const marksStr = `${totalMarks}`;
-  const marksSize = 38; // increased font size to stand out and appear bolder
-  page.drawText(marksStr,       { x: 500, y: 649.18, size: marksSize, font, color: rgb(0,0,0) }); // Shifted right per request
+  const marksSize = 34; // Reduced slightly to ensure it doesn't overlap
+  const marksW = font.widthOfTextAtSize(marksStr, marksSize);
+  const marksCenterX = (323 + 549) / 2;
+  page.drawText(marksStr,       { x: marksCenterX - (marksW / 2), y: 649.18, size: marksSize, font, color: rgb(0,0,0) }); 
 
   // 11. Grade letter — after "Grade:" at 216
   page.drawText(grade,          { x: 320,   y: 603.88,  size: 34, font, color: rgb(0,0,0) });
