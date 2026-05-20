@@ -39,49 +39,101 @@ function getgrd(totalMarks){
   return 'Fail';
 }
 
+// Helper to get short branch name
+function getShortBranch(branch) {
+  if (!branch) return '';
+  const map = {
+    'computer science and engineering': 'CSE',
+    'computer science & engineering': 'CSE',
+    'electronics and communication engineering': 'ECE',
+    'electronics & communication engineering': 'ECE',
+    'electrical and electronics engineering': 'EEE',
+    'electrical & electronics engineering': 'EEE',
+    'mechanical engineering': 'ME',
+    'civil engineering': 'CE',
+    'information technology': 'IT',
+    'artificial intelligence and data science': 'AI&DS',
+    'bio-technology': 'BT',
+    'biotechnology': 'BT',
+    'computer science and information technology': 'CSIT',
+    'electronics and computer engineering': 'ECM'
+  };
+  const key = branch.toLowerCase().trim();
+  if (map[key]) return map[key];
+  
+  // Fallback: create acronym for long names, keeping it under ~5 letters
+  if (branch.split(' ').length > 1) {
+    return branch
+      .split(/[\s&]+/)
+      .filter(w => !['and', 'of', 'the', 'in'].includes(w.toLowerCase()))
+      .map(w => w[0]?.toUpperCase())
+      .join('');
+  }
+  return branch;
+}
+
+// Helper to get formatted mode
+function getDisplayMode(m) {
+  if (!m) return '';
+  const upper = m.toUpperCase().trim();
+  if (upper === 'ONLINE') return 'REMOTE';
+  if (upper === 'OFFLINE') return 'IN-CAMPUS';
+  return upper;
+}
+
 // Draw certificate fields — positions from precise Poppins font measurements
 // Blank spaces (pt): grd:227, branch:499, mode:154, startDate:~175
 export function drawCertificateFields(page, { grd, name, branch, idNumber, start, end, slot, mode, domain, totalMarks, grade, time, uid }, font) {
-  // 1. Grade word — centered in 227pt blank between x:1080 and x:1307
-  const grdW = font.widthOfTextAtSize(grd, 34);
-  const grdX = 1080 + Math.max(0, (227 - grdW) / 2);
-  page.drawText(grd,            { x: grdX,  y: 2186.31, size: 34, font, color: rgb(0,0,0) });
+  // 1. Grade word
+  const grdSize = 48;
+  const grdW = font.widthOfTextAtSize(grd, grdSize);
+  const grdCenterX = (995 + 1307) / 2;
+  const grdX = grdCenterX - (grdW / 2);
+  page.drawText(grd,            { x: grdX,  y: 2186.31, size: grdSize, font, color: rgb(0,0,0) });
 
-  // 2. Name — after "Mr./Ms." ends at x:415.53
-  page.drawText(name,           { x: 420,   y: 1991.95, size: 34, font, color: rgb(0,0,0) });
+  // 2. Name — after "Mr./Ms." starts at 216. Reduced gap to sit closer to the prefix.
+  page.drawText(name,           { x: 365,   y: 2008.15, size: 34, font, color: rgb(0,0,0) });
 
-  // 3. Branch — after "of Branch" ends at x:455.95  (max 499pt → use 24pt)
-  page.drawText(branch,         { x: 460,   y: 1948.53, size: 24, font, color: rgb(0,0,0) });
+  // 3. Branch — after "of Branch" at x:266. "bearing" is at 523. Used shortened branch name.
+  const shortBranch = getShortBranch(branch);
+  page.drawText(shortBranch,    { x: 390,   y: 1962.85, size: 32, font, color: rgb(0,0,0) });
 
-  // 4. Student ID — after "bearing Student ID" ends at x:1298.04
-  page.drawText(idNumber,       { x: 1302,  y: 1948.53, size: 32, font, color: rgb(0,0,0) });
+  // 4. Student ID — after "Student ID" at x:783
+  page.drawText(idNumber,       { x: 830,  y: 1962.85, size: 32, font, color: rgb(0,0,0) });
 
-  // 5. Start date — placed at x:714 (inside blank underline before "to" at x:906), size 26pt
-  page.drawText(start,          { x: 714,   y: 1774.85, size: 26, font, color: rgb(0,0,0) });
+  // 5. Start date — Centered between "from" (~771) and "to" (945)
+  const dateSize = 28;
+  const startW = font.widthOfTextAtSize(start, dateSize);
+  const startCenterX = (771 + 945) / 2;
+  page.drawText(start,          { x: startCenterX - (startW / 2),   y: 1781.65, size: dateSize, font, color: rgb(0,0,0) });
 
-  // 6. End date — after "to" ends at x:943.68
-  page.drawText(`${end},`,      { x: 950,   y: 1774.85, size: 30, font, color: rgb(0,0,0) });
+  // 6. End date — "to" ends at ~970, placing at 985 for a smaller gap
+  page.drawText(`${end},`,      { x: 985,   y: 1781.65, size: dateSize, font, color: rgb(0,0,0) });
 
-  // 7. Slot — after "for a period of 7 days, in Slot No" ends at x:850.60
-  page.drawText(`${slot}`,      { x: 858,   y: 1731.43, size: 34, font, color: rgb(0,0,0) });
+  // 7. Slot — after "Slot No" at 684
+  page.drawText(`${slot}`,      { x: 740,   y: 1736.35, size: 34, font, color: rgb(0,0,0) });
 
-  // 8. Mode — between "through" end (x:427.76) and "mode," start (x:581.99) = 154pt gap
-  page.drawText(mode,           { x: 432,   y: 1688.01, size: 30, font, color: rgb(0,0,0) });
+  // 8. Mode — between "through" at 216 and "mode," at 531
+  const displayMode = getDisplayMode(mode);
+  const modeSize = 28; // reduced from 32 to avoid overlap
+  page.drawText(displayMode,    { x: 350, y: 1691.05, size: modeSize, font, color: rgb(0,0,0) }); // Shifted left per request
 
-  // 9. Domain — after "under the domain" ends at x:610.58 (use 24pt for long domain names)
-  page.drawText(`${domain}.`,   { x: 618,   y: 1644.58, size: 24, font, color: rgb(0,0,0) });
+  // 9. Domain — after "domain" at 392. Shifted right to avoid overlap
+  page.drawText(`${domain}.`,   { x: 510,   y: 1645.76, size: 32, font, color: rgb(0,0,0) });
 
-  // 10. Marks — after "Marks Awarded:" ends at x:577.37, before "/ 100" at x:599.51
-  page.drawText(`${totalMarks}`, { x: 580,  y: 689.34,  size: 28, font, color: rgb(0,0,0) });
+  // 10. Marks — after "Awarded:" at 323, before "/" at 549
+  const marksStr = `${totalMarks}`;
+  const marksSize = 38; // increased font size to stand out and appear bolder
+  page.drawText(marksStr,       { x: 500, y: 649.18, size: marksSize, font, color: rgb(0,0,0) }); // Shifted right per request
 
-  // 11. Grade letter — after "Grade:" ends at x:403.05
-  page.drawText(grade,          { x: 407,   y: 645.91,  size: 34, font, color: rgb(0,0,0) });
+  // 11. Grade letter — after "Grade:" at 216
+  page.drawText(grade,          { x: 320,   y: 603.88,  size: 34, font, color: rgb(0,0,0) });
 
-  // 12. Certificate Date — after "Certificate Date:" ends at x:1508.05
-  page.drawText(time,           { x: 1512,  y: 157.89,  size: 26, font, color: rgb(0,0,0) });
+  // 12. Certificate Date — after "Date:" at 1413
+  page.drawText(time,           { x: 1490,  y: 157.89,  size: 26, font, color: rgb(0,0,0) });
 
-  // 13. Certificate No — after "Certificate No:" ends at x:1479.30
-  page.drawText(uid,            { x: 1483,  y: 124.29,  size: 26, font, color: rgb(0,0,0) });
+  // 13. Certificate No — after "No:" at 1414
+  page.drawText(uid,            { x: 1470,  y: 124.29,  size: 26, font, color: rgb(0,0,0) });
 }
 
 
@@ -123,7 +175,7 @@ export async function GET(req) {
 
     // Fetch student registration details
     const [regRows] = await db.query(
-      'SELECT name, branch, username, slot, mode, selectedDomain FROM registrations WHERE username = ?',
+      'SELECT name, branch, username, slot, mode, selectedDomain, season FROM registrations WHERE username = ?',
       [username]
     );
     const regRow = regRows[0];
@@ -131,10 +183,10 @@ export async function GET(req) {
       return NextResponse.json({ success: false, error: 'Student registration not found.' }, { status: 404 });
     }
 
-    const { name, branch, username: idNumber, slot, mode, selectedDomain: domain } = regRow;
+    const { name, branch, username: idNumber, slot, mode, selectedDomain: domain, season } = regRow;
     const { totalMarks } = marksRow;
     const grade = getGrade(totalMarks);
-    const { start, end } = getSlotDates(slot);
+    const { start, end } = getSlotDates(slot, season);
 
     // Load certificate template PDF
     const certPath = path.join(process.cwd(), 'public', 'certificate.pdf');
@@ -180,7 +232,7 @@ export async function GET(req) {
       totalMarks,
       grade,
       time,
-      uid: `SI25${username}`,
+      uid: `SI26${username}`,
     }, font);
 
     const pdfBytes = await pdfDoc.save();
@@ -237,6 +289,7 @@ export async function POST(request) {
         r.slot,
         r.mode,
         r.selectedDomain,
+        r.season,
         m.internalMarks,
         m.finalReport,
         m.finalPresentation,
@@ -306,7 +359,7 @@ export async function POST(request) {
       for (const student of currentBatch) {
         try {
           // Generate unique ID for the certificate
-          const uid = `SI25${student.username}`;
+          const uid = `SI26${student.username}`;
 
           // Generate certificate using existing logic
           const { name, branch, username: idNumber, slot: studentSlot, mode, selectedDomain: domain } = student;

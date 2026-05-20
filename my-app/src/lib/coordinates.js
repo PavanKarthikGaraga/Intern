@@ -1,5 +1,5 @@
 import fs from 'fs';
-  import pdfjsLib from 'pdfjs-dist/legacy/build/pdf.js'; // Must be using v4.2.67 or later
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs'; // Must be using v4.2.67 or later
 const { getDocument } = pdfjsLib;
 
 const pdfPath = './public/certificate.pdf';
@@ -20,16 +20,14 @@ const data = new Uint8Array(fs.readFileSync(pdfPath));
 
     let offset = 0;
 
+    if (item.transform[5] > 1750 && item.transform[5] < 1800) {
+      console.log({ word: item.str, x: item.transform[4], y: item.transform[5] });
+    }
+
     words.forEach(word => {
       const wordWidth = word.length * avgWidth;
       const wordX = item.transform[4] + offset;
       const wordY = item.transform[5];
-
-      console.log({
-        word,
-        x: parseFloat(wordX.toFixed(2)),
-        y: parseFloat(wordY.toFixed(2))
-      });
 
       offset += wordWidth + avgWidth;
     });

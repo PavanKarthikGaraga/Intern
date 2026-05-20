@@ -17,17 +17,18 @@ function getGrade(marks) {
 }
 
 // Helper to get slot dates
-function getSlotDates(slot) {
+function getSlotDates(slot, season = '2026') {
+  const year = season === '2025' ? '2025' : '2026';
   switch (Number(slot)) {
-    case 1: return { start: '11/05/2026', end: '17/05/2026' };
-    case 2: return { start: '18/05/2026', end: '24/05/2026' };
-    case 3: return { start: '25/05/2026', end: '31/05/2026' };
-    case 4: return { start: '01/06/2026', end: '07/06/2026' };
-    case 5: return { start: '08/06/2026', end: '14/06/2026' };
-    case 6: return { start: '15/06/2026', end: '21/06/2026' };
-    case 7: return { start: '22/06/2026', end: '28/06/2026' };
-    case 8: return { start: '29/06/2026', end: '05/07/2026' };
-    case 9: return { start: '06/07/2026', end: '12/07/2026' };
+    case 1: return { start: `11/05/${year}`, end: `17/05/${year}` };
+    case 2: return { start: `18/05/${year}`, end: `24/05/${year}` };
+    case 3: return { start: `25/05/${year}`, end: `31/05/${year}` };
+    case 4: return { start: `01/06/${year}`, end: `07/06/${year}` };
+    case 5: return { start: `08/06/${year}`, end: `14/06/${year}` };
+    case 6: return { start: `15/06/${year}`, end: `21/06/${year}` };
+    case 7: return { start: `22/06/${year}`, end: `28/06/${year}` };
+    case 8: return { start: `29/06/${year}`, end: `05/07/${year}` };
+    case 9: return { start: `06/07/${year}`, end: `12/07/${year}` };
     default: return { start: '', end: '' };
   }
 }
@@ -132,7 +133,7 @@ export async function POST(request) {
     const { start, end } = getSlotDates(slot);
 
     // Generate unique ID for the certificate
-    const uid = `SI25${username}`;
+    const uid = `SI26${username}`;
 
     // Load certificate template PDF
     const certPath = path.join(process.cwd(), 'public', 'certificate.pdf');
