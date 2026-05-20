@@ -9,6 +9,7 @@ export default function Results() {
   const [loading, setLoading] = useState(false);
   const [slot, setSlot] = useState('1');
   const [gradeFilter, setGradeFilter] = useState('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const getGradeInfo = (marks) => {
     const m = Number(marks);
@@ -41,11 +42,23 @@ export default function Results() {
 
   // Filter logic
   const filteredResults = results.filter(r => {
-    if (gradeFilter === 'ALL') return true;
-    const info = getGradeInfo(r.totalMarks);
-    if (gradeFilter === 'PASS') return Number(r.totalMarks) >= 60;
-    if (gradeFilter === 'FAIL') return Number(r.totalMarks) < 60;
-    return info.grade === gradeFilter;
+    let matchesGrade = true;
+    if (gradeFilter !== 'ALL') {
+      const info = getGradeInfo(r.totalMarks);
+      if (gradeFilter === 'PASS') matchesGrade = Number(r.totalMarks) >= 60;
+      else if (gradeFilter === 'FAIL') matchesGrade = Number(r.totalMarks) < 60;
+      else matchesGrade = info.grade === gradeFilter;
+    }
+
+    let matchesSearch = true;
+    if (searchQuery.trim() !== '') {
+      const q = searchQuery.toLowerCase().trim();
+      matchesSearch = 
+        r.username.toLowerCase().includes(q) || 
+        r.name.toLowerCase().includes(q);
+    }
+
+    return matchesGrade && matchesSearch;
   });
 
   const handleExport = () => {
@@ -59,6 +72,7 @@ export default function Results() {
         'Username': r.username,
         'Name': r.name,
         'Slot': r.slot,
+        'Mode': r.mode || 'N/A',
         'Total Marks': r.totalMarks,
         'Grade': info.grade,
         'Category': info.text,
@@ -79,6 +93,18 @@ export default function Results() {
         </h2>
         
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+          {/* Search Bar */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc', padding: '6px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', minWidth: '220px' }}>
+            <FaSearch style={{ color: '#94a3b8', fontSize: '0.9rem' }} />
+            <input
+              type="text"
+              placeholder="Search ID / Name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '0.9rem', color: '#0f172a', width: '140px' }}
+            />
+          </div>
+
           {/* Slot Filter */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc', padding: '6px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
             <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#475569' }}>Slot:</span>
@@ -153,6 +179,7 @@ export default function Results() {
             <thead>
               <tr style={{ background: '#f8fafc', color: '#475569', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
                 <th style={{ padding: '16px', borderBottom: '2px solid #e2e8f0' }}>Student</th>
+                <th style={{ padding: '16px', borderBottom: '2px solid #e2e8f0', textAlign: 'center' }}>Mode</th>
                 <th style={{ padding: '16px', borderBottom: '2px solid #e2e8f0', textAlign: 'center' }}>Marks ( / 100)</th>
                 <th style={{ padding: '16px', borderBottom: '2px solid #e2e8f0', textAlign: 'center' }}>Grade</th>
                 <th style={{ padding: '16px', borderBottom: '2px solid #e2e8f0', textAlign: 'center' }}>Tag / Category</th>
@@ -166,6 +193,20 @@ export default function Results() {
                     <td style={{ padding: '16px' }}>
                       <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '1.05rem' }}>{r.username}</div>
                       <div style={{ fontSize: '0.9rem', color: '#64748b', marginTop: '4px' }}>{r.name}</div>
+                    </td>
+                    
+                    <td style={{ padding: '16px', textAlign: 'center' }}>
+                      <span style={{ 
+                        display: 'inline-block',
+                        background: '#f1f5f9', 
+                        color: '#475569', 
+                        padding: '4px 10px', 
+                        borderRadius: '6px', 
+                        fontWeight: 600, 
+                        fontSize: '0.85rem' 
+                      }}>
+                        {r.mode || 'N/A'}
+                      </span>
                     </td>
                     
                     <td style={{ padding: '16px', textAlign: 'center' }}>

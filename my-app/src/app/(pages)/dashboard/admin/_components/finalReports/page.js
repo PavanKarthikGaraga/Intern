@@ -12,6 +12,7 @@ export default function FinalReports() {
   const [editStatus, setEditStatus] = useState('');
   const [editRemarks, setEditRemarks] = useState('');
   const [saving, setSaving] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const STATUS_OPTIONS = [
     { value: 'PENDING_REVIEW', label: 'Pending Review', color: '#0369a1', bg: '#f0f9ff' },
@@ -44,12 +45,22 @@ export default function FinalReports() {
     setEditingId(null);
   }, [slot]);
 
+  // Filter logic
+  const filteredReports = reports.filter(r => {
+    if (searchQuery.trim() === '') return true;
+    const q = searchQuery.toLowerCase().trim();
+    return (
+      r.username.toLowerCase().includes(q) ||
+      r.name.toLowerCase().includes(q)
+    );
+  });
+
   const handleExport = () => {
-    if (reports.length === 0) {
+    if (filteredReports.length === 0) {
       toast.error('No data to export');
       return;
     }
-    const exportData = reports.map(r => ({
+    const exportData = filteredReports.map(r => ({
       'Username': r.username,
       'Name': r.name,
       'Slot': r.slot,
@@ -112,6 +123,18 @@ export default function FinalReports() {
         </h2>
         
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          {/* Search Bar */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc', padding: '6px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', minWidth: '220px' }}>
+            <FaSearch style={{ color: '#94a3b8', fontSize: '0.9rem' }} />
+            <input
+              type="text"
+              placeholder="Search ID / Name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '0.9rem', color: '#0f172a', width: '140px' }}
+            />
+          </div>
+
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc', padding: '6px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
             <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#475569' }}>Select Slot:</span>
             <select
@@ -127,8 +150,8 @@ export default function FinalReports() {
           
           <button 
             onClick={handleExport}
-            disabled={reports.length === 0}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: reports.length === 0 ? '#cbd5e1' : '#014a01', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: reports.length === 0 ? 'not-allowed' : 'pointer' }}
+            disabled={filteredReports.length === 0}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: filteredReports.length === 0 ? '#cbd5e1' : '#014a01', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: filteredReports.length === 0 ? 'not-allowed' : 'pointer' }}
           >
             <FaDownload /> Export Excel
           </button>
@@ -142,6 +165,12 @@ export default function FinalReports() {
           <FaSearch style={{ fontSize: '2.5rem', color: '#94a3b8', marginBottom: '16px' }} />
           <h3 style={{ margin: '0 0 8px 0', color: '#334155' }}>No Reports Found</h3>
           <p style={{ margin: 0, color: '#64748b' }}>No students in Slot {slot} have submitted their final report book yet.</p>
+        </div>
+      ) : filteredReports.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '60px 20px', background: '#f8fafc', borderRadius: '12px', border: '1px dashed #cbd5e1' }}>
+          <FaSearch style={{ fontSize: '2.5rem', color: '#94a3b8', marginBottom: '16px' }} />
+          <h3 style={{ margin: '0 0 8px 0', color: '#334155' }}>No Search Matches</h3>
+          <p style={{ margin: 0, color: '#64748b' }}>No reports match your search query "{searchQuery}".</p>
         </div>
       ) : (
         <div style={{ overflowX: 'auto' }}>
@@ -157,7 +186,7 @@ export default function FinalReports() {
               </tr>
             </thead>
             <tbody>
-              {reports.map((r, idx) => {
+              {filteredReports.map((r, idx) => {
                 const isEditing = editingId === r.username;
                 const statusObj = STATUS_OPTIONS.find(s => s.value === r.status) || STATUS_OPTIONS[0];
 
@@ -263,7 +292,7 @@ export default function FinalReports() {
             </tbody>
           </table>
           <div style={{ marginTop: '16px', fontSize: '0.9rem', color: '#64748b' }}>
-            Showing {reports.length} report(s) for Slot {slot}.
+            Showing {filteredReports.length} report(s) for Slot {slot}.
           </div>
         </div>
       )}

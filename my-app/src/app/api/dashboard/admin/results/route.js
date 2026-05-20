@@ -23,6 +23,7 @@ export async function GET(request) {
           r.username, 
           r.name, 
           r.slot,
+          r.mode,
           dm.day1, dm.day2, dm.day3, dm.day4, dm.day5, dm.day6, dm.day7,
           (COALESCE(dm.day1, 0) + COALESCE(dm.day2, 0) + COALESCE(dm.day3, 0) + 
            COALESCE(dm.day4, 0) + COALESCE(dm.day5, 0) + COALESCE(dm.day6, 0) + 
