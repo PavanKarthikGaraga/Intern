@@ -67,10 +67,13 @@ function getShortBranch(branch) {
     'artificial intelligence and data science': 'AI&DS',
     'artificial intelligence & data science': 'AI&DS',
     'aids': 'AI&DS',
+    'ai&ds': 'AI&DS',
     'bio-technology': 'BT',
     'biotechnology': 'BT',
     'computer science and information technology': 'CS&IT',
+    'cs&it': 'CS&IT',
     'electronics and computer engineering': 'ECS',
+    'ecs': 'ECS',
     'internet of things': 'IOT',
     'iot': 'IOT'
   };
@@ -83,11 +86,6 @@ function getShortBranch(branch) {
     } else {
       result = branch.length > 15 ? branch.substring(0, 15) : branch;
     }
-  }
-  
-  // Prepend B.Tech if not present
-  if (!result.toLowerCase().startsWith('b.tech') && !result.toLowerCase().startsWith('b.e')) {
-    result = 'B.Tech ' + result;
   }
   
   return result;
@@ -113,10 +111,11 @@ export function drawCertificateFields(page, { grd, name, branch, idNumber, start
   // 2. Name — after "Mr./Ms." starts at 216.
   page.drawText(name,           { x: 365,   y: 2008.15, size: 34, font, color: rgb(0,0,0) });
 
-  // 3. Branch — Left-aligned at 385 (shifted slightly left) with smaller font to fit B.Tech
+  // 3. Branch — dynamically centered around x=450 to prevent overlap
   const shortBranch = getShortBranch(branch);
-  const branchSize = 26; // Reduced from 28
-  page.drawText(shortBranch,    { x: 385, y: 1962.85, size: branchSize, font, color: rgb(0,0,0) });
+  const branchSize = 34; // All branches are now abbreviations, use large font
+  const branchW = font.widthOfTextAtSize(shortBranch, branchSize);
+  page.drawText(shortBranch,    { x: 450 - (branchW / 2), y: 1962.85, size: branchSize, font, color: rgb(0,0,0) });
 
   // 4. Student ID — after "Student ID" at x:783
   page.drawText(idNumber,       { x: 830,  y: 1962.85, size: 32, font, color: rgb(0,0,0) });
@@ -133,10 +132,11 @@ export function drawCertificateFields(page, { grd, name, branch, idNumber, start
   // 7. Slot — after "Slot No" at 684
   page.drawText(`${slot}`,      { x: 740,   y: 1736.35, size: 34, font, color: rgb(0,0,0) });
 
-  // 8. Mode — Left-aligned at 390 (shifted right)
+  // 8. Mode — dynamically centered around x=430 to fix IN-CAMPUS overlap
   const displayMode = getDisplayMode(mode);
   const modeSize = 28; 
-  page.drawText(displayMode,    { x: 390, y: 1691.05, size: modeSize, font, color: rgb(0,0,0) }); 
+  const modeW = font.widthOfTextAtSize(displayMode, modeSize);
+  page.drawText(displayMode,    { x: 430 - (modeW / 2), y: 1691.05, size: modeSize, font, color: rgb(0,0,0) }); 
 
   // 9. Domain — after "domain" at 392.
   page.drawText(`${domain}.`,   { x: 510,   y: 1645.76, size: 32, font, color: rgb(0,0,0) });
