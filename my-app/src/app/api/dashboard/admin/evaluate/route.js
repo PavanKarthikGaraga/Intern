@@ -57,22 +57,33 @@ export async function GET(request) {
           day5     DECIMAL(5,2) DEFAULT NULL,
           day6     DECIMAL(5,2) DEFAULT NULL,
           day7     DECIMAL(5,2) DEFAULT NULL,
+          remark1  TEXT DEFAULT NULL,
+          remark2  TEXT DEFAULT NULL,
+          remark3  TEXT DEFAULT NULL,
+          remark4  TEXT DEFAULT NULL,
+          remark5  TEXT DEFAULT NULL,
+          remark6  TEXT DEFAULT NULL,
+          remark7  TEXT DEFAULT NULL,
           evaluatedBy VARCHAR(255) DEFAULT NULL,
           updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         )
       `);
 
-      // Migration: If columns are still DEFAULT 0, change them to NULL
+      // Migration: If columns are still DEFAULT 0, change them to NULL; add remark columns if missing
       for (let i = 1; i <= 7; i++) {
         try {
           await db.execute(`ALTER TABLE dailyMarks MODIFY COLUMN day${i} DECIMAL(5,2) DEFAULT NULL`);
-        } catch (e) { /* ignore if already null or fail */ }
+        } catch (e) { /* ignore */ }
+        try {
+          await db.execute(`ALTER TABLE dailyMarks ADD COLUMN remark${i} TEXT DEFAULT NULL`);
+        } catch (e) { /* column already exists — ignore */ }
       }
 
       // All students in this slot
       const [allStudents] = await db.execute(
         `SELECT r.username, r.name, r.slot, r.selectedDomain, r.mode,
                 dm.day${day} AS dayMark,
+                dm.remark${day} AS remark,
                 ps.problem_statement AS ps
          FROM registrations r
          LEFT JOIN dailyMarks dm ON r.username = dm.username
@@ -172,6 +183,7 @@ export async function GET(request) {
             surveyDays: surveyDaysMap[s.username] || null,
             dayMark: s.dayMark === null ? null : Number(s.dayMark),
             evaluated: s.dayMark !== null,
+            remark: s.remark || null,
           });
         } else {
           notSubmitted.push({
@@ -214,7 +226,7 @@ export async function POST(request) {
     const decoded = await assertAdmin(request);
     if (!decoded) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
-    const { username, day, marks } = await request.json();
+    const { username, day, marks, remarks } = await request.json();
 
     if (!username || !day || marks === undefined) {
       return NextResponse.json({ success: false, error: 'username, day and marks are required' }, { status: 400 });
@@ -225,15 +237,16 @@ export async function POST(request) {
 
     const db = await pool.getConnection();
     try {
-      // Upsert dailyMarks row
+      // Upsert dailyMarks row (with optional remarks)
       await db.execute(
-        `INSERT INTO dailyMarks (username, day${day}, evaluatedBy)
-         VALUES (?, ?, ?)
+        `INSERT INTO dailyMarks (username, day${day}, remark${day}, evaluatedBy)
+         VALUES (?, ?, ?, ?)
          ON DUPLICATE KEY UPDATE
            day${day}     = VALUES(day${day}),
+           remark${day}  = VALUES(remark${day}),
            evaluatedBy   = VALUES(evaluatedBy),
            updatedAt     = CURRENT_TIMESTAMP`,
-        [username, mark, decoded.username]
+        [username, mark, remarks || null, decoded.username]
       );
 
       logActivity({

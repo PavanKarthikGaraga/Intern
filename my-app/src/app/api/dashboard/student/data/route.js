@@ -150,7 +150,7 @@ export async function POST(request) {
             let dailyMarksRow = null;
             try {
                 const [dmRows] = await db.execute(
-                    'SELECT day1, day2, day3, day4, day5, day6, day7 FROM dailyMarks WHERE username = ?',
+                    'SELECT day1, day2, day3, day4, day5, day6, day7, remark1, remark2, remark3, remark4, remark5, remark6, remark7 FROM dailyMarks WHERE username = ?',
                     [username]
                 );
                 dailyMarksRow = dmRows[0] || null;
@@ -354,6 +354,13 @@ export async function POST(request) {
                     d5: dailyMarksRow.day5 === null ? null : Number(dailyMarksRow.day5),
                     d6: dailyMarksRow.day6 === null ? null : Number(dailyMarksRow.day6),
                     d7: dailyMarksRow.day7 === null ? null : Number(dailyMarksRow.day7),
+                    r1: dailyMarksRow.remark1 || null,
+                    r2: dailyMarksRow.remark2 || null,
+                    r3: dailyMarksRow.remark3 || null,
+                    r4: dailyMarksRow.remark4 || null,
+                    r5: dailyMarksRow.remark5 || null,
+                    r6: dailyMarksRow.remark6 || null,
+                    r7: dailyMarksRow.remark7 || null,
                     total: [1,2,3,4,5,6,7].reduce((s, i) => s + (Number(dailyMarksRow[`day${i}`]) || 0), 0),
                 } : null,
             };

@@ -684,14 +684,26 @@ export default function DailyTasks({ studentData, onSectionChange }) {
           {/* Evaluated marks banner */}
           {(() => {
             const mark = dailyMarks[`d${activeDay}`];
+            const remark = dailyMarks[`r${activeDay}`];
             const max  = DAY_MAX[activeDay];
             if (typeof mark === 'number' || (typeof mark === 'string' && mark !== '')) {
               return (
-                <div style={{ display:'flex', alignItems:'center', gap:10, background:'#e8f5e9', border:'1.5px solid #a5d6a7', borderRadius:10, padding:'10px 18px', margin:'8px 0' }}>
-                  <FaCheckCircle style={{ color:'#2e7d32', fontSize:'1.1rem' }} />
-                  <span style={{ fontWeight:700, color:'#2e7d32', fontSize:'0.95rem' }}>Evaluated</span>
-                  <span style={{ background:'#014a01', color:'#fff', fontWeight:800, fontSize:'1rem', borderRadius:8, padding:'2px 14px', marginLeft:4 }}>{mark} / {max}</span>
-                  <span style={{ color:'#555', fontSize:'0.82rem', marginLeft:4 }}>marks awarded</span>
+                <div style={{ margin: '8px 0' }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:10, background:'#e8f5e9', border:'1.5px solid #a5d6a7', borderRadius: remark ? '10px 10px 0 0' : 10, padding:'10px 18px' }}>
+                    <FaCheckCircle style={{ color:'#2e7d32', fontSize:'1.1rem' }} />
+                    <span style={{ fontWeight:700, color:'#2e7d32', fontSize:'0.95rem' }}>Evaluated</span>
+                    <span style={{ background:'#014a01', color:'#fff', fontWeight:800, fontSize:'1rem', borderRadius:8, padding:'2px 14px', marginLeft:4 }}>{mark} / {max}</span>
+                    <span style={{ color:'#555', fontSize:'0.82rem', marginLeft:4 }}>marks awarded</span>
+                  </div>
+                  {remark && (
+                    <div style={{ background:'#fffbeb', border:'1.5px solid #fde68a', borderTop:'none', borderRadius:'0 0 10px 10px', padding:'10px 18px', display:'flex', alignItems:'flex-start', gap:10 }}>
+                      <span style={{ fontSize:'1rem', marginTop:1 }}>💬</span>
+                      <div>
+                        <div style={{ fontWeight:700, fontSize:'0.78rem', color:'#92400e', marginBottom:2, textTransform:'uppercase', letterSpacing:'0.04em' }}>Admin Remarks</div>
+                        <div style={{ fontSize:'0.9rem', color:'#78350f', lineHeight:1.6, whiteSpace:'pre-wrap' }}>{remark}</div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             }

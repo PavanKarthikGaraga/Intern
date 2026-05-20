@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   FaSearch, FaClipboardList, FaCheck, FaTimes, FaChevronDown,
   FaChevronUp, FaEdit, FaSave, FaExclamationTriangle, FaCheckCircle,
-  FaStar, FaUserGraduate,
+  FaStar, FaUserGraduate, FaCommentAlt,
 } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import { surveyData as SURVEY } from '../../../student/_components/dailyTasks/surveyDataShared';
@@ -300,6 +300,7 @@ function ModeTag({ mode }) {
 function EvalRow({ student, day, maxMarks, onSave }) {
   const [expanded, setExpanded] = useState(false);
   const [editMark, setEditMark] = useState(String(student.dayMark ?? 0));
+  const [remarks, setRemarks]   = useState(student.remark || '');
   const [saving, setSaving]     = useState(false);
   const [saved, setSaved]       = useState(student.evaluated);
 
@@ -338,7 +339,7 @@ function EvalRow({ student, day, maxMarks, onSave }) {
       return;
     }
     setSaving(true);
-    const ok = await onSave(student.username, numVal);
+    const ok = await onSave(student.username, numVal, remarks.trim() || null);
     setSaving(false);
     if (ok) setSaved(true);
   };
@@ -406,6 +407,30 @@ function EvalRow({ student, day, maxMarks, onSave }) {
         </div>
       )}
 
+      {/* Remarks — editable textarea for admin, shown read-only when saved */}
+      <div style={{ padding: '8px 16px 6px', borderTop: '1px solid #f1f5f9' }}>
+        <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'flex', alignItems: 'center', gap: 5, marginBottom: 5 }}>
+          <FaCommentAlt style={{ fontSize: '0.72rem', color: '#6366f1' }} /> Remarks
+          <span style={{ fontWeight: 400, color: '#94a3b8' }}>(optional)</span>
+        </label>
+        <textarea
+          rows={2}
+          placeholder="Add feedback or remarks for the student…"
+          value={remarks}
+          onChange={e => { setRemarks(e.target.value); setSaved(false); }}
+          onClick={e => e.stopPropagation()}
+          style={{
+            width: '100%', resize: 'vertical', borderRadius: 8,
+            border: '1.5px solid #e2e8f0', padding: '7px 10px',
+            fontSize: '0.84rem', fontFamily: 'inherit', outline: 'none',
+            background: '#f8fafc', color: '#1e293b', boxSizing: 'border-box',
+            transition: 'border 0.15s',
+          }}
+          onFocus={e => e.target.style.borderColor = '#6366f1'}
+          onBlur={e => e.target.style.borderColor = '#e2e8f0'}
+        />
+      </div>
+
       {/* Expanded task preview */}
       {expanded && (
         <div className="ev-task-body">
@@ -444,12 +469,12 @@ export default function Evaluate() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const handleSave = async (username, marks) => {
+  const handleSave = async (username, marks, remarks) => {
     try {
       const res  = await fetch('/api/dashboard/admin/evaluate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, day: Number(day), marks }),
+        body: JSON.stringify({ username, day: Number(day), marks, remarks }),
       });
       const json = await res.json();
       if (json.success) {
@@ -461,7 +486,7 @@ export default function Evaluate() {
             ...prev,
             submitted: prev.submitted.map(s =>
               s.username === username
-                ? { ...s, dayMark: marks, evaluated: true }
+                ? { ...s, dayMark: marks, evaluated: true, remark: remarks }
                 : s
             ),
           };
