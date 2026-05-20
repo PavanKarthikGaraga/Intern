@@ -42,3 +42,12 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 next.config.mjs
+
+# temp / scratch files
+audit_query.sql
+check_unregistered.js
+generate_audit_query.js
+students.txt
+test_cert.js
+test_cert.mjs
+test_output.pdf
