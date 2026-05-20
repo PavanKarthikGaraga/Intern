@@ -433,19 +433,19 @@ export async function POST(request) {
           // Draw student details at appropriate positions
           const grd = getgrd(totalMarks);
           drawCertificateFields(firstPage, {
-            grd,
-            name,
-            branch,
-            idNumber,
-            start,
-            end,
-            slot: studentSlot,
-            mode,
-            domain,
-            totalMarks,
-            grade,
-            time,
-            uid,
+            grd: grd || '',
+            name: name || '',
+            branch: branch || '',
+            idNumber: idNumber || '',
+            start: start || '',
+            end: end || '',
+            slot: studentSlot || '',
+            mode: mode || '',
+            domain: domain || '',
+            totalMarks: totalMarks || 0,
+            grade: grade || '',
+            time: time || '',
+            uid: uid || '',
           }, font);
 
           const pdfBytes = await pdfDoc.save();

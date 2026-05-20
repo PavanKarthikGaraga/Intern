@@ -183,20 +183,19 @@ export async function POST(request) {
 
     // Draw student details at appropriate positions
     drawCertificateFields(firstPage, {
-      grd,
-      grade,
-      name,
-      branch,
-      idNumber,
-      start,
-      end,
-      slot,
-      mode,
-      domain,
+      grd: grd || '',
+      grade: grade || '',
+      name: name || '',
+      branch: branch || '',
+      idNumber: idNumber || '',
+      start: start || '',
+      end: end || '',
+      slot: slot || '',
+      mode: mode || '',
+      domain: domain || '',
       totalMarks: Number(totalMarks) || 0,
-      grade,
-      time,
-      uid,
+      time: time || '',
+      uid: uid || '',
     }, font);
 
     const pdfBytes = await pdfDoc.save();
