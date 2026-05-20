@@ -136,12 +136,10 @@ export default function Overview({ user, studentData }) {
 
   // Helper to calculate grade from marks
   const getGrade = (marks) => {
-    if (marks >= 85) return 'S';
-    if (marks >= 75) return 'A';
-    if (marks >= 65) return 'B';
-    if (marks >= 55) return 'C';
-    if (marks >= 50) return 'D';
-    return 'F';
+    if (marks >= 90) return 'A';
+    if (marks >= 75) return 'B';
+    if (marks >= 60) return 'C';
+    return 'FAIL';
   };
 
   const getSlotRules = (slot) => {
