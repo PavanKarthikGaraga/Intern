@@ -537,8 +537,8 @@ export default function Overview({ user, studentData }) {
                 ) : (
                   <div>
                     <p style={{ fontSize: '1rem' }}>
-                      Your certificate is ready! Please download and print a <span style={{color:'#d4380d', fontWeight:'bold'}}>color copy</span>,
-                      get it signed by the Director SAC, and store it safely.
+                      Your certificate is ready! attach the certificate in your final report book.
+                      <br/>then when book is printed then get it signed by <span style={{color:'#d4380d', fontWeight:'bold'}}>DIRECTOR-SAC</span>.
                     </p>
                     <button
                       type="button"
