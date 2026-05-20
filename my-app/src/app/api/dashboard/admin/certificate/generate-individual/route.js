@@ -101,22 +101,30 @@ export async function POST(request) {
       }, { status: 409 });
     }
 
-    // Fetch student marks from both legacy marks and dailyMarks
-    const [marksRows] = await db.query(`
-      SELECT 
-        m.totalMarks as mTotal,
-        (COALESCE(dm.day1, 0) + COALESCE(dm.day2, 0) + COALESCE(dm.day3, 0) + 
-         COALESCE(dm.day4, 0) + COALESCE(dm.day5, 0) + COALESCE(dm.day6, 0) + COALESCE(dm.day7, 0)) AS dmTotal
-      FROM registrations r
-      LEFT JOIN marks m ON r.username = m.username
-      LEFT JOIN dailyMarks dm ON r.username = dm.username
-      WHERE r.username = ?
-    `, [username]);
-    
-    const marksRow = marksRows[0];
-    const calculatedTotal = marksRow ? Math.max(Number(marksRow.mTotal) || 0, Number(marksRow.dmTotal) || 0) : 0;
+    // Fetch student marks from legacy marks (safe fallback)
+    let mTotal = 0;
+    try {
+      const [marksRows] = await db.query('SELECT totalMarks FROM marks WHERE username = ?', [username]);
+      if (marksRows && marksRows.length > 0) mTotal = Number(marksRows[0].totalMarks) || 0;
+    } catch (e) {
+      console.warn('marks table missing or query failed', e.message);
+    }
 
-    if (!marksRow || calculatedTotal < 60) {
+    // Fetch student marks from dailyMarks (safe fallback)
+    let dmTotal = 0;
+    try {
+      const [dmRows] = await db.query(`
+        SELECT (COALESCE(day1, 0) + COALESCE(day2, 0) + COALESCE(day3, 0) + COALESCE(day4, 0) + COALESCE(day5, 0) + COALESCE(day6, 0) + COALESCE(day7, 0)) AS total
+        FROM dailyMarks WHERE username = ?
+      `, [username]);
+      if (dmRows && dmRows.length > 0) dmTotal = Number(dmRows[0].total) || 0;
+    } catch (e) {
+      console.warn('dailyMarks table missing or query failed', e.message);
+    }
+    
+    const calculatedTotal = Math.max(mTotal, dmTotal);
+
+    if (calculatedTotal < 60) {
       return NextResponse.json({ 
         success: false, 
         error: `Student ${username} is not qualified for certificate (marks: ${calculatedTotal})` 
