@@ -163,62 +163,16 @@ export default function ReportBook({ studentData }) {
         </div>
       )}
 
-      {/* APPROVED / PAYMENT REQUIRED STATUS */}
+      {/* APPROVED STATUS — Tutorial Video + Printing Options */}
       {status === 'APPROVED' && (
-        <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '24px', borderRadius: '12px', marginBottom: 24 }}>
-          <div style={{ textAlign: 'center', marginBottom: 24 }}>
-            <FaCheckCircle style={{ fontSize: '3rem', color: '#16a34a', marginBottom: 12 }} />
-            <h3 style={{ margin: '0 0 8px 0', color: '#15803d', fontSize: '1.4rem' }}>Report Approved!</h3>
-            <p style={{ margin: 0, color: '#166534', fontSize: '1rem' }}>
-              Your report is perfect. Next step: Payment for printing.
-            </p>
-            {adminRemarks && (
-              <div style={{ marginTop: 16, background: '#fff', padding: '12px', borderRadius: '8px', border: '1px solid #bbf7d0', color: '#14532d', fontSize: '0.9rem', textAlign: 'left' }}>
-                <strong>Admin Remarks:</strong> {adminRemarks}
-              </div>
-            )}
-          </div>
-
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, justifyContent: 'center' }}>
-            <div style={{ background: '#fff', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
-              <div style={{ width: 200, height: 200, background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', border: '2px dashed #cbd5e1', marginBottom: 16 }}>
-                <div style={{ textAlign: 'center' }}>
-                  <FaQrcode style={{ fontSize: '3rem', color: '#94a3b8' }} />
-                  <p style={{ margin: '8px 0 0 0', color: '#64748b', fontSize: '0.85rem' }}>Placeholder QR Code</p>
-                </div>
-              </div>
-              <p style={{ margin: 0, fontWeight: 700, color: '#334155' }}>Scan to Pay</p>
-            </div>
-
-            <div style={{ flex: '1 1 300px', background: '#fff', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-              <h4 style={{ margin: '0 0 16px 0', color: '#1e293b', fontSize: '1.1rem' }}>Submit Payment Details</h4>
-              <form onSubmit={handleSubmitUtr}>
-                <div style={{ marginBottom: 16 }}>
-                  <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, color: '#475569', marginBottom: 8 }}>
-                    12-Digit UTR Number / Transaction ID <span style={{ color: '#ef4444' }}>*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={utr}
-                    onChange={(e) => setUtr(e.target.value.replace(/\D/g, ''))}
-                    maxLength={12}
-                    minLength={12}
-                    placeholder="Enter exactly 12 digits"
-                    required
-                    style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '1rem', outline: 'none', letterSpacing: '2px' }}
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={submitting || utr.length !== 12}
-                  style={{ width: '100%', padding: '14px', background: (submitting || utr.length !== 12) ? '#94a3b8' : '#014a01', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '1rem', fontWeight: 700, cursor: (submitting || utr.length !== 12) ? 'not-allowed' : 'pointer', transition: 'background 0.2s' }}
-                >
-                  {submitting ? 'Submitting...' : 'Submit UTR Details'}
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
+        <ApprovedSection
+          studentData={studentData}
+          adminRemarks={adminRemarks}
+          utr={utr}
+          setUtr={setUtr}
+          submitting={submitting}
+          handleSubmitUtr={handleSubmitUtr}
+        />
       )}
 
       {/* PAYMENT_SUBMITTED STATUS */}
@@ -336,6 +290,299 @@ export default function ReportBook({ studentData }) {
           100% { transform: scale(1); }
         }
       `}</style>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
+   APPROVED SECTION
+───────────────────────────────────────────────────────────── */
+function ApprovedSection({ studentData, adminRemarks, utr, setUtr, submitting, handleSubmitUtr }) {
+  const [printingChoice, setPrintingChoice] = useState(null);
+  const [acknowledged, setAcknowledged] = useState(false);
+
+  return (
+    <div style={{ marginBottom: 24 }}>
+
+      {/* Approved Banner */}
+      <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '24px', borderRadius: '12px', textAlign: 'center', marginBottom: 24 }}>
+        <FaCheckCircle style={{ fontSize: '3rem', color: '#16a34a', marginBottom: 12 }} />
+        <h3 style={{ margin: '0 0 8px 0', color: '#15803d', fontSize: '1.4rem' }}>Report Approved! 🎉</h3>
+        <p style={{ margin: 0, color: '#166534', fontSize: '1rem' }}>
+          Your report has been reviewed and approved. Please watch the tutorial video below and choose your preferred printing option.
+        </p>
+        {adminRemarks && (
+          <div style={{ marginTop: 16, background: '#fff', padding: '12px', borderRadius: '8px', border: '1px solid #bbf7d0', color: '#14532d', fontSize: '0.9rem', textAlign: 'left' }}>
+            <strong>Admin Remarks:</strong> {adminRemarks}
+          </div>
+        )}
+      </div>
+
+      {/* YouTube Tutorial Video */}
+      <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.06)', padding: '24px', marginBottom: 24 }}>
+        <h3 style={{ margin: '0 0 8px 0', color: '#1e293b', fontSize: '1.15rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: '1.3rem' }}>▶️</span> Watch: Report Printing &amp; Submission Tutorial
+        </h3>
+        <p style={{ margin: '0 0 16px 0', color: '#64748b', fontSize: '0.9rem' }}>
+          Please watch this video carefully before choosing your printing option. It contains important instructions on the exact printing format.
+        </p>
+        <div style={{ position: 'relative', width: '100%', paddingBottom: '56.25%', borderRadius: '10px', overflow: 'hidden', background: '#000' }}>
+          <iframe
+            src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+            title="Report Printing and Submission Tutorial"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
+          />
+        </div>
+      </div>
+
+      {/* Printing Options */}
+      <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.06)', padding: '24px', marginBottom: 24 }}>
+        <h3 style={{ margin: '0 0 6px 0', color: '#1e293b', fontSize: '1.15rem', fontWeight: 700 }}>
+          📋 Choose Your Printing Option
+        </h3>
+        <p style={{ margin: '0 0 20px 0', color: '#64748b', fontSize: '0.9rem' }}>
+          You must print <strong>2 copies</strong> of your report book — one for submission to the college and one for yourself.
+        </p>
+
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
+          {/* Option 1 — Self Print */}
+          <button
+            onClick={() => setPrintingChoice('self')}
+            style={{
+              flex: '1 1 260px', padding: '20px', borderRadius: '12px',
+              border: `2px solid ${printingChoice === 'self' ? '#014a01' : '#e2e8f0'}`,
+              background: printingChoice === 'self' ? '#f0fdf4' : '#f8fafc',
+              cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s',
+            }}
+          >
+            <div style={{ fontSize: '2rem', marginBottom: 8 }}>🖨️</div>
+            <h4 style={{ margin: '0 0 6px 0', color: '#1e293b', fontSize: '1rem', fontWeight: 700 }}>
+              I&apos;ll print the report books on my own
+            </h4>
+            <ul style={{ margin: 0, padding: '0 0 0 18px', color: '#475569', fontSize: '0.88rem', lineHeight: 1.7 }}>
+              <li>Print <strong>2 copies</strong> of the report book.</li>
+              <li>Submit <strong>1 copy</strong> to the college.</li>
+              <li>Keep <strong>1 copy</strong> for personal use.</li>
+              <li>Follow the printing format from the video above.</li>
+            </ul>
+          </button>
+
+          {/* Option 2 — College Assist */}
+          <button
+            onClick={() => setPrintingChoice('college')}
+            style={{
+              flex: '1 1 260px', padding: '20px', borderRadius: '12px',
+              border: `2px solid ${printingChoice === 'college' ? '#014a01' : '#e2e8f0'}`,
+              background: printingChoice === 'college' ? '#f0fdf4' : '#f8fafc',
+              cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s',
+            }}
+          >
+            <div style={{ fontSize: '2rem', marginBottom: 8 }}>🏫</div>
+            <h4 style={{ margin: '0 0 6px 0', color: '#1e293b', fontSize: '1rem', fontWeight: 700 }}>
+              I need college assistance for printing
+            </h4>
+            <ul style={{ margin: 0, padding: '0 0 0 18px', color: '#475569', fontSize: '0.88rem', lineHeight: 1.7 }}>
+              <li>College arranges printing of <strong>2 copies</strong>.</li>
+              <li><strong>1 copy</strong> submitted to the college.</li>
+              <li><strong>1 copy</strong> for personal use.</li>
+              <li>Collect from <strong>SAC HALL</strong> when college reopens.</li>
+              <li style={{ color: '#014a01', fontWeight: 700 }}>Total Charge: ₹500 (₹250 × 2 books)</li>
+            </ul>
+          </button>
+        </div>
+      </div>
+
+      {/* Self Print Details */}
+      {printingChoice === 'self' && (
+        <div style={{ background: '#f0fdf4', border: '1.5px solid #86efac', borderRadius: '12px', padding: '24px', marginBottom: 16 }}>
+          <h4 style={{ margin: '0 0 12px 0', color: '#15803d', fontSize: '1.05rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <FaCheckCircle /> Self-Print Selected
+          </h4>
+          <div style={{ background: '#fff', border: '1px solid #bbf7d0', borderRadius: '10px', padding: '16px 20px', color: '#14532d', fontSize: '0.95rem', lineHeight: 1.8 }}>
+            <p style={{ margin: 0 }}>
+              📧 <strong>Your Final Report Book PDF will be sent to your registered email address.</strong>
+              <br />
+              Please check your email, download the PDF, get both copies printed, and submit one copy to the college once the campus reopens.
+            </p>
+          </div>
+          <p style={{ margin: '14px 0 0 0', color: '#166534', fontSize: '0.88rem' }}>
+            ⚠️ Make sure to follow the exact printing format and instructions mentioned in the YouTube tutorial video above.
+          </p>
+        </div>
+      )}
+
+      {/* College Assist Details */}
+      {printingChoice === 'college' && (
+        <CollegeAssistSection
+          studentData={studentData}
+          utr={utr}
+          setUtr={setUtr}
+          submitting={submitting}
+          handleSubmitUtr={handleSubmitUtr}
+          acknowledged={acknowledged}
+          setAcknowledged={setAcknowledged}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
+   COLLEGE ASSIST SECTION
+───────────────────────────────────────────────────────────── */
+function CollegeAssistSection({ studentData, utr, setUtr, submitting, handleSubmitUtr, acknowledged, setAcknowledged }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+      {/* Step 1: QR Code & Payment */}
+      <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', padding: '24px' }}>
+        <h4 style={{ margin: '0 0 4px 0', color: '#1e293b', fontSize: '1.05rem', fontWeight: 700 }}>
+          Step 1 — Scan QR Code &amp; Pay ₹500
+        </h4>
+        <p style={{ margin: '0 0 20px 0', color: '#64748b', fontSize: '0.88rem' }}>
+          Scan the QR code below and complete the payment of ₹500 (₹250 × 2 books).
+        </p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, alignItems: 'flex-start' }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ background: '#f8fafc', border: '2px solid #e2e8f0', borderRadius: '12px', padding: '12px', display: 'inline-block' }}>
+              <img src="/QR.jpeg" alt="Payment QR Code" style={{ width: 200, height: 200, objectFit: 'contain', borderRadius: '8px', display: 'block' }} />
+            </div>
+            <div style={{ marginTop: 10, background: '#014a01', color: '#fff', borderRadius: '8px', padding: '8px 20px', fontWeight: 800, fontSize: '1.05rem', display: 'inline-block' }}>
+              Amount to Pay: ₹500
+            </div>
+          </div>
+          <div style={{ flex: '1 1 220px', color: '#475569', fontSize: '0.9rem', lineHeight: 1.8 }}>
+            <p style={{ margin: '0 0 10px 0', fontWeight: 600, color: '#1e293b' }}>Payment Instructions:</p>
+            <ul style={{ margin: 0, padding: '0 0 0 18px' }}>
+              <li>Open any UPI app (PhonePe, GPay, Paytm, etc.)</li>
+              <li>Scan the QR code above.</li>
+              <li>Pay exactly <strong>₹500</strong>.</li>
+              <li>Take a <strong>screenshot</strong> of the transaction confirmation.</li>
+              <li>Note down the <strong>12-digit UTR / Transaction ID</strong>.</li>
+              <li>Note the <strong>transaction date</strong>.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* Step 2: Check Email for PDF */}
+      <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '12px', padding: '20px' }}>
+        <h4 style={{ margin: '0 0 8px 0', color: '#1d4ed8', fontSize: '1.05rem', fontWeight: 700 }}>
+          📧 Step 2 — Check Your Email for the PDF
+        </h4>
+        <p style={{ margin: 0, color: '#1e3a8a', fontSize: '0.92rem', lineHeight: 1.7 }}>
+          Your <strong>Final Report Book PDF</strong> will be sent to your registered email address. Please check your email and download it — you will need to attach it when sending the confirmation email in the next step.
+        </p>
+      </div>
+
+      {/* Step 3: Send Email */}
+      <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', padding: '24px' }}>
+        <h4 style={{ margin: '0 0 4px 0', color: '#1e293b', fontSize: '1.05rem', fontWeight: 700 }}>
+          Step 3 — Send an Email to Handngo
+        </h4>
+        <p style={{ margin: '0 0 16px 0', color: '#64748b', fontSize: '0.88rem' }}>
+          After making the payment, send an email to the address below with all required details.
+        </p>
+        <div style={{ background: '#f0fdf4', border: '1.5px solid #86efac', borderRadius: '10px', padding: '14px 18px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '1.2rem' }}>📨</span>
+          <div>
+            <p style={{ margin: 0, fontSize: '0.85rem', color: '#166534' }}>Send your email to:</p>
+            <a href="mailto:Handngo.org@gmail.com" style={{ fontSize: '1.05rem', fontWeight: 800, color: '#014a01', textDecoration: 'none' }}>
+              Handngo.org@gmail.com
+            </a>
+          </div>
+        </div>
+        <p style={{ margin: '0 0 10px 0', fontWeight: 600, color: '#374151', fontSize: '0.92rem' }}>
+          Your email must include all of the following details:
+        </p>
+        <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '14px 18px', marginBottom: 16 }}>
+          <ol style={{ margin: 0, padding: '0 0 0 18px', color: '#374151', fontSize: '0.92rem', lineHeight: 2 }}>
+            <li><strong>Full Name</strong></li>
+            <li><strong>Registration No</strong></li>
+            <li><strong>Contact Number</strong></li>
+            <li><strong>Email ID</strong></li>
+            <li><strong>12-digit UTR ID</strong></li>
+            <li><strong>Transaction Date</strong></li>
+            <li><strong>Transaction Screenshot</strong> (as attachment)</li>
+          </ol>
+        </div>
+        <div style={{ background: '#fff7ed', border: '1.5px solid #fed7aa', borderRadius: '8px', padding: '12px 16px', color: '#9a3412', fontSize: '0.9rem', fontWeight: 600 }}>
+          ⚠️ Do not forget to attach the <strong>PDF copy of your Final Report Book</strong> in the email.
+        </div>
+      </div>
+
+      {/* Step 4: Submit UTR */}
+      <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', padding: '24px' }}>
+        <h4 style={{ margin: '0 0 4px 0', color: '#1e293b', fontSize: '1.05rem', fontWeight: 700 }}>
+          Step 4 — Submit Your UTR ID Here
+        </h4>
+        <p style={{ margin: '0 0 16px 0', color: '#64748b', fontSize: '0.88rem' }}>
+          Enter your 12-digit UTR / Transaction ID to complete the payment submission on this platform.
+        </p>
+        <form onSubmit={handleSubmitUtr}>
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, color: '#475569', marginBottom: 8 }}>
+              12-Digit UTR Number / Transaction ID <span style={{ color: '#ef4444' }}>*</span>
+            </label>
+            <input
+              type="text"
+              value={utr}
+              onChange={(e) => setUtr(e.target.value.replace(/\D/g, ''))}
+              maxLength={12}
+              minLength={12}
+              placeholder="Enter exactly 12 digits"
+              required
+              style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '1.05rem', outline: 'none', letterSpacing: '3px', fontFamily: 'monospace', boxSizing: 'border-box' }}
+            />
+            <p style={{ margin: '6px 0 0 0', fontSize: '0.82rem', color: '#94a3b8' }}>
+              {utr.length}/12 digits entered
+            </p>
+          </div>
+
+          {/* Acknowledgement Checkbox */}
+          <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '10px', padding: '14px 16px', marginBottom: 16, display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+            <input
+              type="checkbox"
+              id="ack-checkbox"
+              checked={acknowledged}
+              onChange={(e) => setAcknowledged(e.target.checked)}
+              style={{ marginTop: 3, width: 18, height: 18, cursor: 'pointer', accentColor: '#014a01', flexShrink: 0 }}
+            />
+            <label htmlFor="ack-checkbox" style={{ fontSize: '0.9rem', color: '#166534', lineHeight: 1.6, cursor: 'pointer' }}>
+              I have mailed all the required details along with the Final Report Book PDF to{' '}
+              <strong>Handngo.org@gmail.com</strong>.
+            </label>
+          </div>
+
+          <button
+            type="submit"
+            disabled={submitting || utr.length !== 12 || !acknowledged}
+            style={{
+              width: '100%', padding: '14px',
+              background: (submitting || utr.length !== 12 || !acknowledged) ? '#94a3b8' : '#014a01',
+              color: '#fff', border: 'none', borderRadius: '8px', fontSize: '1rem', fontWeight: 700,
+              cursor: (submitting || utr.length !== 12 || !acknowledged) ? 'not-allowed' : 'pointer',
+              transition: 'background 0.2s',
+            }}
+          >
+            {submitting ? 'Submitting...' : 'Submit Payment & Confirm'}
+          </button>
+          {(!acknowledged && utr.length === 12) && (
+            <p style={{ margin: '8px 0 0 0', fontSize: '0.82rem', color: '#b45309', textAlign: 'center' }}>
+              ⚠️ Please check the acknowledgement box above before submitting.
+            </p>
+          )}
+        </form>
+      </div>
+
+      {/* Confirmation note */}
+      <div style={{ background: '#fdf4ff', border: '1px solid #e9d5ff', borderRadius: '12px', padding: '18px 20px', color: '#6b21a8', fontSize: '0.9rem', lineHeight: 1.7 }}>
+        <strong>📦 After successful submission:</strong>
+        <br />
+        Your book printing request is being processed successfully. You will receive an email confirmation once the printing is completed. You can collect your books from <strong>SAC HALL</strong> when the college reopens.
+      </div>
     </div>
   );
 }
