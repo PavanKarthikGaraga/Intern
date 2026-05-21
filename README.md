@@ -1,4 +1,4 @@
-# my-app
+# Social Internship Platform
 
 A comprehensive Social Internship Platform designed to manage and track the impact of student internship programs. This application facilitates a 7-day intensive program where students can participate through Remote, In-Campus, or In-Village modes to create measurable social change.
 
@@ -8,6 +8,8 @@ Key features include:
 - Impact statistics and reporting
 - Automated email notifications
 - PDF report generation
+- Certificate generation and distribution
+- Report Book submission and printing workflow
 
 ## Getting Started
 
@@ -70,9 +72,30 @@ NODE_ENV=
 
 ## Technologies Used
 
-- Next.js
-- React
+- Next.js 15
+- React 19
 - MySQL2
-- Tailwind CSS
 - Jose (JWT)
 - Nodemailer
+- React Hot Toast
+- React Icons
+
+## Dashboards
+
+- **Student Dashboard** — Daily tasks, report book submission, survey, evaluation plan, certificates
+- **Admin Dashboard** — Student management, report review, payment verification, certificate generation
+- **Faculty Mentor Dashboard** — Student oversight and evaluation
+- **Student Lead Dashboard** — Team coordination and reporting
+
+## Report Book Workflow
+
+1. Student submits Adobe Express report link
+2. Admin reviews and approves / rejects
+3. On approval, student chooses printing option:
+   - **Self-print** — PDF sent to registered email
+   - **College-assisted printing** — ₹500 via UPI, collect from SAC HALL
+4. Admin verifies payment and processes printing
+
+---
+
+_Last updated: May 2026_
