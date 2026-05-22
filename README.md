@@ -153,34 +153,6 @@ NODE_ENV=development
 
 ---
 
-## 📑 Report Book Workflow
-
-The report book submission follows a structured multi-step process:
-
-```
-Student                   Admin                    Student (post-approval)
-  │                         │                              │
-  ├─ Submits Adobe Express   │                              │
-  │  report link ──────────► │                              │
-  │                         ├─ Reviews submission           │
-  │                         ├─ Approves / Rejects ─────────►│
-  │                         │                              │
-  │                         │                   ┌──────────┴──────────┐
-  │                         │                   │  Printing Options   │
-  │                         │                   ├─────────────────────┤
-  │                         │                   │ Self-print          │
-  │                         │                   │ (PDF via email)     │
-  │                         │                   ├─────────────────────┤
-  │                         │                   │ College-assisted    │
-  │                         │                   │ (₹500 via UPI,      │
-  │                         │                   │  collect at SAC)    │
-  │                         │◄──── Payment ─────┘
-  │                         ├─ Verifies payment
-  │                         └─ Processes printing
-```
-
----
-
 ## 📜 Available Scripts
 
 Run the following commands from within the `my-app/` directory:
