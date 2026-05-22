@@ -13,8 +13,8 @@ export default function ReportBook({ studentData }) {
   const status = reportBook?.status;
   const adminRemarks = reportBook?.adminRemarks;
 
-  // Deadline: Friday, 22nd May 2026, 5:00 PM IST
-  const deadline = new Date('2026-05-22T17:00:00+05:30').getTime();
+  // Deadline: Saturday, 23rd May 2026, 6:00 PM IST
+  const deadline = new Date('2026-05-23T18:00:00+05:30').getTime();
 
   useEffect(() => {
     const timer = setInterval(() => {
