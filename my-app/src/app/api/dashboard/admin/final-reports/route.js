@@ -23,7 +23,7 @@ export async function GET(request) {
     }
 
     const [rows] = await db.execute(
-      `SELECT r.username, r.name, r.slot, rb.reportLink, rb.status, rb.adminRemarks, rb.utrId, rb.id as rbId,
+      `SELECT r.username, r.name, r.slot, rb.reportLink, rb.status, rb.adminRemarks, rb.utrId, rb.reportBookMarks, rb.id as rbId,
               (COALESCE(dm.day1,0) + COALESCE(dm.day2,0) + COALESCE(dm.day3,0) + COALESCE(dm.day4,0) + COALESCE(dm.day5,0) + COALESCE(dm.day6,0) + COALESCE(dm.day7,0)) AS totalMarks
        FROM registrations r
        JOIN reportBooks rb ON r.username = rb.username
@@ -52,10 +52,33 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { username, status, adminRemarks } = await request.json();
+    const { username, status, adminRemarks, reportBookMarks } = await request.json();
 
-    if (!username || !status) {
-      return NextResponse.json({ success: false, error: 'Username and status are required' }, { status: 400 });
+    if (!username) {
+      return NextResponse.json({ success: false, error: 'Username is required' }, { status: 400 });
+    }
+
+    // Ensure reportBookMarks column exists
+    try {
+      await db.execute(`ALTER TABLE reportBooks ADD COLUMN IF NOT EXISTS reportBookMarks DECIMAL(4,2) DEFAULT NULL`);
+    } catch (e) { /* column may already exist */ }
+
+    // If reportBookMarks is provided, save marks and auto-approve
+    if (reportBookMarks !== undefined && reportBookMarks !== null && reportBookMarks !== '') {
+      const marks = Number(reportBookMarks);
+      if (isNaN(marks) || marks < 0 || marks > 20) {
+        return NextResponse.json({ success: false, error: 'Report Book Marks must be between 0 and 20' }, { status: 400 });
+      }
+      await db.execute(
+        'UPDATE reportBooks SET reportBookMarks = ?, status = "APPROVED", adminRemarks = ? WHERE username = ?',
+        [marks, adminRemarks || null, username]
+      );
+      return NextResponse.json({ success: true, message: 'Marks saved and report auto-approved.' });
+    }
+
+    // Manual status/remarks update
+    if (!status) {
+      return NextResponse.json({ success: false, error: 'Status or marks are required' }, { status: 400 });
     }
 
     await db.execute(

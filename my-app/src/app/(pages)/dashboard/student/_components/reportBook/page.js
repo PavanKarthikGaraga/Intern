@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { FaBook, FaCheckCircle, FaExclamationTriangle, FaClock, FaLink, FaExternalLinkAlt, FaTimesCircle, FaQrcode, FaPrint } from 'react-icons/fa';
+import { FaBook, FaCheckCircle, FaExclamationTriangle, FaClock, FaLink, FaExternalLinkAlt, FaTimesCircle, FaPrint, FaStar } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 
 export default function ReportBook({ studentData }) {
@@ -8,10 +8,12 @@ export default function ReportBook({ studentData }) {
   const [utr, setUtr] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [timeLeft, setTimeLeft] = useState('');
-  
+
+  const isSlot1 = Number(studentData?.slot) === 1;
   const reportBook = studentData?.reportBook || null;
   const status = reportBook?.status;
   const adminRemarks = reportBook?.adminRemarks;
+  const reportBookMarks = reportBook?.reportBookMarks;
 
   // Deadline: Sunday, 24th May 2026, 6:00 PM IST
   const deadline = new Date('2026-05-24T18:00:00+05:30').getTime();
@@ -20,39 +22,26 @@ export default function ReportBook({ studentData }) {
     const timer = setInterval(() => {
       const now = new Date().getTime();
       const distance = deadline - now;
-
       if (distance < 0) {
         clearInterval(timer);
         setTimeLeft('DEADLINE PASSED');
         return;
       }
-
       const days = Math.floor(distance / (1000 * 60 * 60 * 24));
       const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
       const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
       setTimeLeft(`${days}d ${hours}h ${minutes}m ${seconds}s`);
     }, 1000);
-
     return () => clearInterval(timer);
   }, [deadline]);
 
   const handleSubmitLink = async (e) => {
     e.preventDefault();
-    if (!link || !link.trim()) {
-      toast.error('Please enter a valid link');
-      return;
-    }
-
-    if (!link.startsWith('http')) {
-      toast.error('Link must start with http:// or https://');
-      return;
-    }
-
+    if (!link || !link.trim()) { toast.error('Please enter a valid link'); return; }
+    if (!link.startsWith('http')) { toast.error('Link must start with http:// or https://'); return; }
     const confirmSubmit = window.confirm('Are you sure you want to submit?');
     if (!confirmSubmit) return;
-
     setSubmitting(true);
     try {
       const res = await fetch('/api/dashboard/student/report-book', {
@@ -60,14 +49,9 @@ export default function ReportBook({ studentData }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: studentData.username, link: link.trim() }),
       });
-
       const data = await res.json();
-      if (data.success) {
-        toast.success('Report Book submitted successfully!');
-        window.location.reload();
-      } else {
-        toast.error(data.error || 'Failed to submit Report Book');
-      }
+      if (data.success) { toast.success('Report Book submitted successfully!'); window.location.reload(); }
+      else toast.error(data.error || 'Failed to submit Report Book');
     } catch (err) {
       toast.error('An error occurred while submitting.');
     } finally {
@@ -77,14 +61,9 @@ export default function ReportBook({ studentData }) {
 
   const handleSubmitUtr = async (e) => {
     e.preventDefault();
-    if (!utr || !/^\d{12}$/.test(utr)) {
-      toast.error('Please enter a valid 12-digit UTR ID');
-      return;
-    }
-
+    if (!utr || !/^\d{12}$/.test(utr)) { toast.error('Please enter a valid 12-digit UTR ID'); return; }
     const confirmSubmit = window.confirm('Are you sure this is the correct UTR ID?');
     if (!confirmSubmit) return;
-
     setSubmitting(true);
     try {
       const res = await fetch('/api/dashboard/student/report-book', {
@@ -92,14 +71,9 @@ export default function ReportBook({ studentData }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: studentData.username, utrId: utr }),
       });
-
       const data = await res.json();
-      if (data.success) {
-        toast.success('Payment details submitted successfully!');
-        window.location.reload();
-      } else {
-        toast.error(data.error || 'Failed to submit payment details');
-      }
+      if (data.success) { toast.success('Payment details submitted successfully!'); window.location.reload(); }
+      else toast.error(data.error || 'Failed to submit payment details');
     } catch (err) {
       toast.error('An error occurred while submitting.');
     } finally {
@@ -118,6 +92,7 @@ export default function ReportBook({ studentData }) {
         </p>
       </div>
 
+      {/* Countdown Timer — only when pending/rejected */}
       {(!status || status === 'REJECTED') && (
         <div style={{ background: timeLeft === 'DEADLINE PASSED' ? '#ffebee' : '#fff3e0', border: `1.5px solid ${timeLeft === 'DEADLINE PASSED' ? '#ef9a9a' : '#ffcc80'}`, borderRadius: 12, padding: '16px 20px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
           <FaClock style={{ fontSize: '1.5rem', color: timeLeft === 'DEADLINE PASSED' ? '#c62828' : '#e65100' }} />
@@ -130,7 +105,7 @@ export default function ReportBook({ studentData }) {
         </div>
       )}
 
-      {/* REJECTED STATUS */}
+      {/* REJECTED */}
       {status === 'REJECTED' && (
         <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', padding: '20px', borderRadius: '12px', marginBottom: 24 }}>
           <h3 style={{ margin: '0 0 12px 0', color: '#991b1b', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -141,12 +116,12 @@ export default function ReportBook({ studentData }) {
             {adminRemarks || 'No remarks provided.'}
           </div>
           <p style={{ margin: '12px 0 0 0', color: '#b91c1c', fontSize: '0.9rem' }}>
-            Please make the necessary modifications in your Adobe Express project and resubmit your link below.
+            Please make the necessary modifications in your {isSlot1 ? 'Adobe Express' : 'Canva'} project and resubmit your link below.
           </p>
         </div>
       )}
 
-      {/* PENDING_REVIEW STATUS */}
+      {/* PENDING REVIEW */}
       {status === 'PENDING_REVIEW' && (
         <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', padding: '30px 20px', borderRadius: '12px', textAlign: 'center', marginBottom: 24 }}>
           <FaClock style={{ fontSize: '3rem', color: '#0284c7', marginBottom: 16 }} />
@@ -163,11 +138,13 @@ export default function ReportBook({ studentData }) {
         </div>
       )}
 
-      {/* APPROVED STATUS — Tutorial Video + Printing Options */}
+      {/* APPROVED — choose printing option */}
       {status === 'APPROVED' && (
         <ApprovedSection
           studentData={studentData}
           adminRemarks={adminRemarks}
+          reportBookMarks={reportBookMarks}
+          isSlot1={isSlot1}
           utr={utr}
           setUtr={setUtr}
           submitting={submitting}
@@ -175,7 +152,7 @@ export default function ReportBook({ studentData }) {
         />
       )}
 
-      {/* PAYMENT_SUBMITTED STATUS */}
+      {/* PAYMENT_SUBMITTED */}
       {status === 'PAYMENT_SUBMITTED' && (
         <div style={{ background: '#fdf4ff', border: '1px solid #f0abfc', padding: '30px 20px', borderRadius: '12px', textAlign: 'center', marginBottom: 24 }}>
           <FaCheckCircle style={{ fontSize: '3rem', color: '#c026d3', marginBottom: 16 }} />
@@ -187,64 +164,79 @@ export default function ReportBook({ studentData }) {
         </div>
       )}
 
-      {/* PRINTING_IN_PROCESS STATUS */}
+      {/* PRINTING_IN_PROCESS */}
       {status === 'PRINTING_IN_PROCESS' && (
-        <div style={{ background: '#fffbeb', border: '1px solid #fcd34d', padding: '30px 20px', borderRadius: '12px', textAlign: 'center', marginBottom: 24 }}>
-          <FaPrint style={{ fontSize: '3rem', color: '#d97706', marginBottom: 16, animation: 'pulse 2s infinite' }} />
-          <h3 style={{ margin: '0 0 8px 0', color: '#b45309', fontSize: '1.3rem' }}>Printing is being processed!</h3>
-          <p style={{ margin: 0, color: '#92400e', fontSize: '1rem' }}>
-            Payment verified. Your report book is currently being printed.
-            <br />This status will update once your book is fully printed and ready.
-          </p>
-        </div>
+        <PrintingInProcessSection reportBookMarks={reportBookMarks} />
       )}
 
-      {/* PRINTING_COMPLETED STATUS */}
+      {/* PRINTING_COMPLETED */}
       {status === 'PRINTING_COMPLETED' && (
         <div style={{ background: '#ecfdf5', border: '1px solid #6ee7b7', padding: '30px 20px', borderRadius: '12px', textAlign: 'center', marginBottom: 24 }}>
           <FaCheckCircle style={{ fontSize: '3rem', color: '#059669', marginBottom: 16 }} />
           <h3 style={{ margin: '0 0 8px 0', color: '#047857', fontSize: '1.4rem' }}>Printing Completed!</h3>
           <p style={{ margin: 0, color: '#064e3b', fontSize: '1rem' }}>
             Congratulations! Your report book has been printed successfully.
-            <br />Please wait for further instructions from the admin on collection.
+            <br />You can collect your books from <strong>SAC HALL</strong> when the college reopens.
           </p>
         </div>
       )}
 
-
-      {/* Submission Form (Shown if NOT submitted OR if REJECTED) */}
+      {/* SUBMISSION FORM — not submitted OR rejected */}
       {(!status || status === 'REJECTED') && (
         <>
           <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', padding: '24px', marginBottom: 28 }}>
             <h2 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#1e293b', marginTop: 0, borderBottom: '2px solid #f1f5f9', paddingBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
               <FaExclamationTriangle style={{ color: '#f59e0b' }} /> Instructions
             </h2>
-            
             <div style={{ fontSize: '0.95rem', color: '#475569', lineHeight: 1.6 }}>
               <p>Dear Students,</p>
               <p>A sample report document is provided to you as a reference. Your report <strong>must follow the structure and components</strong> in the sample file.</p>
-              
-              <ol style={{ paddingLeft: 20, marginBottom: 20 }}>
-                <li style={{ marginBottom: 10 }}><strong>Create an Account:</strong> First, create an account in <a href="https://new.express.adobe.com/" target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', fontWeight: 600 }}>Adobe Express</a> using your personal email.</li>
-                <li style={{ marginBottom: 10 }}><strong>Use the Template:</strong> Click the template link below to copy the sample report to your account.</li>
-                <li style={{ marginBottom: 10 }}><strong>Edit the Report:</strong> Wherever the sample contains placeholders or dummy data, replace it with your actual information and work. Ensure that all tasks and activities mentioned in your field work are reflected accurately in the report.</li>
-                <li style={{ marginBottom: 10 }}><strong>Verify:</strong> Verify your document multiple times. Make sure all formatting is professional and correct.</li>
-                <li style={{ marginBottom: 10 }}><strong>Generate Link:</strong> Click on <strong>Share</strong> in Adobe Express. Set <em>Who has access</em> to <strong>&quot;Anyone with the link&quot;</strong>.</li>
-                <li><strong>Submit:</strong> Copy the link and submit it below. <strong>Once submitted, the report is final and cannot be edited.</strong></li>
-              </ol>
 
-              <div style={{ background: '#f8fafc', border: '1px dashed #cbd5e1', padding: '16px', borderRadius: '8px', textAlign: 'center' }}>
-                <a 
-                  href="https://new.express.adobe.com/id/urn:aaid:sc:AP:fb696ac2-eae2-5955-8e9f-45dbbd55e7df?promoid=GHMVY4BS&mv=other&preload=sharesheet" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#014a01', color: '#fff', padding: '12px 24px', borderRadius: '8px', textDecoration: 'none', fontWeight: 700, fontSize: '1rem', transition: 'background 0.2s' }}
-                  onMouseOver={(e) => e.currentTarget.style.background = '#013a01'}
-                  onMouseOut={(e) => e.currentTarget.style.background = '#014a01'}
-                >
-                  Open Report Template in Adobe Express <FaExternalLinkAlt />
-                </a>
-              </div>
+              {isSlot1 ? (
+                <>
+                  <ol style={{ paddingLeft: 20, marginBottom: 20 }}>
+                    <li style={{ marginBottom: 10 }}><strong>Create an Account:</strong> First, create an account in <a href="https://new.express.adobe.com/" target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', fontWeight: 600 }}>Adobe Express</a> using your personal email.</li>
+                    <li style={{ marginBottom: 10 }}><strong>Use the Template:</strong> Click the template link below to copy the sample report to your account.</li>
+                    <li style={{ marginBottom: 10 }}><strong>Edit the Report:</strong> Wherever the sample contains placeholders or dummy data, replace it with your actual information and work.</li>
+                    <li style={{ marginBottom: 10 }}><strong>Verify:</strong> Verify your document multiple times. Make sure all formatting is professional and correct.</li>
+                    <li style={{ marginBottom: 10 }}><strong>Generate Link:</strong> Click on <strong>Share</strong> in Adobe Express. Set <em>Who has access</em> to <strong>&quot;Anyone with the link&quot;</strong>.</li>
+                    <li><strong>Submit:</strong> Copy the link and submit it below. <strong>Once submitted, the report is final and cannot be edited.</strong></li>
+                  </ol>
+                  <div style={{ background: '#f8fafc', border: '1px dashed #cbd5e1', padding: '16px', borderRadius: '8px', textAlign: 'center' }}>
+                    <a
+                      href="https://new.express.adobe.com/id/urn:aaid:sc:AP:fb696ac2-eae2-5955-8e9f-45dbbd55e7df?promoid=GHMVY4BS&mv=other&preload=sharesheet"
+                      target="_blank" rel="noopener noreferrer"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#014a01', color: '#fff', padding: '12px 24px', borderRadius: '8px', textDecoration: 'none', fontWeight: 700, fontSize: '1rem' }}
+                      onMouseOver={(e) => e.currentTarget.style.background = '#013a01'}
+                      onMouseOut={(e) => e.currentTarget.style.background = '#014a01'}
+                    >
+                      Open Report Template in Adobe Express <FaExternalLinkAlt />
+                    </a>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <ol style={{ paddingLeft: 20, marginBottom: 20 }}>
+                    <li style={{ marginBottom: 10 }}><strong>Create an Account:</strong> First, create an account in <a href="https://www.canva.com/" target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', fontWeight: 600 }}>Canva</a> using your personal email.</li>
+                    <li style={{ marginBottom: 10 }}><strong>Use the Template:</strong> Click the template link below to copy the sample report to your Canva account.</li>
+                    <li style={{ marginBottom: 10 }}><strong>Edit the Report:</strong> Wherever the sample contains placeholders or dummy data, replace it with your actual information and work.</li>
+                    <li style={{ marginBottom: 10 }}><strong>Verify:</strong> Verify your document multiple times. Make sure all formatting is professional and correct.</li>
+                    <li style={{ marginBottom: 10 }}><strong>Generate Link:</strong> Click on <strong>Share</strong> in Canva. Set <em>Who has access</em> to <strong>&quot;Anyone with the link&quot;</strong>.</li>
+                    <li><strong>Submit:</strong> Copy the link and submit it below. <strong>Once submitted, the report is final and cannot be edited.</strong></li>
+                  </ol>
+                  <div style={{ background: '#f8fafc', border: '1px dashed #cbd5e1', padding: '16px', borderRadius: '8px', textAlign: 'center' }}>
+                    <a
+                      href="https://canva.link/8b6x1531j2t4jqp"
+                      target="_blank" rel="noopener noreferrer"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#014a01', color: '#fff', padding: '12px 24px', borderRadius: '8px', textDecoration: 'none', fontWeight: 700, fontSize: '1rem' }}
+                      onMouseOver={(e) => e.currentTarget.style.background = '#013a01'}
+                      onMouseOut={(e) => e.currentTarget.style.background = '#014a01'}
+                    >
+                      Open Report Template in Canva <FaExternalLinkAlt />
+                    </a>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -252,25 +244,23 @@ export default function ReportBook({ studentData }) {
             <h2 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#1e293b', marginTop: 0, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
               <FaLink style={{ color: '#3b82f6' }} /> {status === 'REJECTED' ? 'Resubmit Your Report Link' : 'Submit Your Report Link'}
             </h2>
-
             <form onSubmit={handleSubmitLink}>
               <div style={{ marginBottom: 20 }}>
                 <label style={{ display: 'block', fontSize: '0.95rem', fontWeight: 600, color: '#334155', marginBottom: 8 }}>
-                  Adobe Express Share Link <span style={{ color: '#ef4444' }}>*</span>
+                  {isSlot1 ? 'Adobe Express Share Link' : 'Canva Share Link'} <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <input
                   type="url"
                   value={link}
                   onChange={(e) => setLink(e.target.value)}
-                  placeholder="https://new.express.adobe.com/..."
+                  placeholder={isSlot1 ? 'https://new.express.adobe.com/...' : 'https://www.canva.com/design/...'}
                   required
-                  style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '1rem', outline: 'none', transition: 'border-color 0.2s' }}
+                  style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '1rem', outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box' }}
                   onFocus={(e) => e.target.style.borderColor = '#014a01'}
                   onBlur={(e) => e.target.style.borderColor = '#cbd5e1'}
                 />
                 <p style={{ margin: '8px 0 0 0', fontSize: '0.85rem', color: '#64748b' }}>Make sure access is set to &quot;Anyone with the link&quot;.</p>
               </div>
-
               <button
                 type="submit"
                 disabled={submitting || timeLeft === 'DEADLINE PASSED'}
@@ -294,22 +284,35 @@ export default function ReportBook({ studentData }) {
   );
 }
 
-/* ─────────────────────────────────────────────────────────────
-   APPROVED SECTION
-───────────────────────────────────────────────────────────── */
-function ApprovedSection({ studentData, adminRemarks, utr, setUtr, submitting, handleSubmitUtr }) {
+/* ── Marks Badge ── */
+function MarksBadge({ reportBookMarks }) {
+  if (reportBookMarks === null || reportBookMarks === undefined) return null;
+  return (
+    <div style={{ background: '#f0fdf4', border: '1.5px solid #86efac', borderRadius: 12, padding: '16px 20px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 16 }}>
+      <FaStar style={{ fontSize: '1.8rem', color: '#16a34a' }} />
+      <div>
+        <div style={{ fontSize: '0.85rem', color: '#166534', fontWeight: 600 }}>Report Book Evaluation</div>
+        <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#014a01' }}>
+          {Number(reportBookMarks)} <span style={{ fontSize: '1rem', fontWeight: 600, color: '#166534' }}>/ 20 marks</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── APPROVED SECTION ── */
+function ApprovedSection({ studentData, adminRemarks, reportBookMarks, isSlot1, utr, setUtr, submitting, handleSubmitUtr }) {
   const [printingChoice, setPrintingChoice] = useState(null);
   const [acknowledged, setAcknowledged] = useState(false);
 
   return (
     <div style={{ marginBottom: 24 }}>
-
       {/* Approved Banner */}
       <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '24px', borderRadius: '12px', textAlign: 'center', marginBottom: 24 }}>
         <FaCheckCircle style={{ fontSize: '3rem', color: '#16a34a', marginBottom: 12 }} />
         <h3 style={{ margin: '0 0 8px 0', color: '#15803d', fontSize: '1.4rem' }}>Report Approved! 🎉</h3>
         <p style={{ margin: 0, color: '#166534', fontSize: '1rem' }}>
-          Your report has been reviewed and approved. Please watch the tutorial video below and choose your preferred printing option.
+          Your report has been reviewed and approved. Please choose your preferred printing option below.
         </p>
         {adminRemarks && (
           <div style={{ marginTop: 16, background: '#fff', padding: '12px', borderRadius: '8px', border: '1px solid #bbf7d0', color: '#14532d', fontSize: '0.9rem', textAlign: 'left' }}>
@@ -318,24 +321,8 @@ function ApprovedSection({ studentData, adminRemarks, utr, setUtr, submitting, h
         )}
       </div>
 
-      {/* YouTube Tutorial Video */}
-      <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.06)', padding: '24px', marginBottom: 24 }}>
-        <h3 style={{ margin: '0 0 8px 0', color: '#1e293b', fontSize: '1.15rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: '1.3rem' }}>▶️</span> Watch: Report Printing &amp; Submission Tutorial
-        </h3>
-        <p style={{ margin: '0 0 16px 0', color: '#64748b', fontSize: '0.9rem' }}>
-          Please watch this video carefully before choosing your printing option. It contains important instructions on the exact printing format.
-        </p>
-        <div style={{ position: 'relative', width: '100%', paddingBottom: '56.25%', borderRadius: '10px', overflow: 'hidden', background: '#000' }}>
-          <iframe
-            src="https://www.youtube.com/embed/dQw4w9WgXcQ"
-            title="Report Printing and Submission Tutorial"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
-          />
-        </div>
-      </div>
+      {/* Evaluation Marks (slot 2+) */}
+      {!isSlot1 && <MarksBadge reportBookMarks={reportBookMarks} />}
 
       {/* Printing Options */}
       <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.06)', padding: '24px', marginBottom: 24 }}>
@@ -345,75 +332,43 @@ function ApprovedSection({ studentData, adminRemarks, utr, setUtr, submitting, h
         <p style={{ margin: '0 0 20px 0', color: '#64748b', fontSize: '0.9rem' }}>
           You must print <strong>2 copies</strong> of your report book — one for submission to the college and one for yourself.
         </p>
-
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
-          {/* Option 1 — Self Print */}
           <button
             onClick={() => setPrintingChoice('self')}
-            style={{
-              flex: '1 1 260px', padding: '20px', borderRadius: '12px',
-              border: `2px solid ${printingChoice === 'self' ? '#014a01' : '#e2e8f0'}`,
-              background: printingChoice === 'self' ? '#f0fdf4' : '#f8fafc',
-              cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s',
-            }}
+            style={{ flex: '1 1 260px', padding: '20px', borderRadius: '12px', border: `2px solid ${printingChoice === 'self' ? '#014a01' : '#e2e8f0'}`, background: printingChoice === 'self' ? '#f0fdf4' : '#f8fafc', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s' }}
           >
             <div style={{ fontSize: '2rem', marginBottom: 8 }}>🖨️</div>
-            <h4 style={{ margin: '0 0 6px 0', color: '#1e293b', fontSize: '1rem', fontWeight: 700 }}>
-              I&apos;ll print the report books on my own
-            </h4>
+            <h4 style={{ margin: '0 0 6px 0', color: '#1e293b', fontSize: '1rem', fontWeight: 700 }}>I&apos;ll print the report books on my own</h4>
             <ul style={{ margin: 0, padding: '0 0 0 18px', color: '#475569', fontSize: '0.88rem', lineHeight: 1.7 }}>
-              <li>Print <strong>2 copies</strong> of the report book.</li>
+              <li>Download your PDF from Canva and print <strong>2 copies</strong>.</li>
               <li>Submit <strong>1 copy</strong> to the college.</li>
               <li>Keep <strong>1 copy</strong> for personal use.</li>
-              <li>Follow the printing format from the video above.</li>
+              <li>Follow the printing format from the instructions.</li>
             </ul>
           </button>
 
-          {/* Option 2 — College Assist */}
           <button
             onClick={() => setPrintingChoice('college')}
-            style={{
-              flex: '1 1 260px', padding: '20px', borderRadius: '12px',
-              border: `2px solid ${printingChoice === 'college' ? '#014a01' : '#e2e8f0'}`,
-              background: printingChoice === 'college' ? '#f0fdf4' : '#f8fafc',
-              cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s',
-            }}
+            style={{ flex: '1 1 260px', padding: '20px', borderRadius: '12px', border: `2px solid ${printingChoice === 'college' ? '#014a01' : '#e2e8f0'}`, background: printingChoice === 'college' ? '#f0fdf4' : '#f8fafc', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s' }}
           >
             <div style={{ fontSize: '2rem', marginBottom: 8 }}>🏫</div>
-            <h4 style={{ margin: '0 0 6px 0', color: '#1e293b', fontSize: '1rem', fontWeight: 700 }}>
-              I need college assistance for printing
-            </h4>
+            <h4 style={{ margin: '0 0 6px 0', color: '#1e293b', fontSize: '1rem', fontWeight: 700 }}>I need college assistance for printing</h4>
             <ul style={{ margin: 0, padding: '0 0 0 18px', color: '#475569', fontSize: '0.88rem', lineHeight: 1.7 }}>
               <li>College arranges printing of <strong>2 copies</strong>.</li>
               <li><strong>1 copy</strong> submitted to the college.</li>
-              <li><strong>1 copy</strong> for personal use.</li>
-              <li>Collect from <strong>SAC HALL</strong> when college reopens.</li>
+              <li>Collect <strong>1 copy</strong> from <strong>SAC HALL</strong> when college reopens.</li>
               <li style={{ color: '#014a01', fontWeight: 700 }}>Total Charge: ₹500 (₹250 × 2 books)</li>
             </ul>
           </button>
         </div>
       </div>
 
-      {/* Self Print Details */}
+      {/* SELF PRINT DETAILS */}
       {printingChoice === 'self' && (
-        <div style={{ background: '#f0fdf4', border: '1.5px solid #86efac', borderRadius: '12px', padding: '24px', marginBottom: 16 }}>
-          <h4 style={{ margin: '0 0 12px 0', color: '#15803d', fontSize: '1.05rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <FaCheckCircle /> Self-Print Selected
-          </h4>
-          <div style={{ background: '#fff', border: '1px solid #bbf7d0', borderRadius: '10px', padding: '16px 20px', color: '#14532d', fontSize: '0.95rem', lineHeight: 1.8 }}>
-            <p style={{ margin: 0 }}>
-              📧 <strong>Your Final Report Book PDF will be sent to your registered email address.</strong>
-              <br />
-              Please check your email, download the PDF, get both copies printed, and submit one copy to the college once the campus reopens.
-            </p>
-          </div>
-          <p style={{ margin: '14px 0 0 0', color: '#166534', fontSize: '0.88rem' }}>
-            ⚠️ Make sure to follow the exact printing format and instructions mentioned in the YouTube tutorial video above.
-          </p>
-        </div>
+        <SelfPrintSection />
       )}
 
-      {/* College Assist Details */}
+      {/* COLLEGE PRINT DETAILS */}
       {printingChoice === 'college' && (
         <CollegeAssistSection
           studentData={studentData}
@@ -429,20 +384,92 @@ function ApprovedSection({ studentData, adminRemarks, utr, setUtr, submitting, h
   );
 }
 
-/* ─────────────────────────────────────────────────────────────
-   COLLEGE ASSIST SECTION
-───────────────────────────────────────────────────────────── */
+/* ── SELF PRINT SECTION ── */
+function SelfPrintSection() {
+  const [acknowledged, setAcknowledged] = useState(false);
+  const [done, setDone] = useState(false);
+
+  if (done) {
+    return (
+      <div style={{ background: '#f0fdf4', border: '1.5px solid #86efac', borderRadius: '12px', padding: '30px 24px', textAlign: 'center' }}>
+        <FaCheckCircle style={{ fontSize: '3rem', color: '#16a34a', marginBottom: 12 }} />
+        <h3 style={{ margin: '0 0 8px 0', color: '#15803d', fontSize: '1.3rem' }}>You&apos;re all set! ✅</h3>
+        <p style={{ margin: 0, color: '#166534', fontSize: '1rem' }}>
+          Download your report PDF from <strong>Canva</strong>, get 2 copies printed, and submit 1 copy to the college when it reopens.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ background: '#f0fdf4', border: '1.5px solid #86efac', borderRadius: '12px', padding: '24px', marginBottom: 16 }}>
+      <h4 style={{ margin: '0 0 16px 0', color: '#15803d', fontSize: '1.05rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
+        <FaPrint /> Self-Print Instructions
+      </h4>
+
+      <div style={{ background: '#fff', border: '1px solid #bbf7d0', borderRadius: '10px', padding: '16px 20px', color: '#14532d', fontSize: '0.95rem', lineHeight: 1.8, marginBottom: 16 }}>
+        <ol style={{ margin: 0, paddingLeft: 20 }}>
+          <li><strong>Download</strong> your Final Report Book PDF directly from Canva (Download → PDF Print).</li>
+          <li>Get the PDF printed at any print shop — <strong>2 copies</strong>.</li>
+          <li>Use <strong>A4 size, single-sided or double-sided</strong> as per the format shown in the template.</li>
+          <li>Submit <strong>1 copy</strong> to the college office when the college reopens.</li>
+          <li>Keep <strong>1 copy</strong> for yourself.</li>
+        </ol>
+      </div>
+
+      <div style={{ background: '#fffbeb', border: '1.5px solid #fcd34d', borderRadius: '8px', padding: '12px 16px', color: '#92400e', fontSize: '0.9rem', marginBottom: 16 }}>
+        ⚠️ Make sure the printed copy matches the template format exactly.
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 16 }}>
+        <input
+          type="checkbox"
+          id="self-ack"
+          checked={acknowledged}
+          onChange={(e) => setAcknowledged(e.target.checked)}
+          style={{ marginTop: 3, width: 18, height: 18, cursor: 'pointer', accentColor: '#014a01', flexShrink: 0 }}
+        />
+        <label htmlFor="self-ack" style={{ fontSize: '0.9rem', color: '#166534', lineHeight: 1.6, cursor: 'pointer' }}>
+          I understand the printing instructions and will download my PDF from Canva and get it printed accordingly.
+        </label>
+      </div>
+
+      <button
+        disabled={!acknowledged}
+        onClick={() => setDone(true)}
+        style={{ width: '100%', padding: '14px', background: !acknowledged ? '#94a3b8' : '#014a01', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '1rem', fontWeight: 700, cursor: !acknowledged ? 'not-allowed' : 'pointer', transition: 'background 0.2s' }}
+      >
+        Confirm — I will print my report
+      </button>
+    </div>
+  );
+}
+
+/* ── COLLEGE ASSIST SECTION ── */
 function CollegeAssistSection({ studentData, utr, setUtr, submitting, handleSubmitUtr, acknowledged, setAcknowledged }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-      {/* Step 1: QR Code & Payment */}
+      {/* Step 1: Download from Canva */}
       <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', padding: '24px' }}>
         <h4 style={{ margin: '0 0 4px 0', color: '#1e293b', fontSize: '1.05rem', fontWeight: 700 }}>
-          Step 1 — Scan QR Code &amp; Pay ₹500
+          Step 1 — Download Your Report PDF from Canva
+        </h4>
+        <p style={{ margin: '0 0 12px 0', color: '#64748b', fontSize: '0.88rem' }}>
+          Open your report in Canva → click <strong>Share</strong> → <strong>Download</strong> → select <strong>PDF Print</strong>.
+        </p>
+        <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '8px', padding: '12px 16px', color: '#0369a1', fontSize: '0.9rem' }}>
+          📥 Download the PDF before sending the email — you will need to attach it.
+        </div>
+      </div>
+
+      {/* Step 2: Scan QR & Pay */}
+      <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', padding: '24px' }}>
+        <h4 style={{ margin: '0 0 4px 0', color: '#1e293b', fontSize: '1.05rem', fontWeight: 700 }}>
+          Step 2 — Scan QR Code &amp; Pay ₹500
         </h4>
         <p style={{ margin: '0 0 20px 0', color: '#64748b', fontSize: '0.88rem' }}>
-          Scan the QR code below and complete the payment of ₹500 (₹250 × 2 books).
+          Scan the QR code and complete the payment of ₹500 (₹250 × 2 books).
         </p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, alignItems: 'flex-start' }}>
           <div style={{ textAlign: 'center' }}>
@@ -450,31 +477,19 @@ function CollegeAssistSection({ studentData, utr, setUtr, submitting, handleSubm
               <img src="/QR.jpeg" alt="Payment QR Code" style={{ width: 200, height: 200, objectFit: 'contain', borderRadius: '8px', display: 'block' }} />
             </div>
             <div style={{ marginTop: 10, background: '#014a01', color: '#fff', borderRadius: '8px', padding: '8px 20px', fontWeight: 800, fontSize: '1.05rem', display: 'inline-block' }}>
-              Amount to Pay: ₹500
+              Amount: ₹500
             </div>
           </div>
           <div style={{ flex: '1 1 220px', color: '#475569', fontSize: '0.9rem', lineHeight: 1.8 }}>
             <p style={{ margin: '0 0 10px 0', fontWeight: 600, color: '#1e293b' }}>Payment Instructions:</p>
             <ul style={{ margin: 0, padding: '0 0 0 18px' }}>
               <li>Open any UPI app (PhonePe, GPay, Paytm, etc.)</li>
-              <li>Scan the QR code above.</li>
-              <li>Pay exactly <strong>₹500</strong>.</li>
+              <li>Scan the QR code and pay exactly <strong>₹500</strong>.</li>
               <li>Take a <strong>screenshot</strong> of the transaction confirmation.</li>
               <li>Note down the <strong>12-digit UTR / Transaction ID</strong>.</li>
-              <li>Note the <strong>transaction date</strong>.</li>
             </ul>
           </div>
         </div>
-      </div>
-
-      {/* Step 2: Check Email for PDF */}
-      <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '12px', padding: '20px' }}>
-        <h4 style={{ margin: '0 0 8px 0', color: '#1d4ed8', fontSize: '1.05rem', fontWeight: 700 }}>
-          📧 Step 2 — Check Your Email for the PDF
-        </h4>
-        <p style={{ margin: 0, color: '#1e3a8a', fontSize: '0.92rem', lineHeight: 1.7 }}>
-          Your <strong>Final Report Book PDF</strong> will be sent to your registered email address. Please check your email and download it — you will need to attach it when sending the confirmation email in the next step.
-        </p>
       </div>
 
       {/* Step 3: Send Email */}
@@ -483,7 +498,7 @@ function CollegeAssistSection({ studentData, utr, setUtr, submitting, handleSubm
           Step 3 — Send an Email to Handngo
         </h4>
         <p style={{ margin: '0 0 16px 0', color: '#64748b', fontSize: '0.88rem' }}>
-          After making the payment, send an email to the address below with all required details.
+          After payment, send an email with all the required details and your report PDF.
         </p>
         <div style={{ background: '#f0fdf4', border: '1.5px solid #86efac', borderRadius: '10px', padding: '14px 18px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           <span style={{ fontSize: '1.2rem' }}>📨</span>
@@ -495,7 +510,7 @@ function CollegeAssistSection({ studentData, utr, setUtr, submitting, handleSubm
           </div>
         </div>
         <p style={{ margin: '0 0 10px 0', fontWeight: 600, color: '#374151', fontSize: '0.92rem' }}>
-          Your email must include all of the following details:
+          Your email must include all of the following:
         </p>
         <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '14px 18px', marginBottom: 16 }}>
           <ol style={{ margin: 0, padding: '0 0 0 18px', color: '#374151', fontSize: '0.92rem', lineHeight: 2 }}>
@@ -506,10 +521,11 @@ function CollegeAssistSection({ studentData, utr, setUtr, submitting, handleSubm
             <li><strong>12-digit UTR ID</strong></li>
             <li><strong>Transaction Date</strong></li>
             <li><strong>Transaction Screenshot</strong> (as attachment)</li>
+            <li><strong>Final Report Book PDF</strong> (downloaded from Canva — attach to email)</li>
           </ol>
         </div>
         <div style={{ background: '#fff7ed', border: '1.5px solid #fed7aa', borderRadius: '8px', padding: '12px 16px', color: '#9a3412', fontSize: '0.9rem', fontWeight: 600 }}>
-          ⚠️ Do not forget to attach the <strong>PDF copy of your Final Report Book</strong> in the email.
+          ⚠️ Do not forget to <strong>download your PDF from Canva</strong> and attach it to the email.
         </div>
       </div>
 
@@ -519,7 +535,7 @@ function CollegeAssistSection({ studentData, utr, setUtr, submitting, handleSubm
           Step 4 — Submit Your UTR ID Here
         </h4>
         <p style={{ margin: '0 0 16px 0', color: '#64748b', fontSize: '0.88rem' }}>
-          Enter your 12-digit UTR / Transaction ID to complete the payment submission on this platform.
+          Enter your 12-digit UTR / Transaction ID to complete the submission on this platform.
         </p>
         <form onSubmit={handleSubmitUtr}>
           <div style={{ marginBottom: 16 }}>
@@ -536,22 +552,19 @@ function CollegeAssistSection({ studentData, utr, setUtr, submitting, handleSubm
               required
               style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '1.05rem', outline: 'none', letterSpacing: '3px', fontFamily: 'monospace', boxSizing: 'border-box' }}
             />
-            <p style={{ margin: '6px 0 0 0', fontSize: '0.82rem', color: '#94a3b8' }}>
-              {utr.length}/12 digits entered
-            </p>
+            <p style={{ margin: '6px 0 0 0', fontSize: '0.82rem', color: '#94a3b8' }}>{utr.length}/12 digits entered</p>
           </div>
 
-          {/* Acknowledgement Checkbox */}
           <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '10px', padding: '14px 16px', marginBottom: 16, display: 'flex', alignItems: 'flex-start', gap: 12 }}>
             <input
               type="checkbox"
-              id="ack-checkbox"
+              id="college-ack"
               checked={acknowledged}
               onChange={(e) => setAcknowledged(e.target.checked)}
               style={{ marginTop: 3, width: 18, height: 18, cursor: 'pointer', accentColor: '#014a01', flexShrink: 0 }}
             />
-            <label htmlFor="ack-checkbox" style={{ fontSize: '0.9rem', color: '#166534', lineHeight: 1.6, cursor: 'pointer' }}>
-              I have mailed all the required details along with the Final Report Book PDF to{' '}
+            <label htmlFor="college-ack" style={{ fontSize: '0.9rem', color: '#166534', lineHeight: 1.6, cursor: 'pointer' }}>
+              I have downloaded my Report Book PDF from Canva, and have sent all the required details along with the PDF and payment screenshot to{' '}
               <strong>Handngo.org@gmail.com</strong>.
             </label>
           </div>
@@ -559,13 +572,7 @@ function CollegeAssistSection({ studentData, utr, setUtr, submitting, handleSubm
           <button
             type="submit"
             disabled={submitting || utr.length !== 12 || !acknowledged}
-            style={{
-              width: '100%', padding: '14px',
-              background: (submitting || utr.length !== 12 || !acknowledged) ? '#94a3b8' : '#014a01',
-              color: '#fff', border: 'none', borderRadius: '8px', fontSize: '1rem', fontWeight: 700,
-              cursor: (submitting || utr.length !== 12 || !acknowledged) ? 'not-allowed' : 'pointer',
-              transition: 'background 0.2s',
-            }}
+            style={{ width: '100%', padding: '14px', background: (submitting || utr.length !== 12 || !acknowledged) ? '#94a3b8' : '#014a01', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '1rem', fontWeight: 700, cursor: (submitting || utr.length !== 12 || !acknowledged) ? 'not-allowed' : 'pointer', transition: 'background 0.2s' }}
           >
             {submitting ? 'Submitting...' : 'Submit Payment & Confirm'}
           </button>
@@ -576,12 +583,28 @@ function CollegeAssistSection({ studentData, utr, setUtr, submitting, handleSubm
           )}
         </form>
       </div>
+    </div>
+  );
+}
 
-      {/* Confirmation note */}
-      <div style={{ background: '#fdf4ff', border: '1px solid #e9d5ff', borderRadius: '12px', padding: '18px 20px', color: '#6b21a8', fontSize: '0.9rem', lineHeight: 1.7 }}>
-        <strong>📦 After successful submission:</strong>
-        <br />
-        Your book printing request is being processed successfully. You will receive an email confirmation once the printing is completed. You can collect your books from <strong>SAC HALL</strong> when the college reopens.
+/* ── PRINTING IN PROCESS ── */
+function PrintingInProcessSection({ reportBookMarks }) {
+  return (
+    <div style={{ marginBottom: 24 }}>
+      {reportBookMarks !== null && reportBookMarks !== undefined && (
+        <MarksBadge reportBookMarks={reportBookMarks} />
+      )}
+      <div style={{ background: '#fffbeb', border: '1px solid #fcd34d', padding: '30px 20px', borderRadius: '12px', textAlign: 'center' }}>
+        <FaPrint style={{ fontSize: '3rem', color: '#d97706', marginBottom: 16, animation: 'pulse 2s infinite' }} />
+        <h3 style={{ margin: '0 0 8px 0', color: '#b45309', fontSize: '1.3rem' }}>Printing is being processed!</h3>
+        <p style={{ margin: '0 0 16px 0', color: '#92400e', fontSize: '1rem' }}>
+          Payment verified. Your report book is currently being printed.
+        </p>
+        <div style={{ background: '#fff', border: '1px solid #fcd34d', borderRadius: '10px', padding: '16px 20px', color: '#78350f', fontSize: '0.95rem', lineHeight: 1.7, textAlign: 'left', maxWidth: 500, margin: '0 auto' }}>
+          📧 <strong>You will be notified via email</strong> once the printing is completed.<br />
+          📚 You can <strong>collect your books at SAC HALL</strong> when the college reopens.<br />
+          No further action is needed from your side at this point.
+        </div>
       </div>
     </div>
   );

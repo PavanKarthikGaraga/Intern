@@ -85,7 +85,7 @@ export default function StudentDashboard() {
   const allDaysEvaluated = [1, 2, 3, 4, 5, 6, 7].every(d => dm[`d${d}`] !== null && dm[`d${d}`] !== undefined);
   const totalMarks = dm.total || 0;
   const isSlot1 = Number(studentData?.slot) === 1;
-  const showReportBook = isSlot1 && allDaysEvaluated && totalMarks >= 60;
+  const showReportBook = allDaysEvaluated && totalMarks >= 60;
 
   // Whether this student's mentor is assigned
   const hasMentor = Boolean(studentData?.facultyMentorId || studentData?.mentor);
@@ -163,7 +163,7 @@ export default function StudentDashboard() {
           {activeSection === 'overview'         ? <Overview user={user} studentData={studentData} /> :
            activeSection === 'profile'          ? <Profile user={user} studentData={studentData} /> :
            activeSection === 'change-password'  ? <ChangePassword user={user} /> :
-           activeSection === 'evaluation-plan'   ? <EvaluationPlan /> :
+           activeSection === 'evaluation-plan'   ? <EvaluationPlan studentData={studentData} /> :
            activeSection === 'lead'             ? <Lead studentData={studentData} /> :
            activeSection === 'survey-questions' ? <SurveyQuestions studentData={studentData} /> :
            activeSection === 'report-book' && showReportBook ? <ReportBook studentData={studentData} /> :

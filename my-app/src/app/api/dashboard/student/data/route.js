@@ -159,7 +159,7 @@ export async function POST(request) {
             let reportBookRow = null;
             try {
                 const [rbRows] = await db.execute(
-                    'SELECT reportLink, status, adminRemarks, utrId FROM reportBooks WHERE username = ?',
+                    'SELECT reportLink, status, adminRemarks, utrId, reportBookMarks FROM reportBooks WHERE username = ?',
                     [username]
                 );
                 reportBookRow = rbRows[0] || null;
@@ -376,7 +376,8 @@ export async function POST(request) {
                     reportLink: reportBookRow.reportLink,
                     status: reportBookRow.status,
                     adminRemarks: reportBookRow.adminRemarks,
-                    utrId: reportBookRow.utrId
+                    utrId: reportBookRow.utrId,
+                    reportBookMarks: reportBookRow.reportBookMarks
                 } : null,
             };
 

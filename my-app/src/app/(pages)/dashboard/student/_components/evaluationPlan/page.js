@@ -1,8 +1,8 @@
 'use client';
 
-import { FaSearch, FaClipboardList, FaChartBar, FaHandshake, FaFileAlt, FaVideo, FaClipboardCheck, FaTrophy, FaGraduationCap, FaLightbulb } from 'react-icons/fa';
+import { FaSearch, FaClipboardList, FaChartBar, FaHandshake, FaFileAlt, FaVideo, FaClipboardCheck, FaTrophy, FaGraduationCap, FaLightbulb, FaBook, FaLinkedin } from 'react-icons/fa';
 
-const CRITERIA = [
+const CRITERIA_SLOT1 = [
   { name: 'Problem Understanding',  marks: 10, icon: <FaSearch />, desc: 'Clarity of problem statement analysis and inference written on Day 1' },
   { name: 'Survey Execution',       marks: 15, icon: <FaClipboardList />, desc: 'Quality and completeness of stakeholder surveys conducted on Days 2–4' },
   { name: 'Data Analysis',          marks: 15, icon: <FaChartBar />, desc: 'Accuracy of Yes/No data tabulation, percentages, root causes on Day 5' },
@@ -11,16 +11,29 @@ const CRITERIA = [
   { name: 'Final Presentation',     marks: 20, icon: <FaVideo />, desc: 'YouTube presentation video quality and communication on Day 7' },
 ];
 
-const GRADES = [
-  { range: '≥ 90', grade: 'A', level: 'Excellence',    color: '#014a01', bg: '#e6f4ea', border: '#b7dfb7' },
-  { range: '≥ 75', grade: 'B', level: 'Appreciation',  color: '#1565c0', bg: '#e3f2fd', border: '#90caf9' },
-  { range: '≥ 60', grade: 'C', level: 'Participation', color: '#e65100', bg: '#fff3e0', border: '#ffcc80' },
-  { range: '< 60', grade: 'F', level: 'Not Eligible',  color: '#b71c1c', bg: '#fdecea', border: '#ef9a9a' },
+const CRITERIA_SLOT2PLUS = [
+  { name: 'Problem Understanding',               marks: 10, icon: <FaSearch />,       desc: 'Clarity of problem statement analysis and inference written on Day 1' },
+  { name: 'Survey Execution',                    marks: 15, icon: <FaClipboardList />, desc: 'Quality and completeness of stakeholder surveys conducted on Days 2–4' },
+  { name: 'Data Analysis',                       marks: 15, icon: <FaChartBar />,      desc: 'Accuracy of Yes/No data tabulation, percentages, root causes on Day 5' },
+  { name: 'Intervention Activity',               marks: 20, icon: <FaHandshake />,    desc: 'Documentation of activities, photos and drive link submitted on Day 6' },
+  { name: 'Case Study Report & LinkedIn Article',marks: 10, icon: <FaLinkedin />,     desc: 'Quality of the written case study report and LinkedIn article submitted on Day 7' },
+  { name: 'Final Presentation',                  marks: 10, icon: <FaVideo />,        desc: 'YouTube presentation video quality and communication on Day 7' },
+  { name: 'Final Report Book',                   marks: 20, icon: <FaBook />,         desc: 'Completeness and quality of the Final Report Book submitted on Day 7' },
 ];
 
-const TOTAL = CRITERIA.reduce((s, c) => s + c.marks, 0);
+const GRADES = [
+  { range: '≥ 90', grade: 'A', level: 'Excellence',    color: '#014a01', bg: '#e6f4ea' },
+  { range: '≥ 75', grade: 'B', level: 'Appreciation',  color: '#1565c0', bg: '#e3f2fd' },
+  { range: '≥ 60', grade: 'C', level: 'Participation', color: '#e65100', bg: '#fff3e0' },
+  { range: '< 60', grade: 'F', level: 'Not Eligible',  color: '#b71c1c', bg: '#fdecea' },
+];
 
-export default function EvaluationPlan() {
+export default function EvaluationPlan({ studentData }) {
+  const slot = Number(studentData?.slot);
+  const isSlot1 = slot === 1;
+  const CRITERIA = isSlot1 ? CRITERIA_SLOT1 : CRITERIA_SLOT2PLUS;
+  const TOTAL = CRITERIA.reduce((s, c) => s + c.marks, 0);
+
   return (
     <div style={{ padding: '28px 32px', maxWidth: 860, margin: '0 auto', fontFamily: 'Inter, sans-serif' }}>
 
@@ -30,7 +43,7 @@ export default function EvaluationPlan() {
           <FaClipboardCheck style={{ color: '#014a01' }} /> Evaluation Plan
         </h1>
         <p style={{ color: '#666', fontSize: '0.88rem', margin: 0 }}>
-          Your internship will be evaluated across 6 criteria totalling <strong>100 marks</strong>.
+          Your internship will be evaluated across <strong>{CRITERIA.length} criteria</strong> totalling <strong>{TOTAL} marks</strong>.
           A minimum of <strong>60 marks</strong> is required to receive a certificate.
         </p>
       </div>
@@ -68,7 +81,7 @@ export default function EvaluationPlan() {
                 >
                   <td style={TD}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div style={{ 
+                      <div style={{
                         fontSize: '1.1rem', color: '#014a01', background: '#e8f5e9',
                         width: '32px', height: '32px', borderRadius: '8px',
                         display: 'flex', alignItems: 'center', justifyContent: 'center'
@@ -161,15 +174,15 @@ export default function EvaluationPlan() {
         padding: '16px 20px', display: 'flex', gap: 14, alignItems: 'flex-start',
         boxShadow: '0 2px 8px rgba(0,0,0,0.03)'
       }}>
-        <div style={{ 
-          fontSize: '1.2rem', flexShrink: 0, background: '#ffe082', 
+        <div style={{
+          fontSize: '1.2rem', flexShrink: 0, background: '#ffe082',
           width: '32px', height: '32px', borderRadius: '50%',
           display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f57f17'
         }}>
           <FaLightbulb />
         </div>
         <div style={{ fontSize: '0.9rem', color: '#5d4037', lineHeight: 1.6 }}>
-          <strong>Note:</strong> Your final marks are calculated based on the <strong>6 evaluation criteria</strong> listed above, totaling <strong>100 marks</strong>.
+          <strong>Note:</strong> Your final marks are calculated based on the <strong>{CRITERIA.length} evaluation criteria</strong> listed above, totaling <strong>{TOTAL} marks</strong>.
           Certificates are generated by the admin only for students who score <strong>≥ 60 marks</strong> overall and are marked as Passed.
           Keep track of your daily task submissions to ensure maximum marks in each criterion.
         </div>

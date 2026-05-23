@@ -25,10 +25,10 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: 'Unauthorized user action' }, { status: 403 });
     }
 
-    // Verify student is Slot 1
+    // Verify student exists
     const [regRows] = await db.execute('SELECT slot FROM registrations WHERE username = ?', [username]);
-    if (regRows.length === 0 || Number(regRows[0].slot) !== 1) {
-      return NextResponse.json({ success: false, error: 'Only Slot 1 students can submit this report' }, { status: 403 });
+    if (regRows.length === 0) {
+      return NextResponse.json({ success: false, error: 'Student not found' }, { status: 403 });
     }
 
     // Create reportBooks table if it doesn't exist
