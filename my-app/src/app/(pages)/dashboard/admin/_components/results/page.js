@@ -178,6 +178,7 @@ export default function Results() {
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
             <thead>
               <tr style={{ background: '#f8fafc', color: '#475569', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                <th style={{ padding: '16px', borderBottom: '2px solid #e2e8f0', width: '60px', textAlign: 'center' }}>S.No</th>
                 <th style={{ padding: '16px', borderBottom: '2px solid #e2e8f0' }}>Student</th>
                 <th style={{ padding: '16px', borderBottom: '2px solid #e2e8f0', textAlign: 'center' }}>Mode</th>
                 <th style={{ padding: '16px', borderBottom: '2px solid #e2e8f0', textAlign: 'center' }}>Marks ( / 100)</th>
@@ -190,6 +191,9 @@ export default function Results() {
                 const info = getGradeInfo(r.totalMarks);
                 return (
                   <tr key={r.username} style={{ borderBottom: '1px solid #e2e8f0', background: idx % 2 === 0 ? '#fff' : '#f8fafc', transition: 'background 0.2s' }}>
+                    <td style={{ padding: '16px', textAlign: 'center', color: '#64748b', fontWeight: 600, fontSize: '0.95rem' }}>
+                      {idx + 1}
+                    </td>
                     <td style={{ padding: '16px' }}>
                       <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '1.05rem' }}>{r.username}</div>
                       <div style={{ fontSize: '0.9rem', color: '#64748b', marginTop: '4px' }}>{r.name}</div>

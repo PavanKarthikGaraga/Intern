@@ -116,7 +116,7 @@ export default function ReportBook({ studentData }) {
             {adminRemarks || 'No remarks provided.'}
           </div>
           <p style={{ margin: '12px 0 0 0', color: '#b91c1c', fontSize: '0.9rem' }}>
-            Please make the necessary modifications in your {isSlot1 ? 'Adobe Express' : 'Canva'} project and resubmit your link below.
+            Please make the necessary modifications in your Canva project and resubmit your link below.
           </p>
         </div>
       )}
@@ -166,7 +166,7 @@ export default function ReportBook({ studentData }) {
 
       {/* PRINTING_IN_PROCESS */}
       {status === 'PRINTING_IN_PROCESS' && (
-        <PrintingInProcessSection reportBookMarks={reportBookMarks} />
+        <PrintingInProcessSection reportBookMarks={reportBookMarks} isSlot1={isSlot1} />
       )}
 
       {/* PRINTING_COMPLETED */}
@@ -192,51 +192,25 @@ export default function ReportBook({ studentData }) {
               <p>Dear Students,</p>
               <p>A sample report document is provided to you as a reference. Your report <strong>must follow the structure and components</strong> in the sample file.</p>
 
-              {isSlot1 ? (
-                <>
-                  <ol style={{ paddingLeft: 20, marginBottom: 20 }}>
-                    <li style={{ marginBottom: 10 }}><strong>Create an Account:</strong> First, create an account in <a href="https://new.express.adobe.com/" target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', fontWeight: 600 }}>Adobe Express</a> using your personal email.</li>
-                    <li style={{ marginBottom: 10 }}><strong>Use the Template:</strong> Click the template link below to copy the sample report to your account.</li>
-                    <li style={{ marginBottom: 10 }}><strong>Edit the Report:</strong> Wherever the sample contains placeholders or dummy data, replace it with your actual information and work.</li>
-                    <li style={{ marginBottom: 10 }}><strong>Verify:</strong> Verify your document multiple times. Make sure all formatting is professional and correct.</li>
-                    <li style={{ marginBottom: 10 }}><strong>Generate Link:</strong> Click on <strong>Share</strong> in Adobe Express. Set <em>Who has access</em> to <strong>&quot;Anyone with the link&quot;</strong>.</li>
-                    <li><strong>Submit:</strong> Copy the link and submit it below. <strong>Once submitted, the report is final and cannot be edited.</strong></li>
-                  </ol>
-                  <div style={{ background: '#f8fafc', border: '1px dashed #cbd5e1', padding: '16px', borderRadius: '8px', textAlign: 'center' }}>
-                    <a
-                      href="https://new.express.adobe.com/id/urn:aaid:sc:AP:fb696ac2-eae2-5955-8e9f-45dbbd55e7df?promoid=GHMVY4BS&mv=other&preload=sharesheet"
-                      target="_blank" rel="noopener noreferrer"
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#014a01', color: '#fff', padding: '12px 24px', borderRadius: '8px', textDecoration: 'none', fontWeight: 700, fontSize: '1rem' }}
-                      onMouseOver={(e) => e.currentTarget.style.background = '#013a01'}
-                      onMouseOut={(e) => e.currentTarget.style.background = '#014a01'}
-                    >
-                      Open Report Template in Adobe Express <FaExternalLinkAlt />
-                    </a>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <ol style={{ paddingLeft: 20, marginBottom: 20 }}>
-                    <li style={{ marginBottom: 10 }}><strong>Create an Account:</strong> First, create an account in <a href="https://www.canva.com/" target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', fontWeight: 600 }}>Canva</a> using your personal email.</li>
-                    <li style={{ marginBottom: 10 }}><strong>Use the Template:</strong> Click the template link below to copy the sample report to your Canva account.</li>
-                    <li style={{ marginBottom: 10 }}><strong>Edit the Report:</strong> Wherever the sample contains placeholders or dummy data, replace it with your actual information and work.</li>
-                    <li style={{ marginBottom: 10 }}><strong>Verify:</strong> Verify your document multiple times. Make sure all formatting is professional and correct.</li>
-                    <li style={{ marginBottom: 10 }}><strong>Generate Link:</strong> Click on <strong>Share</strong> in Canva. Set <em>Who has access</em> to <strong>&quot;Anyone with the link&quot;</strong>.</li>
-                    <li><strong>Submit:</strong> Copy the link and submit it below. <strong>Once submitted, the report is final and cannot be edited.</strong></li>
-                  </ol>
-                  <div style={{ background: '#f8fafc', border: '1px dashed #cbd5e1', padding: '16px', borderRadius: '8px', textAlign: 'center' }}>
-                    <a
-                      href="https://canva.link/8b6x1531j2t4jqp"
-                      target="_blank" rel="noopener noreferrer"
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#014a01', color: '#fff', padding: '12px 24px', borderRadius: '8px', textDecoration: 'none', fontWeight: 700, fontSize: '1rem' }}
-                      onMouseOver={(e) => e.currentTarget.style.background = '#013a01'}
-                      onMouseOut={(e) => e.currentTarget.style.background = '#014a01'}
-                    >
-                      Open Report Template in Canva <FaExternalLinkAlt />
-                    </a>
-                  </div>
-                </>
-              )}
+              <ol style={{ paddingLeft: 20, marginBottom: 20 }}>
+                <li style={{ marginBottom: 10 }}><strong>Create an Account:</strong> First, create an account in <a href="https://www.canva.com/" target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', fontWeight: 600 }}>Canva</a> using your personal email.</li>
+                <li style={{ marginBottom: 10 }}><strong>Use the Template:</strong> Click the template link below to copy the sample report to your Canva account.</li>
+                <li style={{ marginBottom: 10 }}><strong>Edit the Report:</strong> Wherever the sample contains placeholders or dummy data, replace it with your actual information and work.</li>
+                <li style={{ marginBottom: 10 }}><strong>Verify:</strong> Verify your document multiple times. Make sure all formatting is professional and correct.</li>
+                <li style={{ marginBottom: 10 }}><strong>Generate Link:</strong> Click on <strong>Share</strong> in Canva. Set <em>Who has access</em> to <strong>&quot;Anyone with the link&quot;</strong>.</li>
+                <li><strong>Submit:</strong> Copy the link and submit it below. <strong>Once submitted, the report is final and cannot be edited.</strong></li>
+              </ol>
+              <div style={{ background: '#f8fafc', border: '1px dashed #cbd5e1', padding: '16px', borderRadius: '8px', textAlign: 'center' }}>
+                <a
+                  href="https://canva.link/8b6x1531j2t4jqp"
+                  target="_blank" rel="noopener noreferrer"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#014a01', color: '#fff', padding: '12px 24px', borderRadius: '8px', textDecoration: 'none', fontWeight: 700, fontSize: '1rem' }}
+                  onMouseOver={(e) => e.currentTarget.style.background = '#013a01'}
+                  onMouseOut={(e) => e.currentTarget.style.background = '#014a01'}
+                >
+                  Open Report Template in Canva <FaExternalLinkAlt />
+                </a>
+              </div>
             </div>
           </div>
 
@@ -247,13 +221,13 @@ export default function ReportBook({ studentData }) {
             <form onSubmit={handleSubmitLink}>
               <div style={{ marginBottom: 20 }}>
                 <label style={{ display: 'block', fontSize: '0.95rem', fontWeight: 600, color: '#334155', marginBottom: 8 }}>
-                  {isSlot1 ? 'Adobe Express Share Link' : 'Canva Share Link'} <span style={{ color: '#ef4444' }}>*</span>
+                  Canva Share Link <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <input
                   type="url"
                   value={link}
                   onChange={(e) => setLink(e.target.value)}
-                  placeholder={isSlot1 ? 'https://new.express.adobe.com/...' : 'https://www.canva.com/design/...'}
+                  placeholder="https://www.canva.com/design/..."
                   required
                   style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '1rem', outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box' }}
                   onFocus={(e) => e.target.style.borderColor = '#014a01'}
@@ -588,10 +562,10 @@ function CollegeAssistSection({ studentData, utr, setUtr, submitting, handleSubm
 }
 
 /* ── PRINTING IN PROCESS ── */
-function PrintingInProcessSection({ reportBookMarks }) {
+function PrintingInProcessSection({ reportBookMarks, isSlot1 }) {
   return (
     <div style={{ marginBottom: 24 }}>
-      {reportBookMarks !== null && reportBookMarks !== undefined && (
+      {!isSlot1 && reportBookMarks !== null && reportBookMarks !== undefined && (
         <MarksBadge reportBookMarks={reportBookMarks} />
       )}
       <div style={{ background: '#fffbeb', border: '1px solid #fcd34d', padding: '30px 20px', borderRadius: '12px', textAlign: 'center' }}>

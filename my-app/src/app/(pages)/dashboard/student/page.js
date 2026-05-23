@@ -85,7 +85,10 @@ export default function StudentDashboard() {
   const allDaysEvaluated = [1, 2, 3, 4, 5, 6, 7].every(d => dm[`d${d}`] !== null && dm[`d${d}`] !== undefined);
   const totalMarks = dm.total || 0;
   const isSlot1 = Number(studentData?.slot) === 1;
-  const showReportBook = allDaysEvaluated && totalMarks >= 60;
+  const day7Submitted = Boolean(studentData?.uploads?.details?.day7);
+  const showReportBook = isSlot1 
+    ? (allDaysEvaluated && totalMarks >= 60)
+    : day7Submitted;
 
   // Whether this student's mentor is assigned
   const hasMentor = Boolean(studentData?.facultyMentorId || studentData?.mentor);

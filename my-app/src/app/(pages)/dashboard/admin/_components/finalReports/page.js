@@ -185,6 +185,7 @@ export default function FinalReports() {
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
             <thead>
               <tr style={{ background: '#f1f5f9', color: '#475569', fontSize: '0.9rem', textTransform: 'uppercase' }}>
+                <th style={{ ...TH, width: '60px', textAlign: 'center' }}>S.No</th>
                 <th style={TH}>Student</th>
                 <th style={TH}>Daily Marks</th>
                 {!isSlot1 && <th style={TH}>Report Book Marks<br /><span style={{ fontSize: '0.7rem', textTransform: 'none', fontWeight: 500 }}>(out of 20)</span></th>}
@@ -201,6 +202,9 @@ export default function FinalReports() {
 
                 return (
                   <tr key={r.username} style={{ borderBottom: '1px solid #e2e8f0', background: idx % 2 === 0 ? '#fff' : '#fafaf9', verticalAlign: 'top' }}>
+                    <td style={{ ...TD, textAlign: 'center', color: '#64748b', fontWeight: 600, fontSize: '0.95rem' }}>
+                      {idx + 1}
+                    </td>
                     <td style={TD}>
                       <div style={{ fontWeight: 600, color: '#0f172a' }}>{r.username}</div>
                       <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{r.name}</div>
