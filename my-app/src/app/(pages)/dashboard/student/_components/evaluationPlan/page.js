@@ -18,7 +18,7 @@ const CRITERIA_SLOT2PLUS = [
   { name: 'Intervention Activity',               marks: 20, icon: <FaHandshake />,    desc: 'Documentation of activities, photos and drive link submitted on Day 6' },
   { name: 'Case Study Report & LinkedIn Article',marks: 10, icon: <FaLinkedin />,     desc: 'Quality of the written case study report and LinkedIn article submitted on Day 7' },
   { name: 'Final Presentation',                  marks: 10, icon: <FaVideo />,        desc: 'YouTube presentation video quality and communication on Day 7' },
-  { name: 'Final Report Book',                   marks: 20, icon: <FaBook />,         desc: 'Completeness and quality of the Final Report Book submitted on Day 7' },
+  { name: 'Final Report Book',                   marks: 20, icon: <FaBook />,         desc: 'Completeness and quality of the Final Report Book submitted after Day 7' },
 ];
 
 const GRADES = [
