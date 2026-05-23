@@ -46,6 +46,11 @@ export async function POST(request) {
       )
     `);
 
+    try { await db.execute("ALTER TABLE reportBooks ADD COLUMN adminRemarks TEXT DEFAULT NULL"); } catch (e) {}
+    try { await db.execute("ALTER TABLE reportBooks ADD COLUMN utrId VARCHAR(12) DEFAULT NULL"); } catch (e) {}
+    try { await db.execute("ALTER TABLE reportBooks ADD COLUMN reportBookMarks DECIMAL(4,2) DEFAULT NULL"); } catch (e) {}
+    try { await db.execute("ALTER TABLE reportBooks MODIFY COLUMN status ENUM('PENDING_REVIEW', 'REJECTED', 'APPROVED', 'PAYMENT_SUBMITTED', 'PRINTING_IN_PROCESS', 'PRINTING_COMPLETED') DEFAULT 'PENDING_REVIEW'"); } catch (e) {}
+
     // Check existing record
     const [existing] = await db.execute('SELECT * FROM reportBooks WHERE username = ?', [username]);
     const current = existing[0];

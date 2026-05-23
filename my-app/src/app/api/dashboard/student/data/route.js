@@ -159,7 +159,7 @@ export async function POST(request) {
             let reportBookRow = null;
             try {
                 const [rbRows] = await db.execute(
-                    'SELECT reportLink, status, adminRemarks, utrId, reportBookMarks FROM reportBooks WHERE username = ?',
+                    'SELECT * FROM reportBooks WHERE username = ?',
                     [username]
                 );
                 reportBookRow = rbRows[0] || null;
