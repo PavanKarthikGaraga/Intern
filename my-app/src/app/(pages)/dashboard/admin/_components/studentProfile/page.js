@@ -108,7 +108,7 @@ export default function StudentProfile({ isOpen, onClose, username }) {
 
                     {(studentData?.linkedinUrl || studentData?.youtubeUrl) && (
                         <div className="profile-section">
-                            <h3>Social Profiles (Day 1 Submission)</h3>
+                            <h3>Social Profiles</h3>
                             <div className="info-grid">
                                 {studentData?.linkedinUrl && (
                                     <div className="info-item">
@@ -192,9 +192,19 @@ export default function StudentProfile({ isOpen, onClose, username }) {
                         <h3>Daily Submissions</h3>
                         <button className="view-all-btn" onClick={() => setShowVerifyModal(true)} style={{marginBottom: '1rem'}}>View All</button>
                         <div className="submissions-grid">
-                            {[1, 2, 3, 4, 5, 6, 7].map((day) => (
+                            {[1, 2, 3, 4, 5, 6, 7].map((day) => {
+                                const DAY_TITLES = {
+                                    1: "Problem Statement Understanding",
+                                    2: "Survey (Stakeholder 1)",
+                                    3: "Survey (Stakeholder 2)",
+                                    4: "Survey (Stakeholder 3)",
+                                    5: "Data Analysis",
+                                    6: "Intervention Activity",
+                                    7: "Case Study & Presentation"
+                                };
+                                return (
                                 <div key={day} className="submission-item">
-                                    <h4>Day {day}</h4>
+                                    <h4>Day {day} - {DAY_TITLES[day]}</h4>
                                     <div className="submission-details">
                                         <div className="submission-status">
                                             <label>Status:</label>

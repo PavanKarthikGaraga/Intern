@@ -52,7 +52,11 @@ export async function GET(req) {
     const mode = searchParams.get('mode');
 
     // Build query conditions
-    const conditions = ['f.completed = true'];
+    const conditions = [
+      `(COALESCE(dm.day1, 0) + COALESCE(dm.day2, 0) + COALESCE(dm.day3, 0) + 
+        COALESCE(dm.day4, 0) + COALESCE(dm.day5, 0) + COALESCE(dm.day6, 0) + 
+        COALESCE(dm.day7, 0)) >= 60`
+    ];
     const params = [];
 
     if (domain) {
@@ -75,7 +79,7 @@ export async function GET(req) {
     // Get total count
     const [totalCount] = await pool.query(
       `SELECT COUNT(*) as total FROM registrations r 
-       JOIN final f ON r.username = f.username 
+       JOIN dailyMarks dm ON r.username = dm.username 
        ${whereClause}`,
       params
     );
@@ -95,15 +99,16 @@ export async function GET(req) {
         r.slot,
         r.email,
         r.phoneNumber,
-        f.completed,
+        true as completed,
         sl.name as leadName,
         fm.name as facultyName,
-        f.finalReport,
+        rb.reportLink as finalReport,
         r.updatedAt
       FROM registrations r
-      JOIN final f ON r.username = f.username
+      JOIN dailyMarks dm ON r.username = dm.username
       LEFT JOIN studentLeads sl ON r.studentLeadId = sl.username
       LEFT JOIN facultyMentors fm ON r.facultyMentorId = fm.username
+      LEFT JOIN reportBooks rb ON r.username = rb.username
       ${whereClause}
       ORDER BY r.updatedAt DESC
       LIMIT ? OFFSET ?

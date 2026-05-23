@@ -123,9 +123,18 @@ export default function VerifyModalAdmin({ student, onClose }) {
                 const hasUpload = report;
                 const isVerified = verificationStatus[`day${day}`];
                 const currentAttendance = attendanceStatus[`day${day}`];
+                const DAY_TITLES = {
+                  1: "Problem Statement Understanding",
+                  2: "Survey (Stakeholder 1)",
+                  3: "Survey (Stakeholder 2)",
+                  4: "Survey (Stakeholder 3)",
+                  5: "Data Analysis",
+                  6: "Intervention Activity",
+                  7: "Case Study & Presentation"
+                };
                 return (
                   <tr key={day}>
-                    <td>Day {day}</td>
+                    <td>Day {day} - {DAY_TITLES[day]}</td>
                     <td>{hasUpload ? (<a href={hasUpload} target="_blank" rel="noopener noreferrer" className="report-link">View</a>) : '-'}</td>
                     <td>{isVerified ? 'Verified' : 'Pending'}</td>
                     <td>{marks[`day${day}`] || 0}</td>
