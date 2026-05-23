@@ -227,7 +227,8 @@ export default function StudentProfile({ isOpen, onClose, username }) {
                                         )}
                                     </div>
                                 </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
 
