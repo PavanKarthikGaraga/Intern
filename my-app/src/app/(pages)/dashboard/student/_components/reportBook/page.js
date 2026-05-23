@@ -13,8 +13,8 @@ export default function ReportBook({ studentData }) {
   const status = reportBook?.status;
   const adminRemarks = reportBook?.adminRemarks;
 
-  // Deadline: Saturday, 23rd May 2026, 6:00 PM IST
-  const deadline = new Date('2026-05-23T18:00:00+05:30').getTime();
+  // Deadline: Sunday, 24th May 2026, 6:00 PM IST
+  const deadline = new Date('2026-05-24T18:00:00+05:30').getTime();
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -124,7 +124,7 @@ export default function ReportBook({ studentData }) {
           <div>
             <h3 style={{ margin: 0, fontSize: '1rem', color: timeLeft === 'DEADLINE PASSED' ? '#c62828' : '#e65100', fontWeight: 700 }}>Submission Deadline</h3>
             <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: '#333' }}>
-              {timeLeft} <span style={{ fontSize: '0.85rem', fontWeight: 500, color: '#666' }}>(Saturday, 23rd May, 6:00 PM IST)</span>
+              {timeLeft} <span style={{ fontSize: '0.85rem', fontWeight: 500, color: '#666' }}>(Sunday, 24th May, 6:00 PM IST)</span>
             </p>
           </div>
         </div>
