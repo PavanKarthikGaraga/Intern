@@ -22,6 +22,11 @@ export async function GET(request) {
       return NextResponse.json({ success: false, error: 'Slot is required' }, { status: 400 });
     }
 
+    // Ensure reportBookMarks column exists before querying
+    try {
+      await db.execute(`ALTER TABLE reportBooks ADD COLUMN reportBookMarks DECIMAL(4,2) DEFAULT NULL`);
+    } catch (e) { /* ignore, column may already exist */ }
+
     const [rows] = await db.execute(
       `SELECT r.username, r.name, r.slot, rb.reportLink, rb.status, rb.adminRemarks, rb.utrId, rb.reportBookMarks, rb.id as rbId,
               (COALESCE(dm.day1,0) + COALESCE(dm.day2,0) + COALESCE(dm.day3,0) + COALESCE(dm.day4,0) + COALESCE(dm.day5,0) + COALESCE(dm.day6,0) + COALESCE(dm.day7,0)) AS totalMarks
@@ -60,7 +65,7 @@ export async function POST(request) {
 
     // Ensure reportBookMarks column exists
     try {
-      await db.execute(`ALTER TABLE reportBooks ADD COLUMN IF NOT EXISTS reportBookMarks DECIMAL(4,2) DEFAULT NULL`);
+      await db.execute(`ALTER TABLE reportBooks ADD COLUMN reportBookMarks DECIMAL(4,2) DEFAULT NULL`);
     } catch (e) { /* column may already exist */ }
 
     // If reportBookMarks is provided, save marks and auto-approve
