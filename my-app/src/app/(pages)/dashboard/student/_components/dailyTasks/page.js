@@ -736,6 +736,17 @@ export default function DailyTasks({ studentData, onSectionChange }) {
             </button>
           );
         })}
+        {Number(slot) >= 2 && saved[7]?.data?.isFinal && (
+          <button
+            className={`dt-pill unlocked`}
+            style={{ background: '#f0fdf4', borderColor: '#16a34a', color: '#166534', fontWeight: 700 }}
+            onClick={() => onSectionChange && onSectionChange('report-book')}
+            title="Go to Report Book"
+          >
+            <span className="dt-pill-icon">📖</span>
+            Report Book
+          </button>
+        )}
       </div>
 
       {/* Countdown timer moved to header */}

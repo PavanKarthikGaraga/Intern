@@ -15,8 +15,12 @@ export default function ReportBook({ studentData }) {
   const adminRemarks = reportBook?.adminRemarks;
   const reportBookMarks = reportBook?.reportBookMarks;
 
-  // Deadline: Tuesday, 26th May 2026, 10:00 AM IST
-  const deadline = new Date('2026-05-26T10:00:00+05:30').getTime();
+  // Deadlines: 
+  // Slot 1: Tuesday, 26th May 2026, 10:00 AM IST
+  // Slot 2+: Thursday, 28th May 2026, 10:00 AM IST
+  const deadline = isSlot1 
+    ? new Date('2026-05-26T10:00:00+05:30').getTime()
+    : new Date('2026-05-28T10:00:00+05:30').getTime();
 
   useEffect(() => {
     const timer = setInterval(() => {

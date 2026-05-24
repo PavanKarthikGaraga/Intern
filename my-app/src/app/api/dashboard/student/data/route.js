@@ -165,6 +165,21 @@ export async function POST(request) {
                 reportBookRow = rbRows[0] || null;
             } catch (e) { console.warn('reportBooks table missing or error:', e.message); }
 
+            // Check if day 7 task is finally submitted in dailyTasks
+            let hasFinalDay7Task = false;
+            try {
+                const [dtRows] = await db.execute(
+                    'SELECT data FROM dailyTasks WHERE username = ? AND day = 7',
+                    [username]
+                );
+                if (dtRows.length > 0) {
+                    const parsedData = typeof dtRows[0].data === 'string' ? JSON.parse(dtRows[0].data) : dtRows[0].data;
+                    if (parsedData?.isFinal === true) {
+                        hasFinalDay7Task = true;
+                    }
+                }
+            } catch (e) { console.warn('dailyTasks table missing or error:', e.message); }
+
             // Check if student is registered in sstudents (safe fallback if table missing)
             let sstudentRows = [[]];
             try {
@@ -327,6 +342,7 @@ export async function POST(request) {
                     completed: null
                 },
                 reportOpen,
+                hasFinalDay7Task,
                 problemStatementData,
                 sstudentData: sstudentData ? {
                     slot: sstudentData.slot,
