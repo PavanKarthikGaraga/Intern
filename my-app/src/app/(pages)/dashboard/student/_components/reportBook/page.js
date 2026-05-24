@@ -45,10 +45,10 @@ export default function ReportBook({ studentData }) {
     if (!link || !link.trim()) { toast.error('Please enter a valid link'); return; }
     if (!link.startsWith('http')) { toast.error('Link must start with http:// or https://'); return; }
     
-    // Canva link validation
+    // Canva / Google Drive link validation
     const lowerLink = link.toLowerCase();
-    if (!lowerLink.includes('canva.com') && !lowerLink.includes('canva.link')) {
-      toast.error('Invalid link! You must submit a Canva URL (e.g., canva.com/...). Other links are not accepted.', { duration: 5000 });
+    if (!lowerLink.includes('canva.com') && !lowerLink.includes('canva.link') && !lowerLink.includes('drive.google.com')) {
+      toast.error('Invalid link! You must submit a Canva URL or Google Drive URL. Other links are not accepted.', { duration: 5000 });
       return;
     }
 
@@ -128,7 +128,7 @@ export default function ReportBook({ studentData }) {
             {adminRemarks || 'No remarks provided.'}
           </div>
           <p style={{ margin: '12px 0 0 0', color: '#b91c1c', fontSize: '0.9rem' }}>
-            Please make the necessary modifications in your Canva project and resubmit your link below.
+            Please make the necessary modifications in your report project and resubmit your link below.
           </p>
         </div>
       )}
@@ -233,13 +233,13 @@ export default function ReportBook({ studentData }) {
             <form onSubmit={handleSubmitLink}>
               <div style={{ marginBottom: 20 }}>
                 <label style={{ display: 'block', fontSize: '0.95rem', fontWeight: 600, color: '#334155', marginBottom: 8 }}>
-                  Canva Share Link <span style={{ color: '#ef4444' }}>*</span>
+                  Canva / Google Drive Link <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <input
                   type="url"
                   value={link}
                   onChange={(e) => setLink(e.target.value)}
-                  placeholder="https://www.canva.com/design/..."
+                  placeholder="https://www.canva.com/... or https://drive.google.com/..."
                   required
                   style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '1rem', outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box' }}
                   onFocus={(e) => e.target.style.borderColor = '#014a01'}
