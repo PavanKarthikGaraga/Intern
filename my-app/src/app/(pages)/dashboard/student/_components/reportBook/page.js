@@ -338,11 +338,11 @@ function ApprovedSection({ studentData, adminRemarks, reportBookMarks, isSlot1, 
             style={{ flex: '1 1 260px', padding: '20px', borderRadius: '12px', border: `2px solid ${printingChoice === 'college' ? '#014a01' : '#e2e8f0'}`, background: printingChoice === 'college' ? '#f0fdf4' : '#f8fafc', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s ease-in-out' }}
           >
             <div style={{ fontSize: '2rem', marginBottom: 8 }}>🏫</div>
-            <h4 style={{ margin: '0 0 6px 0', color: '#1e293b', fontSize: '1rem', fontWeight: 700 }}>I need college assistance for printing</h4>
+            <h4 style={{ margin: '0 0 6px 0', color: '#1e293b', fontSize: '1rem', fontWeight: 700 }}>I need assistance for printing</h4>
             <ul style={{ margin: 0, padding: '0 0 0 18px', color: '#475569', fontSize: '0.88rem', lineHeight: 1.7 }}>
-              <li>College arranges printing of <strong>2 copies</strong>.</li>
-              <li><strong>1 copy</strong> submitted to the college.</li>
-              <li>Collect <strong>1 copy</strong> from <strong>SAC HALL</strong> when college reopens.</li>
+              <li>Printing of <strong>2 copies</strong> will be arranged.</li>
+              <li><strong>1 copy</strong> will be submitted to the office directly.</li>
+              <li>Collect <strong>1 copy</strong> from <strong>SAC HALL</strong> when classes resume.</li>
               <li style={{ color: '#014a01', fontWeight: 700 }}>Total Charge: ₹500 (₹250 × 2 books)</li>
             </ul>
           </button>
