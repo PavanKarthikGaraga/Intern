@@ -655,13 +655,13 @@ export default function DailyTasks({ studentData, onSectionChange }) {
 
   if (activeDay === null) return <div className="dt-wrap"><p style={{color:'#888'}}>Loading…</p></div>;
 
-  const statuses    = Object.fromEntries([1,2,3,4,5,6,7].map(d => [d, getDayStatus(d, slot, saved, username, unlockedDays, slotEnabled, dailyMarks)]));
-  const meta        = DAY_META[activeDay - 1];
-  const activeStatus = statuses[activeDay];
-  const isSaved     = activeStatus === 'submitted';
+  const statuses     = Object.fromEntries([1,2,3,4,5,6,7].map(d => [d, getDayStatus(d, slot, saved, username, unlockedDays, slotEnabled, dailyMarks)]));
+  const meta         = activeDay === 'report-book' ? { title: 'Report Book', subtitle: 'Final Submission', icon: '📖' } : DAY_META[activeDay - 1];
+  const activeStatus = activeDay === 'report-book' ? 'unlocked' : statuses[activeDay];
+  const isSaved      = activeDay === 'report-book' ? false : activeStatus === 'submitted';
   // Editable if open or unlocked; preview = view only
-  const isEditable  = activeStatus === 'open' || activeStatus === 'unlocked';
-  const isPreview   = activeStatus === 'preview';
+  const isEditable   = activeDay === 'report-book' ? true : activeStatus === 'open' || activeStatus === 'unlocked';
+  const isPreview    = activeDay === 'report-book' ? false : activeStatus === 'preview';
 
   return (
     <div className="dt-wrap">
@@ -675,7 +675,7 @@ export default function DailyTasks({ studentData, onSectionChange }) {
       </div>
 
       {/* Timer / status bar */}
-      {isSaved ? (
+      {isSaved && activeDay !== 'report-book' ? (
         <>
           <CompletedBar 
             deadline={slot ? dayWindow(slot, activeDay).close : new Date()} 
@@ -738,9 +738,9 @@ export default function DailyTasks({ studentData, onSectionChange }) {
         })}
         {Number(slot) >= 2 && saved[7]?.data?.isFinal && (
           <button
-            className={`dt-pill unlocked`}
-            style={{ background: '#f0fdf4', borderColor: '#16a34a', color: '#166534', fontWeight: 700 }}
-            onClick={() => onSectionChange && onSectionChange('report-book')}
+            className={`dt-day-pill ${activeDay === 'report-book' ? 'active' : ''} unlocked`}
+            style={{ borderColor: '#16a34a', color: activeDay === 'report-book' ? '#fff' : '#166534', fontWeight: 700 }}
+            onClick={() => setActiveDay('report-book')}
             title="Go to Report Book"
           >
             <span className="dt-pill-icon">📖</span>
@@ -762,7 +762,49 @@ export default function DailyTasks({ studentData, onSectionChange }) {
           </div>
         </div>
         <div className="dt-card-body">
-          {(activeStatus === 'locked' || activeStatus === 'missed' || activeStatus === 'upcoming')
+          {activeDay === 'report-book' ? (
+            <div style={{
+              marginTop: '12px',
+              padding: '32px 24px',
+              background: 'linear-gradient(to right, #f0fdf4, #dcfce7)',
+              border: '1px solid #86efac',
+              borderRadius: '12px',
+              textAlign: 'center',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
+            }}>
+              <h3 style={{ margin: '0 0 16px 0', color: '#166534', fontSize: '1.4rem', fontWeight: 700 }}>
+                🎉 Congratulations on Completing Day 7!
+              </h3>
+              <p style={{ margin: '0 0 24px 0', color: '#15803d', fontSize: '1.05rem', lineHeight: '1.6' }}>
+                You have successfully submitted your Day 7 tasks. It's now time to start drafting your <strong>Final Report Book</strong> (which consists of 20 marks).
+              </p>
+              <button
+                onClick={() => onSectionChange && onSectionChange('report-book')}
+                style={{
+                  padding: '14px 32px',
+                  background: '#16a34a',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '1.1rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 6px -1px rgba(22, 163, 74, 0.4)',
+                  transition: 'transform 0.2s, background 0.2s'
+                }}
+                onMouseOver={(e) => {
+                  e.target.style.background = '#15803d';
+                  e.target.style.transform = 'translateY(-2px)';
+                }}
+                onMouseOut={(e) => {
+                  e.target.style.background = '#16a34a';
+                  e.target.style.transform = 'none';
+                }}
+              >
+                Go to Report Book ➔
+              </button>
+            </div>
+          ) : (activeStatus === 'locked' || activeStatus === 'missed' || activeStatus === 'upcoming')
             ? <LockedView status={activeStatus} dayNum={activeDay} slot={slot} />
             : (
               <>
@@ -870,51 +912,6 @@ export default function DailyTasks({ studentData, onSectionChange }) {
                     </div>
                   );
                 })()}
-
-                {/* Report Book CTA for Slot 2+ after Day 7 is submitted */}
-                {activeDay === 7 && isSaved && Number(slot) >= 2 && (
-                  <div style={{
-                    marginTop: '24px',
-                    padding: '24px',
-                    background: 'linear-gradient(to right, #f0fdf4, #dcfce7)',
-                    border: '1px solid #86efac',
-                    borderRadius: '12px',
-                    textAlign: 'center',
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
-                  }}>
-                    <h3 style={{ margin: '0 0 12px 0', color: '#166534', fontSize: '1.25rem', fontWeight: 700 }}>
-                      🎉 Congratulations on Completing Day 7!
-                    </h3>
-                    <p style={{ margin: '0 0 20px 0', color: '#15803d', fontSize: '1rem', lineHeight: '1.5' }}>
-                      You have successfully submitted your Day 7 tasks. It's now time to start drafting your <strong>Final Report Book</strong> (which consists of 20 marks).
-                    </p>
-                    <button
-                      onClick={() => onSectionChange && onSectionChange('report-book')}
-                      style={{
-                        padding: '12px 28px',
-                        background: '#16a34a',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '8px',
-                        fontSize: '1.05rem',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        boxShadow: '0 4px 6px -1px rgba(22, 163, 74, 0.4)',
-                        transition: 'transform 0.2s, background 0.2s'
-                      }}
-                      onMouseOver={(e) => {
-                        e.target.style.background = '#15803d';
-                        e.target.style.transform = 'translateY(-2px)';
-                      }}
-                      onMouseOut={(e) => {
-                        e.target.style.background = '#16a34a';
-                        e.target.style.transform = 'none';
-                      }}
-                    >
-                      Go to Report Book ➔
-                    </button>
-                  </div>
-                )}
 
               </>
             )

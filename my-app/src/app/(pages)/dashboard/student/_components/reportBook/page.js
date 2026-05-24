@@ -48,7 +48,7 @@ export default function ReportBook({ studentData }) {
     // Canva link validation
     const lowerLink = link.toLowerCase();
     if (!lowerLink.includes('canva.com') && !lowerLink.includes('canva.link')) {
-      toast.error('Invalid link! You must submit a Canva URL (e.g., canva.com/...). Adobe Express links are not accepted.', { duration: 5000 });
+      toast.error('Invalid link! You must submit a Canva URL (e.g., canva.com/...). Other links are not accepted.', { duration: 5000 });
       return;
     }
 
@@ -104,14 +104,14 @@ export default function ReportBook({ studentData }) {
         </p>
       </div>
 
-      {/* Countdown Timer — only when pending/rejected AND slot 1 */}
-      {isSlot1 && (!status || status === 'REJECTED') && (
+      {/* Countdown Timer — only when pending/rejected */}
+      {(!status || status === 'REJECTED') && (
         <div style={{ background: timeLeft === 'DEADLINE PASSED' ? '#ffebee' : '#fff3e0', border: `1.5px solid ${timeLeft === 'DEADLINE PASSED' ? '#ef9a9a' : '#ffcc80'}`, borderRadius: 12, padding: '16px 20px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
           <FaClock style={{ fontSize: '1.5rem', color: timeLeft === 'DEADLINE PASSED' ? '#c62828' : '#e65100' }} />
           <div>
             <h3 style={{ margin: 0, fontSize: '1rem', color: timeLeft === 'DEADLINE PASSED' ? '#c62828' : '#e65100', fontWeight: 700 }}>Submission Deadline</h3>
             <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: '#333' }}>
-              {timeLeft} <span style={{ fontSize: '0.85rem', fontWeight: 500, color: '#666' }}>(Tuesday, 26th May, 10:00 AM IST)</span>
+              {timeLeft} <span style={{ fontSize: '0.85rem', fontWeight: 500, color: '#666' }}>{isSlot1 ? '(Tuesday, 26th May, 10:00 AM IST)' : '(Thursday, 28th May, 10:00 AM IST)'}</span>
             </p>
           </div>
         </div>
@@ -249,8 +249,8 @@ export default function ReportBook({ studentData }) {
               </div>
               <button
                 type="submit"
-                disabled={submitting || (isSlot1 && timeLeft === 'DEADLINE PASSED')}
-                style={{ width: '100%', padding: '14px', background: (submitting || (isSlot1 && timeLeft === 'DEADLINE PASSED')) ? '#94a3b8' : '#014a01', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '1rem', fontWeight: 700, cursor: (submitting || (isSlot1 && timeLeft === 'DEADLINE PASSED')) ? 'not-allowed' : 'pointer', transition: 'background 0.2s' }}
+                disabled={submitting || timeLeft === 'DEADLINE PASSED'}
+                style={{ width: '100%', padding: '14px', background: (submitting || timeLeft === 'DEADLINE PASSED') ? '#94a3b8' : '#014a01', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '1rem', fontWeight: 700, cursor: (submitting || timeLeft === 'DEADLINE PASSED') ? 'not-allowed' : 'pointer', transition: 'background 0.2s' }}
               >
                 {submitting ? 'Submitting...' : 'Final Submit Report'}
               </button>
