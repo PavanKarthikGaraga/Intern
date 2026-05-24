@@ -713,7 +713,7 @@ export default function DailyTasks({ studentData, onSectionChange }) {
         </>
       ) : activeStatus === 'open' || activeStatus === 'upcoming' || activeStatus === 'preview' ? (
         <TimerBar openTime={dayWindow(slot, activeDay).open} closeTime={dayWindow(slot, activeDay).close} status={activeStatus} />
-      ) : activeStatus === 'unlocked' ? (
+      ) : activeStatus === 'unlocked' && activeDay !== 'report-book' ? (
         <TimerBar openTime={null} closeTime={null} status="unlocked" />
       ) : null}
 
