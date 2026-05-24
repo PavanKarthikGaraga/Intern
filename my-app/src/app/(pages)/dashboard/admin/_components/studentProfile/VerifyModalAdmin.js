@@ -157,9 +157,10 @@ export default function VerifyModalAdmin({ student, onClose }) {
             day={selectedDay} 
             onClose={() => setShowMarksModal(false)} 
             onSave={handleSaveMarks} 
+            slot={student?.slot}
           />
         )}
       </div>
     </div>
   );
-} 
+}

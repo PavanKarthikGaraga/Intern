@@ -11,12 +11,15 @@ const MAX_MARKS_MAPPING = {
   7: 40
 };
 
-export default function MarksModal({ day, onClose, onSave, initialMarks = 0, initialRemarks = '', showRemarks = false }) {
+export default function MarksModal({ day, onClose, onSave, initialMarks = 0, initialRemarks = '', showRemarks = false, slot }) {
   const [totalMarks, setTotalMarks] = useState(initialMarks);
   const [remarks, setRemarks] = useState(initialRemarks);
   const [error, setError] = useState('');
   
-  const maxMarks = MAX_MARKS_MAPPING[day] || 10;
+  let maxMarks = MAX_MARKS_MAPPING[day] || 10;
+  if (day === 7 && slot && Number(slot) >= 2) {
+    maxMarks = 20;
+  }
 
   const handleSave = () => {
     if (totalMarks < 0 || totalMarks > maxMarks) {

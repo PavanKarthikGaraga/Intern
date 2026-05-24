@@ -202,6 +202,7 @@ export default function VerifyModal({ student, onClose }) {
             initialRemarks={marksModal.initialRemarks}
             showRemarks={true}
             onSave={(marks, remarks) => handleAttendanceChange(marksModal.day, 'P', marks, remarks)}
+            slot={student?.slot}
           />
         )}
         {/* Remarks Modal */}

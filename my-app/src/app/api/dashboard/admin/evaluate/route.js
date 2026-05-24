@@ -200,11 +200,14 @@ export async function GET(request) {
         }
       });
 
+      let finalMaxMarks = DAY_MARKS[day]?.max || 10;
+      if (Number(day) === 7 && Number(slot) >= 2) finalMaxMarks = 20;
+
       return NextResponse.json({
         success: true,
         day: Number(day),
         slot: Number(slot),
-        maxMarks: DAY_MARKS[day]?.max || 10,
+        maxMarks: finalMaxMarks,
         criterion: DAY_MARKS[day]?.criterion || `Day ${day}`,
         submitted,
         notSubmitted,
@@ -233,11 +236,15 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: 'username, day and marks are required' }, { status: 400 });
     }
 
-    const maxMarks = DAY_MARKS[day]?.max ?? 10;
-    const mark     = Math.min(Math.max(Number(marks), 0), maxMarks);
-
     const db = await pool.getConnection();
     try {
+      let finalMaxMarks = DAY_MARKS[day]?.max ?? 10;
+      if (Number(day) === 7) {
+        const [rows] = await db.execute(`SELECT slot FROM registrations WHERE username = ?`, [username]);
+        if (rows.length > 0 && Number(rows[0].slot) >= 2) finalMaxMarks = 20;
+      }
+      const mark = Math.min(Math.max(Number(marks), 0), finalMaxMarks);
+
       // Upsert dailyMarks row
       await db.execute(
         `INSERT INTO dailyMarks (username, day${day}, remark${day}, evaluatedBy)

@@ -552,9 +552,13 @@ export default function Evaluate() {
           <label>Day</label>
           <select value={day} onChange={e => { setDay(e.target.value); setData(null); }} disabled={!slot}>
             <option value="">— Select Day —</option>
-            {Object.entries(DAY_LABELS).map(([k, v]) => (
-              <option key={k} value={k}>{v}</option>
-            ))}
+            {Object.entries(DAY_LABELS).map(([k, v]) => {
+              let label = v;
+              if (Number(k) === 7 && Number(slot) >= 2) {
+                label = 'Day 7 — Case Study & Presentation (20 marks)';
+              }
+              return <option key={k} value={k}>{label}</option>;
+            })}
           </select>
         </div>
         <div className="ev-filter-group" style={{ flex: 2 }}>

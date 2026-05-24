@@ -860,6 +860,51 @@ export default function DailyTasks({ studentData, onSectionChange }) {
                   );
                 })()}
 
+                {/* Report Book CTA for Slot 2+ after Day 7 is submitted */}
+                {activeDay === 7 && isSaved && Number(slot) >= 2 && (
+                  <div style={{
+                    marginTop: '24px',
+                    padding: '24px',
+                    background: 'linear-gradient(to right, #f0fdf4, #dcfce7)',
+                    border: '1px solid #86efac',
+                    borderRadius: '12px',
+                    textAlign: 'center',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
+                  }}>
+                    <h3 style={{ margin: '0 0 12px 0', color: '#166534', fontSize: '1.25rem', fontWeight: 700 }}>
+                      🎉 Congratulations on Completing Day 7!
+                    </h3>
+                    <p style={{ margin: '0 0 20px 0', color: '#15803d', fontSize: '1rem', lineHeight: '1.5' }}>
+                      You have successfully submitted your Day 7 tasks. It's now time to start drafting your <strong>Final Report Book</strong> (which consists of 20 marks).
+                    </p>
+                    <button
+                      onClick={() => onSectionChange && onSectionChange('report-book')}
+                      style={{
+                        padding: '12px 28px',
+                        background: '#16a34a',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontSize: '1.05rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        boxShadow: '0 4px 6px -1px rgba(22, 163, 74, 0.4)',
+                        transition: 'transform 0.2s, background 0.2s'
+                      }}
+                      onMouseOver={(e) => {
+                        e.target.style.background = '#15803d';
+                        e.target.style.transform = 'translateY(-2px)';
+                      }}
+                      onMouseOut={(e) => {
+                        e.target.style.background = '#16a34a';
+                        e.target.style.transform = 'none';
+                      }}
+                    >
+                      Go to Report Book ➔
+                    </button>
+                  </div>
+                )}
+
               </>
             )
           }
