@@ -40,11 +40,21 @@ export async function GET(req) {
       FROM registrations r 
       ${slotFilter}
     `, slotParams);
+    // Helper logic for 'completed' criteria based on slot
+    const COMPLETED_CONDITION = `
+      (
+        (r.slot = 1 AND dm.day1 IS NOT NULL AND dm.day2 IS NOT NULL AND dm.day3 IS NOT NULL AND dm.day4 IS NOT NULL AND dm.day5 IS NOT NULL AND dm.day6 IS NOT NULL AND dm.day7 IS NOT NULL AND (COALESCE(dm.day1,0)+COALESCE(dm.day2,0)+COALESCE(dm.day3,0)+COALESCE(dm.day4,0)+COALESCE(dm.day5,0)+COALESCE(dm.day6,0)+COALESCE(dm.day7,0)) >= 60)
+        OR
+        (r.slot > 1 AND dm.day1 IS NOT NULL AND dm.day2 IS NOT NULL AND dm.day3 IS NOT NULL AND dm.day4 IS NOT NULL AND dm.day5 IS NOT NULL AND dm.day6 IS NOT NULL AND dm.day7 IS NOT NULL AND rb.reportBookMarks IS NOT NULL AND (COALESCE(dm.day1,0)+COALESCE(dm.day2,0)+COALESCE(dm.day3,0)+COALESCE(dm.day4,0)+COALESCE(dm.day5,0)+COALESCE(dm.day6,0)+COALESCE(dm.day7,0)+COALESCE(rb.reportBookMarks,0)) >= 60)
+      )
+    `;
+
     const [completedCount] = await pool.query(`
       SELECT COUNT(*) as total 
       FROM registrations r 
-      JOIN final f ON r.username = f.username 
-      WHERE f.completed = 1 ${slotFilterAnd}
+      LEFT JOIN dailyMarks dm ON r.username = dm.username
+      LEFT JOIN reportBooks rb ON r.username = rb.username
+      WHERE ${COMPLETED_CONDITION} ${slotFilterAnd}
     `, slotParams);
 
     // Get new statistics with slot filter
@@ -115,10 +125,11 @@ export async function GET(req) {
       SELECT 
         r.selectedDomain,
         COUNT(*) as count,
-        SUM(CASE WHEN f.completed = true THEN 1 ELSE 0 END) as completed,
+        SUM(CASE WHEN ${COMPLETED_CONDITION} THEN 1 ELSE 0 END) as completed,
         MAX(r.updatedAt) as updatedAt
       FROM registrations r
-      LEFT JOIN final f ON r.username = f.username
+      LEFT JOIN dailyMarks dm ON r.username = dm.username
+      LEFT JOIN reportBooks rb ON r.username = rb.username
       GROUP BY r.selectedDomain
       ORDER BY updatedAt DESC
     `);
@@ -128,10 +139,11 @@ export async function GET(req) {
       SELECT 
         r.mode,
         COUNT(*) as count,
-        SUM(CASE WHEN f.completed = true THEN 1 ELSE 0 END) as completed,
+        SUM(CASE WHEN ${COMPLETED_CONDITION} THEN 1 ELSE 0 END) as completed,
         MAX(r.updatedAt) as updatedAt
       FROM registrations r
-      LEFT JOIN final f ON r.username = f.username
+      LEFT JOIN dailyMarks dm ON r.username = dm.username
+      LEFT JOIN reportBooks rb ON r.username = rb.username
       GROUP BY r.mode
       ORDER BY updatedAt DESC
     `);
@@ -141,10 +153,11 @@ export async function GET(req) {
       SELECT 
         r.slot,
         COUNT(*) as count,
-        SUM(CASE WHEN f.completed = true THEN 1 ELSE 0 END) as completed,
+        SUM(CASE WHEN ${COMPLETED_CONDITION} THEN 1 ELSE 0 END) as completed,
         MAX(r.updatedAt) as updatedAt
       FROM registrations r
-      LEFT JOIN final f ON r.username = f.username
+      LEFT JOIN dailyMarks dm ON r.username = dm.username
+      LEFT JOIN reportBooks rb ON r.username = rb.username
       GROUP BY r.slot
       ORDER BY r.slot
     `);

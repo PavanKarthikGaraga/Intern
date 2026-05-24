@@ -25,11 +25,14 @@ export async function GET(request) {
           r.slot,
           r.mode,
           dm.day1, dm.day2, dm.day3, dm.day4, dm.day5, dm.day6, dm.day7,
-          (COALESCE(dm.day1, 0) + COALESCE(dm.day2, 0) + COALESCE(dm.day3, 0) + 
-           COALESCE(dm.day4, 0) + COALESCE(dm.day5, 0) + COALESCE(dm.day6, 0) + 
-           COALESCE(dm.day7, 0)) AS totalMarks
+          rb.reportBookMarks,
+          CASE 
+            WHEN r.slot = 1 THEN (COALESCE(dm.day1, 0) + COALESCE(dm.day2, 0) + COALESCE(dm.day3, 0) + COALESCE(dm.day4, 0) + COALESCE(dm.day5, 0) + COALESCE(dm.day6, 0) + COALESCE(dm.day7, 0))
+            ELSE (COALESCE(dm.day1, 0) + COALESCE(dm.day2, 0) + COALESCE(dm.day3, 0) + COALESCE(dm.day4, 0) + COALESCE(dm.day5, 0) + COALESCE(dm.day6, 0) + COALESCE(dm.day7, 0) + COALESCE(rb.reportBookMarks, 0))
+          END AS totalMarks
        FROM registrations r
        LEFT JOIN dailyMarks dm ON r.username = dm.username
+       LEFT JOIN reportBooks rb ON r.username = rb.username
        WHERE r.slot = ?
        ORDER BY totalMarks DESC, r.username ASC`,
       [slot]

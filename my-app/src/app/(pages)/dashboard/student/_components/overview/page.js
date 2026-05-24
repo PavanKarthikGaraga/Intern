@@ -119,8 +119,9 @@ export default function Overview({ user, studentData }) {
   //   router.push('/dashboard/student/problemStatement');
   // };
 
+  const isSlot1 = Number(studentData?.slot) === 1;
   const dm = studentData.dailyMarks || {};
-  const evalComponents = [
+  const evalComponents = isSlot1 ? [
     { label: 'Day 1 — Problem Understanding', score: dm.d1 ?? null, max: 10  },
     { label: 'Day 2 — Survey (Stakeholder 1)', score: dm.d2 ?? null, max: 5   },
     { label: 'Day 3 — Survey (Stakeholder 2)', score: dm.d3 ?? null, max: 5   },
@@ -128,6 +129,15 @@ export default function Overview({ user, studentData }) {
     { label: 'Day 5 — Data Analysis',          score: dm.d5 ?? null, max: 15  },
     { label: 'Day 6 — Intervention Activity',  score: dm.d6 ?? null, max: 20  },
     { label: 'Day 7 — Case Study & Presentation', score: dm.d7 ?? null, max: 40 },
+  ] : [
+    { label: 'Day 1 — Problem Understanding', score: dm.d1 ?? null, max: 10  },
+    { label: 'Day 2 — Survey (Stakeholder 1)', score: dm.d2 ?? null, max: 5   },
+    { label: 'Day 3 — Survey (Stakeholder 2)', score: dm.d3 ?? null, max: 5   },
+    { label: 'Day 4 — Survey (Stakeholder 3)', score: dm.d4 ?? null, max: 5   },
+    { label: 'Day 5 — Data Analysis',          score: dm.d5 ?? null, max: 15  },
+    { label: 'Day 6 — Intervention Activity',  score: dm.d6 ?? null, max: 20  },
+    { label: 'Day 7 — Case Study & Presentation', score: dm.d7 ?? null, max: 20 },
+    { label: 'Final Report Book', score: studentData?.reportBook?.reportBookMarks ?? null, max: 20 },
   ];
 
   const totalMarks = evalComponents.reduce((acc, c) => acc + (c.score !== null ? Number(c.score) : 0), 0);
