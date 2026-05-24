@@ -40,6 +40,14 @@ export default function ReportBook({ studentData }) {
     e.preventDefault();
     if (!link || !link.trim()) { toast.error('Please enter a valid link'); return; }
     if (!link.startsWith('http')) { toast.error('Link must start with http:// or https://'); return; }
+    
+    // Canva link validation
+    const lowerLink = link.toLowerCase();
+    if (!lowerLink.includes('canva.com') && !lowerLink.includes('canva.link')) {
+      toast.error('Invalid link! You must submit a Canva URL (e.g., canva.com/...). Adobe Express links are not accepted.', { duration: 5000 });
+      return;
+    }
+
     const confirmSubmit = window.confirm('Are you sure you want to submit?');
     if (!confirmSubmit) return;
     setSubmitting(true);
@@ -309,7 +317,9 @@ function ApprovedSection({ studentData, adminRemarks, reportBookMarks, isSlot1, 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
           <button
             onClick={() => setPrintingChoice('self')}
-            style={{ flex: '1 1 260px', padding: '20px', borderRadius: '12px', border: `2px solid ${printingChoice === 'self' ? '#014a01' : '#e2e8f0'}`, background: printingChoice === 'self' ? '#f0fdf4' : '#f8fafc', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s' }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 16px rgba(1, 74, 1, 0.12)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+            style={{ flex: '1 1 260px', padding: '20px', borderRadius: '12px', border: `2px solid ${printingChoice === 'self' ? '#014a01' : '#e2e8f0'}`, background: printingChoice === 'self' ? '#f0fdf4' : '#f8fafc', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s ease-in-out' }}
           >
             <div style={{ fontSize: '2rem', marginBottom: 8 }}>🖨️</div>
             <h4 style={{ margin: '0 0 6px 0', color: '#1e293b', fontSize: '1rem', fontWeight: 700 }}>I&apos;ll print the report books on my own</h4>
@@ -323,7 +333,9 @@ function ApprovedSection({ studentData, adminRemarks, reportBookMarks, isSlot1, 
 
           <button
             onClick={() => setPrintingChoice('college')}
-            style={{ flex: '1 1 260px', padding: '20px', borderRadius: '12px', border: `2px solid ${printingChoice === 'college' ? '#014a01' : '#e2e8f0'}`, background: printingChoice === 'college' ? '#f0fdf4' : '#f8fafc', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s' }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 16px rgba(1, 74, 1, 0.12)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+            style={{ flex: '1 1 260px', padding: '20px', borderRadius: '12px', border: `2px solid ${printingChoice === 'college' ? '#014a01' : '#e2e8f0'}`, background: printingChoice === 'college' ? '#f0fdf4' : '#f8fafc', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s ease-in-out' }}
           >
             <div style={{ fontSize: '2rem', marginBottom: 8 }}>🏫</div>
             <h4 style={{ margin: '0 0 6px 0', color: '#1e293b', fontSize: '1rem', fontWeight: 700 }}>I need college assistance for printing</h4>
@@ -384,8 +396,8 @@ function SelfPrintSection() {
       <div style={{ background: '#fff', border: '1px solid #bbf7d0', borderRadius: '10px', padding: '16px 20px', color: '#14532d', fontSize: '0.95rem', lineHeight: 1.8, marginBottom: 16 }}>
         <ol style={{ margin: 0, paddingLeft: 20 }}>
           <li><strong>Download</strong> your Final Report Book PDF directly from Canva (Download → PDF Print).</li>
-          <li>Get the PDF printed at any print shop — <strong>2 copies</strong>.</li>
-          <li>Use <strong>A4 size, single-sided or double-sided</strong> as per the format shown in the template.</li>
+          <li>Get the PDF printed at any print shop - <strong>2 copies</strong>.</li>
+          <li>Use <strong>A4 size, single-sided</strong> and the 1st and last pages should be hard binding, the final report book should be submitted in a properly hard-bound book format.</li>
           <li>Submit <strong>1 copy</strong> to the college office when the college reopens.</li>
           <li>Keep <strong>1 copy</strong> for yourself.</li>
         </ol>
@@ -446,11 +458,11 @@ function CollegeAssistSection({ studentData, utr, setUtr, submitting, handleSubm
           Scan the QR code and complete the payment of ₹500 (₹250 × 2 books).
         </p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, alignItems: 'flex-start' }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ background: '#f8fafc', border: '2px solid #e2e8f0', borderRadius: '12px', padding: '12px', display: 'inline-block' }}>
-              <img src="/QR.jpeg" alt="Payment QR Code" style={{ width: 200, height: 200, objectFit: 'contain', borderRadius: '8px', display: 'block' }} />
+          <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{ background: '#f8fafc', border: '2px solid #e2e8f0', borderRadius: '12px', padding: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <img src="/QR.jpeg" alt="Payment QR Code" style={{ width: 320, height: 320, objectFit: 'contain', borderRadius: '8px', display: 'block' }} />
             </div>
-            <div style={{ marginTop: 10, background: '#014a01', color: '#fff', borderRadius: '8px', padding: '8px 20px', fontWeight: 800, fontSize: '1.05rem', display: 'inline-block' }}>
+            <div style={{ marginTop: 16, background: '#014a01', color: '#fff', borderRadius: '8px', padding: '10px 24px', fontWeight: 800, fontSize: '1.2rem', textAlign: 'center', boxShadow: '0 4px 6px rgba(1, 74, 1, 0.2)' }}>
               Amount: ₹500
             </div>
           </div>

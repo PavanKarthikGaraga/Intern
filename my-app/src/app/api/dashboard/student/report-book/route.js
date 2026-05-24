@@ -73,6 +73,11 @@ export async function POST(request) {
 
     // Handle Link Submission
     if (link) {
+      const lowerLink = link.toLowerCase();
+      if (!lowerLink.includes('canva.com') && !lowerLink.includes('canva.link')) {
+        return NextResponse.json({ success: false, error: 'Invalid link! You must submit a Canva URL. Adobe Express links are not accepted.' }, { status: 400 });
+      }
+
       if (current && !['REJECTED'].includes(current.status)) {
         return NextResponse.json({ success: false, error: 'Report Book is already submitted and cannot be changed unless rejected.' }, { status: 400 });
       }
