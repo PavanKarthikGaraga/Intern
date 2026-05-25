@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { FaBook, FaSearch, FaExternalLinkAlt, FaDownload, FaSave, FaEdit, FaStar } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import * as XLSX from 'xlsx';
@@ -14,6 +14,8 @@ export default function FinalReports() {
   const [editMarks, setEditMarks] = useState('');
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
   const STATUS_OPTIONS = [
     { value: 'PENDING_REVIEW',     label: 'Pending Review',           color: '#0369a1', bg: '#f0f9ff' },
@@ -48,15 +50,40 @@ export default function FinalReports() {
     setEditingId(null);
   }, [slot]);
 
-  const filteredReports = reports.filter(r => {
-    if (searchQuery.trim() === '') return true;
-    const q = searchQuery.toLowerCase().trim();
-    return r.username.toLowerCase().includes(q) || r.name.toLowerCase().includes(q);
-  });
+  const sortedAndFilteredReports = useMemo(() => {
+    let result = reports.filter(r => {
+      if (statusFilter !== 'ALL' && r.status !== statusFilter) return false;
+      if (searchQuery.trim() === '') return true;
+      const q = searchQuery.toLowerCase().trim();
+      return r.username.toLowerCase().includes(q) || r.name.toLowerCase().includes(q);
+    });
+
+    if (sortConfig.key) {
+      result.sort((a, b) => {
+        let aVal = a[sortConfig.key] || '';
+        let bVal = b[sortConfig.key] || '';
+        if (typeof aVal === 'string') aVal = aVal.toLowerCase();
+        if (typeof bVal === 'string') bVal = bVal.toLowerCase();
+        
+        if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+    return result;
+  }, [reports, searchQuery, statusFilter, sortConfig]);
+
+  const requestSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
 
   const handleExport = () => {
-    if (filteredReports.length === 0) { toast.error('No data to export'); return; }
-    const exportData = filteredReports.map(r => ({
+    if (sortedAndFilteredReports.length === 0) { toast.error('No data to export'); return; }
+    const exportData = sortedAndFilteredReports.map(r => ({
       'Username': r.username,
       'Name': r.name,
       'Slot': r.slot,
@@ -158,12 +185,31 @@ export default function FinalReports() {
           </div>
           <button
             onClick={handleExport}
-            disabled={filteredReports.length === 0}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: filteredReports.length === 0 ? '#cbd5e1' : '#014a01', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: filteredReports.length === 0 ? 'not-allowed' : 'pointer' }}
+            disabled={sortedAndFilteredReports.length === 0}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: sortedAndFilteredReports.length === 0 ? '#cbd5e1' : '#014a01', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: sortedAndFilteredReports.length === 0 ? 'not-allowed' : 'pointer' }}
           >
             <FaDownload /> Export Excel
           </button>
         </div>
+      </div>
+
+      {/* Status Filter Tabs */}
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '24px' }}>
+        <button
+          onClick={() => setStatusFilter('ALL')}
+          style={{ padding: '6px 14px', borderRadius: '20px', border: '1px solid #cbd5e1', background: statusFilter === 'ALL' ? '#0f172a' : '#fff', color: statusFilter === 'ALL' ? '#fff' : '#475569', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+        >
+          All
+        </button>
+        {STATUS_OPTIONS.map(opt => (
+          <button
+            key={opt.value}
+            onClick={() => setStatusFilter(opt.value)}
+            style={{ padding: '6px 14px', borderRadius: '20px', border: `1px solid ${opt.color}40`, background: statusFilter === opt.value ? opt.color : opt.bg, color: statusFilter === opt.value ? '#fff' : opt.color, fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+          >
+            {opt.label}
+          </button>
+        ))}
       </div>
 
       {loading ? (
@@ -174,11 +220,11 @@ export default function FinalReports() {
           <h3 style={{ margin: '0 0 8px 0', color: '#334155' }}>No Reports Found</h3>
           <p style={{ margin: 0, color: '#64748b' }}>No students in Slot {slot} have submitted their final report book yet.</p>
         </div>
-      ) : filteredReports.length === 0 ? (
+      ) : sortedAndFilteredReports.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px 20px', background: '#f8fafc', borderRadius: '12px', border: '1px dashed #cbd5e1' }}>
           <FaSearch style={{ fontSize: '2.5rem', color: '#94a3b8', marginBottom: '16px' }} />
           <h3 style={{ margin: '0 0 8px 0', color: '#334155' }}>No Search Matches</h3>
-          <p style={{ margin: 0, color: '#64748b' }}>No reports match &quot;{searchQuery}&quot;.</p>
+          <p style={{ margin: 0, color: '#64748b' }}>No reports match the current filters.</p>
         </div>
       ) : (
         <div style={{ overflowX: 'auto' }}>
@@ -186,17 +232,17 @@ export default function FinalReports() {
             <thead>
               <tr style={{ background: '#f1f5f9', color: '#475569', fontSize: '0.9rem', textTransform: 'uppercase' }}>
                 <th style={{ ...TH, width: '60px', textAlign: 'center' }}>S.No</th>
-                <th style={TH}>Student</th>
-                <th style={TH}>Daily Marks</th>
-                {!isSlot1 && <th style={TH}>Report Book Marks<br /><span style={{ fontSize: '0.7rem', textTransform: 'none', fontWeight: 500 }}>(out of 20)</span></th>}
+                <th style={{ ...TH, cursor: 'pointer' }} onClick={() => requestSort('name')}>Student {sortConfig.key === 'name' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</th>
+                <th style={{ ...TH, cursor: 'pointer' }} onClick={() => requestSort('totalMarks')}>Daily Marks {sortConfig.key === 'totalMarks' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</th>
+                {!isSlot1 && <th style={{ ...TH, cursor: 'pointer' }} onClick={() => requestSort('reportBookMarks')}>Report Book Marks<br /><span style={{ fontSize: '0.7rem', textTransform: 'none', fontWeight: 500 }}>(out of 20)</span> {sortConfig.key === 'reportBookMarks' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</th>}
                 <th style={TH}>Report Link</th>
                 <th style={TH}>UTR ID</th>
-                <th style={{ ...TH, minWidth: 320 }}>Status & Remarks</th>
+                <th style={{ ...TH, minWidth: 320, cursor: 'pointer' }} onClick={() => requestSort('status')}>Status & Remarks {sortConfig.key === 'status' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</th>
                 <th style={{ ...TH, width: 100 }}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filteredReports.map((r, idx) => {
+              {sortedAndFilteredReports.map((r, idx) => {
                 const isEditing = editingId === r.username;
                 const statusObj = STATUS_OPTIONS.find(s => s.value === r.status) || STATUS_OPTIONS[0];
 
@@ -339,7 +385,7 @@ export default function FinalReports() {
             </tbody>
           </table>
           <div style={{ marginTop: '16px', fontSize: '0.9rem', color: '#64748b' }}>
-            Showing {filteredReports.length} report(s) for Slot {slot}.
+            Showing {sortedAndFilteredReports.length} report(s) for Slot {slot}.
             {!isSlot1 && <span style={{ marginLeft: 12, color: '#014a01', fontWeight: 600 }}>💡 Enter Report Book Marks (0–20) to auto-approve submissions.</span>}
           </div>
         </div>
