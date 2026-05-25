@@ -262,6 +262,7 @@ export default function Students() {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [selectedProfile, setSelectedProfile] = useState(null);
   const isInitialMount = useRef(true);
+  const fetchController = useRef(null);
 
   /* ── Fetch domains ── */
   useEffect(() => {
@@ -273,6 +274,13 @@ export default function Students() {
 
   /* ── Fetch students ── */
   const fetchStudents = useCallback(async (isBackground = false) => {
+    if (fetchController.current) {
+      fetchController.current.abort();
+    }
+    const controller = new AbortController();
+    fetchController.current = controller;
+    const { signal } = controller;
+
     if (isBackground) setIsSearching(true);
     else setLoading(true);
     try {
@@ -290,7 +298,10 @@ export default function Students() {
         ...(filters.taskDay         && { taskDay:         filters.taskDay }),
         ...(filters.taskDay && filters.taskStatus && { taskStatus: filters.taskStatus }),
       });
-      const res = await fetch(`/api/dashboard/admin/students?${queryParams}`, { credentials: 'include' });
+      const res = await fetch(`/api/dashboard/admin/students?${queryParams}`, { 
+        credentials: 'include',
+        signal 
+      });
       if (!res.ok) throw new Error('Failed to fetch students');
       const data = await res.json();
       if (data.success) {
@@ -300,11 +311,14 @@ export default function Students() {
         throw new Error(data.error || 'Failed to fetch students');
       }
     } catch (err) {
+      if (err.name === 'AbortError') return;
       setError(err.message);
       toast.error(err.message);
     } finally {
-      setLoading(false);
-      setIsSearching(false);
+      if (fetchController.current === controller) {
+        setLoading(false);
+        setIsSearching(false);
+      }
     }
   }, [
     filters.search, filters.domain, filters.slot, filters.mode,
