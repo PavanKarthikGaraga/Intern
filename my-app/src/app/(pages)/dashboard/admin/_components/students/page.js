@@ -5,6 +5,7 @@ import './page.css';
 import VerifyModal from './VerifyModal';
 import StudentProfile from '../studentProfile/page';
 import { FaSearch, FaTrash, FaDownload, FaSync, FaEye, FaCheck, FaTimes, FaEdit } from 'react-icons/fa';
+import { PROBLEM_STATEMENTS } from '@/app/Data/problemStatements';
 
 const SLOT_LABELS = {
   '1': 'Slot 1 — May 11–17',
@@ -139,6 +140,109 @@ function SlotCell({ student, onSave }) {
   );
 }
 
+/* ── Inline-editable cell for Domain ── */
+function DomainCell({ student, onSave, domains }) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue]     = useState(student.selectedDomain || '');
+  const [saving, setSaving]   = useState(false);
+
+  const handleSave = async () => {
+    if (value === student.selectedDomain) { setEditing(false); return; }
+    setSaving(true);
+    const ok = await onSave(student.username, { selectedDomain: value });
+    setSaving(false);
+    if (ok) setEditing(false);
+    else setValue(student.selectedDomain || '');
+  };
+
+  const handleCancel = () => { setValue(student.selectedDomain || ''); setEditing(false); };
+
+  if (editing) {
+    return (
+      <div className="inline-edit-wrap">
+        <select
+          className="inline-select"
+          value={value}
+          onChange={e => setValue(e.target.value)}
+          autoFocus
+        >
+          <option value="">Select Domain</option>
+          {domains.map(d => (
+            <option key={d} value={d}>{d}</option>
+          ))}
+        </select>
+        <button className="inline-btn confirm-btn" onClick={handleSave} disabled={saving} title="Save">
+          {saving ? <span className="mini-spinner" /> : <FaCheck />}
+        </button>
+        <button className="inline-btn cancel-btn" onClick={handleCancel} title="Cancel">✕</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="editable-cell" onClick={() => setEditing(true)} title="Click to edit">
+      <span>{student.selectedDomain || 'N/A'}</span>
+      <FaEdit className="edit-hint-icon" />
+    </div>
+  );
+}
+
+/* ── Inline-editable cell for Problem Statement ── */
+function ProblemStatementCell({ student, onSave }) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue]     = useState(student.problem_statement || '');
+  const [saving, setSaving]   = useState(false);
+
+  const availableStatements = student.selectedDomain && PROBLEM_STATEMENTS[student.selectedDomain] 
+    ? PROBLEM_STATEMENTS[student.selectedDomain] 
+    : [];
+
+  const handleSave = async () => {
+    if (value === student.problem_statement) { setEditing(false); return; }
+    setSaving(true);
+    const ok = await onSave(student.username, { problemStatement: value });
+    setSaving(false);
+    if (ok) setEditing(false);
+    else setValue(student.problem_statement || '');
+  };
+
+  const handleCancel = () => { setValue(student.problem_statement || ''); setEditing(false); };
+
+  if (editing) {
+    return (
+      <div className="inline-edit-wrap">
+        <select
+          className="inline-select"
+          value={value}
+          onChange={e => setValue(e.target.value)}
+          autoFocus
+        >
+          <option value="">Select Problem Statement</option>
+          {availableStatements.map(stmt => (
+            <option key={stmt} value={stmt} title={stmt}>
+              {stmt.length > 40 ? stmt.substring(0, 40) + '...' : stmt}
+            </option>
+          ))}
+        </select>
+        <button className="inline-btn confirm-btn" onClick={handleSave} disabled={saving} title="Save">
+          {saving ? <span className="mini-spinner" /> : <FaCheck />}
+        </button>
+        <button className="inline-btn cancel-btn" onClick={handleCancel} title="Cancel">✕</button>
+      </div>
+    );
+  }
+
+  const displayValue = student.problem_statement || 'N/A';
+  return (
+    <div className="editable-cell" onClick={() => setEditing(true)} title="Click to edit">
+      <span title={displayValue}>
+        {displayValue.length > 40 ? displayValue.substring(0, 40) + '...' : displayValue}
+      </span>
+      <FaEdit className="edit-hint-icon" />
+    </div>
+  );
+}
+
 /* ══════════════════════════════════════════════════════ */
 export default function Students() {
   const [students, setStudents]           = useState([]);
@@ -149,7 +253,7 @@ export default function Students() {
   const [searchInput, setSearchInput]     = useState('');
   const [filters, setFilters] = useState({
     domain: '', slot: '', mode: '', search: '',
-    gender: '', fieldOfInterest: '', accommodation: '', transportation: '',
+    gender: '', accommodation: '', transportation: '',
     taskDay: '', taskStatus: '',
   });
   const [pagination, setPagination] = useState({
@@ -181,7 +285,6 @@ export default function Students() {
         ...(filters.mode            && { mode:            filters.mode }),
         ...(filters.search          && { search:          filters.search }),
         ...(filters.gender          && { gender:          filters.gender }),
-        ...(filters.fieldOfInterest && { fieldOfInterest: filters.fieldOfInterest }),
         ...(filters.accommodation   && { accommodation:   filters.accommodation }),
         ...(filters.transportation  && { transportation:  filters.transportation }),
         ...(filters.taskDay         && { taskDay:         filters.taskDay }),
@@ -205,7 +308,7 @@ export default function Students() {
     }
   }, [
     filters.search, filters.domain, filters.slot, filters.mode,
-    filters.gender, filters.fieldOfInterest, filters.accommodation,
+    filters.gender, filters.accommodation,
     filters.transportation, filters.taskDay, filters.taskStatus,
     pagination.currentPage, pagination.limit,
   ]);
@@ -323,7 +426,6 @@ export default function Students() {
         ...(filters.mode            && { mode:            filters.mode }),
         ...(filters.search          && { search:          filters.search }),
         ...(filters.gender          && { gender:          filters.gender }),
-        ...(filters.fieldOfInterest && { fieldOfInterest: filters.fieldOfInterest }),
         ...(filters.accommodation   && { accommodation:   filters.accommodation }),
         ...(filters.transportation  && { transportation:  filters.transportation }),
         ...(filters.taskDay         && { taskDay:         filters.taskDay }),
@@ -384,7 +486,7 @@ export default function Students() {
             <input
               type="text"
               id="search"
-              placeholder="Search by name, email, domain or field of interest…"
+              placeholder="Search by name, email, or domain…"
               value={searchInput}
               onChange={e => setSearchInput(e.target.value)}
               autoComplete="off"
@@ -398,20 +500,6 @@ export default function Students() {
             <select id="domain" value={filters.domain} onChange={e => handleFilterChange('domain', e.target.value)}>
               <option value="">All Domains</option>
               {domains.map(d => <option key={d} value={d}>{d}</option>)}
-            </select>
-          </div>
-          <div className="filter-group">
-            <label htmlFor="fieldOfInterest">Field of Interest</label>
-            <select id="fieldOfInterest" value={filters.fieldOfInterest} onChange={e => handleFilterChange('fieldOfInterest', e.target.value)}>
-              <option value="">All Fields</option>
-              {[
-                'Awareness Campaigns','Content Creation (YouTube / Reels)','Cover Song Production',
-                'Dance','Documentary Making','Dramatics','Environmental Activities',
-                'Leadership Activities','Literature','Painting','Photography','Public Speaking',
-                'Rural Development','Short Film Making','Singing','Social Service / Volunteering',
-                'Spirituality','Story Telling','Technical (Hardware)','Technical (Software)',
-                'Video Editing','Yoga & Meditation',
-              ].map(f => <option key={f} value={f}>{f}</option>)}
             </select>
           </div>
           <div className="filter-group">
@@ -492,7 +580,7 @@ export default function Students() {
       {/* ── Inline-edit hint ── */}
       <div className="inline-edit-notice">
         <FaEdit style={{ fontSize: 13 }} />
-        <span>Click any <strong>Mode</strong> or <strong>Slot</strong> cell to edit it inline and sync to the database.</span>
+        <span>Click any <strong>Domain</strong>, <strong>Problem Statement</strong>, <strong>Mode</strong>, or <strong>Slot</strong> cell to edit it inline and sync to the database.</span>
       </div>
 
       {/* ── Table ── */}
@@ -503,8 +591,8 @@ export default function Students() {
               <th>S.No</th>
               <th>ID</th>
               <th>Name</th>
-              <th>Domain</th>
-              <th>Field of Interest</th>
+              <th>Domain <span className="editable-col-hint">✎</span></th>
+              <th>Problem Statement <span className="editable-col-hint">✎</span></th>
               <th>Mode <span className="editable-col-hint">✎</span></th>
               <th>Slot <span className="editable-col-hint">✎</span></th>
               <th>Status</th>
@@ -523,8 +611,12 @@ export default function Students() {
                 <td>{getSerialNumber(index)}</td>
                 <td className="mono-id">{student.username}</td>
                 <td>{student.name}</td>
-                <td>{student.selectedDomain}</td>
-                <td>{student.fieldOfInterest || 'N/A'}</td>
+                <td>
+                  <DomainCell student={student} onSave={handleUpdateStudent} domains={domains} />
+                </td>
+                <td>
+                  <ProblemStatementCell student={student} onSave={handleUpdateStudent} />
+                </td>
                 <td>
                   <ModeCell student={student} onSave={handleUpdateStudent} />
                 </td>

@@ -18,14 +18,7 @@ const uniqueCountryCodes = countryCodes
   .filter((c, i, arr) => i === arr.findIndex(x => x.code === c.code))
   .sort((a, b) => a.name.localeCompare(b.name));
 
-const FIELDS_OF_INTEREST = [
-  'Awareness Campaigns','Content Creation (YouTube / Reels)','Cover Song Production',
-  'Dance','Documentary Making','Dramatics','Environmental Activities',
-  'Leadership Activities','Literature','Painting','Photography','Public Speaking',
-  'Rural Development','Short Film Making','Singing','Social Service / Volunteering',
-  'Spirituality','Story Telling','Technical (Hardware)','Technical (Software)',
-  'Video Editing','Yoga & Meditation',
-];
+
 
 const SLOT_LABELS = {
   '1':'Slot 1 — May 11–17','2':'Slot 2 — May 18–24','3':'Slot 3 — May 25–31',
@@ -109,7 +102,6 @@ export default function Profile({ user, studentData: initialStudentData }) {
       transportation: initialStudentData.transportation || 'No',
       busRoute:       initialStudentData.busRoute       || '',
       selectedDomain: initialStudentData.selectedDomain || '',
-      fieldOfInterest:initialStudentData.fieldOfInterest|| '',
       mode:           initialStudentData.mode           || 'Remote',
       slot:           String(initialStudentData.slot    || '1'),
       year:           String(initialStudentData.year    || '1'),
@@ -144,7 +136,6 @@ export default function Profile({ user, studentData: initialStudentData }) {
       transportation: studentData.transportation || 'No',
       busRoute:       studentData.busRoute       || '',
       selectedDomain: studentData.selectedDomain || '',
-      fieldOfInterest:studentData.fieldOfInterest|| '',
       mode:           studentData.mode           || 'Remote',
       slot:           String(studentData.slot    || '1'),
       year:           String(studentData.year    || '1'),
@@ -461,15 +452,8 @@ export default function Profile({ user, studentData: initialStudentData }) {
                 <ViewField label="Domain" value={studentData.selectedDomain} />
               )}
 
-              {/* Field of Interest */}
-              {isEditing ? (
-                <EditSelect label="Field of Interest" name="fieldOfInterest" value={formData.fieldOfInterest} onChange={handleChange}>
-                  {!formData.fieldOfInterest && <option value="">Select Field</option>}
-                  {FIELDS_OF_INTEREST.map(f => <option key={f} value={f}>{f}</option>)}
-                </EditSelect>
-              ) : (
-                <ViewField label="Field of Interest" value={studentData.fieldOfInterest} />
-              )}
+              {/* Problem Statement — read-only here */}
+              <ViewField label="Problem Statement" value={studentData.problemStatementData?.problem_statement || 'N/A'} />
 
               {/* Mode — always read-only */}
               <ViewField label="Internship Mode" value={studentData.mode} />

@@ -51,7 +51,6 @@ export async function GET(req) {
     const mode = searchParams.get('mode');
     const search = searchParams.get('search');
     const gender = searchParams.get('gender');
-    const fieldOfInterest = searchParams.get('fieldOfInterest');
     const accommodation = searchParams.get('accommodation');
     const transportation = searchParams.get('transportation');
     const season = searchParams.get('season') || '2026';
@@ -76,16 +75,12 @@ export async function GET(req) {
       params.push(mode);
     }
     if (search) {
-      conditions.push('(r.name LIKE ? OR r.email LIKE ? OR r.selectedDomain LIKE ? OR r.fieldOfInterest LIKE ?)');
+      conditions.push('(r.name LIKE ? OR r.email LIKE ? OR r.selectedDomain LIKE ? OR ps.problem_statement LIKE ?)');
       params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
     }
     if (gender) {
       conditions.push('r.gender = ?');
       params.push(gender);
-    }
-    if (fieldOfInterest) {
-      conditions.push('r.fieldOfInterest = ?');
-      params.push(fieldOfInterest);
     }
     if (accommodation) {
       conditions.push('r.accommodation = ?');
@@ -124,6 +119,7 @@ export async function GET(req) {
       SELECT COUNT(*) as total
       FROM registrations r
       ${taskJoin}
+      LEFT JOIN problemStatements ps ON r.username = ps.username
       ${whereClause}
     `;
 
@@ -140,7 +136,7 @@ export async function GET(req) {
         r.slot,
         r.email,
         r.phoneNumber,
-        r.fieldOfInterest,
+        ps.problem_statement,
         f.completed,
         sl.name as leadName,
         fm.name as facultyName,
@@ -148,6 +144,7 @@ export async function GET(req) {
         ${taskJoin ? ', dt.submittedAt as taskSubmittedAt' : ''}
       FROM registrations r
       ${taskJoin}
+      LEFT JOIN problemStatements ps ON r.username = ps.username
       LEFT JOIN final f ON r.username = f.username
       LEFT JOIN studentLeads sl ON r.studentLeadId = sl.username
       LEFT JOIN facultyMentors fm ON r.facultyMentorId = fm.username
@@ -326,7 +323,7 @@ export async function PATCH(request) {
       }, { status: 403 });
     }
 
-    const { username, mode, slot } = await request.json();
+    const { username, mode, slot, selectedDomain, problemStatement } = await request.json();
 
     if (!username) {
       return NextResponse.json({ success: false, error: 'Username is required' }, { status: 400 });
@@ -347,34 +344,75 @@ export async function PATCH(request) {
 
     if (mode) { setClauses.push('mode = ?'); params.push(mode); }
     if (slot) { setClauses.push('slot = ?'); params.push(String(slot)); }
+    if (selectedDomain) { setClauses.push('selectedDomain = ?'); params.push(selectedDomain); }
 
-    if (setClauses.length === 0) {
+    if (setClauses.length === 0 && !problemStatement) {
       return NextResponse.json({ success: false, error: 'Nothing to update' }, { status: 400 });
     }
 
-    params.push(username);
-
     const connection = await pool.getConnection();
     try {
-      const [result] = await connection.query(
-        `UPDATE registrations SET ${setClauses.join(', ')} WHERE username = ?`,
-        params
-      );
+      await connection.beginTransaction();
 
-      if (result.affectedRows === 0) {
-        return NextResponse.json({ success: false, error: 'Student not found' }, { status: 404 });
+      if (setClauses.length > 0) {
+        params.push(username);
+        const [result] = await connection.query(
+          `UPDATE registrations SET ${setClauses.join(', ')} WHERE username = ?`,
+          params
+        );
+        if (result.affectedRows === 0 && !problemStatement) {
+          throw new Error('Student not found');
+        }
       }
 
+      if (selectedDomain || problemStatement) {
+        const psSetClauses = [];
+        const psParams = [];
+        if (selectedDomain) {
+            psSetClauses.push('domain = ?');
+            psParams.push(selectedDomain);
+        }
+        if (problemStatement) {
+            psSetClauses.push('problem_statement = ?');
+            psParams.push(problemStatement);
+        }
+
+        if (psSetClauses.length > 0) {
+            const [existing] = await connection.query('SELECT domain, problem_statement FROM problemStatements WHERE username = ?', [username]);
+            
+            const newDomain = selectedDomain || (existing.length ? existing[0].domain : null);
+            const newPs = problemStatement || (existing.length ? existing[0].problem_statement : null);
+
+            if (existing.length > 0) {
+                psParams.push(username);
+                await connection.query(
+                    `UPDATE problemStatements SET ${psSetClauses.join(', ')} WHERE username = ?`,
+                    psParams
+                );
+            } else {
+                await connection.query(
+                    `INSERT INTO problemStatements (username, domain, problem_statement) VALUES (?, ?, ?)`,
+                    [username, newDomain, newPs]
+                );
+            }
+        }
+      }
+
+      await connection.commit();
+
       logActivity({
-        action: 'ADMIN_UPDATE_STUDENT_MODE_SLOT',
+        action: 'ADMIN_UPDATE_STUDENT_DATA',
         actorUsername: decoded.username,
         actorName: decoded.name,
         actorRole: 'admin',
         targetUsername: username,
-        details: { mode, slot },
+        details: { mode, slot, selectedDomain, problemStatement },
       }).catch(() => {});
 
-      return NextResponse.json({ success: true, message: 'Student updated successfully', mode, slot });
+      return NextResponse.json({ success: true, message: 'Student updated successfully', mode, slot, selectedDomain, problemStatement });
+    } catch (error) {
+      await connection.rollback();
+      throw error;
     } finally {
       connection.release();
     }
