@@ -347,7 +347,7 @@ function ApprovedSection({ studentData, adminRemarks, reportBookMarks, isSlot1, 
               <li>Printing of <strong>2 copies</strong> will be arranged.</li>
               <li><strong>1 copy</strong> will be submitted to the office directly.</li>
               <li>Collect <strong>1 copy</strong> from <strong>SAC HALL</strong> when classes resume.</li>
-              <li style={{ color: '#014a01', fontWeight: 700 }}>Total Charge: ₹500 (₹250 × 2 books)</li>
+              <li style={{ color: '#014a01', fontWeight: 700 }}>Total Charge: ₹600 (₹300 × 2 books)</li>
             </ul>
           </button>
         </div>
@@ -456,10 +456,10 @@ function CollegeAssistSection({ studentData, utr, setUtr, submitting, handleSubm
       {/* Step 2: Scan QR & Pay */}
       <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', padding: '24px' }}>
         <h4 style={{ margin: '0 0 4px 0', color: '#1e293b', fontSize: '1.05rem', fontWeight: 700 }}>
-          Step 2 — Scan QR Code &amp; Pay ₹500
+          Step 2 — Scan QR Code &amp; Pay ₹600
         </h4>
         <p style={{ margin: '0 0 20px 0', color: '#64748b', fontSize: '0.88rem' }}>
-          Scan the QR code and complete the payment of ₹500 (₹250 × 2 books).
+          Scan the QR code and complete the payment of ₹600 (₹300 × 2 books).
         </p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, alignItems: 'flex-start' }}>
           <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -467,14 +467,14 @@ function CollegeAssistSection({ studentData, utr, setUtr, submitting, handleSubm
               <img src="/QR.jpeg" alt="Payment QR Code" style={{ width: 320, height: 320, objectFit: 'contain', borderRadius: '8px', display: 'block' }} />
             </div>
             <div style={{ marginTop: 16, background: '#014a01', color: '#fff', borderRadius: '8px', padding: '10px 24px', fontWeight: 800, fontSize: '1.2rem', textAlign: 'center', boxShadow: '0 4px 6px rgba(1, 74, 1, 0.2)' }}>
-              Amount: ₹500
+              Amount: ₹600
             </div>
           </div>
           <div style={{ flex: '1 1 220px', color: '#475569', fontSize: '0.9rem', lineHeight: 1.8 }}>
             <p style={{ margin: '0 0 10px 0', fontWeight: 600, color: '#1e293b' }}>Payment Instructions:</p>
             <ul style={{ margin: 0, padding: '0 0 0 18px' }}>
               <li>Open any UPI app (PhonePe, GPay, Paytm, etc.)</li>
-              <li>Scan the QR code and pay exactly <strong>₹500</strong>.</li>
+              <li>Scan the QR code and pay exactly <strong>₹600</strong>.</li>
               <li>Take a <strong>screenshot</strong> of the transaction confirmation.</li>
               <li>Note down the <strong>12-digit UTR / Transaction ID</strong>.</li>
             </ul>
