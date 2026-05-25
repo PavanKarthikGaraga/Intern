@@ -35,9 +35,9 @@ function dayWindow(slot, dayNum) {
   const close = new Date(d);
   close.setHours(23, 59, 59, 999); // 11:59:59 PM IST
   
-  // Custom extension for Slot 2, Day 7: Extend to May 25th 2026, 3:00 PM IST
+  // Custom extension for Slot 2, Day 7: Extend to May 25th 2026, 6:30 PM IST
   if (Number(slot) === 2 && dayNum === 7) {
-    return { open, close: new Date('2026-05-25T15:00:00+05:30') };
+    return { open, close: new Date('2026-05-25T18:30:00+05:30') };
   }
   
   return { open, close };
