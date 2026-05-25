@@ -45,8 +45,8 @@ export async function GET(request) {
     if (slot)            { conditions.push('r.slot = ?');             params.push(slot); }
     if (mode)            { conditions.push('r.mode = ?');             params.push(mode); }
     if (search) {
-      conditions.push('(r.name LIKE ? OR r.email LIKE ? OR r.selectedDomain LIKE ? OR r.fieldOfInterest LIKE ?)');
-      params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
+      conditions.push('(r.username LIKE ? OR r.name LIKE ? OR r.email LIKE ? OR r.selectedDomain LIKE ? OR ps.problem_statement LIKE ?)');
+      params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
     }
     if (gender)          { conditions.push('r.gender = ?');           params.push(gender); }
     if (fieldOfInterest) { conditions.push('r.fieldOfInterest = ?');  params.push(fieldOfInterest); }
@@ -90,7 +90,7 @@ export async function GET(request) {
         r.state,
         r.district,
         r.pincode,
-        r.fieldOfInterest,
+        ps.problem_statement,
         r.studentLeadId,
         r.facultyMentorId,
         sl.name  AS studentLead,
@@ -100,6 +100,7 @@ export async function GET(request) {
         r.updatedAt
       FROM registrations r
       ${taskJoin}
+      LEFT JOIN problemStatements ps ON r.username = ps.username
       LEFT JOIN final f           ON r.username = f.username
       LEFT JOIN studentLeads sl   ON r.studentLeadId   = sl.username
       LEFT JOIN facultyMentors fm ON r.facultyMentorId = fm.username
@@ -130,7 +131,7 @@ export async function GET(request) {
       { key: 'state',           header: 'STATE',                 width: 18 },
       { key: 'district',        header: 'DISTRICT',              width: 18 },
       { key: 'pincode',         header: 'PINCODE',               width: 10 },
-      { key: 'fieldOfInterest', header: 'FIELD OF INTEREST',     width: 28 },
+      { key: 'problem_statement', header: 'PROBLEM STATEMENT',   width: 40 },
       { key: 'studentLeadId',   header: 'STUDENT LEAD ID',       width: 16 },
       { key: 'facultyMentorId', header: 'FACULTY MENTOR ID',     width: 18 },
       { key: 'studentLead',     header: 'STUDENT LEAD NAME',     width: 28 },
