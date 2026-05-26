@@ -285,6 +285,7 @@ function LockedView({ status, dayNum, slot }) {
 /* ── Main component ── */
 export default function DailyTasks({ studentData, onSectionChange }) {
   const [activeDay, setActiveDay] = useState(null);
+  const [editingDays, setEditingDays] = useState({});
   const [saved, setSaved]     = useState({});
   const [draft, setDraft]     = useState({});
   const [unlockedDays, setUnlockedDays] = useState([]);
@@ -505,7 +506,11 @@ export default function DailyTasks({ studentData, onSectionChange }) {
     try {
       // Strip base64 images from reportSlots before saving — they can be 5–30 MB
       // and cause Network errors/timeouts. Only persist text fields (name, description).
-      const dataToSave = { ...data, isFinal: !isDraft };
+      const dataToSave = { 
+        ...data, 
+        isFinal: !isDraft, 
+        editCount: editingDays[activeDay] ? (data.editCount || 0) + 1 : data.editCount 
+      };
       // Stamp the exact final submission time — do NOT overwrite if already set
       // (so re-saves after the initial submit don't reset the timestamp)
       if (!isDraft && !dataToSave.finalSubmittedAt) {
@@ -569,6 +574,10 @@ export default function DailyTasks({ studentData, onSectionChange }) {
       }
 
       if (lastErr) throw lastErr; // All retries failed
+
+      if (!isDraft) {
+        setEditingDays(prev => ({ ...prev, [activeDay]: false }));
+      }
 
       // ── Auto-refresh on 401 Unauthorized ──────────────────────────────────
       // If token expired mid-session, silently refresh and retry once
@@ -663,7 +672,7 @@ export default function DailyTasks({ studentData, onSectionChange }) {
   const statuses     = Object.fromEntries([1,2,3,4,5,6,7].map(d => [d, getDayStatus(d, slot, saved, username, unlockedDays, slotEnabled, dailyMarks)]));
   const meta         = activeDay === 'report-book' ? { title: 'Report Book', subtitle: 'Final Submission', icon: '📖' } : DAY_META[activeDay - 1];
   const activeStatus = activeDay === 'report-book' ? 'unlocked' : statuses[activeDay];
-  const isSaved      = activeDay === 'report-book' ? false : activeStatus === 'submitted';
+  const isSaved      = activeDay === 'report-book' ? false : (activeStatus === 'submitted' && !editingDays[activeDay]);
   // Editable if open or unlocked; preview = view only
   const isEditable   = activeDay === 'report-book' ? true : activeStatus === 'open' || activeStatus === 'unlocked';
   const isPreview    = activeDay === 'report-book' ? false : activeStatus === 'preview';
@@ -872,12 +881,30 @@ export default function DailyTasks({ studentData, onSectionChange }) {
                         {isSaved && (() => {
                           const mark = dailyMarks[`d${activeDay}`];
                           const max  = DAY_MAX[activeDay];
-                          if (typeof mark === 'number' || (typeof mark === 'string' && mark !== '')) return (
-                            <span style={{ display:'flex', alignItems:'center', gap:6, background:'#e8f5e9', border:'1px solid #a5d6a7', borderRadius:8, padding:'4px 12px', fontSize:'0.85rem', fontWeight:700, color:'#2e7d32' }}>
-                              <FaCheckCircle /> Evaluated: {mark}/{max}
-                            </span>
+                          const { open, close } = dayWindow(slot, activeDay);
+                          const isWindowOpen = serverNow() >= open.getTime() && serverNow() <= close.getTime();
+                          const canEdit = Number(slot) >= 3 && (dayData(activeDay).editCount || 0) < 1 && isWindowOpen;
+
+                          return (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                              {typeof mark === 'number' || (typeof mark === 'string' && mark !== '') ? (
+                                <span style={{ display:'flex', alignItems:'center', gap:6, background:'#e8f5e9', border:'1px solid #a5d6a7', borderRadius:8, padding:'4px 12px', fontSize:'0.85rem', fontWeight:700, color:'#2e7d32' }}>
+                                  <FaCheckCircle /> Evaluated: {mark}/{max}
+                                </span>
+                              ) : (
+                                <span style={{fontSize:'0.82rem',color:'#e65100', fontWeight:600}}>⏳ Evaluation Pending</span>
+                              )}
+                              {canEdit && (
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingDays(prev => ({...prev, [activeDay]: true}))}
+                                  style={{ background: '#f59e0b', color: '#fff', border: 'none', padding: '4px 12px', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer' }}
+                                >
+                                  Edit Submission
+                                </button>
+                              )}
+                            </div>
                           );
-                          return <span style={{fontSize:'0.82rem',color:'#e65100', fontWeight:600}}>⏳ Evaluation Pending</span>;
                         })()}
 
                         {isPreview && <span style={{fontSize:'0.82rem',color:'#1d4ed8'}}>Submission opens {new Date(dayWindow(slot, activeDay).open).toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit', hour12:true })}</span>}
@@ -905,12 +932,30 @@ export default function DailyTasks({ studentData, onSectionChange }) {
                       {isSaved && (() => {
                         const mark = dailyMarks[`d${activeDay}`];
                         const max  = DAY_MAX[activeDay];
-                        if (typeof mark === 'number' || (typeof mark === 'string' && mark !== '')) return (
-                          <span style={{ display:'flex', alignItems:'center', gap:6, background:'#e8f5e9', border:'1px solid #a5d6a7', borderRadius:8, padding:'4px 12px', fontSize:'0.85rem', fontWeight:700, color:'#2e7d32' }}>
-                            <FaCheckCircle /> Evaluated: {mark}/{max}
-                          </span>
+                        const { open, close } = dayWindow(slot, activeDay);
+                        const isWindowOpen = serverNow() >= open.getTime() && serverNow() <= close.getTime();
+                        const canEdit = Number(slot) >= 3 && (dayData(activeDay).editCount || 0) < 1 && isWindowOpen;
+
+                        return (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            {typeof mark === 'number' || (typeof mark === 'string' && mark !== '') ? (
+                              <span style={{ display:'flex', alignItems:'center', gap:6, background:'#e8f5e9', border:'1px solid #a5d6a7', borderRadius:8, padding:'4px 12px', fontSize:'0.85rem', fontWeight:700, color:'#2e7d32' }}>
+                                <FaCheckCircle /> Evaluated: {mark}/{max}
+                              </span>
+                            ) : (
+                              <span style={{fontSize:'0.82rem',color:'#e65100', fontWeight:600}}>⏳ Evaluation Pending</span>
+                            )}
+                            {canEdit && (
+                              <button
+                                type="button"
+                                onClick={() => setEditingDays(prev => ({...prev, [activeDay]: true}))}
+                                style={{ background: '#f59e0b', color: '#fff', border: 'none', padding: '4px 12px', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer' }}
+                              >
+                                Edit Submission
+                              </button>
+                            )}
+                          </div>
                         );
-                        return <span style={{fontSize:'0.82rem',color:'#e65100', fontWeight:600}}>⏳ Evaluation Pending</span>;
                       })()}
                       {isPreview && <span style={{fontSize:'0.82rem',color:'#1d4ed8'}}>Submission opens {new Date(dayWindow(slot, activeDay).open).toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit', hour12:true })}</span>}
                       {msg && <span className={`dt-save-msg ${msgType}`}>{msg}</span>}
