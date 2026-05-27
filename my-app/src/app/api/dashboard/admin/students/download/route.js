@@ -45,8 +45,8 @@ export async function GET(request) {
     if (slot)            { conditions.push('r.slot = ?');             params.push(slot); }
     if (mode)            { conditions.push('r.mode = ?');             params.push(mode); }
     if (search) {
-      conditions.push('(r.username LIKE ? OR r.name LIKE ? OR r.email LIKE ? OR r.selectedDomain LIKE ? OR ps.problem_statement LIKE ?)');
-      params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
+      conditions.push('(r.username LIKE ? OR r.name LIKE ? OR r.email LIKE ? OR r.selectedDomain LIKE ?)');
+      params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
     }
     if (gender)          { conditions.push('r.gender = ?');           params.push(gender); }
     if (fieldOfInterest) { conditions.push('r.fieldOfInterest = ?');  params.push(fieldOfInterest); }

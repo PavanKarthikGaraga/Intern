@@ -75,8 +75,8 @@ export async function GET(req) {
       params.push(mode);
     }
     if (search) {
-      conditions.push('(r.username LIKE ? OR r.name LIKE ? OR r.email LIKE ? OR r.selectedDomain LIKE ? OR ps.problem_statement LIKE ?)');
-      params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
+      conditions.push('(r.username LIKE ? OR r.name LIKE ? OR r.email LIKE ? OR r.selectedDomain LIKE ?)');
+      params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
     }
     if (gender) {
       conditions.push('r.gender = ?');
@@ -116,7 +116,7 @@ export async function GET(req) {
     const allParams = [...taskParams, ...params];
 
     const countQuery = `
-      SELECT COUNT(*) as total
+      SELECT COUNT(DISTINCT r.username) as total
       FROM registrations r
       ${taskJoin}
       LEFT JOIN problemStatements ps ON r.username = ps.username
@@ -130,18 +130,18 @@ export async function GET(req) {
     const studentsQuery = `
       SELECT 
         r.username,
-        r.name,
-        r.selectedDomain,
-        r.mode,
-        r.slot,
-        r.email,
-        r.phoneNumber,
-        ps.problem_statement,
-        f.completed,
-        sl.name as leadName,
-        fm.name as facultyName,
-        r.updatedAt
-        ${taskJoin ? ', dt.submittedAt as taskSubmittedAt' : ''}
+        MAX(r.name) as name,
+        MAX(r.selectedDomain) as selectedDomain,
+        MAX(r.mode) as mode,
+        MAX(r.slot) as slot,
+        MAX(r.email) as email,
+        MAX(r.phoneNumber) as phoneNumber,
+        MAX(ps.problem_statement) as problem_statement,
+        MAX(f.completed) as completed,
+        MAX(sl.name) as leadName,
+        MAX(fm.name) as facultyName,
+        MAX(r.updatedAt) as updatedAt
+        ${taskJoin ? ', MAX(dt.submittedAt) as taskSubmittedAt' : ''}
       FROM registrations r
       ${taskJoin}
       LEFT JOIN problemStatements ps ON r.username = ps.username
@@ -149,7 +149,8 @@ export async function GET(req) {
       LEFT JOIN studentLeads sl ON r.studentLeadId = sl.username
       LEFT JOIN facultyMentors fm ON r.facultyMentorId = fm.username
       ${whereClause}
-      ORDER BY r.slot
+      GROUP BY r.username
+      ORDER BY MAX(r.slot)
       LIMIT ? OFFSET ?
     `;
 
