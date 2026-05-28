@@ -463,8 +463,9 @@ export default function DailyTasks({ studentData, onSectionChange }) {
         setMsg("Please upload your intervention report to Google Drive and paste the public link.");
         setMsgType('err'); return;
       }
-      // Slot 1: both MyGov + intervention drive link are required
-      if (isSlot1 && !data.mygovDriveLink?.trim()) {
+      // Slot 1 and Slot 3: both MyGov + intervention drive link are required
+      const isSlot3 = Number(studentData?.slot) === 3;
+      if ((isSlot1 || isSlot3) && !data.mygovDriveLink?.trim()) {
         setMsg("Please complete the MyGov quizzes/pledges, upload your certificates to Google Drive, and paste the link before submitting.");
         setMsgType('err'); return;
       }
@@ -2422,11 +2423,16 @@ function Day6({ data, onChange, readOnly, studentData }) {
   const template = getInterventionTemplate(domain);
   const isSlot1 = Number(studentData?.slot) === 1;
 
+  const isSlot3 = Number(studentData?.slot) === 3;
+  const isMyGovSlot = isSlot1 || isSlot3;
+
   const QUIZZES = [
     { title: 'Bharat GI Quiz – Celebrate India’s Heritage', url: 'https://quiz.mygov.in/quiz/bharat-gi-quiz-celebrate-indias-heritage/' },
     { title: 'Commonwealth Games 2030 Quiz', url: 'https://quiz.mygov.in/quiz/commonwealth-games-2030-quiz/' },
     { title: 'MOHFW Fire Safety Quiz 2026', url: 'https://quiz.mygov.in/quiz/mohfw-fire-safety-quiz-2026/' },
-    { title: 'Quiz on Our Exam Warriors – Celebrating Exams', url: 'https://quiz.mygov.in/quiz/quiz-on-our-exam-warriors-celebrating-exams/' },
+    isSlot3
+      ? { title: 'Bharatiya Gyan Quiz Series Mathematics Astronomy', url: 'https://quiz.mygov.in/quiz/bharatiya-gyan-quiz-series-mathematics-astronomy/' }
+      : { title: 'Quiz on Our Exam Warriors – Celebrating Exams', url: 'https://quiz.mygov.in/quiz/quiz-on-our-exam-warriors-celebrating-exams/' },
     { title: 'Dr. B.R. Ambedkar’s Life and Contributions Quiz Competition 2026', url: 'https://quiz.mygov.in/quiz/dr-b-r-ambedkars-life-and-contributions-quiz-competition-2026/' },
     { title: 'Vande Mataram 150 Years Quiz', url: 'https://quiz.mygov.in/quiz/vande-mataram-150-years-quiz/' },
   ];
@@ -2442,8 +2448,8 @@ function Day6({ data, onChange, readOnly, studentData }) {
   return (
     <div>
 
-      {/* ── MyGov India Task (Slot 1 only) ── */}
-      {isSlot1 && (
+      {/* ── MyGov India Task (Slot 1 & Slot 3) ── */}
+      {isMyGovSlot && (
         <div style={{ marginBottom: 28, border: '2px solid #1e40af', borderRadius: 12, overflow: 'hidden' }}>
           <div style={{ background: '#1e40af', padding: '12px 18px', color: '#fff', fontWeight: 700, fontSize: '1rem' }}>
             🇮🇳 MyGov India Task
