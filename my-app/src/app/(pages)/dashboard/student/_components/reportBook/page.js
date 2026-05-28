@@ -17,10 +17,10 @@ export default function ReportBook({ studentData }) {
 
   // Deadlines: 
   // Slot 1: Friday, 29th May 2026, 6:00 PM IST
-  // Slot 2+: Thursday, 28th May 2026, 10:00 AM IST
+  // Slot 2+: Saturday, 30th May 2026, 6:00 PM IST
   const deadline = isSlot1 
     ? new Date('2026-05-29T18:00:00+05:30').getTime()
-    : new Date('2026-05-28T10:00:00+05:30').getTime();
+    : new Date('2026-05-30T18:00:00+05:30').getTime();
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -111,7 +111,7 @@ export default function ReportBook({ studentData }) {
           <div>
             <h3 style={{ margin: 0, fontSize: '1rem', color: timeLeft === 'DEADLINE PASSED' ? '#c62828' : '#e65100', fontWeight: 700 }}>Submission Deadline</h3>
             <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: '#333' }}>
-              {timeLeft} <span style={{ fontSize: '0.85rem', fontWeight: 500, color: '#666' }}>{isSlot1 ? '(Friday, 29th May, 6:00 PM IST)' : '(Thursday, 28th May, 10:00 AM IST)'}</span>
+              {timeLeft} <span style={{ fontSize: '0.85rem', fontWeight: 500, color: '#666' }}>{isSlot1 ? '(Friday, 29th May, 6:00 PM IST)' : '(Saturday, 30th May, 6:00 PM IST)'}</span>
             </p>
           </div>
         </div>
