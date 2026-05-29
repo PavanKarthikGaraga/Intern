@@ -279,6 +279,13 @@ export default function AdminDashboard() {
           </button>
 
           <button
+            className={`sidebar-item ${activeSection === 'report-deadline' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('report-deadline')}
+          >
+            <span className="item-label">Report Deadline</span>
+          </button>
+
+          <button
             className={`sidebar-item ${activeSection === 'evaluate' ? 'active' : ''}`}
             onClick={() => handleSectionClick('evaluate')}
           >
@@ -345,7 +352,7 @@ export default function AdminDashboard() {
           {(user.username === '2300032048' || user.username === '2400030188@kluniversity.in' || user.username === '2400030188') && (
             <div className="dropdown">
               <button
-                className={`sidebar-item ${['data-download', 'sql-executor','certificate-download','report-control','report-deadline'].includes(activeSection) ? 'active' : ''}`}
+                className={`sidebar-item ${['data-download', 'sql-executor','certificate-download','report-control'].includes(activeSection) ? 'active' : ''}`}
                 onClick={() => setShowDevDropdown(!showDevDropdown)}
               >
                 <span className="item-label">Dev</span>
@@ -375,12 +382,6 @@ export default function AdminDashboard() {
                     onClick={() => handleSectionClick('report-control')}
                   >
                     Report Control
-                  </button>
-                  <button
-                    className={`dropdown-item ${activeSection === 'report-deadline' ? 'active' : ''}`}
-                    onClick={() => handleSectionClick('report-deadline')}
-                  >
-                    Report Deadline
                   </button>
                 </div>
               )}
