@@ -38,15 +38,15 @@ export async function GET() {
         // Insert defaults if empty
         await pool.query(`
             INSERT IGNORE INTO reportDeadlines (slot, deadline) VALUES
-            (1, '2026-05-29 18:00:00'),
-            (2, '2026-05-30 18:00:00'),
-            (3, '2026-05-30 18:00:00'),
-            (4, '2026-05-30 18:00:00'),
-            (5, '2026-05-30 18:00:00'),
-            (6, '2026-05-30 18:00:00')
+            (1, '2026-05-29 12:30:00'),
+            (2, '2026-05-30 12:30:00'),
+            (3, '2026-05-30 12:30:00'),
+            (4, '2026-05-30 12:30:00'),
+            (5, '2026-05-30 12:30:00'),
+            (6, '2026-05-30 12:30:00')
         `);
 
-        const [rows] = await pool.query('SELECT slot, deadline FROM reportDeadlines ORDER BY slot ASC');
+        const [rows] = await pool.query("SELECT slot, DATE_FORMAT(deadline, '%Y-%m-%dT%H:%i:%s.000Z') as deadline FROM reportDeadlines ORDER BY slot ASC");
         return NextResponse.json({ success: true, data: rows });
     } catch (error) {
         console.error('Error fetching deadlines:', error);
@@ -67,13 +67,13 @@ export async function PUT(req) {
             return NextResponse.json({ error: 'Missing slot or deadline' }, { status: 400 });
         }
 
-        // Validate date string
-        const parsedDate = new Date(deadline);
+        // Validate date string (Append +05:30 to explicitly parse as IST)
+        const parsedDate = new Date(`${deadline}+05:30`);
         if (isNaN(parsedDate.getTime())) {
             return NextResponse.json({ error: 'Invalid date format' }, { status: 400 });
         }
         
-        // MySQL expects YYYY-MM-DD HH:MM:SS
+        // MySQL expects YYYY-MM-DD HH:MM:SS (Save in UTC)
         const mysqlDate = parsedDate.toISOString().slice(0, 19).replace('T', ' ');
 
         await pool.query(

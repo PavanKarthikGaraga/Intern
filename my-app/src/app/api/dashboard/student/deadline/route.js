@@ -32,11 +32,11 @@ export async function GET(req) {
             return NextResponse.json({ error: 'Slot is required' }, { status: 400 });
         }
 
-        const [rows] = await pool.query('SELECT deadline FROM reportDeadlines WHERE slot = ?', [slot]);
+        const [rows] = await pool.query("SELECT DATE_FORMAT(deadline, '%Y-%m-%dT%H:%i:%s.000Z') as deadline FROM reportDeadlines WHERE slot = ?", [slot]);
         
         if (rows.length === 0) {
             // Default fallback if no row
-            const defaultDate = Number(slot) === 1 ? '2026-05-29 18:00:00' : '2026-05-30 18:00:00';
+            const defaultDate = Number(slot) === 1 ? '2026-05-29T12:30:00.000Z' : '2026-05-30T12:30:00.000Z';
             return NextResponse.json({ success: true, data: { deadline: defaultDate } });
         }
 
