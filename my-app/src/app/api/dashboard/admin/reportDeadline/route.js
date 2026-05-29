@@ -1,20 +1,21 @@
-import db from '@/lib/db';
-import { NextResponse } from 'next/server';
-import { headers } from 'next/headers';
-import jwt from 'jsonwebtoken';
+import { NextResponse } from "next/server";
+import pool from "@/lib/db";
+import { verifyAccessToken } from "@/lib/jwt";
+import { cookies } from 'next/headers';
 
 const verifyAdmin = async () => {
-    const headersList = await headers();
-    const token = headersList.get('authorization')?.split(' ')[1];
-    
-    if (!token) return null;
-    try {
-        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN);
-        if (decoded.role !== 'admin') return null;
-        return decoded;
-    } catch {
+    const cookieStore = await cookies();
+    const accessToken = await cookieStore.get('accessToken');
+
+    if (!accessToken?.value) {
         return null;
     }
+
+    const decoded = await verifyAccessToken(accessToken.value);
+    if (!decoded || decoded.role !== 'admin') {
+        return null;
+    }
+    return decoded;
 };
 
 export async function GET() {
@@ -25,7 +26,7 @@ export async function GET() {
         }
 
         // Auto-create table if missing for smooth deployment
-        await db.query(`
+        await pool.query(`
             CREATE TABLE IF NOT EXISTS reportDeadlines (
                 id BIGINT AUTO_INCREMENT PRIMARY KEY,
                 slot INT NOT NULL UNIQUE,
@@ -35,7 +36,7 @@ export async function GET() {
             );
         `);
         // Insert defaults if empty
-        await db.query(`
+        await pool.query(`
             INSERT IGNORE INTO reportDeadlines (slot, deadline) VALUES
             (1, '2026-05-29 18:00:00'),
             (2, '2026-05-30 18:00:00'),
@@ -45,7 +46,7 @@ export async function GET() {
             (6, '2026-05-30 18:00:00')
         `);
 
-        const [rows] = await db.query('SELECT slot, deadline FROM reportDeadlines ORDER BY slot ASC');
+        const [rows] = await pool.query('SELECT slot, deadline FROM reportDeadlines ORDER BY slot ASC');
         return NextResponse.json({ success: true, data: rows });
     } catch (error) {
         console.error('Error fetching deadlines:', error);
@@ -75,7 +76,7 @@ export async function PUT(req) {
         // MySQL expects YYYY-MM-DD HH:MM:SS
         const mysqlDate = parsedDate.toISOString().slice(0, 19).replace('T', ' ');
 
-        await db.query(
+        await pool.query(
             'UPDATE reportDeadlines SET deadline = ? WHERE slot = ?',
             [mysqlDate, slot]
         );

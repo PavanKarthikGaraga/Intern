@@ -1,27 +1,26 @@
-import db from '@/lib/db';
-import { NextResponse } from 'next/server';
-import { headers } from 'next/headers';
-import jwt from 'jsonwebtoken';
+import { NextResponse } from "next/server";
+import pool from "@/lib/db";
+import { verifyAccessToken } from "@/lib/jwt";
+import { cookies } from 'next/headers';
 
 const verifyStudent = async () => {
-    const headersList = await headers();
-    const token = headersList.get('authorization')?.split(' ')[1];
-    
-    if (!token) return null;
-    try {
-        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN);
-        if (decoded.role !== 'student' && decoded.role !== 'studentLead') return null;
-        return decoded;
-    } catch {
+    const cookieStore = await cookies();
+    const accessToken = await cookieStore.get('accessToken');
+
+    if (!accessToken?.value) {
         return null;
     }
+
+    const decoded = await verifyAccessToken(accessToken.value);
+    if (!decoded || (decoded.role !== 'student' && decoded.role !== 'studentLead')) {
+        return null;
+    }
+    return decoded;
 };
 
 export async function GET(req) {
     try {
         const student = await verifyStudent();
-        // Allow unauthenticated fetch if we just want it by slot? 
-        // Best to require auth since they should have it in dashboard.
         if (!student) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
@@ -33,7 +32,7 @@ export async function GET(req) {
             return NextResponse.json({ error: 'Slot is required' }, { status: 400 });
         }
 
-        const [rows] = await db.query('SELECT deadline FROM reportDeadlines WHERE slot = ?', [slot]);
+        const [rows] = await pool.query('SELECT deadline FROM reportDeadlines WHERE slot = ?', [slot]);
         
         if (rows.length === 0) {
             // Default fallback if no row
