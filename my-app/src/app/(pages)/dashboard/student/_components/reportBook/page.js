@@ -15,17 +15,42 @@ export default function ReportBook({ studentData }) {
   const adminRemarks = reportBook?.adminRemarks;
   const reportBookMarks = reportBook?.reportBookMarks;
 
-  // Deadlines: 
-  // Slot 1: Friday, 29th May 2026, 6:00 PM IST
-  // Slot 2+: Saturday, 30th May 2026, 6:00 PM IST
-  const deadline = isSlot1 
-    ? new Date('2026-05-29T18:00:00+05:30').getTime()
-    : new Date('2026-05-30T18:00:00+05:30').getTime();
+  const [deadlineTime, setDeadlineTime] = useState(null);
 
   useEffect(() => {
+    const fetchDeadline = async () => {
+      try {
+        const slot = studentData?.slot || 1;
+        const res = await fetch(`/api/dashboard/student/deadline?slot=${slot}`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
+        });
+        const data = await res.json();
+        if (data.success && data.data?.deadline) {
+          const d = new Date(data.data.deadline);
+          // If the date string doesn't include timezone information, it might be parsed as local time.
+          // In our API, it's returning a standard UTC string or ISO string depending on MySQL dialect.
+          // Actually, let's just use the JS Date object returned. If it's an ISO string ending in Z,
+          // it's already properly timezone-aware.
+          setDeadlineTime(d.getTime());
+        } else {
+          setDeadlineTime(isSlot1 
+            ? new Date('2026-05-29T18:00:00+05:30').getTime()
+            : new Date('2026-05-30T18:00:00+05:30').getTime());
+        }
+      } catch (e) {
+        setDeadlineTime(isSlot1 
+          ? new Date('2026-05-29T18:00:00+05:30').getTime()
+          : new Date('2026-05-30T18:00:00+05:30').getTime());
+      }
+    };
+    fetchDeadline();
+  }, [studentData, isSlot1]);
+
+  useEffect(() => {
+    if (!deadlineTime) return;
     const timer = setInterval(() => {
       const now = new Date().getTime();
-      const distance = deadline - now;
+      const distance = deadlineTime - now;
       if (distance < 0) {
         clearInterval(timer);
         setTimeLeft('DEADLINE PASSED');
@@ -38,7 +63,7 @@ export default function ReportBook({ studentData }) {
       setTimeLeft(`${days}d ${hours}h ${minutes}m ${seconds}s`);
     }, 1000);
     return () => clearInterval(timer);
-  }, [deadline]);
+  }, [deadlineTime]);
 
   const handleSubmitLink = async (e) => {
     e.preventDefault();
@@ -111,7 +136,9 @@ export default function ReportBook({ studentData }) {
           <div>
             <h3 style={{ margin: 0, fontSize: '1rem', color: timeLeft === 'DEADLINE PASSED' ? '#c62828' : '#e65100', fontWeight: 700 }}>Submission Deadline</h3>
             <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: '#333' }}>
-              {timeLeft} <span style={{ fontSize: '0.85rem', fontWeight: 500, color: '#666' }}>{isSlot1 ? '(Friday, 29th May, 6:00 PM IST)' : '(Saturday, 30th May, 6:00 PM IST)'}</span>
+              {timeLeft} <span style={{ fontSize: '0.85rem', fontWeight: 500, color: '#666' }}>
+                {deadlineTime ? `(${new Date(deadlineTime).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: 'numeric', hour12: true })} IST)` : ''}
+              </span>
             </p>
           </div>
         </div>

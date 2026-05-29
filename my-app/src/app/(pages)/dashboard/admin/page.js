@@ -15,6 +15,7 @@ import FacultyMentors from './_components/facultyMentors/page';
 import Admins from './_components/admins/page';
 import DataDownload from './_components/dataDownload/page';
 import ReportControl from './_components/reportControl/page';
+import ReportDeadline from './_components/reportDeadline/page';
 // import PM2Logs from './_components/pm2-logs/page';
 import TokenGenerator from './_components/tokenGenerator/page';
 import SQLExecutor from './_components/sqlExecutor/page';
@@ -344,7 +345,7 @@ export default function AdminDashboard() {
           {(user.username === '2300032048' || user.username === '2400030188@kluniversity.in' || user.username === '2400030188') && (
             <div className="dropdown">
               <button
-                className={`sidebar-item ${['data-download', 'sql-executor','certificate-download','report-control'].includes(activeSection) ? 'active' : ''}`}
+                className={`sidebar-item ${['data-download', 'sql-executor','certificate-download','report-control','report-deadline'].includes(activeSection) ? 'active' : ''}`}
                 onClick={() => setShowDevDropdown(!showDevDropdown)}
               >
                 <span className="item-label">Dev</span>
@@ -374,6 +375,12 @@ export default function AdminDashboard() {
                     onClick={() => handleSectionClick('report-control')}
                   >
                     Report Control
+                  </button>
+                  <button
+                    className={`dropdown-item ${activeSection === 'report-deadline' ? 'active' : ''}`}
+                    onClick={() => handleSectionClick('report-deadline')}
+                  >
+                    Report Deadline
                   </button>
                 </div>
               )}
@@ -410,6 +417,7 @@ export default function AdminDashboard() {
            activeSection === 'admins' ? <Admins /> :
            activeSection === 'data-download' ? <DataDownload /> :
            activeSection === 'report-control' ? <ReportControl /> :
+           activeSection === 'report-deadline' ? <ReportDeadline /> :
            activeSection === 'token-generator' ? <TokenGenerator /> :
            activeSection === 'sql-executor' ? <SQLExecutor /> :
            activeSection === 'reset-password' ? <ResetPassword /> :
