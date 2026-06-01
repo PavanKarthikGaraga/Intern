@@ -18,12 +18,16 @@ function MarksContent() {
   const username = searchParams.get('username');
   const name = searchParams.get('name');
   const day = parseInt(searchParams.get('day'));
+  const slot = searchParams.get('slot');
   
   const [totalMarks, setTotalMarks] = useState(0);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
-  const maxMarks = MAX_MARKS_MAPPING[day] || 10;
+  let maxMarks = MAX_MARKS_MAPPING[day] || 10;
+  if (day === 7 && slot && Number(slot) >= 2) {
+    maxMarks = 20;
+  }
 
   const handleSave = () => {
     if (totalMarks < 0 || totalMarks > maxMarks) {

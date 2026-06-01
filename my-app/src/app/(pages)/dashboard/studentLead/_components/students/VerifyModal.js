@@ -50,7 +50,7 @@ export default function VerifyModal({ username, onClose, onVerify }) {
       const top = 0;
       
       window.open(
-        `/dashboard/studentLead/marks?username=${username}&day=${day}&name=${studentData.name}`,
+        `/dashboard/studentLead/marks?username=${username}&day=${day}&name=${studentData.name}&slot=${studentData.slot}`,
         'MarksModal',
         `width=${width},height=${height},left=${left},top=${top}`
       );

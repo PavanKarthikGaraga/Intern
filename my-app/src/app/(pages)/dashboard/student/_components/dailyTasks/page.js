@@ -311,7 +311,10 @@ export default function DailyTasks({ studentData, onSectionChange }) {
   const dailyMarks = useMemo(() => studentData?.dailyMarks || {}, [studentData?.dailyMarks]);
 
   // Max marks per day (matches evaluation rubric)
-  const DAY_MAX = { 1:10, 2:5, 3:5, 4:5, 5:15, 6:20, 7:40 };
+  const rawSlot = studentData?.slot || "1";
+  const parsedSlot = parseInt(String(rawSlot).replace(/\D/g, ''), 10) || 1;
+  const isSlot2OrMore = parsedSlot >= 2;
+  const DAY_MAX = { 1:10, 2:5, 3:5, 4:5, 5:15, 6:20, 7: isSlot2OrMore ? 20 : 40 };
 
   // Store slot/username/slotEnabled/dailyMarks in refs so the fetch effect can
   // read their current values without re-running every time they change.
@@ -424,8 +427,8 @@ export default function DailyTasks({ studentData, onSectionChange }) {
         }
       }
     }
-    // Slot 2: MyGov Drive Link mandatory for Day 5
-    if (!isDraft && activeDay === 5 && Number(studentData?.slot) === 2) {
+    // Slot 2 or Slot >= 4: MyGov Drive Link mandatory for Day 5
+    if (!isDraft && activeDay === 5 && (Number(studentData?.slot) === 2 || Number(studentData?.slot) >= 4)) {
       if (!data.mygovDriveLink?.trim()) {
         setMsg('Please complete the Day 5 MyGov quizzes & pledges, upload certificates to Google Drive, and paste the link before submitting.');
         setMsgType('err'); return;
@@ -463,9 +466,10 @@ export default function DailyTasks({ studentData, onSectionChange }) {
         setMsg("Please upload your intervention report to Google Drive and paste the public link.");
         setMsgType('err'); return;
       }
-      // Slot 1 and Slot 3: both MyGov + intervention drive link are required
+      // Slot 1, Slot 3, and Slot >= 4: both MyGov + intervention drive link are required
       const isSlot3 = Number(studentData?.slot) === 3;
-      if ((isSlot1 || isSlot3) && !data.mygovDriveLink?.trim()) {
+      const isSlot4OrMore = Number(studentData?.slot) >= 4;
+      if ((isSlot1 || isSlot3 || isSlot4OrMore) && !data.mygovDriveLink?.trim()) {
         setMsg("Please complete the MyGov quizzes/pledges, upload your certificates to Google Drive, and paste the link before submitting.");
         setMsgType('err'); return;
       }
@@ -1876,6 +1880,7 @@ function Day5({ saved, survey, data, onChange, readOnly, studentData }) {
   );
 
   const isSlot2 = Number(studentData?.slot) === 2;
+  const isSlot4OrMore = Number(studentData?.slot) >= 4;
 
   const DAY5_MYGOV = {
     quizzes: [
@@ -1888,10 +1893,25 @@ function Day5({ saved, survey, data, onChange, readOnly, studentData }) {
     ],
   };
 
+  const SLOT4_DAY5_MYGOV = {
+    quizzes: [
+      { title: 'Bharat GI Quiz – Celebrate India’s Heritage', url: 'https://quiz.mygov.in/quiz/bharat-gi-quiz-celebrate-indias-heritage/' },
+      { title: 'Commonwealth Games 2030 Quiz', url: 'https://quiz.mygov.in/quiz/commonwealth-games-2030-quiz/' },
+      { title: 'Dr. B.R. Ambedkar’s Life and Contributions Quiz Competition 2026', url: 'https://quiz.mygov.in/quiz/dr-b-r-ambedkars-life-and-contributions-quiz-competition-2026/' },
+    ],
+    pledges: [
+      { title: 'Mother Earth 2026 Pledge', url: 'https://pledge.mygov.in/mother-earth-2026/' },
+      { title: 'Social Justice Pledge', url: 'https://pledge.mygov.in/social-justice/' },
+      { title: 'Eat Right 2026 Pledge', url: 'https://pledge.mygov.in/eat-right-2026/' },
+    ],
+  };
+
+  const activeMyGovTasks = isSlot4OrMore ? SLOT4_DAY5_MYGOV : DAY5_MYGOV;
+
   return (
     <div>
-      {/* ── MyGov India Task (Slot 2, Day 5 only) ── */}
-      {isSlot2 && (
+      {/* ── MyGov India Task (Slot 2 or Slot 4+, Day 5 only) ── */}
+      {(isSlot2 || isSlot4OrMore) && (
         <div style={{ marginBottom: 28, border: '2px solid #1e40af', borderRadius: 12, overflow: 'hidden' }}>
           <div style={{ background: '#1e40af', padding: '12px 18px', color: '#fff', fontWeight: 700, fontSize: '1rem' }}>
             🇮🇳 MyGov India Task – Day 5
@@ -1901,8 +1921,8 @@ function Day5({ saved, survey, data, onChange, readOnly, studentData }) {
             <p style={{ margin: '0 0 12px', color: '#334155' }}>Complete today&apos;s final MyGov tasks (if not already done, create your account on <a href="https://www.mygov.in/" target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8', fontWeight: 600 }}>MyGov India</a>):</p>
 
             <div style={{ marginBottom: 16 }}>
-              <div style={{ fontWeight: 700, color: '#1e40af', marginBottom: 8, fontSize: '0.95rem' }}>🧠 QUIZZES (Complete both):</div>
-              {DAY5_MYGOV.quizzes.map((q, i) => (
+              <div style={{ fontWeight: 700, color: '#1e40af', marginBottom: 8, fontSize: '0.95rem' }}>🧠 QUIZZES (Complete all {activeMyGovTasks.quizzes.length}):</div>
+              {activeMyGovTasks.quizzes.map((q, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
                   <span style={{ color: '#1e40af', fontWeight: 700, minWidth: 20 }}>•</span>
                   <a href={q.url} target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8', fontSize: '0.88rem', wordBreak: 'break-all' }}>{q.title}</a>
@@ -1911,8 +1931,8 @@ function Day5({ saved, survey, data, onChange, readOnly, studentData }) {
             </div>
 
             <div style={{ marginBottom: 16 }}>
-              <div style={{ fontWeight: 700, color: '#15803d', marginBottom: 8, fontSize: '0.95rem' }}>🤝 PLEDGES (Complete both):</div>
-              {DAY5_MYGOV.pledges.map((p, i) => (
+              <div style={{ fontWeight: 700, color: '#15803d', marginBottom: 8, fontSize: '0.95rem' }}>🤝 PLEDGES (Complete all {activeMyGovTasks.pledges.length}):</div>
+              {activeMyGovTasks.pledges.map((p, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
                   <span style={{ color: '#15803d', fontWeight: 700, minWidth: 20 }}>•</span>
                   <a href={p.url} target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8', fontSize: '0.88rem', wordBreak: 'break-all' }}>{p.title}</a>
@@ -1921,7 +1941,7 @@ function Day5({ saved, survey, data, onChange, readOnly, studentData }) {
             </div>
 
             <div style={{ background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: 8, padding: '10px 14px', fontSize: '0.87rem', color: '#78350f', marginBottom: 14 }}>
-              ⚠️ After completing <strong>2 quizzes</strong> and <strong>2 pledges</strong> today, save all 4 certificates in a folder, upload to Google Drive, make the link <strong>public (anyone can view)</strong>, and submit the URL below.
+              ⚠️ After completing <strong>{activeMyGovTasks.quizzes.length} quizzes</strong> and <strong>{activeMyGovTasks.pledges.length} pledges</strong> today, save all {activeMyGovTasks.quizzes.length + activeMyGovTasks.pledges.length} certificates in a folder, upload to Google Drive, make the link <strong>public (anyone can view)</strong>, and submit the URL below.
             </div>
 
             <label style={{ fontWeight: 700, color: '#1e3a8a', display: 'block', marginBottom: 6 }}>
@@ -2424,9 +2444,10 @@ function Day6({ data, onChange, readOnly, studentData }) {
   const isSlot1 = Number(studentData?.slot) === 1;
 
   const isSlot3 = Number(studentData?.slot) === 3;
-  const isMyGovSlot = isSlot1 || isSlot3;
+  const isSlot4OrMore = Number(studentData?.slot) >= 4;
+  const isMyGovSlot = isSlot1 || isSlot3 || isSlot4OrMore;
 
-  const QUIZZES = [
+  const QUIZZES_SLOT_1_3 = [
     { title: 'Bharat GI Quiz – Celebrate India’s Heritage', url: 'https://quiz.mygov.in/quiz/bharat-gi-quiz-celebrate-indias-heritage/' },
     { title: 'Commonwealth Games 2030 Quiz', url: 'https://quiz.mygov.in/quiz/commonwealth-games-2030-quiz/' },
     { title: 'MOHFW Fire Safety Quiz 2026', url: 'https://quiz.mygov.in/quiz/mohfw-fire-safety-quiz-2026/' },
@@ -2436,7 +2457,7 @@ function Day6({ data, onChange, readOnly, studentData }) {
     { title: 'Dr. B.R. Ambedkar’s Life and Contributions Quiz Competition 2026', url: 'https://quiz.mygov.in/quiz/dr-b-r-ambedkars-life-and-contributions-quiz-competition-2026/' },
     { title: 'Vande Mataram 150 Years Quiz', url: 'https://quiz.mygov.in/quiz/vande-mataram-150-years-quiz/' },
   ];
-  const PLEDGES = [
+  const PLEDGES_SLOT_1_3 = [
     { title: 'Mother Earth 2026 Pledge', url: 'https://pledge.mygov.in/mother-earth-2026/' },
     { title: 'Social Justice Pledge', url: 'https://pledge.mygov.in/social-justice/' },
     { title: 'Eat Right 2026 Pledge', url: 'https://pledge.mygov.in/eat-right-2026/' },
@@ -2444,6 +2465,21 @@ function Day6({ data, onChange, readOnly, studentData }) {
     { title: 'Bharat Vikas 2025 Pledge', url: 'https://pledge.mygov.in/bharat-vikas-2025/' },
     { title: 'National Technology Day 2026 Pledge', url: 'https://pledge.mygov.in/national-technology-day-2026/' },
   ];
+
+  const SLOT4_QUIZZES = [
+    { title: 'Vande Mataram 150 Years Quiz', url: 'https://quiz.mygov.in/quiz/vande-mataram-150-years-quiz/' },
+    { title: 'PM Internship Quiz', url: 'https://quiz.mygov.in/quiz/pm-internship-quiz/' },
+    { title: 'Quiz on Observance of 350 Years of Martyrdom of Sri Guru Tegh Bahadur Ji', url: 'https://quiz.mygov.in/quiz/quiz-on-observance-of-350-years-of-martyrdom-of-sri-guru-tegh-bahadur-ji/' },
+  ];
+
+  const SLOT4_PLEDGES = [
+    { title: 'Constitution Day 2025 Pledge', url: 'https://pledge.mygov.in/constitution-day-2025/' },
+    { title: 'Bharat Vikas 2025 Pledge', url: 'https://pledge.mygov.in/bharat-vikas-2025/' },
+    { title: 'National Technology Day 2026 Pledge', url: 'https://pledge.mygov.in/national-technology-day-2026/' },
+  ];
+
+  const activeQuizzes = isSlot4OrMore ? SLOT4_QUIZZES : QUIZZES_SLOT_1_3;
+  const activePledges = isSlot4OrMore ? SLOT4_PLEDGES : PLEDGES_SLOT_1_3;
 
   return (
     <div>
@@ -2468,8 +2504,8 @@ function Day6({ data, onChange, readOnly, studentData }) {
 
             {/* Quizzes */}
             <div style={{ marginBottom: 16 }}>
-              <div style={{ fontWeight: 700, color: '#1e40af', marginBottom: 8, fontSize: '0.95rem' }}>🧠 QUIZZES (Complete all 6):</div>
-              {QUIZZES.map((q, i) => (
+              <div style={{ fontWeight: 700, color: '#1e40af', marginBottom: 8, fontSize: '0.95rem' }}>🧠 QUIZZES (Complete all {activeQuizzes.length}):</div>
+              {activeQuizzes.map((q, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
                   <span style={{ color: '#1e40af', fontWeight: 700, minWidth: 20 }}>•</span>
                   <a href={q.url} target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8', fontSize: '0.88rem', wordBreak: 'break-all' }}>{q.title}</a>
@@ -2479,8 +2515,8 @@ function Day6({ data, onChange, readOnly, studentData }) {
 
             {/* Pledges */}
             <div style={{ marginBottom: 16 }}>
-              <div style={{ fontWeight: 700, color: '#15803d', marginBottom: 8, fontSize: '0.95rem' }}>🤝 PLEDGES (Complete all 6):</div>
-              {PLEDGES.map((p, i) => (
+              <div style={{ fontWeight: 700, color: '#15803d', marginBottom: 8, fontSize: '0.95rem' }}>🤝 PLEDGES (Complete all {activePledges.length}):</div>
+              {activePledges.map((p, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
                   <span style={{ color: '#15803d', fontWeight: 700, minWidth: 20 }}>•</span>
                   <a href={p.url} target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8', fontSize: '0.88rem', wordBreak: 'break-all' }}>{p.title}</a>
@@ -2489,7 +2525,7 @@ function Day6({ data, onChange, readOnly, studentData }) {
             </div>
 
             <div style={{ background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: 8, padding: '10px 14px', fontSize: '0.87rem', color: '#78350f', marginBottom: 14 }}>
-              ⚠️ After completing all <strong>6 quizzes</strong> and <strong>6 pledges</strong>, save all 12 certificates in a folder, upload to Google Drive, make the link <strong>public (anyone can view)</strong>, and submit the URL below.
+              ⚠️ After completing all <strong>{activeQuizzes.length} quizzes</strong> and <strong>{activePledges.length} pledges</strong>, save all {activeQuizzes.length + activePledges.length} certificates in a folder, upload to Google Drive, make the link <strong>public (anyone can view)</strong>, and submit the URL below.
             </div>
 
             {/* MyGov Drive Link */}
