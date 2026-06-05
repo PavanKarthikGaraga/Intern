@@ -98,7 +98,7 @@ function getDayStatus(dayNum, slot, saved, username, unlockedDays = [], slotEnab
     if ((dayNum === 3 || dayNum === 4) && (!d.driveLink || !d.p1 || !d.p2 || !d.p3)) isFinal = false;
     if (dayNum === 6 && !d.driveLink) isFinal = false;
     if (dayNum === 7 && (!d.caseStudyLink || !d.youtubeLink || !d.linkedinLink)) isFinal = false;
-    if (dayNum === 5 && !(d.day2_topProblems || d.day3_topProblems || d.day4_topProblems)) isFinal = false;
+    if (dayNum === 5 && !(d.day2_topProblems || d.day3_topProblems || d.day4_topProblems || d.day5_actualProblem)) isFinal = false;
   }
 
   // ── Legacy recovery ──
@@ -111,7 +111,7 @@ function getDayStatus(dayNum, slot, saved, username, unlockedDays = [], slotEnab
     else if ((dayNum === 3 || dayNum === 4) && d.driveLink && d.p1 && d.p2 && d.p3) isFinal = true;
     else if (dayNum === 6 && d.driveLink) isFinal = true;
     else if (dayNum === 7 && d.caseStudyLink && d.youtubeLink && d.linkedinLink) isFinal = true;
-    else if (dayNum === 5 && (d.day2_topProblems || d.day3_topProblems || d.day4_topProblems)) isFinal = true;
+    else if (dayNum === 5 && (d.day2_topProblems || d.day3_topProblems || d.day4_topProblems || d.day5_actualProblem)) isFinal = true;
   }
   
   const isSubmitted = !!s && isFinal === true;
