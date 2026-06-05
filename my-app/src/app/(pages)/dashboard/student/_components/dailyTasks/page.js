@@ -526,11 +526,8 @@ export default function DailyTasks({ studentData, onSectionChange }) {
       });
       
       for (const d of activeDays) {
-        const pCount = wc(data[`day${d}_topProblems`] || '');
-        const rCount = wc(data[`day${d}_rootCauses`] || '');
-        const sCount = wc(data[`day${d}_recommendations`] || '');
-        if (pCount < 50 || rCount < 50 || sCount < 50) {
-          setMsg(`Please ensure all analysis sections have at least 50 words. Check your Day ${d} inputs.`);
+        if (!data[`day${d}_topProblems`]?.trim() || !data[`day${d}_rootCauses`]?.trim() || !data[`day${d}_recommendations`]?.trim()) {
+          setMsg(`Please ensure all analysis sections are filled out. Check your Day ${d} inputs.`);
           setMsgType('err'); return;
         }
       }
@@ -2036,7 +2033,7 @@ function Day5({ saved, survey, data, onChange, readOnly, studentData }) {
                    <div style={{ marginTop: 24, paddingTop: 20, borderTop: '2px solid #e0e0e0' }}>
                      <div className="dt-textarea-wrap" style={{ marginBottom: 20 }}>
                        <label htmlFor={`day5-topProblems-${day}`}>1. Top 3 Problems Identified</label>
-                       <p style={{ fontSize: '0.8rem', color: '#666', marginBottom: 8, marginTop: -4 }}>Based on the severity (YES percentages), list the top 3 problems. (Minimum 50 words)</p>
+                       <p style={{ fontSize: '0.8rem', color: '#666', marginBottom: 8, marginTop: -4 }}>Based on the severity (YES percentages), list the top 3 problems.</p>
                        <textarea
                          id={`day5-topProblems-${day}`} className="dt-textarea"
                          placeholder="List the top 3 problems here..."
@@ -2044,14 +2041,14 @@ function Day5({ saved, survey, data, onChange, readOnly, studentData }) {
                          onChange={e => !readOnly && onChange(`day${day}_topProblems`, e.target.value)}
                          style={readOnly ? { background:'#f9f9f9', color:'#555', minHeight: 100 } : { minHeight: 100 }}
                        />
-                       <p className={`dt-word-count ${pCount >= 50 ? 'ok' : pCount > 0 ? 'warn' : ''}`}>
-                         {pCount} / 50 words minimum {pCount >= 50 ? '✓' : ''}
+                       <p className={`dt-word-count ${pCount > 0 ? 'ok' : ''}`}>
+                         {pCount} words
                        </p>
                      </div>
                      
                      <div className="dt-textarea-wrap" style={{ marginBottom: 20 }}>
                        <label htmlFor={`day5-rootCauses-${day}`}>2. Root Causes Analysis</label>
-                       <p style={{ fontSize: '0.8rem', color: '#666', marginBottom: 8, marginTop: -4 }}>Identify root causes (e.g., Skill gap, Lack of awareness, Infrastructure issues). (Minimum 50 words)</p>
+                       <p style={{ fontSize: '0.8rem', color: '#666', marginBottom: 8, marginTop: -4 }}>Identify root causes (e.g., Skill gap, Lack of awareness, Infrastructure issues).</p>
                        <textarea
                          id={`day5-rootCauses-${day}`} className="dt-textarea"
                          placeholder="Write the identified root causes here..."
@@ -2059,14 +2056,14 @@ function Day5({ saved, survey, data, onChange, readOnly, studentData }) {
                          onChange={e => !readOnly && onChange(`day${day}_rootCauses`, e.target.value)}
                          style={readOnly ? { background:'#f9f9f9', color:'#555', minHeight: 100 } : { minHeight: 100 }}
                        />
-                       <p className={`dt-word-count ${rCount >= 50 ? 'ok' : rCount > 0 ? 'warn' : ''}`}>
-                         {rCount} / 50 words minimum {rCount >= 50 ? '✓' : ''}
+                       <p className={`dt-word-count ${rCount > 0 ? 'ok' : ''}`}>
+                         {rCount} words
                        </p>
                      </div>
 
                      <div className="dt-textarea-wrap" style={{ marginBottom: 8 }}>
                        <label htmlFor={`day5-recommendations-${day}`}>3. Recommendations &amp; Improvement Suggestions</label>
-                       <p style={{ fontSize: '0.8rem', color: '#666', marginBottom: 8, marginTop: -4 }}>Provide suitable recommendations or improvement suggestions based on the identified problems and root causes that may help improve the current community situation. (Minimum 50 words)</p>
+                       <p style={{ fontSize: '0.8rem', color: '#666', marginBottom: 8, marginTop: -4 }}>Provide suitable recommendations or improvement suggestions based on the identified problems and root causes that may help improve the current community situation.</p>
                        <textarea
                          id={`day5-recommendations-${day}`} className="dt-textarea"
                          placeholder="Write your recommendations here..."
@@ -2074,8 +2071,8 @@ function Day5({ saved, survey, data, onChange, readOnly, studentData }) {
                          onChange={e => !readOnly && onChange(`day${day}_recommendations`, e.target.value)}
                          style={readOnly ? { background:'#f9f9f9', color:'#555', minHeight: 100 } : { minHeight: 100 }}
                        />
-                       <p className={`dt-word-count ${sCount >= 50 ? 'ok' : sCount > 0 ? 'warn' : ''}`}>
-                         {sCount} / 50 words minimum {sCount >= 50 ? '✓' : ''}
+                       <p className={`dt-word-count ${sCount > 0 ? 'ok' : ''}`}>
+                         {sCount} words
                        </p>
                      </div>
                    </div>
