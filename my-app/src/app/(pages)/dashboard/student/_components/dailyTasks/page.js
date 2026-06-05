@@ -443,8 +443,8 @@ export default function DailyTasks({ studentData, onSectionChange }) {
         if (!selectedProb && !data.day5_problemArea_custom?.trim()) {
           setMsg(`Please select or enter a Problem Statement.`); setMsgType('err'); return;
         }
-        if (wc(data.day5_actualProblem) < 20) {
-          setMsg(`"Actual Problem Observed" must be at least 20 words.`); setMsgType('err'); return;
+        if (!data.day5_actualProblem?.trim()) {
+          setMsg(`Please fill in "Actual Problem Observed".`); setMsgType('err'); return;
         }
         if (!data.day5_affected?.trim()) {
           setMsg(`Please specify "Who is Mainly Affected".`); setMsgType('err'); return;
@@ -452,11 +452,11 @@ export default function DailyTasks({ studentData, onSectionChange }) {
         if (!data.day5_surveyInsight?.trim()) {
           setMsg(`Please provide a "Survey Insight / Key Finding".`); setMsgType('err'); return;
         }
-        if (wc(data.day5_mainReason) < 15) {
-          setMsg(`"Main Reason for the Problem" must be at least 15 words.`); setMsgType('err'); return;
+        if (!data.day5_mainReason?.trim()) {
+          setMsg(`Please fill in "Main Reason for the Problem".`); setMsgType('err'); return;
         }
-        if (wc(data.day5_impact) < 15) {
-          setMsg(`"Impact of the Problem" must be at least 15 words.`); setMsgType('err'); return;
+        if (!data.day5_impact?.trim()) {
+          setMsg(`Please fill in "Impact of the Problem".`); setMsgType('err'); return;
         }
         if (wc(data.day5_finalStatement) < 100) {
           setMsg(`"Final Problem Statement" must be at least 100 words.`); setMsgType('err'); return;
