@@ -517,7 +517,7 @@ export default function DailyTasks({ studentData, onSectionChange }) {
         setMsgType('err'); return;
       }
     }
-    if (!isDraft && activeDay === 5) {
+    if (!isDraft && activeDay === 5 && !isSlot4OrMore) {
       const activeDays = [2, 3, 4].filter(d => {
         const sh = survey && survey[d - 2];
         if (!sh) return false;
