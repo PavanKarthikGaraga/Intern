@@ -101,11 +101,23 @@ function SurveyDayPreview({ data, day }) {
 }
 
 /* ── Day 5 preview ── */
-function Day5Preview({ data, surveyDays, ps }) {
+function Day5Preview({ data, surveyDays, ps, slot }) {
   if (!data) return <p className="ev-no-data">No task data available.</p>;
 
+  const parsedSlot = parseInt(String(slot).replace(/\D/g, ''), 10) || 1;
+  const isSlot4OrMore = parsedSlot >= 4;
+
   const survey = ps ? (SURVEY[ps] || null) : null;
-  const textSections = [
+  const textSections = isSlot4OrMore ? [
+    { key: 'problemArea',         label: 'Selected Problem Statement' },
+    { key: 'problemArea_custom',  label: 'Custom Problem Statement' },
+    { key: 'actualProblem',       label: 'Actual Problem Observed' },
+    { key: 'affected',            label: 'Who is Mainly Affected' },
+    { key: 'surveyInsight',       label: 'Survey Insight' },
+    { key: 'mainReason',          label: 'Main Reason for the Problem' },
+    { key: 'impact',              label: 'Impact of the Problem' },
+    { key: 'finalStatement',      label: 'Final Problem Statement' },
+  ] : [
     { key: 'topProblems',    label: 'Top Problems'     },
     { key: 'rootCauses',     label: 'Root Causes'      },
     { key: 'recommendations',label: 'Recommendations'  },
@@ -172,11 +184,16 @@ function Day5Preview({ data, surveyDays, ps }) {
       {[2, 3, 4].map(d => {
         const surveyDayData = surveyDays?.[`day${d}`];
         const groups = buildStakeholderGroups(surveyDayData, d);
+        
+        const dayWords = !isSlot4OrMore 
+          ? wc(data[`day${d}_topProblems`]) + wc(data[`day${d}_rootCauses`]) + wc(data[`day${d}_recommendations`])
+          : 0;
+
         return (
           <div key={d} style={{ marginBottom: 20, border: '1px solid #e2e8f0', borderRadius: 10, overflow: 'hidden' }}>
             {/* Day header */}
             <div style={{ background: '#1e40af', padding: '8px 14px', fontWeight: 700, fontSize: '0.88rem', color: '#fff' }}>
-              Day {d} Analysis — {wc(data[`day${d}_topProblems`])} + {wc(data[`day${d}_rootCauses`])} + {wc(data[`day${d}_recommendations`])} words
+              {isSlot4OrMore ? `Day ${d} Analysis — Survey` : `Day ${d} Analysis — ${dayWords} words`}
             </div>
 
             {/* Survey Yes/No by stakeholder */}
@@ -210,20 +227,55 @@ function Day5Preview({ data, surveyDays, ps }) {
               );
             })}
 
-            {/* Text analysis sections */}
-            {textSections.map(({ key, label }) => (
-              <div key={key} className="ev-field" style={{ borderBottom: '1px solid #f1f5f9', marginBottom: 0 }}>
-                <span className="ev-field-label" style={{ fontSize: '0.78rem', color: '#64748b' }}>
-                  {label} ({wc(data[`day${d}_${key}`])} words)
-                </span>
-                <div className="ev-field-value ev-scrollable" style={{ maxHeight: 160, whiteSpace: 'pre-wrap', fontSize: '0.83rem', lineHeight: 1.6 }}>
-                  {data[`day${d}_${key}`] || <em>Not provided</em>}
+            {/* Text analysis sections for older slots (per day) */}
+            {!isSlot4OrMore && textSections.map(({ key, label }) => {
+              return (
+                <div key={key} className="ev-field" style={{ borderBottom: '1px solid #f1f5f9', marginBottom: 0 }}>
+                  <span className="ev-field-label" style={{ fontSize: '0.78rem', color: '#64748b' }}>
+                    {label} ({wc(data[`day${d}_${key}`])} words)
+                  </span>
+                  <div className="ev-field-value ev-scrollable" style={{ maxHeight: 160, whiteSpace: 'pre-wrap', fontSize: '0.83rem', lineHeight: 1.6 }}>
+                    {data[`day${d}_${key}`] || <em>Not provided</em>}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         );
       })}
+
+      {/* Text analysis sections for Slot 4+ (unified) */}
+      {isSlot4OrMore && (() => {
+        const totalWords = wc(data.day5_actualProblem) + wc(data.day5_surveyInsight) + wc(data.day5_mainReason) + wc(data.day5_impact) + wc(data.day5_finalStatement);
+        return (
+          <div style={{ marginBottom: 20, border: '1px solid #e2e8f0', borderRadius: 10, overflow: 'hidden' }}>
+            <div style={{ background: '#1e40af', padding: '8px 14px', fontWeight: 700, fontSize: '0.88rem', color: '#fff' }}>
+              Final Problem Analysis — {totalWords} words
+            </div>
+            {textSections.map(({ key, label }) => {
+              const dataKey = `day5_${key}`;
+              if (key === 'problemArea_custom' && !data[dataKey]) return null;
+              
+              // Handle the primary problemArea rendering 
+              let value = data[dataKey];
+              if (key === 'problemArea' && !value) {
+                 value = data.problemStatementData?.problem_statement || '';
+              }
+
+              return (
+                <div key={key} className="ev-field" style={{ borderBottom: '1px solid #f1f5f9', marginBottom: 0 }}>
+                  <span className="ev-field-label" style={{ fontSize: '0.78rem', color: '#64748b' }}>
+                    {label} ({wc(value)} words)
+                  </span>
+                  <div className="ev-field-value ev-scrollable" style={{ maxHeight: 160, whiteSpace: 'pre-wrap', fontSize: '0.83rem', lineHeight: 1.6 }}>
+                    {value || <em>Not provided</em>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        );
+      })()}
     </div>
   );
 }
@@ -281,10 +333,11 @@ function Day7Preview({ data }) {
   );
 }
 
-function TaskPreview({ day, data, surveyDays, ps }) {
+/* ── Wrapper ── */
+function TaskPreview({ day, data, surveyDays, ps, slot }) {
   if (day === 1) return <Day1Preview data={data} />;
   if (day === 2 || day === 3 || day === 4) return <SurveyDayPreview data={data} day={day} />;
-  if (day === 5) return <Day5Preview data={data} surveyDays={surveyDays} ps={ps} />;
+  if (day === 5) return <Day5Preview data={data} surveyDays={surveyDays} ps={ps} slot={slot} />;
   if (day === 6) return <Day6Preview data={data} />;
   if (day === 7) return <Day7Preview data={data} />;
   return null;
@@ -308,8 +361,8 @@ function ModeTag({ mode }) {
   );
 }
 
-/* ── Single student evaluation row ── */
-function EvalRow({ student, day, maxMarks, onSave }) {
+/* ── Single student/* ── Single student evaluation row ── */
+function EvalRow({ student, day, maxMarks, onSave, slot }) {
   const [expanded, setExpanded] = useState(false);
   const [editMark, setEditMark] = useState(String(student.dayMark ?? 0));
   const [remark, setRemark]     = useState(student.remark || '');
@@ -443,7 +496,7 @@ function EvalRow({ student, day, maxMarks, onSave }) {
       {/* Expanded task preview */}
       {expanded && (
         <div className="ev-task-body">
-          <TaskPreview day={day} data={student.taskData} surveyDays={student.surveyDays} ps={student.ps} />
+          <TaskPreview day={day} data={student.taskData} surveyDays={student.surveyDays} ps={student.ps} slot={slot} />
         </div>
       )}
     </div>
@@ -694,6 +747,7 @@ export default function Evaluate() {
                       day={Number(day)}
                       maxMarks={data.maxMarks}
                       onSave={handleSave}
+                      slot={slot}
                     />
                   ))}
                 </div>
@@ -711,6 +765,7 @@ export default function Evaluate() {
                       day={Number(day)}
                       maxMarks={data.maxMarks}
                       onSave={handleSave}
+                      slot={slot}
                     />
                   ))}
                 </div>

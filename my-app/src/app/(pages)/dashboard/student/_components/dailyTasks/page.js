@@ -438,31 +438,28 @@ export default function DailyTasks({ studentData, onSectionChange }) {
       }
       
       if (isSlot4OrMore) {
-        for (let d of [2, 3, 4]) {
-          // Only validate if survey data exists for this day
-          if (!survey[d - 2]) continue;
-          
-          if (!data[`day${d}_problemArea`]?.trim() && !data[`day${d}_problemArea_custom`]?.trim()) {
-            setMsg(`Please select or enter a Problem Statement for Day ${d} analysis.`); setMsgType('err'); return;
-          }
-          if (wc(data[`day${d}_actualProblem`]) < 20) {
-            setMsg(`"Actual Problem Observed" for Day ${d} must be at least 20 words.`); setMsgType('err'); return;
-          }
-          if (!data[`day${d}_affected`]?.trim()) {
-            setMsg(`Please specify "Who is Mainly Affected" for Day ${d} analysis.`); setMsgType('err'); return;
-          }
-          if (!data[`day${d}_surveyInsight`]?.trim()) {
-            setMsg(`Please provide a "Survey Insight / Key Finding" for Day ${d} analysis.`); setMsgType('err'); return;
-          }
-          if (wc(data[`day${d}_mainReason`]) < 15) {
-            setMsg(`"Main Reason for the Problem" for Day ${d} must be at least 15 words.`); setMsgType('err'); return;
-          }
-          if (wc(data[`day${d}_impact`]) < 15) {
-            setMsg(`"Impact of the Problem" for Day ${d} must be at least 15 words.`); setMsgType('err'); return;
-          }
-          if (wc(data[`day${d}_finalStatement`]) < 30) {
-            setMsg(`"Final Problem Statement" for Day ${d} must be at least 30 words.`); setMsgType('err'); return;
-          }
+        const defaultProblem = studentData?.problemStatementData?.problem_statement?.trim();
+        const selectedProb = data.day5_problemArea?.trim() || defaultProblem;
+        if (!selectedProb && !data.day5_problemArea_custom?.trim()) {
+          setMsg(`Please select or enter a Problem Statement.`); setMsgType('err'); return;
+        }
+        if (wc(data.day5_actualProblem) < 20) {
+          setMsg(`"Actual Problem Observed" must be at least 20 words.`); setMsgType('err'); return;
+        }
+        if (!data.day5_affected?.trim()) {
+          setMsg(`Please specify "Who is Mainly Affected".`); setMsgType('err'); return;
+        }
+        if (!data.day5_surveyInsight?.trim()) {
+          setMsg(`Please provide a "Survey Insight / Key Finding".`); setMsgType('err'); return;
+        }
+        if (wc(data.day5_mainReason) < 15) {
+          setMsg(`"Main Reason for the Problem" must be at least 15 words.`); setMsgType('err'); return;
+        }
+        if (wc(data.day5_impact) < 15) {
+          setMsg(`"Impact of the Problem" must be at least 15 words.`); setMsgType('err'); return;
+        }
+        if (wc(data.day5_finalStatement) < 100) {
+          setMsg(`"Final Problem Statement" must be at least 100 words.`); setMsgType('err'); return;
         }
       }
     }
@@ -2083,124 +2080,119 @@ function Day5({ saved, survey, data, onChange, readOnly, studentData }) {
                      </div>
                    </div>
                  );
-               } else {
-                 const studentDomain = studentData?.selectedDomain || '';
-                 const domainProblems = PROBLEM_STATEMENTS[studentDomain] || [];
-
-                 return (
-                   <div style={{ marginTop: 24, paddingTop: 20, borderTop: '2px solid #e0e0e0' }}>
-                     <div className="dt-textarea-wrap" style={{ marginBottom: 20 }}>
-                       <label htmlFor={`day5-problemArea-${day}`}>1. Selected Problem Statement</label>
-                       <select
-                         id={`day5-problemArea-${day}`} className="dt-textarea"
-                         value={data[`day${day}_problemArea`] || ''} disabled={readOnly}
-                         onChange={e => !readOnly && onChange(`day${day}_problemArea`, e.target.value)}
-                         style={{ ...(readOnly ? { background:'#f9f9f9', color:'#555' } : {}), minHeight: 'auto', padding: '10px' }}
-                       >
-                         <option value="">Select a Problem Statement</option>
-                         {domainProblems.map(p => <option key={p} value={p}>{p}</option>)}
-                         <option value="Other">Other (Please specify)</option>
-                       </select>
-                       {data[`day${day}_problemArea`] === 'Other' && (
-                         <input
-                           type="text"
-                           className="dt-textarea"
-                           placeholder="Type problem statement..."
-                           value={data[`day${day}_problemArea_custom`] || ''} readOnly={readOnly}
-                           onChange={e => !readOnly && onChange(`day${day}_problemArea_custom`, e.target.value)}
-                           style={{ marginTop: 10, ...(readOnly ? { background:'#f9f9f9', color:'#555' } : { minHeight: 'auto' }) }}
-                         />
-                       )}
-                     </div>
-                     
-                     <div className="dt-textarea-wrap" style={{ marginBottom: 20 }}>
-                       <label htmlFor={`day5-actualProblem-${day}`}>2. What is the Actual Problem Observed?</label>
-                       <textarea
-                         id={`day5-actualProblem-${day}`} className="dt-textarea"
-                         placeholder="Example: Most households in the village do not have access to clean drinking water..."
-                         value={data[`day${day}_actualProblem`] || ''} readOnly={readOnly}
-                         onChange={e => !readOnly && onChange(`day${day}_actualProblem`, e.target.value)}
-                         style={readOnly ? { background:'#f9f9f9', color:'#555', minHeight: 60 } : { minHeight: 60 }}
-                       />
-                     </div>
-
-                     <div className="dt-textarea-wrap" style={{ marginBottom: 20 }}>
-                       <label htmlFor={`day5-affected-${day}`}>3. Who is Mainly Affected?</label>
-                       <input
-                         type="text"
-                         id={`day5-affected-${day}`} className="dt-textarea"
-                         placeholder="Example: Women, Farmers, Children..."
-                         value={data[`day${day}_affected`] || ''} readOnly={readOnly}
-                         onChange={e => !readOnly && onChange(`day${day}_affected`, e.target.value)}
-                         style={{ ...(readOnly ? { background:'#f9f9f9', color:'#555' } : {}), minHeight: 'auto' }}
-                       />
-                     </div>
-
-                     <div className="dt-textarea-wrap" style={{ marginBottom: 20 }}>
-                       <label htmlFor={`day5-surveyInsight-${day}`}>4. Survey Insight / Key Finding</label>
-                       <input
-                         type="text"
-                         id={`day5-surveyInsight-${day}`} className="dt-textarea"
-                         placeholder="Example: 72% of surveyed families reported poor drinking water quality."
-                         value={data[`day${day}_surveyInsight`] || ''} readOnly={readOnly}
-                         onChange={e => !readOnly && onChange(`day${day}_surveyInsight`, e.target.value)}
-                         style={{ ...(readOnly ? { background:'#f9f9f9', color:'#555' } : {}), minHeight: 'auto' }}
-                       />
-                     </div>
-
-                     <div className="dt-textarea-wrap" style={{ marginBottom: 20 }}>
-                       <label htmlFor={`day5-mainReason-${day}`}>5. Main Reason for the Problem</label>
-                       <textarea
-                         id={`day5-mainReason-${day}`} className="dt-textarea"
-                         placeholder="Example: Lack of RO plant and drying borewells during summer."
-                         value={data[`day${day}_mainReason`] || ''} readOnly={readOnly}
-                         onChange={e => !readOnly && onChange(`day${day}_mainReason`, e.target.value)}
-                         style={readOnly ? { background:'#f9f9f9', color:'#555', minHeight: 50 } : { minHeight: 50 }}
-                       />
-                     </div>
-
-                     <div className="dt-textarea-wrap" style={{ marginBottom: 20 }}>
-                       <label htmlFor={`day5-impact-${day}`}>6. Impact of the Problem</label>
-                       <textarea
-                         id={`day5-impact-${day}`} className="dt-textarea"
-                         placeholder="Example: Families are spending extra money on water cans and facing health issues."
-                         value={data[`day${day}_impact`] || ''} readOnly={readOnly}
-                         onChange={e => !readOnly && onChange(`day${day}_impact`, e.target.value)}
-                         style={readOnly ? { background:'#f9f9f9', color:'#555', minHeight: 50 } : { minHeight: 50 }}
-                       />
-                     </div>
-
-                     <div className="dt-textarea-wrap" style={{ marginBottom: 20 }}>
-                       <label htmlFor={`day5-finalStatement-${day}`}>7. Final Problem Statement</label>
-                       <p style={{ fontSize: '0.8rem', color: '#666', marginBottom: 8, marginTop: -4 }}>Format: &quot;In [Village Name], [problem] is affecting [stakeholders]. Based on the survey, [key finding]. The major reason identified is [cause], which is leading to [impact].&quot;</p>
-                       <textarea
-                         id={`day5-finalStatement-${day}`} className="dt-textarea"
-                         placeholder="Write your final problem statement here..."
-                         value={data[`day${day}_finalStatement`] || ''} readOnly={readOnly}
-                         onChange={e => !readOnly && onChange(`day${day}_finalStatement`, e.target.value)}
-                         style={readOnly ? { background:'#f9f9f9', color:'#555', minHeight: 100 } : { minHeight: 100 }}
-                       />
-                     </div>
-
-                     <div className="dt-textarea-wrap" style={{ marginBottom: 8 }}>
-                       <label htmlFor={`day5-evidenceUrl-${day}`}>Optional (Recommended): Upload Supporting Evidence</label>
-                       <p style={{ fontSize: '0.8rem', color: '#666', marginBottom: 8, marginTop: -4 }}>Google Drive link for Photos, Survey screenshots, or Observation images. Make sure it is public.</p>
-                       <input
-                         type="url"
-                         id={`day5-evidenceUrl-${day}`} className="dt-link-input"
-                         placeholder="https://drive.google.com/..."
-                         value={data[`day${day}_evidenceUrl`] || ''} readOnly={readOnly}
-                         onChange={e => !readOnly && onChange(`day${day}_evidenceUrl`, e.target.value)}
-                         style={{ ...(readOnly ? { background:'#f9f9f9' } : {}) }}
-                       />
-                     </div>
-                   </div>
-                 );
                }
-            })()}
+               return null;
+             })()}
           </div>
         ))}
       </div>
+
+      {isSlot4OrMore && (() => {
+        const studentDomain = studentData?.selectedDomain || '';
+        const domainProblems = PROBLEM_STATEMENTS[studentDomain] || [];
+        const defaultProblem = studentData?.problemStatementData?.problem_statement || '';
+        const displayProblemArea = data.day5_problemArea || defaultProblem;
+
+        return (
+          <div style={{ marginTop: 24, paddingTop: 20, borderTop: '2px solid #e0e0e0', marginBottom: 40 }}>
+            <div className="dt-textarea-wrap" style={{ marginBottom: 20 }}>
+              <label htmlFor="day5-problemArea">1. Selected Problem Statement</label>
+              <select
+                id="day5-problemArea" className="dt-textarea"
+                value={displayProblemArea} disabled={readOnly}
+                onChange={e => !readOnly && onChange('day5_problemArea', e.target.value)}
+                style={{ ...(readOnly ? { background:'#f9f9f9', color:'#555' } : {}), minHeight: 'auto', padding: '10px' }}
+              >
+                <option value="">Select a Problem Statement</option>
+                {domainProblems.map(p => <option key={p} value={p}>{p}</option>)}
+                <option value="Other">Other (Please specify)</option>
+              </select>
+              {displayProblemArea === 'Other' && (
+                <input
+                  type="text"
+                  className="dt-textarea"
+                  placeholder="Type problem statement..."
+                  value={data.day5_problemArea_custom || ''} readOnly={readOnly}
+                  onChange={e => !readOnly && onChange('day5_problemArea_custom', e.target.value)}
+                  style={{ marginTop: 10, ...(readOnly ? { background:'#f9f9f9', color:'#555' } : { minHeight: 'auto' }) }}
+                />
+              )}
+            </div>
+            
+            <div className="dt-textarea-wrap" style={{ marginBottom: 20 }}>
+              <label htmlFor="day5-actualProblem">2. What is the Actual Problem Observed?</label>
+              <textarea
+                id="day5-actualProblem" className="dt-textarea"
+                placeholder="Example: Most households in the village do not have access to clean drinking water..."
+                value={data.day5_actualProblem || ''} readOnly={readOnly}
+                onChange={e => !readOnly && onChange('day5_actualProblem', e.target.value)}
+                style={readOnly ? { background:'#f9f9f9', color:'#555', minHeight: 60 } : { minHeight: 60 }}
+              />
+            </div>
+
+            <div className="dt-textarea-wrap" style={{ marginBottom: 20 }}>
+              <label htmlFor="day5-affected">3. Who is Mainly Affected?</label>
+              <input
+                type="text"
+                id="day5-affected" className="dt-textarea"
+                placeholder="Example: Women, Farmers, Children..."
+                value={data.day5_affected || ''} readOnly={readOnly}
+                onChange={e => !readOnly && onChange('day5_affected', e.target.value)}
+                style={{ ...(readOnly ? { background:'#f9f9f9', color:'#555' } : {}), minHeight: 'auto' }}
+              />
+            </div>
+
+            <div className="dt-textarea-wrap" style={{ marginBottom: 20 }}>
+              <label htmlFor="day5-surveyInsight">4. Survey Insight / Key Finding</label>
+              <input
+                type="text"
+                id="day5-surveyInsight" className="dt-textarea"
+                placeholder="Example: 72% of surveyed families reported poor drinking water quality."
+                value={data.day5_surveyInsight || ''} readOnly={readOnly}
+                onChange={e => !readOnly && onChange('day5_surveyInsight', e.target.value)}
+                style={{ ...(readOnly ? { background:'#f9f9f9', color:'#555' } : {}), minHeight: 'auto' }}
+              />
+            </div>
+
+            <div className="dt-textarea-wrap" style={{ marginBottom: 20 }}>
+              <label htmlFor="day5-mainReason">5. Main Reason for the Problem</label>
+              <textarea
+                id="day5-mainReason" className="dt-textarea"
+                placeholder="Example: Lack of RO plant and drying borewells during summer."
+                value={data.day5_mainReason || ''} readOnly={readOnly}
+                onChange={e => !readOnly && onChange('day5_mainReason', e.target.value)}
+                style={readOnly ? { background:'#f9f9f9', color:'#555', minHeight: 50 } : { minHeight: 50 }}
+              />
+            </div>
+
+            <div className="dt-textarea-wrap" style={{ marginBottom: 20 }}>
+              <label htmlFor="day5-impact">6. Impact of the Problem</label>
+              <textarea
+                id="day5-impact" className="dt-textarea"
+                placeholder="Example: Families are spending extra money on water cans and facing health issues."
+                value={data.day5_impact || ''} readOnly={readOnly}
+                onChange={e => !readOnly && onChange('day5_impact', e.target.value)}
+                style={readOnly ? { background:'#f9f9f9', color:'#555', minHeight: 50 } : { minHeight: 50 }}
+              />
+            </div>
+
+            <div className="dt-textarea-wrap" style={{ marginBottom: 20 }}>
+              <label htmlFor="day5-finalStatement">7. Final Problem Statement</label>
+              <p style={{ fontSize: '0.8rem', color: '#666', marginBottom: 8, marginTop: -4 }}>Format: &quot;In [Village Name], [problem] is affecting [stakeholders]. Based on the survey, [key finding]. The major reason identified is [cause], which is leading to [impact].&quot;</p>
+              <textarea
+                id="day5-finalStatement" className="dt-textarea"
+                placeholder="Write your final problem statement here..."
+                value={data.day5_finalStatement || ''} readOnly={readOnly}
+                onChange={e => !readOnly && onChange('day5_finalStatement', e.target.value)}
+                style={readOnly ? { background:'#f9f9f9', color:'#555', minHeight: 100 } : { minHeight: 100 }}
+              />
+              <p className={`dt-word-count ${wc(data.day5_finalStatement) >= 100 ? 'ok' : wc(data.day5_finalStatement) > 0 ? 'warn' : ''}`}>
+                {wc(data.day5_finalStatement)} / 100 words minimum {wc(data.day5_finalStatement) >= 100 ? '✓' : ''}
+              </p>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
