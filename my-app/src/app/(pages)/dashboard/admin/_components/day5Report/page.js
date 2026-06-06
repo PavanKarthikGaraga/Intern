@@ -1,5 +1,5 @@
 'use client';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { FaFilePdf, FaDownload, FaSpinner, FaFilter } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 
@@ -8,7 +8,16 @@ export default function Day5Report() {
   const [modes, setModes] = useState(['InVillage', 'Incampus']);
   const [loading, setLoading] = useState(false);
   const [studentsData, setStudentsData] = useState([]);
+  const [pdfPending, setPdfPending] = useState(false);
   const pdfRef = useRef();
+
+  // Trigger PDF after React finishes rendering the studentsData into the DOM
+  useEffect(() => {
+    if (pdfPending && studentsData.length > 0) {
+      generatePDF();
+      setPdfPending(false);
+    }
+  }, [pdfPending, studentsData]);
 
   const handleModeToggle = (mode) => {
     setModes(prev => 
@@ -34,11 +43,7 @@ export default function Day5Report() {
         } else {
           setStudentsData(data.data);
           toast.success(`Found ${data.data.length} students. Generating PDF...`);
-          
-          // Allow React to render the hidden DOM first
-          setTimeout(() => {
-            generatePDF(data.data.length);
-          }, 1000);
+          setPdfPending(true);
         }
       } else {
         toast.error(data.error || 'Failed to fetch data');
@@ -50,7 +55,7 @@ export default function Day5Report() {
     }
   };
 
-  const generatePDF = async (count) => {
+  const generatePDF = async () => {
     const element = pdfRef.current;
     if (!element) return;
 
@@ -134,8 +139,8 @@ export default function Day5Report() {
         </button>
       </div>
 
-      {/* Hidden PDF Template Container */}
-      <div style={{ display: 'none' }}>
+      {/* Hidden PDF Template Container - positioned off-screen, not display:none (html2canvas can't capture hidden elements) */}
+      <div style={{ position: 'fixed', top: 0, left: '-9999px', width: '210mm', zIndex: -1, background: '#fff' }}>
         <div ref={pdfRef} style={{ background: '#fff', padding: '20px', color: '#000', fontSize: '12px' }}>
           {studentsData.map((s, idx) => (
             <div key={s.username} style={{ pageBreakAfter: idx < studentsData.length - 1 ? 'always' : 'auto', paddingBottom: '20px' }}>
