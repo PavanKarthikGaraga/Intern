@@ -24,6 +24,7 @@ export default function FinalReports() {
     { value: 'PAYMENT_SUBMITTED',  label: 'Payment Submitted',        color: '#86198f', bg: '#fdf4ff' },
     { value: 'PRINTING_IN_PROCESS',label: 'Printing In Process',      color: '#b45309', bg: '#fffbeb' },
     { value: 'PRINTING_COMPLETED', label: 'Printing Completed',       color: '#047857', bg: '#ecfdf5' },
+    { value: 'OWN_PRINTING',       label: 'Own Printing',             color: '#0f766e', bg: '#f0fdfa' },
   ];
 
   const isSlot1 = Number(slot) === 1;

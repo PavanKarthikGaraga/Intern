@@ -118,6 +118,26 @@ export default function ReportBook({ studentData }) {
     }
   };
 
+  const handleSubmitOwnPrinting = async () => {
+    const confirmSubmit = window.confirm('Are you sure you want to confirm your own printing choice?');
+    if (!confirmSubmit) return;
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/dashboard/student/report-book', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: studentData.username, ownPrinting: true }),
+      });
+      const data = await res.json();
+      if (data.success) { toast.success('Printing choice saved successfully!'); window.location.reload(); }
+      else toast.error(data.error || 'Failed to save choice');
+    } catch (err) {
+      toast.error('An error occurred while submitting.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div style={{ padding: '28px 32px', maxWidth: 860, margin: '0 auto', fontFamily: 'Inter, sans-serif' }}>
       <div style={{ marginBottom: 28 }}>
@@ -188,7 +208,20 @@ export default function ReportBook({ studentData }) {
           setUtr={setUtr}
           submitting={submitting}
           handleSubmitUtr={handleSubmitUtr}
+          handleSubmitOwnPrinting={handleSubmitOwnPrinting}
         />
+      )}
+
+      {/* OWN_PRINTING */}
+      {status === 'OWN_PRINTING' && (
+        <div style={{ background: '#f0fdf4', border: '1px solid #86efac', padding: '30px 20px', borderRadius: '12px', textAlign: 'center', marginBottom: 24 }}>
+          <FaCheckCircle style={{ fontSize: '3rem', color: '#16a34a', marginBottom: 16 }} />
+          <h3 style={{ margin: '0 0 8px 0', color: '#15803d', fontSize: '1.4rem' }}>Self-Printing Confirmed! ✅</h3>
+          <p style={{ margin: 0, color: '#166534', fontSize: '1rem' }}>
+            You have chosen to print the report book on your own.
+            <br />Please download your report from Canva, print 2 copies, and submit 1 copy to the college when it reopens.
+          </p>
+        </div>
       )}
 
       {/* PAYMENT_SUBMITTED */}
@@ -314,7 +347,7 @@ function MarksBadge({ reportBookMarks }) {
 }
 
 /* ── APPROVED SECTION ── */
-function ApprovedSection({ studentData, adminRemarks, reportBookMarks, isSlot1, utr, setUtr, submitting, handleSubmitUtr }) {
+function ApprovedSection({ studentData, adminRemarks, reportBookMarks, isSlot1, utr, setUtr, submitting, handleSubmitUtr, handleSubmitOwnPrinting }) {
   const [printingChoice, setPrintingChoice] = useState(null);
   const [acknowledged, setAcknowledged] = useState(false);
 
@@ -382,7 +415,7 @@ function ApprovedSection({ studentData, adminRemarks, reportBookMarks, isSlot1, 
 
       {/* SELF PRINT DETAILS */}
       {printingChoice === 'self' && (
-        <SelfPrintSection />
+        <SelfPrintSection submitting={submitting} handleSubmitOwnPrinting={handleSubmitOwnPrinting} />
       )}
 
       {/* COLLEGE PRINT DETAILS */}
@@ -402,7 +435,7 @@ function ApprovedSection({ studentData, adminRemarks, reportBookMarks, isSlot1, 
 }
 
 /* ── SELF PRINT SECTION ── */
-function SelfPrintSection() {
+function SelfPrintSection({ submitting, handleSubmitOwnPrinting }) {
   const [acknowledged, setAcknowledged] = useState(false);
   const [done, setDone] = useState(false);
 
@@ -452,11 +485,11 @@ function SelfPrintSection() {
       </div>
 
       <button
-        disabled={!acknowledged}
-        onClick={() => setDone(true)}
-        style={{ width: '100%', padding: '14px', background: !acknowledged ? '#94a3b8' : '#014a01', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '1rem', fontWeight: 700, cursor: !acknowledged ? 'not-allowed' : 'pointer', transition: 'background 0.2s' }}
+        disabled={!acknowledged || submitting}
+        onClick={handleSubmitOwnPrinting}
+        style={{ width: '100%', padding: '14px', background: (!acknowledged || submitting) ? '#94a3b8' : '#014a01', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '1rem', fontWeight: 700, cursor: (!acknowledged || submitting) ? 'not-allowed' : 'pointer', transition: 'background 0.2s' }}
       >
-        Confirm — I will print my report
+        {submitting ? 'Confirming...' : 'Confirm — I will print my report'}
       </button>
     </div>
   );

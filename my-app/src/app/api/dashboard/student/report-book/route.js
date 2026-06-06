@@ -15,7 +15,7 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { username, link, utrId } = await request.json();
+    const { username, link, utrId, ownPrinting } = await request.json();
 
     if (!username) {
       return NextResponse.json({ success: false, error: 'Username is required' }, { status: 400 });
@@ -37,7 +37,7 @@ export async function POST(request) {
         id BIGINT AUTO_INCREMENT PRIMARY KEY,
         username VARCHAR(255) NOT NULL UNIQUE,
         reportLink VARCHAR(500) DEFAULT NULL,
-        status ENUM('PENDING_REVIEW', 'REJECTED', 'APPROVED', 'PAYMENT_SUBMITTED', 'PRINTING_IN_PROCESS', 'PRINTING_COMPLETED') DEFAULT 'PENDING_REVIEW',
+        status ENUM('PENDING_REVIEW', 'REJECTED', 'APPROVED', 'PAYMENT_SUBMITTED', 'PRINTING_IN_PROCESS', 'PRINTING_COMPLETED', 'OWN_PRINTING') DEFAULT 'PENDING_REVIEW',
         adminRemarks TEXT DEFAULT NULL,
         utrId VARCHAR(12) DEFAULT NULL,
         reportBookMarks DECIMAL(4,2) DEFAULT NULL,
@@ -49,11 +49,23 @@ export async function POST(request) {
     try { await db.execute("ALTER TABLE reportBooks ADD COLUMN adminRemarks TEXT DEFAULT NULL"); } catch (e) {}
     try { await db.execute("ALTER TABLE reportBooks ADD COLUMN utrId VARCHAR(12) DEFAULT NULL"); } catch (e) {}
     try { await db.execute("ALTER TABLE reportBooks ADD COLUMN reportBookMarks DECIMAL(4,2) DEFAULT NULL"); } catch (e) {}
-    try { await db.execute("ALTER TABLE reportBooks MODIFY COLUMN status ENUM('PENDING_REVIEW', 'REJECTED', 'APPROVED', 'PAYMENT_SUBMITTED', 'PRINTING_IN_PROCESS', 'PRINTING_COMPLETED') DEFAULT 'PENDING_REVIEW'"); } catch (e) {}
+    try { await db.execute("ALTER TABLE reportBooks MODIFY COLUMN status ENUM('PENDING_REVIEW', 'REJECTED', 'APPROVED', 'PAYMENT_SUBMITTED', 'PRINTING_IN_PROCESS', 'PRINTING_COMPLETED', 'OWN_PRINTING') DEFAULT 'PENDING_REVIEW'"); } catch (e) {}
 
     // Check existing record
     const [existing] = await db.execute('SELECT * FROM reportBooks WHERE username = ?', [username]);
     const current = existing[0];
+
+    // Handle Own Printing Submission
+    if (ownPrinting) {
+      if (!current || current.status !== 'APPROVED') {
+        return NextResponse.json({ success: false, error: 'You are not eligible to choose a printing option yet.' }, { status: 400 });
+      }
+      await db.execute(
+        'UPDATE reportBooks SET status = "OWN_PRINTING" WHERE username = ?',
+        [username]
+      );
+      return NextResponse.json({ success: true, message: 'Printing choice saved successfully.' });
+    }
 
     // Handle UTR Submission
     if (utrId) {
