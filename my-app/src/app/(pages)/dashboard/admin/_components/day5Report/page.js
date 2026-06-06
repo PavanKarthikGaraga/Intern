@@ -141,7 +141,7 @@ export default function Day5Report() {
               <div style={{ marginBottom: '20px' }}>
                 <h2 style={{ fontSize: '14px', color: '#1e293b', borderBottom: '1px solid #ccc', paddingBottom: '4px', marginBottom: '10px' }}>Survey Responses (YES %)</h2>
                 {[2, 3, 4].map(dayNum => {
-                  const dayData = s.surveyData[\`day\${dayNum}\`];
+                  const dayData = s.surveyData[`day${dayNum}`];
                   if (!dayData || !dayData.questions) return null;
                   return (
                     <div key={dayNum} className="no-break" style={{ marginBottom: '15px' }}>
@@ -188,7 +188,7 @@ export default function Day5Report() {
                 ) : (
                   <div>
                     {[2, 3, 4].map(dayNum => {
-                      const d = s.analysisText[\`day\${dayNum}\`];
+                      const d = s.analysisText[`day${dayNum}`];
                       if (!d) return null;
                       return (
                         <div key={dayNum} style={{ marginBottom: '15px' }}>
@@ -220,10 +220,10 @@ export default function Day5Report() {
         </div>
       </div>
 
-      <style jsx>{\`
+      <style jsx>{`
         .spin { animation: spin 1s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
-      \`}</style>
+      `}</style>
     </div>
   );
 }

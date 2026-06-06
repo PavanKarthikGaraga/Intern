@@ -149,7 +149,7 @@ export async function GET(request) {
           let totalPersons = 0;
 
           for (let pIdx = 1; pIdx <= 30; pIdx++) {
-            const person = dayData[\`p\${pIdx}\`];
+            const person = dayData[`p${pIdx}`];
             if (!person) break;
             totalPersons++;
             const answers = parseAnswers(person.answers);
@@ -160,8 +160,8 @@ export async function GET(request) {
           }
 
           if (totalPersons > 0) {
-            surveyData[\`day\${dayNum}\`] = {
-              stakeholder: stakeholder || \`Stakeholder Day \${dayNum}\`,
+            surveyData[`day${dayNum}`] = {
+              stakeholder: stakeholder || `Stakeholder Day ${dayNum}`,
               totalPersons,
               questions: questions.map((q, idx) => {
                 const yes = yesCount[idx];
