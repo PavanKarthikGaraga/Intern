@@ -102,19 +102,22 @@ export async function GET(request) {
         const day5Data = studentTasks[5] || {};
 
         // Extract Day 5 text
-        const isSlot4OrMore = Number(String(student.slot).replace(/\\D/g, '')) >= 4;
+        const slotNum = parseInt(String(student.slot).replace(/\D/g, ''), 10) || 1;
+        const isSlot4OrMore = slotNum >= 4;
         let analysisText = {};
         if (isSlot4OrMore) {
           analysisText = {
             isSlot4OrMore: true,
             actualProblem: day5Data.day5_actualProblem || '',
-            whoAffected: day5Data.day5_whoAffected || '',
+            whoAffected: day5Data.day5_affected || '',
             surveyInsight: day5Data.day5_surveyInsight || '',
             mainReason: day5Data.day5_mainReason || '',
             impact: day5Data.day5_impact || '',
             finalStatement: day5Data.day5_finalStatement || '',
           };
         } else {
+          // For Slot 1-3, the analysis is stored in the Day 5 task row itself
+          // using keys like day2_topProblems, day3_topProblems, day4_topProblems
           analysisText = {
             isSlot4OrMore: false,
             day2: {
@@ -174,7 +177,7 @@ export async function GET(request) {
           }
         });
 
-        return {
+        const studentResult = {
           username: student.username,
           name: student.name,
           slot: student.slot,
@@ -183,9 +186,17 @@ export async function GET(request) {
           analysisText,
           surveyData
         };
+        return studentResult;
+      }).filter(s => {
+        // Skip students with no Day 5 submission at all
+        if (s.analysisText.isSlot4OrMore) {
+          return s.analysisText.actualProblem || s.analysisText.finalStatement;
+        } else {
+          return s.analysisText.day2?.topProblems || s.analysisText.day3?.topProblems || s.analysisText.day4?.topProblems;
+        }
       });
 
-      return NextResponse.json({ success: true, data: result });
+      return NextResponse.json({ success: true, data: result, total: result.length });
     } finally {
       db.release();
     }

@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 
 export default function Day5Report() {
   const [slot, setSlot] = useState('1');
-  const [modes, setModes] = useState(['In-Village', 'In-Campus']);
+  const [modes, setModes] = useState(['InVillage', 'Incampus']);
   const [loading, setLoading] = useState(false);
   const [studentsData, setStudentsData] = useState([]);
   const pdfRef = useRef();
@@ -106,15 +106,19 @@ export default function Day5Report() {
             <FaFilter style={{ color: '#64748b' }}/> Select Modes
           </label>
           <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-            {['In-Village', 'In-Campus', 'Remote'].map(mode => (
-              <label key={mode} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.95rem', color: '#475569' }}>
+            {[
+              { label: 'In-Village', value: 'InVillage' },
+              { label: 'In-Campus', value: 'Incampus' },
+              { label: 'Remote', value: 'Remote' }
+            ].map(mode => (
+              <label key={mode.value} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.95rem', color: '#475569' }}>
                 <input
                   type="checkbox"
-                  checked={modes.includes(mode)}
-                  onChange={() => handleModeToggle(mode)}
+                  checked={modes.includes(mode.value)}
+                  onChange={() => handleModeToggle(mode.value)}
                   style={{ width: '18px', height: '18px', accentColor: '#014a01', cursor: 'pointer' }}
                 />
-                {mode}
+                {mode.label}
               </label>
             ))}
           </div>
