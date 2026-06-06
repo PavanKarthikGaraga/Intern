@@ -2,7 +2,6 @@
 import { useState, useRef } from 'react';
 import { FaFilePdf, FaDownload, FaSpinner, FaFilter } from 'react-icons/fa';
 import toast from 'react-hot-toast';
-import html2pdf from 'html2pdf.js';
 
 export default function Day5Report() {
   const [slot, setSlot] = useState('1');
@@ -51,22 +50,28 @@ export default function Day5Report() {
     }
   };
 
-  const generatePDF = (count) => {
+  const generatePDF = async (count) => {
     const element = pdfRef.current;
     if (!element) return;
 
-    const opt = {
-      margin:       10,
-      filename:     `Day5_Report_Slot${slot}.pdf`,
-      image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true },
-      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak:    { mode: 'css', avoid: '.no-break' }
-    };
+    try {
+      const html2pdf = (await import('html2pdf.js')).default;
+      const opt = {
+        margin:       10,
+        filename:     `Day5_Report_Slot${slot}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak:    { mode: 'css', avoid: '.no-break' }
+      };
 
-    html2pdf().set(opt).from(element).save().then(() => {
-      toast.success('PDF Downloaded successfully!');
-    });
+      html2pdf().set(opt).from(element).save().then(() => {
+        toast.success('PDF Downloaded successfully!');
+      });
+    } catch (e) {
+      console.error(e);
+      toast.error('Failed to load PDF library');
+    }
   };
 
   return (
