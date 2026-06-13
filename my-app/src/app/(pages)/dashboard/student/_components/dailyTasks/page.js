@@ -2564,7 +2564,22 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
       </div>
 
       <button onClick={generatePDF} disabled={isGenerating} style={{
-        padding: '10px 20px', backgroundColor: '#16a34a', c  const isSlot3 = (parseInt(String(studentData?.slot || '1').replace(/\D/g, ''), 10) || 1) === 3;
+        padding: '10px 20px', backgroundColor: '#16a34a', color: 'white', border: 'none', borderRadius: '6px', cursor: isGenerating ? 'not-allowed' : 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px'
+      }}>
+        {isGenerating ? '⏳ Generating PDF...' : '⬇ Download Intervention PDF'}
+      </button>
+    </div>
+  );
+}
+
+/* ── Day 6 ── */
+function Day6({ data, onChange, readOnly, studentData }) {
+  const ro = { background: readOnly ? '#f9f9f9' : undefined };
+  const domain = studentData?.selectedDomain || '';
+  const template = getInterventionTemplate(domain);
+  const isSlot1 = (parseInt(String(studentData?.slot || '1').replace(/\D/g, ''), 10) || 1) === 1;
+
+  const isSlot3 = (parseInt(String(studentData?.slot || '1').replace(/\D/g, ''), 10) || 1) === 3;
   const isSlot4OrMore = (parseInt(String(studentData?.slot || '1').replace(/\D/g, ''), 10) || 1) >= 4;
   const isSlot5OrMore = (parseInt(String(studentData?.slot || '1').replace(/\D/g, ''), 10) || 1) >= 5;
   const isMyGovSlot = isSlot1 || isSlot3 || isSlot4OrMore;
