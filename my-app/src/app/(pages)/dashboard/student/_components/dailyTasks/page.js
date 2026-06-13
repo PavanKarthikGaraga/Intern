@@ -2585,13 +2585,13 @@ function Day6({ data, onChange, readOnly, studentData }) {
   const isMyGovSlot = isSlot1 || isSlot3 || isSlot4OrMore;
 
   const QUIZZES_SLOT_1_3 = [
-    { title: 'Bharat GI Quiz – Celebrate India's Heritage', url: 'https://quiz.mygov.in/quiz/bharat-gi-quiz-celebrate-indias-heritage/' },
+    { title: `Bharat GI Quiz – Celebrate India’s Heritage`, url: 'https://quiz.mygov.in/quiz/bharat-gi-quiz-celebrate-indias-heritage/' },
     { title: 'Commonwealth Games 2030 Quiz', url: 'https://quiz.mygov.in/quiz/commonwealth-games-2030-quiz/' },
     { title: 'MOHFW Fire Safety Quiz 2026', url: 'https://quiz.mygov.in/quiz/mohfw-fire-safety-quiz-2026/' },
     isSlot3
       ? { title: 'Bharatiya Gyan Quiz Series Mathematics Astronomy', url: 'https://quiz.mygov.in/quiz/bharatiya-gyan-quiz-series-mathematics-astronomy/' }
       : { title: 'Quiz on Our Exam Warriors – Celebrating Exams', url: 'https://quiz.mygov.in/quiz/quiz-on-our-exam-warriors-celebrating-exams/' },
-    { title: 'Dr. B.R. Ambedkar's Life and Contributions Quiz Competition 2026', url: 'https://quiz.mygov.in/quiz/dr-b-r-ambedkars-life-and-contributions-quiz-competition-2026/' },
+    { title: `Dr. B.R. Ambedkar’s Life and Contributions Quiz Competition 2026`, url: 'https://quiz.mygov.in/quiz/dr-b-r-ambedkars-life-and-contributions-quiz-competition-2026/' },
     { title: 'Vande Mataram 150 Years Quiz', url: 'https://quiz.mygov.in/quiz/vande-mataram-150-years-quiz/' },
   ];
   const PLEDGES_SLOT_1_3 = [
