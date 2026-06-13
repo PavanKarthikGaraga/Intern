@@ -115,7 +115,7 @@ export default function FinalReports() {
     try {
       const payload = { username, status: editStatus, adminRemarks: editRemarks };
 
-      // For slot 2+, if marks filled in, send marks (will auto-approve)
+      // For slot 2+, include marks if provided — but always send status too (never auto-override)
       if (!isSlot1 && editMarks !== '') {
         const m = Number(editMarks);
         if (isNaN(m) || m < 0 || m > 20) {
@@ -124,8 +124,7 @@ export default function FinalReports() {
           return;
         }
         payload.reportBookMarks = m;
-        // Don't send status manually — API will auto-approve
-        delete payload.status;
+        // Keep status as whatever admin selected — do NOT delete it
       }
 
       const res = await fetch('/api/dashboard/admin/final-reports', {
@@ -139,7 +138,7 @@ export default function FinalReports() {
         toast.success(data.message || 'Updated successfully');
         setReports(reports.map(r => r.username === username ? {
           ...r,
-          status: (!isSlot1 && editMarks !== '') ? 'APPROVED' : editStatus,
+          status: editStatus,
           adminRemarks: editRemarks,
           reportBookMarks: (!isSlot1 && editMarks !== '') ? Number(editMarks) : r.reportBookMarks,
         } : r));
@@ -313,21 +312,15 @@ export default function FinalReports() {
                     <td style={TD}>
                       {isEditing ? (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          {!isSlot1 && editMarks !== '' ? (
-                            <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '6px', padding: '6px 10px', fontSize: '0.85rem', color: '#166534', fontWeight: 600 }}>
-                              ✅ Saving marks will auto-approve the submission
-                            </div>
-                          ) : (
-                            <select
-                              value={editStatus}
-                              onChange={(e) => setEditStatus(e.target.value)}
-                              style={{ padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.9rem', outline: 'none' }}
-                            >
-                              {STATUS_OPTIONS.map(opt => (
-                                <option key={opt.value} value={opt.value}>{opt.label}</option>
-                              ))}
-                            </select>
-                          )}
+                          <select
+                            value={editStatus}
+                            onChange={(e) => setEditStatus(e.target.value)}
+                            style={{ padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.9rem', outline: 'none' }}
+                          >
+                            {STATUS_OPTIONS.map(opt => (
+                              <option key={opt.value} value={opt.value}>{opt.label}</option>
+                            ))}
+                          </select>
                           <textarea
                             value={editRemarks}
                             onChange={(e) => setEditRemarks(e.target.value)}
@@ -387,7 +380,6 @@ export default function FinalReports() {
           </table>
           <div style={{ marginTop: '16px', fontSize: '0.9rem', color: '#64748b' }}>
             Showing {sortedAndFilteredReports.length} report(s) for Slot {slot}.
-            {!isSlot1 && <span style={{ marginLeft: 12, color: '#014a01', fontWeight: 600 }}>💡 Enter Report Book Marks (0–20) to auto-approve submissions.</span>}
           </div>
         </div>
       )}

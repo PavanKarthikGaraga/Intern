@@ -68,17 +68,19 @@ export async function POST(request) {
       await db.execute(`ALTER TABLE reportBooks ADD COLUMN reportBookMarks DECIMAL(4,2) DEFAULT NULL`);
     } catch (e) { /* column may already exist */ }
 
-    // If reportBookMarks is provided, save marks and auto-approve
+    // If reportBookMarks is provided, save marks with the given status (or APPROVED as fallback)
     if (reportBookMarks !== undefined && reportBookMarks !== null && reportBookMarks !== '') {
       const marks = Number(reportBookMarks);
       if (isNaN(marks) || marks < 0 || marks > 20) {
         return NextResponse.json({ success: false, error: 'Report Book Marks must be between 0 and 20' }, { status: 400 });
       }
+      // Use the admin-provided status; fall back to APPROVED only if none given
+      const finalStatus = status || 'APPROVED';
       await db.execute(
-        'UPDATE reportBooks SET reportBookMarks = ?, status = "APPROVED", adminRemarks = ? WHERE username = ?',
-        [marks, adminRemarks || null, username]
+        'UPDATE reportBooks SET reportBookMarks = ?, status = ?, adminRemarks = ? WHERE username = ?',
+        [marks, finalStatus, adminRemarks || null, username]
       );
-      return NextResponse.json({ success: true, message: 'Marks saved and report auto-approved.' });
+      return NextResponse.json({ success: true, message: 'Marks saved successfully.' });
     }
 
     // Manual status/remarks update
