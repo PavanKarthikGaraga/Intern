@@ -2564,33 +2564,19 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
       </div>
 
       <button onClick={generatePDF} disabled={isGenerating} style={{
-        padding: '10px 20px', backgroundColor: '#16a34a', color: 'white', border: 'none', borderRadius: '6px', cursor: isGenerating ? 'not-allowed' : 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px'
-      }}>
-        {isGenerating ? '⏳ Generating PDF...' : '⬇ Download Intervention PDF'}
-      </button>
-    </div>
-  );
-}
-
-/* ── Day 6 ── */
-function Day6({ data, onChange, readOnly, studentData }) {
-  const ro = { background: readOnly ? '#f9f9f9' : undefined };
-  const domain = studentData?.selectedDomain || '';
-  const template = getInterventionTemplate(domain);
-  const isSlot1 = (parseInt(String(studentData?.slot || '1').replace(/\D/g, ''), 10) || 1) === 1;
-
-  const isSlot3 = (parseInt(String(studentData?.slot || '1').replace(/\D/g, ''), 10) || 1) === 3;
+        padding: '10px 20px', backgroundColor: '#16a34a', c  const isSlot3 = (parseInt(String(studentData?.slot || '1').replace(/\D/g, ''), 10) || 1) === 3;
   const isSlot4OrMore = (parseInt(String(studentData?.slot || '1').replace(/\D/g, ''), 10) || 1) >= 4;
+  const isSlot5OrMore = (parseInt(String(studentData?.slot || '1').replace(/\D/g, ''), 10) || 1) >= 5;
   const isMyGovSlot = isSlot1 || isSlot3 || isSlot4OrMore;
 
   const QUIZZES_SLOT_1_3 = [
-    { title: 'Bharat GI Quiz – Celebrate India’s Heritage', url: 'https://quiz.mygov.in/quiz/bharat-gi-quiz-celebrate-indias-heritage/' },
+    { title: 'Bharat GI Quiz – Celebrate India's Heritage', url: 'https://quiz.mygov.in/quiz/bharat-gi-quiz-celebrate-indias-heritage/' },
     { title: 'Commonwealth Games 2030 Quiz', url: 'https://quiz.mygov.in/quiz/commonwealth-games-2030-quiz/' },
     { title: 'MOHFW Fire Safety Quiz 2026', url: 'https://quiz.mygov.in/quiz/mohfw-fire-safety-quiz-2026/' },
     isSlot3
       ? { title: 'Bharatiya Gyan Quiz Series Mathematics Astronomy', url: 'https://quiz.mygov.in/quiz/bharatiya-gyan-quiz-series-mathematics-astronomy/' }
       : { title: 'Quiz on Our Exam Warriors – Celebrating Exams', url: 'https://quiz.mygov.in/quiz/quiz-on-our-exam-warriors-celebrating-exams/' },
-    { title: 'Dr. B.R. Ambedkar’s Life and Contributions Quiz Competition 2026', url: 'https://quiz.mygov.in/quiz/dr-b-r-ambedkars-life-and-contributions-quiz-competition-2026/' },
+    { title: 'Dr. B.R. Ambedkar's Life and Contributions Quiz Competition 2026', url: 'https://quiz.mygov.in/quiz/dr-b-r-ambedkars-life-and-contributions-quiz-competition-2026/' },
     { title: 'Vande Mataram 150 Years Quiz', url: 'https://quiz.mygov.in/quiz/vande-mataram-150-years-quiz/' },
   ];
   const PLEDGES_SLOT_1_3 = [
@@ -2602,9 +2588,17 @@ function Day6({ data, onChange, readOnly, studentData }) {
     { title: 'National Technology Day 2026 Pledge', url: 'https://pledge.mygov.in/national-technology-day-2026/' },
   ];
 
+  // Slot 4 only
   const SLOT4_QUIZZES = [
     { title: 'Vande Mataram 150 Years Quiz', url: 'https://quiz.mygov.in/quiz/vande-mataram-150-years-quiz/' },
     { title: 'PM Internship Quiz', url: 'https://quiz.mygov.in/quiz/pm-internship-quiz/' },
+    { title: 'Quiz on Observance of 350 Years of Martyrdom of Sri Guru Tegh Bahadur Ji', url: 'https://quiz.mygov.in/quiz/quiz-on-observance-of-350-years-of-martyrdom-of-sri-guru-tegh-bahadur-ji/' },
+  ];
+
+  // Slot 5 onwards — PM Internship Quiz replaced with Senior Citizens Rights quiz
+  const SLOT5_QUIZZES = [
+    { title: 'Vande Mataram 150 Years Quiz', url: 'https://quiz.mygov.in/quiz/vande-mataram-150-years-quiz/' },
+    { title: 'Quiz on Awareness of Senior Citizens Rights and Welfare Schemes', url: 'https://quiz.mygov.in/quiz/quiz-on-awareness-of-senior-citizens-rights-and-welfare-schemes/' },
     { title: 'Quiz on Observance of 350 Years of Martyrdom of Sri Guru Tegh Bahadur Ji', url: 'https://quiz.mygov.in/quiz/quiz-on-observance-of-350-years-of-martyrdom-of-sri-guru-tegh-bahadur-ji/' },
   ];
 
@@ -2614,7 +2608,7 @@ function Day6({ data, onChange, readOnly, studentData }) {
     { title: 'National Technology Day 2026 Pledge', url: 'https://pledge.mygov.in/national-technology-day-2026/' },
   ];
 
-  const activeQuizzes = isSlot4OrMore ? SLOT4_QUIZZES : QUIZZES_SLOT_1_3;
+  const activeQuizzes = isSlot5OrMore ? SLOT5_QUIZZES : isSlot4OrMore ? SLOT4_QUIZZES : QUIZZES_SLOT_1_3;
   const activePledges = isSlot4OrMore ? SLOT4_PLEDGES : PLEDGES_SLOT_1_3;
 
   return (
