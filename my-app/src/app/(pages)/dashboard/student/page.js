@@ -86,9 +86,12 @@ export default function StudentDashboard() {
   const totalMarks = dm.total || 0;
   const isSlot1 = Number(studentData?.slot) === 1;
   const day7Submitted = Boolean(studentData?.uploads?.details?.day7) || Boolean(studentData?.hasFinalDay7Task);
-  const showReportBook = isSlot1 
+  // For slot 2+: show Report Book tab if day7 is submitted OR if student already has a reportBook entry
+  // (covers APPROVED/OWN_PRINTING/PAYMENT_SUBMITTED students who may not have day7 in uploads)
+  const hasReportBookEntry = Boolean(studentData?.reportBook);
+  const showReportBook = isSlot1
     ? (allDaysEvaluated && totalMarks >= 60)
-    : day7Submitted;
+    : (day7Submitted || hasReportBookEntry);
 
   // Whether this student's mentor is assigned
   const hasMentor = Boolean(studentData?.facultyMentorId || studentData?.mentor);
