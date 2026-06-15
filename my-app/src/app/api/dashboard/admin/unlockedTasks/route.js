@@ -33,7 +33,7 @@ export async function GET(req) {
           day TINYINT NOT NULL, data JSON NOT NULL, submittedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
           UNIQUE KEY uq_user_day (username, day)
-        )
+        ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
       `);
       const [tasksRows] = await db.query(
         "SELECT day FROM dailyTasks WHERE username = ? AND JSON_EXTRACT(data, '$.isFinal') = true",
@@ -54,7 +54,7 @@ export async function GET(req) {
           username VARCHAR(255) NOT NULL, day TINYINT NOT NULL,
           unlockedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           PRIMARY KEY (username, day)
-        )
+        ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
       `);
       const [unlockedRows] = await db.query('SELECT day FROM unlockedDays WHERE username = ?', [username]);
       const unlockedDays = unlockedRows.map(r => r.day);
@@ -96,7 +96,7 @@ export async function POST(req) {
           username VARCHAR(255) NOT NULL, day TINYINT NOT NULL,
           unlockedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           PRIMARY KEY (username, day)
-        )
+        ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
       `);
 
       // ── Allow Edit: reset isFinal so student can re-submit ──
@@ -126,7 +126,7 @@ export async function POST(req) {
             username VARCHAR(255) NOT NULL, day TINYINT NOT NULL,
             unlockedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (username, day)
-          )
+          ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
         `);
         await db.query('INSERT IGNORE INTO unlockedDays (username, day) VALUES (?, ?)', [username, day]);
         return NextResponse.json({ success: true, action: 'allowEdit' });

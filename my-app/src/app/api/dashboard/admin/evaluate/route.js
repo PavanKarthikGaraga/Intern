@@ -66,7 +66,7 @@ export async function GET(request) {
           remark7  TEXT DEFAULT NULL,
           evaluatedBy VARCHAR(255) DEFAULT NULL,
           updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-        )
+        ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
       `);
 
       // Migration: If columns are still DEFAULT 0, change them to NULL

@@ -33,7 +33,7 @@ export async function GET() {
                 deadline DATETIME NOT NULL,
                 createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-            );
+            ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
         `);
         // Insert defaults if empty
         await pool.query(`

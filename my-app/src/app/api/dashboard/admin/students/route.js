@@ -246,6 +246,9 @@ export async function DELETE(request) {
       await connection.query('DELETE FROM attendance WHERE username = ?', [username]);
       await connection.query('DELETE FROM uploads WHERE username = ?', [username]);
       await connection.query('DELETE FROM final WHERE username = ?', [username]);
+      // Clear daily task submissions and unlocked days (prevents stale data on re-registration)
+      await connection.query('DELETE FROM dailyTasks WHERE username = ?', [username]);
+      await connection.query('DELETE FROM unlockedDays WHERE username = ?', [username]);
       await connection.query('DELETE FROM registrations WHERE username = ?', [username]);
       await connection.query('DELETE FROM users WHERE username = ?', [username]);
 

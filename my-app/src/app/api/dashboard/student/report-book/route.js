@@ -43,7 +43,7 @@ export async function POST(request) {
         reportBookMarks DECIMAL(4,2) DEFAULT NULL,
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-      )
+      ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
     `);
 
     try { await db.execute("ALTER TABLE reportBooks ADD COLUMN adminRemarks TEXT DEFAULT NULL"); } catch (e) {}

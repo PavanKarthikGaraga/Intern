@@ -57,7 +57,7 @@ export async function POST(request) {
           submittedAt TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
           updatedAt   TIMESTAMP    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
           UNIQUE KEY uq_user_day (username, day)
-        )
+        ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
       `);
 
       // Server-side safety: strip any base64 image data before persisting.
@@ -129,7 +129,7 @@ export async function GET() {
           submittedAt TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
           updatedAt   TIMESTAMP    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
           UNIQUE KEY uq_user_day (username, day)
-        )
+        ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
       `);
 
       const [rows] = await db.execute(
@@ -153,7 +153,7 @@ export async function GET() {
           day TINYINT NOT NULL,
           unlockedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           PRIMARY KEY (username, day)
-        )
+        ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
       `);
       
       const [unlockedRows] = await db.execute(

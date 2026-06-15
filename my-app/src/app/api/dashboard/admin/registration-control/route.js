@@ -9,7 +9,7 @@ const ensureTable = async (db) => {
       slot             TINYINT   NOT NULL PRIMARY KEY,
       registrationOpen TINYINT   NOT NULL DEFAULT 1,
       updatedAt        TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    )
+    ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   `);
   // Seed all 9 slots as OPEN by default
   for (let s = 1; s <= 9; s++) {
