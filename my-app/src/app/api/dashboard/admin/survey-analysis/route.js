@@ -42,7 +42,7 @@ export async function GET(request) {
         `SELECT r.username, r.slot, r.selectedDomain AS domain,
                 ps.problem_statement AS problemStatement, dt.day, dt.data AS taskData
          FROM registrations r
-         JOIN dailyTasks dt ON r.username = dt.username AND dt.day IN (2, 3, 4)
+         JOIN dailyTasks dt ON r.username = dt.username COLLATE utf8mb4_unicode_ci AND dt.day IN (2, 3, 4)
          LEFT JOIN problemStatements ps ON r.username = ps.username
          WHERE ${whereClause}
          ORDER BY r.selectedDomain, ps.problem_statement, r.slot`,
@@ -54,7 +54,7 @@ export async function GET(request) {
         `SELECT r.username, r.selectedDomain AS domain,
                 ps.problem_statement AS problemStatement, dt.data AS taskData
          FROM registrations r
-         JOIN dailyTasks dt ON r.username = dt.username AND dt.day = 5
+         JOIN dailyTasks dt ON r.username = dt.username COLLATE utf8mb4_unicode_ci AND dt.day = 5
          LEFT JOIN problemStatements ps ON r.username = ps.username
          WHERE ${whereClause}
          ORDER BY r.selectedDomain, ps.problem_statement`,

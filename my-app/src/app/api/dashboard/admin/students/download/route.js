@@ -58,10 +58,10 @@ export async function GET(request) {
     let taskJoin   = '';
     let taskParams = [];
     if (taskDay && taskStatus === 'submitted') {
-      taskJoin = 'INNER JOIN dailyTasks dt ON r.username = dt.username AND dt.day = ?';
+      taskJoin = 'INNER JOIN dailyTasks dt ON r.username = dt.username COLLATE utf8mb4_unicode_ci AND dt.day = ?';
       taskParams.push(taskDay);
     } else if (taskDay && taskStatus === 'not_submitted') {
-      taskJoin = 'LEFT JOIN dailyTasks dt ON r.username = dt.username AND dt.day = ?';
+      taskJoin = 'LEFT JOIN dailyTasks dt ON r.username = dt.username COLLATE utf8mb4_unicode_ci AND dt.day = ?';
       taskParams.push(taskDay);
       conditions.push('dt.username IS NULL');
     }

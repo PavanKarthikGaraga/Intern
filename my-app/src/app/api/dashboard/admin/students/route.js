@@ -101,11 +101,11 @@ export async function GET(req) {
     let taskParams = []; // separate params for the JOIN ON clause
     if (taskDay && taskStatus === 'submitted') {
       // Only students who HAVE a dailyTasks row for this day
-      taskJoin = 'INNER JOIN dailyTasks dt ON r.username = dt.username AND dt.day = ?';
+      taskJoin = 'INNER JOIN dailyTasks dt ON r.username = dt.username COLLATE utf8mb4_unicode_ci AND dt.day = ?';
       taskParams.push(taskDay);
     } else if (taskDay && taskStatus === 'not_submitted') {
       // Students who do NOT have a dailyTasks row for this day
-      taskJoin = 'LEFT JOIN dailyTasks dt ON r.username = dt.username AND dt.day = ?';
+      taskJoin = 'LEFT JOIN dailyTasks dt ON r.username = dt.username COLLATE utf8mb4_unicode_ci AND dt.day = ?';
       taskParams.push(taskDay);
       conditions.push('dt.username IS NULL');
     }

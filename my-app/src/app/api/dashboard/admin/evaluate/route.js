@@ -97,7 +97,7 @@ export async function GET(request) {
       const [submittedRows] = await db.execute(
         `SELECT dt.username, dt.submittedAt, dt.data
          FROM dailyTasks dt
-         JOIN registrations r ON dt.username = r.username
+         JOIN registrations r ON dt.username COLLATE utf8mb4_unicode_ci = r.username
          WHERE r.slot = ? AND dt.day = ? AND r.season = '2026'`,
         [slot, day]
       );
@@ -116,7 +116,7 @@ export async function GET(request) {
         const [surveyRows] = await db.execute(
           `SELECT dt.username, dt.day, dt.data
            FROM dailyTasks dt
-           JOIN registrations r ON dt.username = r.username
+           JOIN registrations r ON dt.username COLLATE utf8mb4_unicode_ci = r.username
            WHERE r.slot = ? AND dt.day IN (2, 3, 4) AND r.season = '2026'`,
           [slot]
         );
