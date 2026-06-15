@@ -38,6 +38,7 @@ import SlotReport from './_components/slotReport/page';
 import FinalReports from './_components/finalReports/page';
 import Results from './_components/results/page';
 import Day5Report from './_components/day5Report/page';
+import RBookControl from './_components/rbookControl/page';
 
 
 export default function AdminDashboard() {
@@ -320,6 +321,14 @@ export default function AdminDashboard() {
           >
             <span className="item-label">📘 Final Reports</span>
           </button>
+
+          <button
+            className={`sidebar-item ${activeSection === 'rbook-control' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('rbook-control')}
+          >
+            <span className="item-label">📒 R-Book</span>
+          </button>
+
           <button
             className={`sidebar-item ${activeSection === 'day5Report' ? 'active' : ''}`}
             onClick={() => handleSectionClick('day5Report')}
@@ -445,6 +454,7 @@ export default function AdminDashboard() {
            activeSection === 'survey-analysis' ? <SurveyAnalysis /> :
            activeSection === 'slot-report' ? <SlotReport /> :
            activeSection === 'final-reports' ? <FinalReports /> :
+           activeSection === 'rbook-control' ? <RBookControl /> :
            activeSection === 'day5Report' ? <Day5Report /> :
            <ChangePassword />}
         </main>

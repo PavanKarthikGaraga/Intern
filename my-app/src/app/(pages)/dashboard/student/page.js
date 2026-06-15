@@ -28,6 +28,7 @@ export default function StudentDashboard() {
   const [studentData, setStudentData]     = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [slotEnabled, setSlotEnabled]     = useState(false); // default locked
+  const [rbookVisible, setRbookVisible]   = useState(true);  // admin report book visibility
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -39,13 +40,14 @@ export default function StudentDashboard() {
         setError(null);
 
         // Fetch student data + slot status in parallel
-        const [studentRes, slotRes] = await Promise.all([
+        const [studentRes, slotRes, rbookRes] = await Promise.all([
           fetch('/api/dashboard/student/data', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username: user.username }),
           }),
           fetch('/api/slot-status', { credentials: 'include' }),
+          fetch('/api/rbook-status', { credentials: 'include' }),
         ]);
 
         if (!studentRes.ok) {
@@ -53,12 +55,13 @@ export default function StudentDashboard() {
           throw new Error(errData.message || `HTTP error! status: ${studentRes.status}`);
         }
 
-        const [data, slotData] = await Promise.all([studentRes.json(), slotRes.json()]);
+        const [data, slotData, rbookData] = await Promise.all([studentRes.json(), slotRes.json(), rbookRes.json()]);
 
         if (data.success && data.student) setStudentData(data.student);
         else throw new Error(data.error || 'Failed to fetch student data');
 
         setSlotEnabled(slotData.enabled === true);
+        setRbookVisible(rbookData.visible !== false); // default to true if missing
       } catch (err) {
         console.error('Error fetching data:', err);
         setError(err.message || 'Failed to load student data');
@@ -140,7 +143,7 @@ export default function StudentDashboard() {
             <span className="item-label">Change Password</span>
           </button>
 
-          {showReportBook && (
+          {showReportBook && rbookVisible && (
             <button className={`sidebar-item ${activeSection === 'report-book' ? 'active' : ''}`}
               onClick={() => handleSectionClick('report-book')}>
               <FaBook className="sidebar-icon" />
@@ -172,7 +175,7 @@ export default function StudentDashboard() {
            activeSection === 'evaluation-plan'   ? <EvaluationPlan studentData={studentData} /> :
            activeSection === 'lead'             ? <Lead studentData={studentData} /> :
            activeSection === 'survey-questions' ? <SurveyQuestions studentData={studentData} /> :
-           activeSection === 'report-book' && showReportBook ? <ReportBook studentData={studentData} /> :
+           activeSection === 'report-book' && showReportBook && rbookVisible ? <ReportBook studentData={studentData} /> :
            // Slot-gated
            activeSection === 'daily-tasks' && slotEnabled  ? <DailyTasks studentData={studentData} onSectionChange={setActiveSection} /> :
            !slotEnabled && (activeSection === 'daily-tasks') ? (
