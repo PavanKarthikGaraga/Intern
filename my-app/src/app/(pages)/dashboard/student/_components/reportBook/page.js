@@ -346,10 +346,63 @@ function MarksBadge({ reportBookMarks }) {
   );
 }
 
+/* ── Grand Total Marks Banner ── */
+function TotalMarksBanner({ dailyTotal, reportBookMarks }) {
+  const rbMarks  = (reportBookMarks !== null && reportBookMarks !== undefined) ? Number(reportBookMarks) : null;
+  const grandTotal = rbMarks !== null ? (Number(dailyTotal) + rbMarks) : null;
+  const passed   = grandTotal !== null ? grandTotal >= 60 : null;
+
+  if (grandTotal === null) return null; // marks not yet assigned
+
+  return (
+    <div style={{
+      borderRadius: 14,
+      padding: '18px 22px',
+      marginBottom: 24,
+      border: `2px solid ${passed ? '#86efac' : '#fca5a5'}`,
+      background: passed ? '#f0fdf4' : '#fef2f2',
+      display: 'flex', flexDirection: 'column', gap: 10,
+    }}>
+      <div style={{ fontSize: '0.85rem', fontWeight: 700, color: passed ? '#166534' : '#991b1b', letterSpacing: '0.03em' }}>
+        {passed ? '🏆 MARKS SUMMARY — PASS' : '❌ MARKS SUMMARY — FAIL'}
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+        <div style={{ flex: '1 1 130px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, padding: '10px 14px' }}>
+          <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>Daily Marks</div>
+          <div style={{ fontSize: '1.3rem', fontWeight: 900, color: '#014a01' }}>{Number(dailyTotal)}<span style={{ fontSize: '0.85rem', fontWeight: 500, color: '#64748b' }}>/80</span></div>
+        </div>
+        <div style={{ flex: '1 1 130px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, padding: '10px 14px' }}>
+          <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>Report Book</div>
+          <div style={{ fontSize: '1.3rem', fontWeight: 900, color: '#014a01' }}>{rbMarks}<span style={{ fontSize: '0.85rem', fontWeight: 500, color: '#64748b' }}>/20</span></div>
+        </div>
+        <div style={{
+          flex: '1 1 130px',
+          background: passed ? '#014a01' : '#dc2626',
+          borderRadius: 10, padding: '10px 14px',
+        }}>
+          <div style={{ fontSize: '0.75rem', color: passed ? '#bbf7d0' : '#fecaca', fontWeight: 600 }}>Grand Total</div>
+          <div style={{ fontSize: '1.3rem', fontWeight: 900, color: '#fff' }}>{grandTotal}<span style={{ fontSize: '0.85rem', fontWeight: 500, color: passed ? '#bbf7d0' : '#fecaca' }}>/100</span></div>
+        </div>
+      </div>
+      {!passed && (
+        <div style={{ fontSize: '0.85rem', color: '#7f1d1d', fontWeight: 500, lineHeight: 1.5 }}>
+          Minimum passing score is <strong>60/100</strong>. You need at least 60 marks to proceed with Report Book printing.
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ── APPROVED SECTION ── */
 function ApprovedSection({ studentData, adminRemarks, reportBookMarks, isSlot1, utr, setUtr, submitting, handleSubmitUtr, handleSubmitOwnPrinting }) {
   const [printingChoice, setPrintingChoice] = useState(null);
   const [acknowledged, setAcknowledged] = useState(false);
+
+  // Compute pass/fail
+  const dailyTotal  = Number(studentData?.dailyMarks?.total || 0);
+  const rbMarks     = (reportBookMarks !== null && reportBookMarks !== undefined) ? Number(reportBookMarks) : null;
+  const grandTotal  = rbMarks !== null ? dailyTotal + rbMarks : null;
+  const hasPassed   = grandTotal !== null ? grandTotal >= 60 : true; // if marks not yet set, don't block
 
   return (
     <div style={{ marginBottom: 24 }}>
@@ -358,7 +411,8 @@ function ApprovedSection({ studentData, adminRemarks, reportBookMarks, isSlot1, 
         <FaCheckCircle style={{ fontSize: '3rem', color: '#16a34a', marginBottom: 12 }} />
         <h3 style={{ margin: '0 0 8px 0', color: '#15803d', fontSize: '1.4rem' }}>Report Approved! 🎉</h3>
         <p style={{ margin: 0, color: '#166534', fontSize: '1rem' }}>
-          Your report has been reviewed and approved. Please choose your preferred printing option below.
+          Your report has been reviewed and approved.
+          {hasPassed ? ' Please choose your preferred printing option below.' : ''}
         </p>
         {adminRemarks && (
           <div style={{ marginTop: 16, background: '#fff', padding: '12px', borderRadius: '8px', border: '1px solid #bbf7d0', color: '#14532d', fontSize: '0.9rem', textAlign: 'left' }}>
@@ -367,68 +421,113 @@ function ApprovedSection({ studentData, adminRemarks, reportBookMarks, isSlot1, 
         )}
       </div>
 
-      {/* Evaluation Marks (slot 2+) */}
-      {!isSlot1 && <MarksBadge reportBookMarks={reportBookMarks} />}
+      {/* Grand Total Marks Banner — always shown when marks are available */}
+      <TotalMarksBanner dailyTotal={dailyTotal} reportBookMarks={reportBookMarks} />
 
-      {/* Printing Options */}
-      <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.06)', padding: '24px', marginBottom: 24 }}>
-        <h3 style={{ margin: '0 0 6px 0', color: '#1e293b', fontSize: '1.15rem', fontWeight: 700 }}>
-          📋 Choose Your Printing Option
-        </h3>
-        <p style={{ margin: '0 0 20px 0', color: '#64748b', fontSize: '0.9rem' }}>
-          You must print <strong>2 copies</strong> of your report book — one for submission to the college and one for yourself.
-        </p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
-          <button
-            onClick={() => setPrintingChoice('self')}
-            onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 16px rgba(1, 74, 1, 0.12)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
-            style={{ flex: '1 1 260px', padding: '20px', borderRadius: '12px', border: `2px solid ${printingChoice === 'self' ? '#014a01' : '#e2e8f0'}`, background: printingChoice === 'self' ? '#f0fdf4' : '#f8fafc', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s ease-in-out' }}
-          >
-            <div style={{ fontSize: '2rem', marginBottom: 8 }}>🖨️</div>
-            <h4 style={{ margin: '0 0 6px 0', color: '#1e293b', fontSize: '1rem', fontWeight: 700 }}>I&apos;ll print the report books on my own</h4>
-            <ul style={{ margin: 0, padding: '0 0 0 18px', color: '#475569', fontSize: '0.88rem', lineHeight: 1.7 }}>
-              <li>Download your PDF from Canva and print <strong>2 copies</strong>.</li>
-              <li>Submit <strong>1 copy</strong> to the college.</li>
-              <li>Keep <strong>1 copy</strong> for personal use.</li>
-              <li>Follow the printing format from the instructions.</li>
-            </ul>
-          </button>
+      {/* Evaluation Marks (slot 2+ fallback badge when grandTotal not yet computed) */}
+      {!isSlot1 && grandTotal === null && <MarksBadge reportBookMarks={reportBookMarks} />}
 
-          <button
-            onClick={() => setPrintingChoice('college')}
-            onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 16px rgba(1, 74, 1, 0.12)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
-            style={{ flex: '1 1 260px', padding: '20px', borderRadius: '12px', border: `2px solid ${printingChoice === 'college' ? '#014a01' : '#e2e8f0'}`, background: printingChoice === 'college' ? '#f0fdf4' : '#f8fafc', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s ease-in-out' }}
-          >
-            <div style={{ fontSize: '2rem', marginBottom: 8 }}>🏫</div>
-            <h4 style={{ margin: '0 0 6px 0', color: '#1e293b', fontSize: '1rem', fontWeight: 700 }}>I need assistance for printing</h4>
-            <ul style={{ margin: 0, padding: '0 0 0 18px', color: '#475569', fontSize: '0.88rem', lineHeight: 1.7 }}>
-              <li>Printing of <strong>2 copies</strong> will be arranged.</li>
-              <li><strong>1 copy</strong> will be submitted to the office directly.</li>
-              <li>Collect <strong>1 copy</strong> from <strong>SAC HALL</strong> when classes resume.</li>
-              <li style={{ color: '#014a01', fontWeight: 700 }}>Total Charge: ₹600 (₹300 × 2 books)</li>
-            </ul>
-          </button>
+      {/* ── FAILED — no printing ── */}
+      {!hasPassed && (
+        <div style={{
+          background: 'linear-gradient(135deg, #fff5f5 0%, #fef2f2 100%)',
+          border: '2px solid #fca5a5',
+          borderRadius: 16,
+          padding: '32px 28px',
+          textAlign: 'center',
+          marginBottom: 24,
+        }}>
+          <div style={{ fontSize: '4rem', marginBottom: 12 }}>😔</div>
+          <h3 style={{ margin: '0 0 10px 0', color: '#991b1b', fontSize: '1.5rem', fontWeight: 800 }}>
+            You did not qualify for printing.
+          </h3>
+          <p style={{ margin: '0 0 16px 0', color: '#7f1d1d', fontSize: '1rem', lineHeight: 1.7, maxWidth: 480, marginLeft: 'auto', marginRight: 'auto' }}>
+            A minimum score of <strong>60 out of 100</strong> is required to proceed with Report Book printing.
+            Your grand total is <strong style={{ color: '#dc2626' }}>{grandTotal}/100</strong>.
+          </p>
+          <div style={{
+            display: 'inline-block',
+            background: '#fef2f2',
+            border: '1.5px solid #fca5a5',
+            borderRadius: 10,
+            padding: '14px 22px',
+            color: '#7f1d1d',
+            fontSize: '0.92rem',
+            lineHeight: 1.6,
+            textAlign: 'left',
+            maxWidth: 440,
+          }}>
+            <strong>ℹ️ What this means:</strong><br />
+            Since your total score is below 60, you are not eligible to print the Report Book as part of this internship program.
+            Your Report Book has been reviewed and will remain on record.
+          </div>
         </div>
-      </div>
-
-      {/* SELF PRINT DETAILS */}
-      {printingChoice === 'self' && (
-        <SelfPrintSection submitting={submitting} handleSubmitOwnPrinting={handleSubmitOwnPrinting} />
       )}
 
-      {/* COLLEGE PRINT DETAILS */}
-      {printingChoice === 'college' && (
-        <CollegeAssistSection
-          studentData={studentData}
-          utr={utr}
-          setUtr={setUtr}
-          submitting={submitting}
-          handleSubmitUtr={handleSubmitUtr}
-          acknowledged={acknowledged}
-          setAcknowledged={setAcknowledged}
-        />
+      {/* ── PASSED — show printing options ── */}
+      {hasPassed && (
+        <>
+          {/* Printing Options */}
+          <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.06)', padding: '24px', marginBottom: 24 }}>
+            <h3 style={{ margin: '0 0 6px 0', color: '#1e293b', fontSize: '1.15rem', fontWeight: 700 }}>
+              📋 Choose Your Printing Option
+            </h3>
+            <p style={{ margin: '0 0 20px 0', color: '#64748b', fontSize: '0.9rem' }}>
+              You must print <strong>2 copies</strong> of your report book — one for submission to the college and one for yourself.
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
+              <button
+                onClick={() => setPrintingChoice('self')}
+                onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 16px rgba(1, 74, 1, 0.12)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+                style={{ flex: '1 1 260px', padding: '20px', borderRadius: '12px', border: `2px solid ${printingChoice === 'self' ? '#014a01' : '#e2e8f0'}`, background: printingChoice === 'self' ? '#f0fdf4' : '#f8fafc', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s ease-in-out' }}
+              >
+                <div style={{ fontSize: '2rem', marginBottom: 8 }}>🖨️</div>
+                <h4 style={{ margin: '0 0 6px 0', color: '#1e293b', fontSize: '1rem', fontWeight: 700 }}>I&apos;ll print the report books on my own</h4>
+                <ul style={{ margin: 0, padding: '0 0 0 18px', color: '#475569', fontSize: '0.88rem', lineHeight: 1.7 }}>
+                  <li>Download your PDF from Canva and print <strong>2 copies</strong>.</li>
+                  <li>Submit <strong>1 copy</strong> to the college.</li>
+                  <li>Keep <strong>1 copy</strong> for personal use.</li>
+                  <li>Follow the printing format from the instructions.</li>
+                </ul>
+              </button>
+
+              <button
+                onClick={() => setPrintingChoice('college')}
+                onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 16px rgba(1, 74, 1, 0.12)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+                style={{ flex: '1 1 260px', padding: '20px', borderRadius: '12px', border: `2px solid ${printingChoice === 'college' ? '#014a01' : '#e2e8f0'}`, background: printingChoice === 'college' ? '#f0fdf4' : '#f8fafc', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s ease-in-out' }}
+              >
+                <div style={{ fontSize: '2rem', marginBottom: 8 }}>🏫</div>
+                <h4 style={{ margin: '0 0 6px 0', color: '#1e293b', fontSize: '1rem', fontWeight: 700 }}>I need assistance for printing</h4>
+                <ul style={{ margin: 0, padding: '0 0 0 18px', color: '#475569', fontSize: '0.88rem', lineHeight: 1.7 }}>
+                  <li>Printing of <strong>2 copies</strong> will be arranged.</li>
+                  <li><strong>1 copy</strong> will be submitted to the office directly.</li>
+                  <li>Collect <strong>1 copy</strong> from <strong>SAC HALL</strong> when classes resume.</li>
+                  <li style={{ color: '#014a01', fontWeight: 700 }}>Total Charge: ₹600 (₹300 × 2 books)</li>
+                </ul>
+              </button>
+            </div>
+          </div>
+
+          {/* SELF PRINT DETAILS */}
+          {printingChoice === 'self' && (
+            <SelfPrintSection submitting={submitting} handleSubmitOwnPrinting={handleSubmitOwnPrinting} />
+          )}
+
+          {/* COLLEGE PRINT DETAILS */}
+          {printingChoice === 'college' && (
+            <CollegeAssistSection
+              studentData={studentData}
+              utr={utr}
+              setUtr={setUtr}
+              submitting={submitting}
+              handleSubmitUtr={handleSubmitUtr}
+              acknowledged={acknowledged}
+              setAcknowledged={setAcknowledged}
+            />
+          )}
+        </>
       )}
     </div>
   );
