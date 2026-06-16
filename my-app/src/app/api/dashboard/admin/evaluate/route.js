@@ -167,7 +167,7 @@ export async function GET(request) {
             else if (dayNum === 5 && (d.day2_topProblems || d.day3_topProblems || d.day4_topProblems || d.day5_actualProblem)) isFinal = true;
           }
 
-          isValidFinal = isFinal === true;
+          isValidFinal = isFinal === true || s.dayMark !== null;
         }
 
         if (isValidFinal) {

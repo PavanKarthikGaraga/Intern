@@ -114,7 +114,7 @@ function getDayStatus(dayNum, slot, saved, username, unlockedDays = [], slotEnab
     else if (dayNum === 5 && (d.day2_topProblems || d.day3_topProblems || d.day4_topProblems || d.day5_actualProblem)) isFinal = true;
   }
   
-  const isSubmitted = !!s && isFinal === true;
+  const isSubmitted = (!!s && isFinal === true) || isEvaluated;
   const isUnlocked = unlockedDays.includes(dayNum);
 
   if (isSubmitted) return 'submitted';
