@@ -114,11 +114,11 @@ function getDayStatus(dayNum, slot, saved, username, unlockedDays = [], slotEnab
     else if (dayNum === 5 && (d.day2_topProblems || d.day3_topProblems || d.day4_topProblems || d.day5_actualProblem)) isFinal = true;
   }
   
-  const isSubmitted = (!!s && isFinal === true) || isEvaluated;
   const isUnlocked = unlockedDays.includes(dayNum);
+  if (isUnlocked) return 'unlocked'; // Admin unlocked this day explicitly overrides everything
 
+  const isSubmitted = (!!s && isFinal === true) || isEvaluated;
   if (isSubmitted) return 'submitted';
-  if (isUnlocked) return 'unlocked'; // Admin unlocked this day
 
   // Check previous days first to see if we should cascade lock
   if (dayNum > 1) {

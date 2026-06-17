@@ -84,6 +84,7 @@ export async function GET(request) {
         `SELECT r.username, r.name, r.slot, r.selectedDomain, r.mode,
                 dm.day${day} AS dayMark,
                 dm.remark${day} AS remark,
+                dm.updatedAt AS markUpdatedAt,
                 ps.problem_statement AS ps
          FROM registrations r
          LEFT JOIN dailyMarks dm ON r.username = dm.username
@@ -95,7 +96,7 @@ export async function GET(request) {
 
       // Students who submitted this day
       const [submittedRows] = await db.execute(
-        `SELECT dt.username, dt.submittedAt, dt.data
+        `SELECT dt.username, dt.submittedAt, dt.updatedAt AS taskUpdatedAt, dt.data
          FROM dailyTasks dt
          JOIN registrations r ON dt.username COLLATE utf8mb4_unicode_ci = r.username
          WHERE r.slot = ? AND dt.day = ? AND r.season = '2026'`,
@@ -106,6 +107,7 @@ export async function GET(request) {
       submittedRows.forEach(row => {
         submittedMap[row.username] = {
           submittedAt: row.submittedAt,
+          taskUpdatedAt: row.taskUpdatedAt,
           taskData: typeof row.data === 'string' ? JSON.parse(row.data) : row.data,
         };
       });
@@ -171,6 +173,12 @@ export async function GET(request) {
         }
 
         if (isValidFinal) {
+          // Check if re-evaluation is needed: student submitted AFTER admin evaluated
+          // We add a small 5-second buffer to handle minor time discrepancies or immediate updates
+          const taskTime = sub.taskUpdatedAt ? new Date(sub.taskUpdatedAt).getTime() : 0;
+          const markTime = s.markUpdatedAt ? new Date(s.markUpdatedAt).getTime() : 0;
+          const isEvaluated = s.dayMark !== null && (taskTime <= markTime + 5000);
+
           submitted.push({
             username: s.username,
             name: s.name,
@@ -183,7 +191,7 @@ export async function GET(request) {
             surveyDays: surveyDaysMap[s.username] || null,
             dayMark: s.dayMark === null ? null : Number(s.dayMark),
             remark: s.remark || '',
-            evaluated: s.dayMark !== null,
+            evaluated: isEvaluated,
           });
         } else {
           notSubmitted.push({

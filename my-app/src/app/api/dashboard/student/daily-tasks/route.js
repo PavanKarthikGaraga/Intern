@@ -96,6 +96,14 @@ export async function POST(request) {
         [payload.username, day, JSON.stringify(sanitizedData)]
       );
 
+      // If this is a final submission, consume any unlock token so it properly returns to submitted status
+      if (data.isFinal === true) {
+        await db.execute(
+          `DELETE FROM unlockedDays WHERE username = ? AND day = ?`,
+          [payload.username, day]
+        );
+      }
+
       return NextResponse.json({ success: true, message: `Day ${day} saved successfully.` });
     } finally {
       db.release();
