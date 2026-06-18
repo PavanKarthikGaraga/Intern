@@ -403,6 +403,9 @@ function ApprovedSection({ studentData, adminRemarks, reportBookMarks, isSlot1, 
   const rbMarks     = (reportBookMarks !== null && reportBookMarks !== undefined) ? Number(reportBookMarks) : null;
   const grandTotal  = rbMarks !== null ? dailyTotal + rbMarks : null;
   const hasPassed   = grandTotal !== null ? grandTotal >= 60 : true; // if marks not yet set, don't block
+  
+  const dm = studentData?.dailyMarks;
+  const isDailyFullyEvaluated = dm ? [1,2,3,4,5,6,7].every(i => dm[`d${i}`] !== null && dm[`d${i}`] !== undefined) : false;
 
   return (
     <div style={{ marginBottom: 24 }}>
@@ -427,8 +430,28 @@ function ApprovedSection({ studentData, adminRemarks, reportBookMarks, isSlot1, 
       {/* Evaluation Marks (slot 2+ fallback badge when grandTotal not yet computed) */}
       {!isSlot1 && grandTotal === null && <MarksBadge reportBookMarks={reportBookMarks} />}
 
+      {/* ── PENDING EVALUATION (Score < 60 but not fully evaluated) ── */}
+      {!hasPassed && !isDailyFullyEvaluated && (
+        <div style={{
+          background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
+          border: '2px solid #fcd34d',
+          borderRadius: 16,
+          padding: '32px 28px',
+          textAlign: 'center',
+          marginBottom: 24,
+        }}>
+          <div style={{ fontSize: '4rem', marginBottom: 12 }}>⏳</div>
+          <h3 style={{ margin: '0 0 10px 0', color: '#b45309', fontSize: '1.5rem', fontWeight: 800 }}>
+            Evaluation in Progress
+          </h3>
+          <p style={{ margin: '0 0 16px 0', color: '#92400e', fontSize: '1rem', lineHeight: 1.7, maxWidth: 480, marginLeft: 'auto', marginRight: 'auto' }}>
+            Please wait until your daily tasks are completely evaluated. A minimum score of <strong>60 out of 100</strong> is required to proceed with Report Book printing.
+          </p>
+        </div>
+      )}
+
       {/* ── FAILED — no printing ── */}
-      {!hasPassed && (
+      {!hasPassed && isDailyFullyEvaluated && (
         <div style={{
           background: 'linear-gradient(135deg, #fff5f5 0%, #fef2f2 100%)',
           border: '2px solid #fca5a5',
