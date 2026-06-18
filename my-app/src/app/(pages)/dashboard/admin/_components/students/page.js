@@ -6,6 +6,7 @@ import VerifyModal from './VerifyModal';
 import StudentProfile from '../studentProfile/page';
 import { FaSearch, FaTrash, FaDownload, FaSync, FaEye, FaCheck, FaTimes, FaEdit } from 'react-icons/fa';
 import { PROBLEM_STATEMENTS } from '@/app/Data/problemStatements';
+import { branchNames } from '@/app/Data/branches';
 
 const SLOT_LABELS = {
   '1': 'Slot 1 — May 11–17',
@@ -252,7 +253,7 @@ export default function Students() {
   const [domains, setDomains]             = useState([]);
   const [searchInput, setSearchInput]     = useState('');
   const [filters, setFilters] = useState({
-    domain: '', slot: '', mode: '', search: '',
+    domain: '', slot: '', mode: '', search: '', branch: '',
     gender: '', accommodation: '', transportation: '',
     taskDay: '', taskStatus: '',
   });
@@ -291,6 +292,7 @@ export default function Students() {
         ...(filters.domain          && { domain:          filters.domain }),
         ...(filters.slot            && { slot:            filters.slot }),
         ...(filters.mode            && { mode:            filters.mode }),
+        ...(filters.branch          && { branch:          filters.branch }),
         ...(filters.search          && { search:          filters.search }),
         ...(filters.gender          && { gender:          filters.gender }),
         ...(filters.accommodation   && { accommodation:   filters.accommodation }),
@@ -321,7 +323,7 @@ export default function Students() {
       }
     }
   }, [
-    filters.search, filters.domain, filters.slot, filters.mode,
+    filters.search, filters.domain, filters.slot, filters.mode, filters.branch,
     filters.gender, filters.accommodation,
     filters.transportation, filters.taskDay, filters.taskStatus,
     pagination.currentPage, pagination.limit,
@@ -438,6 +440,7 @@ export default function Students() {
         ...(filters.domain          && { domain:          filters.domain }),
         ...(filters.slot            && { slot:            filters.slot }),
         ...(filters.mode            && { mode:            filters.mode }),
+        ...(filters.branch          && { branch:          filters.branch }),
         ...(filters.search          && { search:          filters.search }),
         ...(filters.gender          && { gender:          filters.gender }),
         ...(filters.accommodation   && { accommodation:   filters.accommodation }),
@@ -514,6 +517,13 @@ export default function Students() {
             <select id="domain" value={filters.domain} onChange={e => handleFilterChange('domain', e.target.value)}>
               <option value="">All Domains</option>
               {domains.map(d => <option key={d} value={d}>{d}</option>)}
+            </select>
+          </div>
+          <div className="filter-group">
+            <label htmlFor="branch">Branch</label>
+            <select id="branch" value={filters.branch} onChange={e => handleFilterChange('branch', e.target.value)}>
+              <option value="">All Branches</option>
+              {branchNames.map((b) => <option key={b.id} value={b.name}>{b.name}</option>)}
             </select>
           </div>
           <div className="filter-group">

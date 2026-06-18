@@ -37,6 +37,7 @@ export async function GET(request) {
     const season          = searchParams.get('season') || '2026';
     const taskDay         = searchParams.get('taskDay');    // '1'–'7'
     const taskStatus      = searchParams.get('taskStatus'); // 'submitted' | 'not_submitted'
+    const branch          = searchParams.get('branch');
 
     let conditions = [];
     let params     = [];
@@ -44,6 +45,7 @@ export async function GET(request) {
     if (domain)          { conditions.push('r.selectedDomain = ?');  params.push(domain); }
     if (slot)            { conditions.push('r.slot = ?');             params.push(slot); }
     if (mode)            { conditions.push('r.mode = ?');             params.push(mode); }
+    if (branch)          { conditions.push('r.branch = ?');           params.push(branch); }
     if (search) {
       conditions.push('(r.username LIKE ? OR r.name LIKE ? OR r.email LIKE ? OR r.selectedDomain LIKE ?)');
       params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);

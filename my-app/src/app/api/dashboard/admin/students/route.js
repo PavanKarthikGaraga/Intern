@@ -49,6 +49,7 @@ export async function GET(req) {
     const domain = searchParams.get('domain');
     const slot = searchParams.get('slot');
     const mode = searchParams.get('mode');
+    const branch = searchParams.get('branch');
     const search = searchParams.get('search');
     const gender = searchParams.get('gender');
     const accommodation = searchParams.get('accommodation');
@@ -73,6 +74,10 @@ export async function GET(req) {
     if (mode) {
       conditions.push('r.mode = ?');
       params.push(mode);
+    }
+    if (branch) {
+      conditions.push('r.branch = ?');
+      params.push(branch);
     }
     if (search) {
       conditions.push('(r.username LIKE ? OR r.name LIKE ? OR r.email LIKE ? OR r.selectedDomain LIKE ?)');
@@ -132,6 +137,7 @@ export async function GET(req) {
         r.username,
         MAX(r.name) as name,
         MAX(r.selectedDomain) as selectedDomain,
+        MAX(r.branch) as branch,
         MAX(r.mode) as mode,
         MAX(r.slot) as slot,
         MAX(r.email) as email,
