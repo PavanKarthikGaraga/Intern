@@ -493,28 +493,12 @@ function ApprovedSection({ studentData, adminRemarks, reportBookMarks, isSlot1, 
           {/* Printing Options */}
           <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.06)', padding: '24px', marginBottom: 24 }}>
             <h3 style={{ margin: '0 0 6px 0', color: '#1e293b', fontSize: '1.15rem', fontWeight: 700 }}>
-              📋 Choose Your Printing Option
+              📋 Click Here to Choose Printing Option
             </h3>
             <p style={{ margin: '0 0 20px 0', color: '#64748b', fontSize: '0.9rem' }}>
               You must print <strong>2 copies</strong> of your report book — one for submission to the college and one for yourself.
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
-              <button
-                onClick={() => setPrintingChoice('self')}
-                onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 16px rgba(1, 74, 1, 0.12)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
-                style={{ flex: '1 1 260px', padding: '20px', borderRadius: '12px', border: `2px solid ${printingChoice === 'self' ? '#014a01' : '#e2e8f0'}`, background: printingChoice === 'self' ? '#f0fdf4' : '#f8fafc', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s ease-in-out' }}
-              >
-                <div style={{ fontSize: '2rem', marginBottom: 8 }}>🖨️</div>
-                <h4 style={{ margin: '0 0 6px 0', color: '#1e293b', fontSize: '1rem', fontWeight: 700 }}>I&apos;ll print the report books on my own</h4>
-                <ul style={{ margin: 0, padding: '0 0 0 18px', color: '#475569', fontSize: '0.88rem', lineHeight: 1.7 }}>
-                  <li>Download your PDF from Canva and print <strong>2 copies</strong>.</li>
-                  <li>Submit <strong>1 copy</strong> to the college.</li>
-                  <li>Keep <strong>1 copy</strong> for personal use.</li>
-                  <li>Follow the printing format from the instructions.</li>
-                </ul>
-              </button>
-
               <button
                 onClick={() => setPrintingChoice('college')}
                 onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 16px rgba(1, 74, 1, 0.12)'; }}
@@ -522,7 +506,7 @@ function ApprovedSection({ studentData, adminRemarks, reportBookMarks, isSlot1, 
                 style={{ flex: '1 1 260px', padding: '20px', borderRadius: '12px', border: `2px solid ${printingChoice === 'college' ? '#014a01' : '#e2e8f0'}`, background: printingChoice === 'college' ? '#f0fdf4' : '#f8fafc', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s ease-in-out' }}
               >
                 <div style={{ fontSize: '2rem', marginBottom: 8 }}>🏫</div>
-                <h4 style={{ margin: '0 0 6px 0', color: '#1e293b', fontSize: '1rem', fontWeight: 700 }}>I need assistance for printing</h4>
+                <h4 style={{ margin: '0 0 6px 0', color: '#1e293b', fontSize: '1rem', fontWeight: 700 }}>I need assistance for printing (Optional)</h4>
                 <ul style={{ margin: 0, padding: '0 0 0 18px', color: '#475569', fontSize: '0.88rem', lineHeight: 1.7 }}>
                   <li>Printing of <strong>2 copies</strong> will be arranged.</li>
                   <li><strong>1 copy</strong> will be submitted to the office directly.</li>
