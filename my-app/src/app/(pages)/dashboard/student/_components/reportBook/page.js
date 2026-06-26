@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { FaBook, FaCheckCircle, FaExclamationTriangle, FaClock, FaLink, FaExternalLinkAlt, FaTimesCircle, FaPrint, FaStar } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 
@@ -16,6 +16,14 @@ export default function ReportBook({ studentData }) {
   const reportBookMarks = reportBook?.reportBookMarks;
 
   const [deadlineTime, setDeadlineTime] = useState(null);
+  const assistRef = useRef(null);
+
+  const handleSelectAssist = () => {
+    setPrintingChoice('college');
+    setTimeout(() => {
+      assistRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  };
 
   useEffect(() => {
     const fetchDeadline = async () => {
@@ -492,13 +500,16 @@ function ApprovedSection({ studentData, adminRemarks, reportBookMarks, isSlot1, 
         <>
           {/* Printing Options */}
           <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.06)', padding: '24px', marginBottom: 24 }}>
-            <h3 style={{ margin: '0 0 10px 0', color: '#1e293b', fontSize: '1.15rem', fontWeight: 700 }}>
+            <h3 
+              onClick={handleSelectAssist}
+              style={{ margin: '0 0 10px 0', color: '#2563eb', fontSize: '1.15rem', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}
+            >
               📋 Click Here for Printing Assistance
             </h3>
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
               <button
-                onClick={() => setPrintingChoice('college')}
+                onClick={handleSelectAssist}
                 onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 16px rgba(1, 74, 1, 0.12)'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
                 style={{ flex: '1 1 260px', padding: '20px', borderRadius: '12px', border: `2px solid ${printingChoice === 'college' ? '#014a01' : '#e2e8f0'}`, background: printingChoice === 'college' ? '#f0fdf4' : '#f8fafc', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s ease-in-out' }}
@@ -528,15 +539,17 @@ function ApprovedSection({ studentData, adminRemarks, reportBookMarks, isSlot1, 
 
           {/* COLLEGE PRINT DETAILS */}
           {printingChoice === 'college' && (
-            <CollegeAssistSection
-              studentData={studentData}
-              utr={utr}
-              setUtr={setUtr}
-              submitting={submitting}
-              handleSubmitUtr={handleSubmitUtr}
-              acknowledged={acknowledged}
-              setAcknowledged={setAcknowledged}
-            />
+            <div ref={assistRef} style={{ scrollMarginTop: '20px' }}>
+              <CollegeAssistSection
+                studentData={studentData}
+                utr={utr}
+                setUtr={setUtr}
+                submitting={submitting}
+                handleSubmitUtr={handleSubmitUtr}
+                acknowledged={acknowledged}
+                setAcknowledged={setAcknowledged}
+              />
+            </div>
           )}
         </>
       )}
