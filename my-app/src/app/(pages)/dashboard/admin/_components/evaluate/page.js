@@ -417,7 +417,7 @@ function EvalRow({ student, index, day, maxMarks, onSave, slot }) {
     <div className={`ev-row ${saved ? 'ev-row-done' : ''}`}>
       <div className="ev-row-header" onClick={() => setExpanded(e => !e)}>
         <div className="ev-row-left">
-          <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#64748b', minWidth: '28px' }}>{index}.</div>
+          <div style={{ fontSize: '1rem', fontWeight: 800, color: '#1e293b', minWidth: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f1f5f9', borderRadius: '6px', height: '32px', marginRight: '4px' }}>{index}</div>
           <div className="ev-avatar">{student.name?.[0]?.toUpperCase() || '?'}</div>
           <div>
             <div className="ev-student-name">{student.name}</div>
@@ -636,14 +636,6 @@ export default function Evaluate() {
             />
           </div>
         </div>
-        <div className="ev-filter-group">
-          <label>Sort by Marks</label>
-          <select value={sortMarks} onChange={e => setSortMarks(e.target.value)}>
-            <option value="none">Default Order</option>
-            <option value="asc">Lower to Higher</option>
-            <option value="desc">Higher to Lower</option>
-          </select>
-        </div>
       </div>
 
       {/* ── No selection ── */}
@@ -749,6 +741,22 @@ export default function Evaluate() {
                   <span style={{ fontSize: '0.78rem', color: '#64748b' }}>
                     Showing {subTab === 'pending_eval' ? evalPending.length : evalDone.length} students
                   </span>
+                )}
+                
+                {/* Sort by Marks Dropdown */}
+                {subTab === 'evaluated' && (
+                  <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#475569' }}>Sort Marks:</span>
+                    <select 
+                      value={sortMarks} 
+                      onChange={e => setSortMarks(e.target.value)}
+                      style={{ padding: '4px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.8rem', outline: 'none', cursor: 'pointer' }}
+                    >
+                      <option value="none">Default</option>
+                      <option value="asc">Low to High ↑</option>
+                      <option value="desc">High to Low ↓</option>
+                    </select>
+                  </div>
                 )}
               </div>
 
