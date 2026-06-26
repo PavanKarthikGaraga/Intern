@@ -16,14 +16,6 @@ export default function ReportBook({ studentData }) {
   const reportBookMarks = reportBook?.reportBookMarks;
 
   const [deadlineTime, setDeadlineTime] = useState(null);
-  const assistRef = useRef(null);
-
-  const handleSelectAssist = () => {
-    setPrintingChoice('college');
-    setTimeout(() => {
-      assistRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 100);
-  };
 
   useEffect(() => {
     const fetchDeadline = async () => {
@@ -405,6 +397,14 @@ function TotalMarksBanner({ dailyTotal, reportBookMarks }) {
 function ApprovedSection({ studentData, adminRemarks, reportBookMarks, isSlot1, utr, setUtr, submitting, handleSubmitUtr, handleSubmitOwnPrinting }) {
   const [printingChoice, setPrintingChoice] = useState(null);
   const [acknowledged, setAcknowledged] = useState(false);
+  const assistRef = useRef(null);
+
+  const handleSelectAssist = () => {
+    setPrintingChoice('college');
+    setTimeout(() => {
+      assistRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  };
 
   // Compute pass/fail
   const dailyTotal  = Number(studentData?.dailyMarks?.total || 0);
