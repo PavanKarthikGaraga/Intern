@@ -513,6 +513,7 @@ export default function Evaluate() {
   const [tab, setTab]         = useState('submitted');  // 'submitted' | 'not_submitted'
   const [subTab, setSubTab]   = useState('pending_eval'); // 'pending_eval' | 'evaluated'
   const [modeFilter, setModeFilter] = useState('all'); // 'all' | 'remote' | 'incampus' | 'invillage'
+  const [sortMarks, setSortMarks] = useState('none'); // 'none' | 'asc' | 'desc'
 
   const fetchData = useCallback(async () => {
     if (!slot || !day) return;
@@ -576,7 +577,14 @@ export default function Evaluate() {
     (list || []).filter(s => (s.mode || '').toLowerCase().replace(/[^a-z]/g, '') === modeFilter.replace(/[^a-z]/g, ''));
 
   const allSubmitted  = filterStudents(data?.submitted);
-  const evalDone      = filterByMode(allSubmitted.filter(s => s.evaluated));
+  
+  let evalDone      = filterByMode(allSubmitted.filter(s => s.evaluated));
+  if (sortMarks === 'asc') {
+    evalDone.sort((a, b) => Number(a.dayMark || 0) - Number(b.dayMark || 0));
+  } else if (sortMarks === 'desc') {
+    evalDone.sort((a, b) => Number(b.dayMark || 0) - Number(a.dayMark || 0));
+  }
+  
   const evalPending   = filterByMode(allSubmitted.filter(s => !s.evaluated));
   const notSubmitted  = filterStudents(data?.notSubmitted);
 
@@ -626,6 +634,14 @@ export default function Evaluate() {
               className="ev-search-input"
             />
           </div>
+        </div>
+        <div className="ev-filter-group">
+          <label>Sort by Marks</label>
+          <select value={sortMarks} onChange={e => setSortMarks(e.target.value)}>
+            <option value="none">Default Order</option>
+            <option value="asc">Lower to Higher</option>
+            <option value="desc">Higher to Lower</option>
+          </select>
         </div>
       </div>
 
