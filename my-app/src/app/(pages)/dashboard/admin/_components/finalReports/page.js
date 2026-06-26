@@ -18,6 +18,7 @@ export default function FinalReports() {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
   const STATUS_OPTIONS = [
+    { value: 'NOT_SUBMITTED',      label: 'Not Submitted',            color: '#475569', bg: '#f1f5f9' },
     { value: 'PENDING_REVIEW',     label: 'Pending Review',           color: '#0369a1', bg: '#f0f9ff' },
     { value: 'REJECTED',           label: 'Rejected',                 color: '#991b1b', bg: '#fef2f2' },
     { value: 'APPROVED',           label: 'Approved',                 color: '#16a34a', bg: '#f0fdf4' },
@@ -52,7 +53,7 @@ export default function FinalReports() {
   }, [slot]);
 
   const sortedAndFilteredReports = useMemo(() => {
-    let result = reports.filter(r => {
+    let result = reports.map(r => ({ ...r, status: r.status || 'NOT_SUBMITTED' })).filter(r => {
       if (statusFilter !== 'ALL' && r.status !== statusFilter) return false;
       if (searchQuery.trim() === '') return true;
       const q = searchQuery.toLowerCase().trim();

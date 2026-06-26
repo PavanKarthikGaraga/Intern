@@ -31,7 +31,7 @@ export async function GET(request) {
       `SELECT r.username, r.name, r.slot, rb.reportLink, rb.status, rb.adminRemarks, rb.utrId, rb.reportBookMarks, rb.id as rbId,
               (COALESCE(dm.day1,0) + COALESCE(dm.day2,0) + COALESCE(dm.day3,0) + COALESCE(dm.day4,0) + COALESCE(dm.day5,0) + COALESCE(dm.day6,0) + COALESCE(dm.day7,0)) AS totalMarks
        FROM registrations r
-       JOIN reportBooks rb ON r.username = rb.username
+       LEFT JOIN reportBooks rb ON r.username = rb.username
        LEFT JOIN dailyMarks dm ON r.username = dm.username
        WHERE r.slot = ?
        ORDER BY rb.updatedAt DESC`,
