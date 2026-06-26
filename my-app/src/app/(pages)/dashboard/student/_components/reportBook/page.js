@@ -495,11 +495,7 @@ function ApprovedSection({ studentData, adminRemarks, reportBookMarks, isSlot1, 
             <h3 style={{ margin: '0 0 10px 0', color: '#1e293b', fontSize: '1.15rem', fontWeight: 700 }}>
               📋 Click Here for Printing Assistance
             </h3>
-            <div style={{ margin: '0 0 20px 0', color: '#475569', fontSize: '0.95rem', lineHeight: 1.6, background: '#f8fafc', padding: '16px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-              <strong>Note:</strong> This option is for students who prefer a hassle-free printing process. Your report books will be printed and delivered to the SAC Hall, where you can collect them when the college reopens. This service is <strong>completely optional</strong>.<br/><br/>
-              You may also choose to print the books on your own and submit them directly to the SAC Hall. You are required to print <strong>2 copies</strong> (one for college submission and one for personal use).<br/>
-              <strong style={{ color: '#b45309' }}>Important:</strong> Both copies must be signed and verified by the Director, SAC.
-            </div>
+
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
               <button
                 onClick={() => setPrintingChoice('college')}
@@ -512,10 +508,16 @@ function ApprovedSection({ studentData, adminRemarks, reportBookMarks, isSlot1, 
                 <ul style={{ margin: 0, padding: '0 0 0 18px', color: '#475569', fontSize: '0.88rem', lineHeight: 1.7 }}>
                   <li>Printing of <strong>2 copies</strong> will be arranged.</li>
                   <li><strong>1 copy</strong> will be submitted to the office directly.</li>
-                  <li>Collect <strong>1 copy</strong> from <strong>SAC HALL</strong> when classes resume.</li>
+                  <li>Collect <strong>1 copy</strong> from <strong>SAC HALL</strong> when college reopens.</li>
                   <li style={{ color: '#014a01', fontWeight: 700 }}>Total Charge: ₹600 (₹300 × 2 books)</li>
                 </ul>
               </button>
+            </div>
+            
+            <div style={{ marginTop: '20px', color: '#475569', fontSize: '0.95rem', lineHeight: 1.6, background: '#f8fafc', padding: '16px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+              <strong>Note:</strong> This option is for students who prefer a hassle-free printing process. Your report books will be printed and delivered to the SAC Hall, where you can collect them when the college reopens. This service is <strong>completely optional</strong>.<br/><br/>
+              You may also choose to print the books on your own and submit them directly to the SAC Hall. You are required to print <strong>2 copies</strong> (one for college submission and one for personal use).<br/>
+              <strong style={{ color: '#b45309' }}>Important:</strong> Both copies must be signed and verified by the Director, SAC.
             </div>
           </div>
 
