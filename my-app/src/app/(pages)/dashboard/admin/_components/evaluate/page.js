@@ -362,7 +362,7 @@ function ModeTag({ mode }) {
 }
 
 /* ── Single student/* ── Single student evaluation row ── */
-function EvalRow({ student, day, maxMarks, onSave, slot }) {
+function EvalRow({ student, index, day, maxMarks, onSave, slot }) {
   const [expanded, setExpanded] = useState(false);
   const [editMark, setEditMark] = useState(String(student.dayMark ?? 0));
   const [remark, setRemark]     = useState(student.remark || '');
@@ -417,6 +417,7 @@ function EvalRow({ student, day, maxMarks, onSave, slot }) {
     <div className={`ev-row ${saved ? 'ev-row-done' : ''}`}>
       <div className="ev-row-header" onClick={() => setExpanded(e => !e)}>
         <div className="ev-row-left">
+          <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#64748b', minWidth: '28px' }}>{index}.</div>
           <div className="ev-avatar">{student.name?.[0]?.toUpperCase() || '?'}</div>
           <div>
             <div className="ev-student-name">{student.name}</div>
@@ -756,10 +757,11 @@ export default function Evaluate() {
                 <div className="ev-list">
                   {evalPending.length === 0 ? (
                     <div className="ev-empty-sm">🎉 All submitted students have been evaluated!</div>
-                  ) : evalPending.map(s => (
+                  ) : evalPending.map((s, idx) => (
                     <EvalRow
                       key={s.username}
                       student={s}
+                      index={idx + 1}
                       day={Number(day)}
                       maxMarks={data.maxMarks}
                       onSave={handleSave}
@@ -774,10 +776,11 @@ export default function Evaluate() {
                 <div className="ev-list">
                   {evalDone.length === 0 ? (
                     <div className="ev-empty-sm">No students evaluated yet.</div>
-                  ) : evalDone.map(s => (
+                  ) : evalDone.map((s, idx) => (
                     <EvalRow
                       key={s.username}
                       student={s}
+                      index={idx + 1}
                       day={Number(day)}
                       maxMarks={data.maxMarks}
                       onSave={handleSave}
