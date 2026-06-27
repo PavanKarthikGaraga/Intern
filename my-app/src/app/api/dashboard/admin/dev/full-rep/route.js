@@ -1,19 +1,27 @@
 import { NextResponse } from 'next/server';
-import { defaultPool as pool } from '@/lib/db'; // Explicitly use defaultPool if we want, or just `import pool from`
+import pool from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const activePool = (await import('@/lib/db')).default;
+    // 1. Overall Student Registration (live from DB)
+    // Completed = students who scored 60 or above out of 100
+    const [[overview]] = await pool.query(`
+      SELECT
+        COUNT(*) AS totalStudents,
+        SUM(CASE WHEN m.totalMarks >= 60 THEN 1 ELSE 0 END) AS totalCompleted
+      FROM registrations r
+      LEFT JOIN marks m ON r.username = m.username
+    `);
+    const totalStudents  = Number(overview.totalStudents)  || 0;
+    const totalCompleted = Number(overview.totalCompleted) || 0;
+    const completionRate = totalStudents > 0
+      ? ((totalCompleted / totalStudents) * 100).toFixed(2) + '%'
+      : '0.00%';
 
-    // 1. Overall Student Registration
-    const [[{ totalStudents }]] = await activePool.query('SELECT COUNT(*) as totalStudents FROM registrations');
-    const totalCompleted = 0; // Keeping as 0 based on user's template
-    const completionRate = '0%';
-
-    // 2. Slot-wise Student Distribution
-    const [slotRows] = await activePool.query(`
+    // 2. Slot-wise Student Distribution (live from DB)
+    const [slotRows] = await pool.query(`
       SELECT 
         slot, 
         COUNT(*) as total,
@@ -42,8 +50,8 @@ export async function GET() {
       }
     }
 
-    // 3. Domain-wise Student Participation
-    const [domainRows] = await activePool.query(`
+    // 3. Domain-wise Student Participation (live from DB)
+    const [domainRows] = await pool.query(`
       SELECT selectedDomain, COUNT(*) as count 
       FROM registrations 
       WHERE selectedDomain IS NOT NULL AND selectedDomain != ''
