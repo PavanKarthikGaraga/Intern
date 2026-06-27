@@ -72,7 +72,7 @@ export default function Register() {
   };
 
   // Batches that only support Remote mode
-  const REMOTE_ONLY_BATCHES = ['Y-25-HYD', 'Y-24'];
+  const REMOTE_ONLY_BATCHES = ['Y-25-HYD', 'Y-24', 'Y-22', 'Y-23'];
   const isRemoteOnly = (batch) => REMOTE_ONLY_BATCHES.includes(batch);
 
   const [selectedDomainInfo, setSelectedDomainInfo] = useState('');
@@ -630,6 +630,8 @@ export default function Register() {
                   <option value="Y-25-VJA">Y-25 (Vijayawada Campus)</option>
                   <option value="Y-25-HYD">Y-25 (Hyderabad Campus)</option>
                   <option value="Y-24">Y-24 (Detained) / Supply (Both Campuses)</option>
+                  <option value="Y-23">Y-23 (Remote)</option>
+                  <option value="Y-22">Y-22 (Remote)</option>
                 </select>
               </div>
 
@@ -1152,9 +1154,11 @@ export default function Register() {
                 <div className="confirm-grid">
                   <div className="confirm-item">
                     <span>Batch</span>
-                    <span><span className={`batch-tag ${formData.batch === 'Y-24' ? 'y24' : 'y25'}`}>
+                    <span><span className={`batch-tag ${formData.batch.startsWith('Y-24') || formData.batch.startsWith('Y-22') || formData.batch.startsWith('Y-23') ? 'y24' : 'y25'}`}>
                       {formData.batch === 'Y-25-VJA' ? 'Y-25 (Vijayawada Campus)' :
                        formData.batch === 'Y-25-HYD' ? 'Y-25 (Hyderabad Campus)' :
+                       formData.batch === 'Y-23' ? 'Y-23 (Remote)' :
+                       formData.batch === 'Y-22' ? 'Y-22 (Remote)' :
                        'Y-24 (Detained) / Supply'}
                     </span></span>
                   </div>
