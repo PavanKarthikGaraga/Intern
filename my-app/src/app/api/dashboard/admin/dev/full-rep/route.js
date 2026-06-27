@@ -216,7 +216,7 @@ export async function GET() {
               <div class="kpi-label">Total Registered</div>
             </td>
             <td class="kpi-box">
-              <div class="kpi-value">${totalActive}</div>
+              <div class="kpi-value">${totalStudents}</div>
               <div class="kpi-label">Active Students</div>
             </td>
             <td class="kpi-box" style="background-color: #F0FFF4; border-color: #9AE6B4;">
