@@ -31,15 +31,23 @@ export async function GET() {
       ORDER BY CAST(slot AS UNSIGNED)
     `);
 
+    const COMPLETED_CONDITION = `
+      (
+        (r.slot = 1 AND dm.day1 IS NOT NULL AND dm.day2 IS NOT NULL AND dm.day3 IS NOT NULL AND dm.day4 IS NOT NULL AND dm.day5 IS NOT NULL AND dm.day6 IS NOT NULL AND dm.day7 IS NOT NULL AND (COALESCE(dm.day1,0)+COALESCE(dm.day2,0)+COALESCE(dm.day3,0)+COALESCE(dm.day4,0)+COALESCE(dm.day5,0)+COALESCE(dm.day6,0)+COALESCE(dm.day7,0)) >= 60)
+        OR
+        (r.slot > 1 AND dm.day1 IS NOT NULL AND dm.day2 IS NOT NULL AND dm.day3 IS NOT NULL AND dm.day4 IS NOT NULL AND dm.day5 IS NOT NULL AND dm.day6 IS NOT NULL AND dm.day7 IS NOT NULL AND rb.reportBookMarks IS NOT NULL AND (COALESCE(dm.day1,0)+COALESCE(dm.day2,0)+COALESCE(dm.day3,0)+COALESCE(dm.day4,0)+COALESCE(dm.day5,0)+COALESCE(dm.day6,0)+COALESCE(dm.day7,0)+COALESCE(rb.reportBookMarks,0)) >= 60)
+      )
+    `;
+
     // ── Overview totals ───────────────────────────────────────────────────────
-    // Completed = students who scored 60 or above out of 100 in the marks table
     const [overviewRows] = await pool.query(`
       SELECT
         COUNT(*) AS totalStudents,
-        SUM(CASE WHEN m.totalMarks >= 60 THEN 1 ELSE 0 END) AS totalCompleted,
-        SUM(CASE WHEN m.totalMarks >= 60 THEN 0 ELSE 1 END) AS totalActive
+        SUM(CASE WHEN ${COMPLETED_CONDITION} THEN 1 ELSE 0 END) AS totalCompleted,
+        SUM(CASE WHEN ${COMPLETED_CONDITION} THEN 0 ELSE 1 END) AS totalActive
       FROM registrations r
-      LEFT JOIN marks m ON r.username = m.username
+      LEFT JOIN dailyMarks dm ON r.username = dm.username
+      LEFT JOIN reportBooks rb ON r.username = rb.username
     `);
     const overview = overviewRows[0] || {};
     const totalStudents  = Number(overview.totalStudents)  || 0;
@@ -62,13 +70,13 @@ export async function GET() {
     });
 
     // ── Domain stats: include ALL 20 domains, even those with 0 students ──────
-    // Pull actual counts from registrations
     const [domainRows] = await pool.query(`
       SELECT r.selectedDomain, COUNT(*) AS total,
-             SUM(CASE WHEN m.totalMarks >= 60 THEN 1 ELSE 0 END) AS completed,
-             SUM(CASE WHEN m.totalMarks >= 60 THEN 0 ELSE 1 END) AS active
+             SUM(CASE WHEN ${COMPLETED_CONDITION} THEN 1 ELSE 0 END) AS completed,
+             SUM(CASE WHEN ${COMPLETED_CONDITION} THEN 0 ELSE 1 END) AS active
       FROM registrations r
-      LEFT JOIN marks m ON r.username = m.username
+      LEFT JOIN dailyMarks dm ON r.username = dm.username
+      LEFT JOIN reportBooks rb ON r.username = rb.username
       GROUP BY r.selectedDomain
     `);
 
@@ -89,10 +97,11 @@ export async function GET() {
       SELECT
         r.mode,
         COUNT(*) AS total,
-        SUM(CASE WHEN m.totalMarks >= 60 THEN 1 ELSE 0 END) AS completed,
-        SUM(CASE WHEN m.totalMarks >= 60 THEN 0 ELSE 1 END) AS active
+        SUM(CASE WHEN ${COMPLETED_CONDITION} THEN 1 ELSE 0 END) AS completed,
+        SUM(CASE WHEN ${COMPLETED_CONDITION} THEN 0 ELSE 1 END) AS active
       FROM registrations r
-      LEFT JOIN marks m ON r.username = m.username
+      LEFT JOIN dailyMarks dm ON r.username = dm.username
+      LEFT JOIN reportBooks rb ON r.username = rb.username
       GROUP BY r.mode
     `);
 
