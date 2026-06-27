@@ -98,7 +98,7 @@ export default function ReportDeadline() {
                         value={selectedSlot}
                         onChange={(e) => setSelectedSlot(e.target.value)}
                     >
-                        {[1, 2, 3, 4, 5, 6].map(slot => (
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(slot => (
                             <option key={slot} value={slot}>Slot {slot}</option>
                         ))}
                     </select>
