@@ -4,6 +4,8 @@ import { verifyAccessToken } from '@/lib/jwt';
 import { cookies } from 'next/headers';
 import { DOMAINS } from '@/app/Data/domains';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const cookieStore = await cookies();
