@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import sharp from 'sharp';
 import IndiaMap from "@/lib/indiaMap";
 import pool from '@/lib/db';
 import fs from 'fs';
@@ -122,15 +123,26 @@ export async function GET() {
     }).join('\n');
 
     
+    
     const rawSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${IndiaMap.viewBox}" width="500" height="500">
         ${svgPaths}
       </svg>`;
-    const svgBase64 = Buffer.from(rawSvg).toString('base64');
+      
+    // Convert SVG to PNG Base64 using sharp so MS Word can render it
+    let pngBase64 = "";
+    try {
+      const pngBuffer = await sharp(Buffer.from(rawSvg)).png().toBuffer();
+      pngBase64 = pngBuffer.toString('base64');
+    } catch (err) {
+      console.error('Error generating map PNG:', err);
+    }
+    
     const indiaSvgHtml = `
       <div style="text-align: center;">
-        <img src="data:image/svg+xml;base64,${svgBase64}" style="width: 500px; height: 500px;" alt="India Map" />
+        <img src="data:image/png;base64,${pngBase64}" style="width: 500px; height: 500px;" alt="India Map" />
       </div>
     `;
+
 
 
 
