@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { defaultPool, legacyPool } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const results = [];
   
