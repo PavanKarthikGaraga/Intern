@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
+import fs from 'fs';
+import path from 'path';
 
 export const dynamic = 'force-dynamic';
 
@@ -75,6 +77,16 @@ export async function GET() {
           <td style="border: 1px solid black; padding: 8px;">${row.count}</td>
         </tr>
       `;
+    }
+
+    
+    let sacLogoBase64 = '';
+    try {
+      const sacLogoPath = path.join(process.cwd(), 'public', 'sac.png');
+      const sacLogoData = fs.readFileSync(sacLogoPath);
+      sacLogoBase64 = 'data:image/png;base64,' + sacLogoData.toString('base64');
+    } catch (e) {
+      console.error('Error reading sac.png', e);
     }
 
     const htmlContent = `
@@ -190,18 +202,31 @@ export async function GET() {
     <body>
       <div class="Section1">
       
-        <div class="header-title">
-          <h1>Student Activity Center (SAC)</h1>
-          <h2>Social Internship</h2>
-          <p style="font-size: 16pt; color: #718096; font-style: italic;">Monthly Progress Report – May 2026</p>
-          <br/>
-          <table style="width: 100%; text-align: left; margin-top: 20px;">
+        
+        <div class="header-title" style="border: none; margin-top: 50px;">
+          <h1 style="font-size: 36pt; text-transform: uppercase; margin: 0; color: #2B6CB0; text-align: center;">STUDENT ACTIVITY CENTER<br/>(SAC)</h1>
+          <h2 style="font-size: 24pt; margin: 20px 0; color: #4A5568; text-align: center;">Social Internship</h2>
+          <p style="font-size: 18pt; color: #718096; font-style: italic; text-align: center;">Monthly Progress Report - May 2026</p>
+          
+          <div style="text-align: center; margin: 60px 0;">
+            <img src="${sacLogoBase64}" alt="SAC Logo" style="width: 250px; height: auto;" />
+          </div>
+
+          <table style="width: 100%; text-align: center; margin-top: 80px; font-size: 16pt; color: #4A5568;">
             <tr>
-              <td style="width: 50%;"><b>Submitted by:</b><br/>Director-SAC<br/>Student Activity Center</td>
-              <td style="width: 50%; text-align: right;"><b>Institution:</b><br/>KL Deemed to be University</td>
+              <td style="width: 50%; vertical-align: top;">
+                <b>Submitted by:</b><br/>Director-SAC<br/>Student Activity Center
+              </td>
+              <td style="width: 50%; vertical-align: top;">
+                <b>Institution:</b><br/>KL Deemed to be University
+              </td>
             </tr>
           </table>
         </div>
+        
+        <!-- MS Word Page Break -->
+        <br clear="all" style="page-break-before:always; mso-break-type:page-break" />
+
 
         <h3 class="section-header">Executive Summary</h3>
         <p>The month of May 2026 marked the official commencement of the Social Internship (Social Immersive Learning – SIL) for the Y25 Batch, while simultaneously facilitating registration, planning, software development, orientation, and deployment activities for both Y25 and Y24 Batch students.</p>
