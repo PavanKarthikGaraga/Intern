@@ -906,7 +906,7 @@ export default function Register() {
                 <label>ID Number *</label>
                 <input
                   type="text"
-                  placeholder="Enter 10-digit ID (starts with 24/25)"
+                  placeholder="Enter 10-digit ID"
                   value={formData.studentInfo.idNumber}
                   onChange={(e) => {
                     const value = e.target.value.replace(/\D/g, ''); // Remove non-digits
