@@ -99,26 +99,33 @@ export async function GET() {
       ORDER BY count DESC
     `);
 
-    const chartLabels = stateRows.map(s => s.state);
-    const chartData = stateRows.map(s => s.count);
-    const chartConfig = {
-      type: 'pie',
-      data: {
-        labels: chartLabels,
-        datasets: [{ data: chartData }]
-      }
-    };
-    const pieChartUrl = 'https://quickchart.io/chart?c=' + encodeURIComponent(JSON.stringify(chartConfig)) + '&w=500&h=300';
     
-    let pieChartBase64 = '';
-    try {
-        const pRes = await fetch(pieChartUrl);
-        const pBuf = await pRes.arrayBuffer();
-        pieChartBase64 = 'data:image/png;base64,' + Buffer.from(pBuf).toString('base64');
-    } catch(e) {
-        console.error('Quickchart fetch failed', e);
-        pieChartBase64 = pieChartUrl; // fallback
-    }
+    const maxCount = Math.max(...stateRows.map(s => s.count), 1);
+    const getStateColor = (count) => {
+        const ratio = count / maxCount;
+        const r = Math.round(235 - ratio * (235 - 43));
+        const g = Math.round(248 - ratio * (248 - 108));
+        const b = Math.round(255 - ratio * (255 - 176));
+        return `rgb(${r}, ${g}, ${b})`;
+    };
+
+    const stateMap = {};
+    stateRows.forEach(row => {
+        stateMap[row.state.trim().toLowerCase()] = row.count;
+    });
+
+    const svgPaths = IndiaMap.locations.map(loc => {
+        const count = stateMap[loc.name.toLowerCase()] || 0;
+        const fill = count > 0 ? getStateColor(count) : '#EDF2F7';
+        return `<path d="${loc.path}" id="${loc.id}" name="${loc.name}" fill="${fill}" stroke="#CBD5E0" stroke-width="2"></path>`;
+    }).join('\n');
+
+    const indiaSvgHtml = `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="${IndiaMap.viewBox}" style="width: 100%; max-width: 500px; height: auto; display: block; margin: 0 auto;">
+        ${svgPaths}
+      </svg>
+    `;
+
 
     let galleryHtml = '';
     
@@ -161,7 +168,7 @@ export async function GET() {
         <br clear="all" style="page-break-before:always; mso-break-type:page-break" />
         <h3 class="section-header">States Involved in the Social Internship</h3>
         <div style="text-align: center; margin: 30px 0;">
-          <img src="${pieChartBase64}" style="width: 500px; height: auto;" alt="State-wise Registrations" />
+          ${indiaSvgHtml}
         </div>
     `;
 
