@@ -39,6 +39,7 @@ import FinalReports from './_components/finalReports/page';
 import Results from './_components/results/page';
 import Day5Report from './_components/day5Report/page';
 import RBookControl from './_components/rbookControl/page';
+import FullRep from './_components/dev/fullRep/page';
 
 
 export default function AdminDashboard() {
@@ -368,7 +369,7 @@ export default function AdminDashboard() {
           {(user.username === '2300032048' || user.username === '2400030188@kluniversity.in' || user.username === '2400030188') && (
             <div className="dropdown">
               <button
-                className={`sidebar-item ${['data-download', 'sql-executor','certificate-download','report-control'].includes(activeSection) ? 'active' : ''}`}
+                className={`sidebar-item ${['data-download', 'sql-executor','certificate-download','report-control', 'full-rep'].includes(activeSection) ? 'active' : ''}`}
                 onClick={() => setShowDevDropdown(!showDevDropdown)}
               >
                 <span className="item-label">Dev</span>
@@ -398,6 +399,12 @@ export default function AdminDashboard() {
                     onClick={() => handleSectionClick('report-control')}
                   >
                     Report Control
+                  </button>
+                  <button
+                    className={`dropdown-item ${activeSection === 'full-rep' ? 'active' : ''}`}
+                    onClick={() => handleSectionClick('full-rep')}
+                  >
+                    Full Report
                   </button>
                 </div>
               )}
@@ -452,6 +459,7 @@ export default function AdminDashboard() {
            activeSection === 'evaluate' ? <Evaluate /> :
            activeSection === 'results' ? <Results /> :
            activeSection === 'survey-analysis' ? <SurveyAnalysis /> :
+           activeSection === 'full-rep' ? <FullRep /> :
            activeSection === 'slot-report' ? <SlotReport /> :
            activeSection === 'final-reports' ? <FinalReports /> :
            activeSection === 'rbook-control' ? <RBookControl /> :

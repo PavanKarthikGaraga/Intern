@@ -1,0 +1,97 @@
+.full-rep-container {
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.full-rep-container h2 {
+  color: #2c3e50;
+  margin-bottom: 10px;
+}
+
+.full-rep-container > p {
+  color: #555;
+  margin-bottom: 30px;
+}
+
+.error-message {
+  background-color: #fee2e2;
+  color: #ef4444;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  border: 1px solid #fca5a5;
+}
+
+.action-cards {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.action-card {
+  flex: 1;
+  min-width: 250px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 24px;
+  text-align: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.action-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.card-icon {
+  font-size: 40px;
+  margin-bottom: 15px;
+}
+
+.action-card h3 {
+  color: #1e293b;
+  margin-bottom: 10px;
+}
+
+.action-card p {
+  color: #64748b;
+  font-size: 14px;
+  margin-bottom: 20px;
+  height: 40px;
+}
+
+.generate-btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.generate-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.word-btn {
+  background-color: #2563eb;
+  color: white;
+}
+
+.word-btn:hover:not(:disabled) {
+  background-color: #1d4ed8;
+}
+
+.pdf-btn {
+  background-color: #dc2626;
+  color: white;
+}
+
+.pdf-btn:hover:not(:disabled) {
+  background-color: #b91c1c;
+}
