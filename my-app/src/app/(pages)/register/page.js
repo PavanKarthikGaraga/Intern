@@ -747,6 +747,18 @@ export default function Register() {
                       })}
                     </>
                   )}
+                  {(formData.batch === 'Y-22' || formData.batch === 'Y-23') && (
+                    <>
+                      {[8,9].map(s => {
+                        const open = slotAvailability[s] !== false;
+                        return (
+                          <option key={s} value={String(s)} disabled={!open}>
+                            {open ? `Slot ${s} — ${SLOT_DATES[s]}` : `Slot ${s} — Registration Closed`}
+                          </option>
+                        );
+                      })}
+                    </>
+                  )}
                 </select>
               </div>
 
