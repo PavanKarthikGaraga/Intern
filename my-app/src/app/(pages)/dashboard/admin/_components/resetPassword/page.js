@@ -29,7 +29,7 @@ export default function ResetPassword() {
 
             // Validate username format (must start with 24 or 25 and be exactly 10 digits)
             const invalidUsernames = usernameList.filter(username => 
-                !/^(24|25)\d{8}$/.test(username)
+                !/^(22|23|24|25)\d{8}$/.test(username)
             );
 
             if (invalidUsernames.length > 0) {
