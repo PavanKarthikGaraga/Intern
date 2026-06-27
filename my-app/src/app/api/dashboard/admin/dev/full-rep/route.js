@@ -102,23 +102,30 @@ export async function GET() {
     `);
 
     
-    const maxCount = Math.max(...stateRows.map(s => s.count), 1);
-    const getStateColor = (count) => {
-        const ratio = count / maxCount;
-        const r = Math.round(235 - ratio * (235 - 43));
-        const g = Math.round(248 - ratio * (248 - 108));
-        const b = Math.round(255 - ratio * (255 - 176));
-        return `rgb(${r}, ${g}, ${b})`;
-    };
+    
+    const distinctColors = [
+        '#E53E3E', '#319795', '#D69E2E', '#805AD5', '#38A169', 
+        '#3182CE', '#DD6B20', '#ED64A6', '#00B5D8', '#D53F8C', 
+        '#4A5568', '#975A16', '#553C9A', '#2C7A7B', '#276749', 
+        '#2B6CB0', '#C53030', '#B7791F', '#F6E05E', '#68D391',
+        '#F6AD55', '#F687B3', '#76E4F7', '#B794F4', '#FC8181'
+    ];
 
     const stateMap = {};
+    const stateColorMap = {};
+    let colorIdx = 0;
+
     stateRows.forEach(row => {
-        stateMap[row.state.trim().toLowerCase()] = row.count;
+        const key = row.state.trim().toLowerCase();
+        stateMap[key] = row.count;
+        stateColorMap[key] = distinctColors[colorIdx % distinctColors.length];
+        colorIdx++;
     });
+
 
     const svgPaths = IndiaMap.locations.map(loc => {
         const count = stateMap[loc.name.toLowerCase()] || 0;
-        const fill = count > 0 ? getStateColor(count) : '#EDF2F7';
+        const fill = count > 0 ? stateColorMap[loc.name.toLowerCase()] : '#EDF2F7';
         return `<path d="${loc.path}" id="${loc.id}" name="${loc.name}" fill="${fill}" stroke="#CBD5E0" stroke-width="2"></path>`;
     }).join('\n');
 
@@ -190,7 +197,7 @@ export async function GET() {
     
     stateRows.forEach(row => {
         const count = row.count;
-        const color = count > 0 ? getStateColor(count) : '#EDF2F7';
+        const color = count > 0 ? stateColorMap[row.state.trim().toLowerCase()] : '#EDF2F7';
         legendHtml += `<tr>
             <td style="padding: 5px; border-bottom:1px solid #EDF2F7;">
               <span style="display:inline-block; width:12px; height:12px; background-color:${color}; margin-right:8px; border:1px solid #CBD5E0;"></span>${row.state}
