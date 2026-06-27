@@ -121,11 +121,17 @@ export async function GET() {
         return `<path d="${loc.path}" id="${loc.id}" name="${loc.name}" fill="${fill}" stroke="#CBD5E0" stroke-width="2"></path>`;
     }).join('\n');
 
-    const indiaSvgHtml = `
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="${IndiaMap.viewBox}" style="width: 100%; max-width: 500px; height: auto; display: block; margin: 0 auto;">
+    
+    const rawSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${IndiaMap.viewBox}" width="500" height="500">
         ${svgPaths}
-      </svg>
+      </svg>`;
+    const svgBase64 = Buffer.from(rawSvg).toString('base64');
+    const indiaSvgHtml = `
+      <div style="text-align: center;">
+        <img src="data:image/svg+xml;base64,${svgBase64}" style="width: 500px; height: 500px;" alt="India Map" />
+      </div>
     `;
+
 
 
     let galleryHtml = '';
@@ -164,16 +170,43 @@ export async function GET() {
       }
     }
 
+    
     // 2. States Involved Section
+    
+    let legendHtml = `<table style="width:100%; border-collapse: collapse; font-size: 14px;">
+      <tr><th style="text-align:left; border-bottom:1px solid #CBD5E0; padding: 5px;">State</th><th style="text-align:right; border-bottom:1px solid #CBD5E0; padding: 5px;">Students</th></tr>`;
+    
+    stateRows.forEach(row => {
+        const count = row.count;
+        const color = count > 0 ? getStateColor(count) : '#EDF2F7';
+        legendHtml += `<tr>
+            <td style="padding: 5px; border-bottom:1px solid #EDF2F7;">
+              <span style="display:inline-block; width:12px; height:12px; background-color:${color}; margin-right:8px; border:1px solid #CBD5E0;"></span>${row.state}
+            </td>
+            <td style="padding: 5px; border-bottom:1px solid #EDF2F7; text-align:right;"><b>${count}</b></td>
+        </tr>`;
+    });
+    legendHtml += `</table>`;
+
     galleryHtml += `
         <br clear="all" style="page-break-before:always; mso-break-type:page-break" />
         <h3 class="section-header">States Involved in the Social Internship</h3>
-        <div style="text-align: center; margin: 30px 0;">
-          ${indiaSvgHtml}
-        </div>
+        
+        <table style="width: 100%; margin: 30px 0;">
+          <tr>
+            <td style="width: 60%; text-align: center; vertical-align: top;">
+              ${indiaSvgHtml}
+            </td>
+            <td style="width: 40%; vertical-align: top; padding-left: 20px; background-color: #F7FAFC; border: 1px solid #E2E8F0; padding: 15px;">
+              <h4 style="margin-top:0; color: #2D3748; border-bottom: 2px solid #E2E8F0; padding-bottom: 10px;">Registrations by State</h4>
+              ${legendHtml}
+            </td>
+          </tr>
+        </table>
     `;
 
     // 3. State-wise Photos
+
     for (const stateRow of stateRows) {
         galleryHtml += `
           <h4 style="color: #2B6CB0; margin-top: 30px;">${stateRow.state} (${stateRow.count} Students)</h4>
