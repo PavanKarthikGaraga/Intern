@@ -43,7 +43,10 @@ export async function GET() {
             (3, '2026-05-30 12:30:00'),
             (4, '2026-05-30 12:30:00'),
             (5, '2026-05-30 12:30:00'),
-            (6, '2026-05-30 12:30:00')
+            (6, '2026-05-30 12:30:00'),
+            (7, '2026-06-30 12:30:00'),
+            (8, '2026-06-30 12:30:00'),
+            (9, '2026-06-30 12:30:00')
         `);
 
         const [rows] = await pool.query("SELECT slot, DATE_FORMAT(deadline, '%Y-%m-%dT%H:%i:%s.000Z') as deadline FROM reportDeadlines ORDER BY slot ASC");
@@ -77,8 +80,8 @@ export async function PUT(req) {
         const mysqlDate = parsedDate.toISOString().slice(0, 19).replace('T', ' ');
 
         await pool.query(
-            'UPDATE reportDeadlines SET deadline = ? WHERE slot = ?',
-            [mysqlDate, slot]
+            'INSERT INTO reportDeadlines (slot, deadline) VALUES (?, ?) ON DUPLICATE KEY UPDATE deadline = ?',
+            [slot, mysqlDate, mysqlDate]
         );
 
         return NextResponse.json({ success: true, message: 'Deadline updated successfully' });
