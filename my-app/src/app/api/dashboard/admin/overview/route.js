@@ -57,26 +57,37 @@ export async function GET(req) {
       WHERE ${COMPLETED_CONDITION} ${slotFilterAnd}
     `, slotParams);
 
+    
+    const MARKS_SUBQUERY = `
+      (
+        SELECT 
+          r.username,
+          r.slot,
+          CASE 
+            WHEN r.slot = 1 THEN (COALESCE(dm.day1, 0) + COALESCE(dm.day2, 0) + COALESCE(dm.day3, 0) + COALESCE(dm.day4, 0) + COALESCE(dm.day5, 0) + COALESCE(dm.day6, 0) + COALESCE(dm.day7, 0))
+            ELSE (COALESCE(dm.day1, 0) + COALESCE(dm.day2, 0) + COALESCE(dm.day3, 0) + COALESCE(dm.day4, 0) + COALESCE(dm.day5, 0) + COALESCE(dm.day6, 0) + COALESCE(dm.day7, 0) + COALESCE(rb.reportBookMarks, 0))
+          END AS totalMarks,
+          (dm.day1 IS NOT NULL OR dm.day2 IS NOT NULL OR dm.day3 IS NOT NULL OR dm.day4 IS NOT NULL OR dm.day5 IS NOT NULL OR dm.day6 IS NOT NULL OR dm.day7 IS NOT NULL OR rb.reportBookMarks IS NOT NULL) AS participated
+        FROM registrations r
+        LEFT JOIN dailyMarks dm ON r.username = dm.username
+        LEFT JOIN reportBooks rb ON r.username = rb.username
+      ) m
+    `;
+
     // Get new statistics with slot filter
     const [totalPassed] = await pool.query(`
       SELECT COUNT(*) AS total_passed
-      FROM marks m
-      JOIN registrations r ON m.username = r.username
-      WHERE m.totalMarks >= 60 ${slotFilterAnd}
+      FROM ${MARKS_SUBQUERY} WHERE m.totalMarks >= 60 AND m.participated = 1 ${slotFilterAnd.replace('r.slot', 'm.slot')}
     `, slotParams);
 
     const [totalFailed] = await pool.query(`
       SELECT COUNT(*) AS total_failed
-      FROM marks m
-      JOIN registrations r ON m.username = r.username
-      WHERE m.totalMarks < 60 ${slotFilterAnd}
+      FROM ${MARKS_SUBQUERY} WHERE m.totalMarks < 60 AND m.participated = 1 ${slotFilterAnd.replace('r.slot', 'm.slot')}
     `, slotParams);
 
     const [totalParticipated] = await pool.query(`
       SELECT COUNT(*) AS total_participated
-      FROM marks m
-      JOIN registrations r ON m.username = r.username
-      WHERE m.totalMarks IS NOT NULL ${slotFilterAnd}
+      FROM ${MARKS_SUBQUERY} WHERE m.participated = 1 ${slotFilterAnd.replace('r.slot', 'm.slot')}
     `, slotParams);
 
     // Get marks distribution with slot filter
@@ -88,9 +99,7 @@ export async function GET(req) {
         SUM(CASE WHEN m.totalMarks >= 70 AND m.totalMarks < 80 THEN 1 ELSE 0 END) AS '70_to_79',
         SUM(CASE WHEN m.totalMarks >= 60 AND m.totalMarks < 70 THEN 1 ELSE 0 END) AS '60_to_69',
         SUM(CASE WHEN m.totalMarks < 60 THEN 1 ELSE 0 END) AS 'below_60'
-      FROM marks m
-      JOIN registrations r ON m.username = r.username
-      ${slotFilter}
+      FROM ${MARKS_SUBQUERY} WHERE m.participated = 1 ${slotFilter.replace('WHERE ', 'AND ').replace('r.slot', 'm.slot')}
     `, slotParams);
 
     // Get verification and attendance stats
