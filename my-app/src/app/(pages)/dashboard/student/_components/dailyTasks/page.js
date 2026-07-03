@@ -1631,8 +1631,8 @@ function DaySurvey({ day, stakeholderIdx, survey, data, onChange, readOnly, onFi
   const SLOT2_MYGOV = {
     3: {
       quizzes: [
-        { title: 'Bharat GI Quiz – Celebrate India\'s Heritage', url: 'https://quiz.mygov.in/quiz/bharat-gi-quiz-celebrate-indias-heritage/' },
-        { title: 'Commonwealth Games 2030 Quiz', url: 'https://quiz.mygov.in/quiz/commonwealth-games-2030-quiz/' },
+        { title: 'Quiz on International Day Against Drug Abuse and Illicit Trafficking', url: 'https://quiz.mygov.in/quiz/quiz-on-international-day-against-drug-abuse-and-illicit-trafficking/' },
+        { title: 'Vande Mataram 150 Years Quiz', url: 'https://quiz.mygov.in/quiz/vande-mataram-150-years-quiz/' },
       ],
       pledges: [
         { title: 'Mother Earth 2026 Pledge', url: 'https://pledge.mygov.in/mother-earth-2026/' },
@@ -1641,8 +1641,8 @@ function DaySurvey({ day, stakeholderIdx, survey, data, onChange, readOnly, onFi
     },
     4: {
       quizzes: [
-        { title: 'MOHFW Fire Safety Quiz 2026', url: 'https://quiz.mygov.in/quiz/mohfw-fire-safety-quiz-2026/' },
-        { title: 'Quiz on Our Exam Warriors – Celebrating Exams', url: 'https://quiz.mygov.in/quiz/quiz-on-our-exam-warriors-celebrating-exams/' },
+        { title: 'Dr. B.R. Ambedkar\'s Life and Contributions Quiz Competition 2026', url: 'https://quiz.mygov.in/quiz/dr-b-r-ambedkars-life-and-contributions-quiz-competition-2026/' },
+        { title: 'Ocean Science for a Viksit Bharat INCOIS Independence Day Quiz 2026', url: 'https://quiz.mygov.in/quiz/ocean-science-for-a-viksit-bharat-incois-independence-day-quiz-2026/' },
       ],
       pledges: [
         { title: 'Eat Right 2026 Pledge', url: 'https://pledge.mygov.in/eat-right-2026/' },
@@ -1910,7 +1910,7 @@ function Day5({ saved, survey, data, onChange, readOnly, studentData }) {
 
   const DAY5_MYGOV = {
     quizzes: [
-      { title: 'Dr. B.R. Ambedkar\'s Life and Contributions Quiz Competition 2026', url: 'https://quiz.mygov.in/quiz/dr-b-r-ambedkars-life-and-contributions-quiz-competition-2026/' },
+      { title: 'Quiz on International Day Against Drug Abuse and Illicit Trafficking', url: 'https://quiz.mygov.in/quiz/quiz-on-international-day-against-drug-abuse-and-illicit-trafficking/' },
       { title: 'Vande Mataram 150 Years Quiz', url: 'https://quiz.mygov.in/quiz/vande-mataram-150-years-quiz/' },
     ],
     pledges: [
@@ -1921,9 +1921,9 @@ function Day5({ saved, survey, data, onChange, readOnly, studentData }) {
 
   const SLOT4_DAY5_MYGOV = {
     quizzes: [
-      { title: 'Bharat GI Quiz – Celebrate India’s Heritage', url: 'https://quiz.mygov.in/quiz/bharat-gi-quiz-celebrate-indias-heritage/' },
-      { title: 'Commonwealth Games 2030 Quiz', url: 'https://quiz.mygov.in/quiz/commonwealth-games-2030-quiz/' },
-      { title: 'Dr. B.R. Ambedkar’s Life and Contributions Quiz Competition 2026', url: 'https://quiz.mygov.in/quiz/dr-b-r-ambedkars-life-and-contributions-quiz-competition-2026/' },
+      { title: 'Quiz on International Day Against Drug Abuse and Illicit Trafficking', url: 'https://quiz.mygov.in/quiz/quiz-on-international-day-against-drug-abuse-and-illicit-trafficking/' },
+      { title: 'Vande Mataram 150 Years Quiz', url: 'https://quiz.mygov.in/quiz/vande-mataram-150-years-quiz/' },
+      { title: 'Dr. B.R. Ambedkar\'s Life and Contributions Quiz Competition 2026', url: 'https://quiz.mygov.in/quiz/dr-b-r-ambedkars-life-and-contributions-quiz-competition-2026/' },
     ],
     pledges: [
       { title: 'Mother Earth 2026 Pledge', url: 'https://pledge.mygov.in/mother-earth-2026/' },
@@ -2585,14 +2585,12 @@ function Day6({ data, onChange, readOnly, studentData }) {
   const isMyGovSlot = isSlot1 || isSlot3 || isSlot4OrMore;
 
   const QUIZZES_SLOT_1_3 = [
-    { title: `Bharat GI Quiz – Celebrate India’s Heritage`, url: 'https://quiz.mygov.in/quiz/bharat-gi-quiz-celebrate-indias-heritage/' },
-    { title: 'Commonwealth Games 2030 Quiz', url: 'https://quiz.mygov.in/quiz/commonwealth-games-2030-quiz/' },
-    { title: 'MOHFW Fire Safety Quiz 2026', url: 'https://quiz.mygov.in/quiz/mohfw-fire-safety-quiz-2026/' },
-    isSlot3
-      ? { title: 'Bharatiya Gyan Quiz Series Mathematics Astronomy', url: 'https://quiz.mygov.in/quiz/bharatiya-gyan-quiz-series-mathematics-astronomy/' }
-      : { title: 'Quiz on Our Exam Warriors – Celebrating Exams', url: 'https://quiz.mygov.in/quiz/quiz-on-our-exam-warriors-celebrating-exams/' },
-    { title: `Dr. B.R. Ambedkar’s Life and Contributions Quiz Competition 2026`, url: 'https://quiz.mygov.in/quiz/dr-b-r-ambedkars-life-and-contributions-quiz-competition-2026/' },
+    { title: 'Quiz on International Day Against Drug Abuse and Illicit Trafficking', url: 'https://quiz.mygov.in/quiz/quiz-on-international-day-against-drug-abuse-and-illicit-trafficking/' },
     { title: 'Vande Mataram 150 Years Quiz', url: 'https://quiz.mygov.in/quiz/vande-mataram-150-years-quiz/' },
+    { title: 'Dr. B.R. Ambedkar\'s Life and Contributions Quiz Competition 2026', url: 'https://quiz.mygov.in/quiz/dr-b-r-ambedkars-life-and-contributions-quiz-competition-2026/' },
+    { title: 'Ocean Science for a Viksit Bharat INCOIS Independence Day Quiz 2026', url: 'https://quiz.mygov.in/quiz/ocean-science-for-a-viksit-bharat-incois-independence-day-quiz-2026/' },
+    { title: 'Bharatiya Gyan Quiz on Architecture Engineering', url: 'https://quiz.mygov.in/quiz/bharatiya-gyan-quiz-on-architecture-engineering/' },
+    { title: 'National Quiz Competition on CA Day', url: 'https://quiz.mygov.in/quiz/national-quiz-competition-on-ca-day/' },
   ];
   const PLEDGES_SLOT_1_3 = [
     { title: 'Mother Earth 2026 Pledge', url: 'https://pledge.mygov.in/mother-earth-2026/' },
@@ -2605,16 +2603,16 @@ function Day6({ data, onChange, readOnly, studentData }) {
 
   // Slot 4 only
   const SLOT4_QUIZZES = [
-    { title: 'Vande Mataram 150 Years Quiz', url: 'https://quiz.mygov.in/quiz/vande-mataram-150-years-quiz/' },
-    { title: 'PM Internship Quiz', url: 'https://quiz.mygov.in/quiz/pm-internship-quiz/' },
-    { title: 'Quiz on Observance of 350 Years of Martyrdom of Sri Guru Tegh Bahadur Ji', url: 'https://quiz.mygov.in/quiz/quiz-on-observance-of-350-years-of-martyrdom-of-sri-guru-tegh-bahadur-ji/' },
+    { title: 'Ocean Science for a Viksit Bharat INCOIS Independence Day Quiz 2026', url: 'https://quiz.mygov.in/quiz/ocean-science-for-a-viksit-bharat-incois-independence-day-quiz-2026/' },
+    { title: 'Bharatiya Gyan Quiz on Architecture Engineering', url: 'https://quiz.mygov.in/quiz/bharatiya-gyan-quiz-on-architecture-engineering/' },
+    { title: 'National Quiz Competition on CA Day', url: 'https://quiz.mygov.in/quiz/national-quiz-competition-on-ca-day/' },
   ];
 
   // Slot 5 onwards — PM Internship Quiz replaced with Senior Citizens Rights quiz
   const SLOT5_QUIZZES = [
-    { title: 'Vande Mataram 150 Years Quiz', url: 'https://quiz.mygov.in/quiz/vande-mataram-150-years-quiz/' },
-    { title: 'Quiz on Awareness of Senior Citizens Rights and Welfare Schemes', url: 'https://quiz.mygov.in/quiz/quiz-on-awareness-of-senior-citizens-rights-and-welfare-schemes/' },
-    { title: 'Quiz on Observance of 350 Years of Martyrdom of Sri Guru Tegh Bahadur Ji', url: 'https://quiz.mygov.in/quiz/quiz-on-observance-of-350-years-of-martyrdom-of-sri-guru-tegh-bahadur-ji/' },
+    { title: 'Ocean Science for a Viksit Bharat INCOIS Independence Day Quiz 2026', url: 'https://quiz.mygov.in/quiz/ocean-science-for-a-viksit-bharat-incois-independence-day-quiz-2026/' },
+    { title: 'Bharatiya Gyan Quiz on Architecture Engineering', url: 'https://quiz.mygov.in/quiz/bharatiya-gyan-quiz-on-architecture-engineering/' },
+    { title: 'National Quiz Competition on CA Day', url: 'https://quiz.mygov.in/quiz/national-quiz-competition-on-ca-day/' },
   ];
 
   const SLOT4_PLEDGES = [
