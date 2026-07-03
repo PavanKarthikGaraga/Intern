@@ -9,7 +9,7 @@ export const RULES = [
   'You must submit your final internship report by the 10th day for review and approval by the Admin.',
   'Always communicate respectfully and professionally with peers, mentors, and faculty members.',
   'It is mandatory to complete all 7 days of the internship. Failure to do so will result in disqualification.',
-  'Students doing social internship through other organizations or NGOs should submit their final report and certificate issued by the organization to Director SAC physically on or before the last slot timeline.',
+  'Students doing social internship through other organizations or NGOs should submit their final report and certificate issued by the organization to the SAC Office on or before the last slot timeline.',
   'Students doing social internship through other organizations should mail a soft copy to sac@kluniversity.in and cc director_sac@kluniversity.in.',
 ];
 

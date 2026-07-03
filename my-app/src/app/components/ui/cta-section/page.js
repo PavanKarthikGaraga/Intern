@@ -123,7 +123,7 @@ export default function CTASection() {
               <h3>Rules and Regulations</h3>
               <ul style={{ listStyleType: 'disc', paddingLeft: '20px', color: '#334155', lineHeight: '1.6', fontSize: '1.05rem', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <li>All students registered should submit all 7 days tasks in their register slot timeline only.</li>
-                <li>Students doing a social internship through other organizations or NGOs should submit their final report and a certificate issued by the organization to the Director SAC physically on or before the last slot timeline.</li>
+                <li>Students doing a social internship through other organizations or NGOs should submit their final report and a certificate issued by the organization to the SAC Office on or before the last slot timeline.</li>
                 <li>Students from other organizations should also mail a soft copy to <strong>sac@kluniversity.in</strong> and cc <strong>director_sac@kluniversity.in</strong>.</li>
                 <li>Ensure adherence to professional conduct and university guidelines throughout the internship program.</li>
                 <li>Failure to submit reports within the timeline may result in disqualification from the program.</li>
