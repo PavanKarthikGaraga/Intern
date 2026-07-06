@@ -40,6 +40,7 @@ import Results from './_components/results/page';
 import Day5Report from './_components/day5Report/page';
 import RBookControl from './_components/rbookControl/page';
 import FullRep from './_components/dev/fullRep/page';
+import CertGen from './_components/certGen/page';
 
 
 export default function AdminDashboard() {
@@ -369,7 +370,7 @@ export default function AdminDashboard() {
           {(user.username === '2300032048' || user.username === '2400030188@kluniversity.in' || user.username === '2400030188') && (
             <div className="dropdown">
               <button
-                className={`sidebar-item ${['data-download', 'sql-executor','certificate-download','report-control', 'full-rep'].includes(activeSection) ? 'active' : ''}`}
+                className={`sidebar-item ${['data-download', 'sql-executor','certificate-download','report-control', 'full-rep', 'cert-gen'].includes(activeSection) ? 'active' : ''}`}
                 onClick={() => setShowDevDropdown(!showDevDropdown)}
               >
                 <span className="item-label">Dev</span>
@@ -405,6 +406,12 @@ export default function AdminDashboard() {
                     onClick={() => handleSectionClick('full-rep')}
                   >
                     Full Report
+                  </button>
+                  <button
+                    className={`dropdown-item ${activeSection === 'cert-gen' ? 'active' : ''}`}
+                    onClick={() => handleSectionClick('cert-gen')}
+                  >
+                    Cert Gen
                   </button>
                 </div>
               )}
@@ -464,6 +471,7 @@ export default function AdminDashboard() {
            activeSection === 'final-reports' ? <FinalReports /> :
            activeSection === 'rbook-control' ? <RBookControl /> :
            activeSection === 'day5Report' ? <Day5Report /> :
+           activeSection === 'cert-gen' ? <CertGen /> :
            <ChangePassword />}
         </main>
       </div>
