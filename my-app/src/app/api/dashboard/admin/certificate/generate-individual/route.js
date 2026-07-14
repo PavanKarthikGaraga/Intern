@@ -122,7 +122,30 @@ export async function POST(request) {
       console.warn('dailyMarks table missing or query failed', e.message);
     }
     
-    const calculatedTotal = Math.max(mTotal, dmTotal);
+    // Fetch student registration details (needed early for slot check)
+    const [regRows] = await db.query(
+      'SELECT name, branch, username, slot, mode, selectedDomain, season FROM registrations WHERE username = ?',
+      [username]
+    );
+    const regRow = regRows[0];
+    
+    let calculatedTotal = Math.max(mTotal, dmTotal);
+
+    let slotNum = 1;
+    if (regRow && regRow.slot) {
+      slotNum = parseInt(String(regRow.slot).replace(/\D/g, ''), 10) || 1;
+    }
+
+    if (slotNum >= 2) {
+      let rbTotal = 0;
+      try {
+        const [rbRows] = await db.query('SELECT reportBookMarks FROM reportBooks WHERE username = ?', [username]);
+        if (rbRows && rbRows.length > 0) rbTotal = Number(rbRows[0].reportBookMarks) || 0;
+      } catch (e) {
+        console.warn('reportBooks table missing or query failed', e.message);
+      }
+      calculatedTotal = dmTotal + rbTotal;
+    }
 
     if (calculatedTotal < 60) {
       return NextResponse.json({ 
@@ -130,13 +153,6 @@ export async function POST(request) {
         error: `Student ${username} is not qualified for certificate (marks: ${calculatedTotal})` 
       }, { status: 403 });
     }
-
-    // Fetch student registration details
-    const [regRows] = await db.query(
-      'SELECT name, branch, username, slot, mode, selectedDomain, season FROM registrations WHERE username = ?',
-      [username]
-    );
-    const regRow = regRows[0];
     if (!regRow) {
       return NextResponse.json({ 
         success: false, 
