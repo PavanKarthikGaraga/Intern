@@ -6,7 +6,7 @@ import fs from 'fs';
 import path from 'path';
 import { PDFDocument, rgb } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
-import { drawCertificateFields } from '../route';
+import { drawCertificateFields, drawOldCertificateFields, getOldGrd } from '../route';
 
 // Helper to convert marks to grade
 function getGrade(marks) {
@@ -133,7 +133,7 @@ export async function POST(request) {
 
     // Fetch student registration details
     const [regRows] = await db.query(
-      'SELECT name, branch, username, slot, mode, selectedDomain FROM registrations WHERE username = ?',
+      'SELECT name, branch, username, slot, mode, selectedDomain, season FROM registrations WHERE username = ?',
       [username]
     );
     const regRow = regRows[0];
@@ -144,16 +144,17 @@ export async function POST(request) {
       }, { status: 404 });
     }
 
-    const { name, branch, username: idNumber, slot, mode, selectedDomain: domain } = regRow;
+    const { name, branch, username: idNumber, slot, mode, selectedDomain: domain, season } = regRow;
     const totalMarks = calculatedTotal;
     const grade = getGrade(totalMarks);
-    const { start, end } = getSlotDates(slot);
+    const { start, end } = getSlotDates(slot, season);
 
     // Generate unique ID for the certificate
-    const uid = `SI26${username}`;
+    const uid = season === '2025' ? `SI25${username}` : `SI26${username}`;
 
-    // Load certificate template PDF
-    const certPath = path.join(process.cwd(), 'public', 'certificate.pdf');
+    // Load certificate template PDF based on season
+    const pdfFilename = season === '2025' ? 'Old_Certificate.pdf' : 'certificate.pdf';
+    const certPath = path.join(process.cwd(), 'public', pdfFilename);
     const certBytes = fs.readFileSync(certPath);
     const pdfDoc = await PDFDocument.load(certBytes);
 
@@ -182,21 +183,39 @@ export async function POST(request) {
     // grd='Participation';
 
     // Draw student details at appropriate positions
-    drawCertificateFields(firstPage, {
-      grd: grd || '',
-      grade: grade || '',
-      name: name || '',
-      branch: branch || '',
-      idNumber: idNumber || '',
-      start: start || '',
-      end: end || '',
-      slot: slot || '',
-      mode: mode || '',
-      domain: domain || '',
-      totalMarks: Number(totalMarks) || 0,
-      time: time || '',
-      uid: uid || '',
-    }, font);
+    if (season === '2025') {
+      drawOldCertificateFields(firstPage, {
+        grd: getOldGrd(totalMarks),
+        grade: grade || '',
+        name: name || '',
+        branch: branch || '',
+        idNumber: idNumber || '',
+        start: start || '',
+        end: end || '',
+        slot: slot || '',
+        mode: mode || '',
+        domain: domain || '',
+        totalMarks: Number(totalMarks) || 0,
+        time: time || '',
+        uid: uid || '',
+      }, font);
+    } else {
+      drawCertificateFields(firstPage, {
+        grd: grd || '',
+        grade: grade || '',
+        name: name || '',
+        branch: branch || '',
+        idNumber: idNumber || '',
+        start: start || '',
+        end: end || '',
+        slot: slot || '',
+        mode: mode || '',
+        domain: domain || '',
+        totalMarks: Number(totalMarks) || 0,
+        time: time || '',
+        uid: uid || '',
+      }, font);
+    }
 
     const pdfBytes = await pdfDoc.save();
 

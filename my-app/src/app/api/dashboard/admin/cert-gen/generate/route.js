@@ -22,6 +22,13 @@ function getgrd(totalMarks){
   return 'Fail';
 }
 
+function getOldGrd(marks){
+  if(marks>=90) return 'Excellent';
+  if(marks>=75) return 'Appreciation';
+  if(marks>=60) return 'Participation';
+  return 'No Grade';
+}
+
 // Helper to get slot dates
 function getSlotDates(slot, season = '2026') {
   const year = season === '2025' ? '2025' : '2026';
@@ -162,6 +169,22 @@ function drawCertificateFields(page, { grd, name, branch, idNumber, start, end, 
   page.drawText(uid,            { x: 1470,  y: 124.29,  size: 26, font, color: rgb(0,0,0) });
 }
 
+function drawOldCertificateFields(page, { grd, grade, name, branch, idNumber, start, end, slot, mode, domain, totalMarks, time, uid }, font) {
+  page.drawText(grd, { x: 376.29, y: 709.36, size: 16, font, color: rgb(0, 0, 0) });
+  page.drawText(name, {  x: 90.35, y: 645.58, size: 11, font, color: rgb(0, 0, 0) });
+  page.drawText(branch, { x: 103.27, y: 630.58, size: 11, font, color: rgb(0, 0, 0) });
+  page.drawText(`${idNumber},`, { x: 282.2, y: 630.58, size: 11, font, color: rgb(0, 0, 0) });
+  page.drawText(start, {x: 239.66, y: 570.56, size: 10, font, color: rgb(0, 0, 0) });
+  page.drawText(`${end},`, { x: 316.73, y: 570.56, size: 10, font, color: rgb(0, 0, 0) });
+  page.drawText(`${slot} ,`, { x: 228.94, y: 555.55, size: 11, font, color: rgb(0, 0, 0) });
+  page.drawText(`${mode}`, { x: 92.82, y: 540.55  , size: 11, font, color: rgb(0, 0, 0) });
+  page.drawText(`${domain}.`, { x: 144.93, y: 525.54 , size: 11, font, color: rgb(0, 0, 0) });
+  page.drawText(`${totalMarks}`, {  x: 134.71, y: 270.44, size: 11, font, color: rgb(0, 0, 0) });
+  page.drawText(grade, {  x: 88.32, y: 255.44 , size: 11, font, color: rgb(0, 0, 0) });
+  page.drawText(time, {  x: 438.18, y: 106.13 , size: 10, font, color: rgb(0, 0, 0) });
+  page.drawText(uid, {  x: 431.13, y: 91.13 , size: 10, font, color: rgb(0, 0, 0) });
+}
+
 export async function POST(request) {
   const cookieStore = await cookies();
   const accessToken = await cookieStore.get('accessToken');
@@ -209,10 +232,11 @@ export async function POST(request) {
     const grade = getGrade(totalMarks);
     const { start, end } = getSlotDates(slot, season);
     const grd = getgrd(totalMarks);
-    const uid = `SI26${username}`;
+    const uid = season === '2025' ? `SI25${username}` : `SI26${username}`;
 
-    // Load certificate template PDF
-    const certPath = path.join(process.cwd(), 'public', 'certificate.pdf');
+    // Load certificate template PDF based on season
+    const pdfFilename = season === '2025' ? 'Old_Certificate.pdf' : 'certificate.pdf';
+    const certPath = path.join(process.cwd(), 'public', pdfFilename);
     const certBytes = fs.readFileSync(certPath);
     const pdfDoc = await PDFDocument.load(certBytes);
 
@@ -238,21 +262,39 @@ export async function POST(request) {
     const time = `${day}/${month}/${currentYear}`;
 
     // Draw student details at appropriate positions
-    drawCertificateFields(firstPage, {
-      grd: grd || '',
-      grade: grade || '',
-      name: name || '',
-      branch: branch || '',
-      idNumber: idNumber || '',
-      start: start || '',
-      end: end || '',
-      slot: slot || '',
-      mode: mode || '',
-      domain: domain || '',
-      totalMarks: Number(totalMarks) || 0,
-      time: time || '',
-      uid: uid || '',
-    }, font);
+    if (season === '2025') {
+      drawOldCertificateFields(firstPage, {
+        grd: getOldGrd(totalMarks),
+        grade: grade || '',
+        name: name || '',
+        branch: branch || '',
+        idNumber: idNumber || '',
+        start: start || '',
+        end: end || '',
+        slot: slot || '',
+        mode: mode || '',
+        domain: domain || '',
+        totalMarks: Number(totalMarks) || 0,
+        time: time || '',
+        uid: uid || '',
+      }, font);
+    } else {
+      drawCertificateFields(firstPage, {
+        grd: grd || '',
+        grade: grade || '',
+        name: name || '',
+        branch: branch || '',
+        idNumber: idNumber || '',
+        start: start || '',
+        end: end || '',
+        slot: slot || '',
+        mode: mode || '',
+        domain: domain || '',
+        totalMarks: Number(totalMarks) || 0,
+        time: time || '',
+        uid: uid || '',
+      }, font);
+    }
 
     const pdfBytes = await pdfDoc.save();
 

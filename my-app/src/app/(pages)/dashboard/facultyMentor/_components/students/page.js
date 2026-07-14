@@ -13,8 +13,9 @@ export default function Students({ user }) {
   const [error, setError] = useState(null);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [currentSlot, setCurrentSlot] = useState(1);
-  const [selectedSlot, setSelectedSlot] = useState('current');
+  const [selectedSlot, setSelectedSlot] = useState('all');
+  const [selectedBatch, setSelectedBatch] = useState('all');
+  const [availableSlots, setAvailableSlots] = useState([]);
   const { isAuthenticated } = useAuth();
   const router = useRouter();
 
@@ -45,20 +46,12 @@ export default function Students({ user }) {
       }
 
       if (data.success) {
-        setCurrentSlot(data.currentSlot);
-        // Filter students based on selected slot
-        let filteredStudents;
-        if (selectedSlot === 'current') {
-          // Show only current slot students by default
-          filteredStudents = data.students.filter(student => student.slot === data.currentSlot);
-        } else if (selectedSlot === 'all') {
-          // Show all students up to current slot
-          filteredStudents = data.students.filter(student => student.slot <= data.currentSlot);
-        } else {
-          // Show specific slot
-          filteredStudents = data.students.filter(student => student.slot === parseInt(selectedSlot));
-        }
-        setStudents(filteredStudents);
+        setStudents(data.students || []);
+        
+        // Calculate available slots based on the students data
+        const maxSlot = data.students.length > 0 ? Math.max(...data.students.map(s => s.slot)) : 1;
+        const slotsArray = Array.from({ length: maxSlot }, (_, i) => i + 1);
+        setAvailableSlots(slotsArray);
       } else {
         setError(data.error || 'Failed to fetch students');
         toast.error(data.error || 'Failed to fetch students');
@@ -144,6 +137,21 @@ export default function Students({ user }) {
     return <div className="error">{error}</div>;
   }
 
+  // Filter students by selected slot and batch
+  const filteredStudents = students.filter(student => {
+    // Check Slot
+    const slotMatches = selectedSlot === 'all' || student.slot === parseInt(selectedSlot);
+    
+    // Check Batch
+    let batchMatches = true;
+    if (selectedBatch !== 'all') {
+      const yearPrefix = selectedBatch.replace('y', ''); // e.g. '22'
+      batchMatches = student.username && student.username.startsWith(yearPrefix);
+    }
+    
+    return slotMatches && batchMatches;
+  });
+
   return (
     <div className="students-section">
       <div className="section-header">
@@ -155,21 +163,28 @@ export default function Students({ user }) {
               onChange={(e) => setSelectedSlot(e.target.value)}
               className="slot-filter"
             >
-              <option value="current">Slot {currentSlot}</option>
               <option value="all">All Slots</option>
-              {[...Array(currentSlot)]
-                .map((_, i) => i + 1)
-                .filter(slot => slot !== currentSlot)
-                .reverse()
-                .map(slot => (
-                  <option key={slot} value={slot}>
-                    Slot {slot}
-                  </option>
-                ))}
+              {availableSlots.map(slot => (
+                <option key={slot} value={slot}>
+                  Slot {slot}
+                </option>
+              ))}
+            </select>
+
+            <select 
+              value={selectedBatch} 
+              onChange={(e) => setSelectedBatch(e.target.value)}
+              className="slot-filter" // reusing slot-filter class for styling
+            >
+              <option value="all">All Batches</option>
+              <option value="y22">Y22</option>
+              <option value="y23">Y23</option>
+              <option value="y24">Y24</option>
+              <option value="y25">Y25</option>
             </select>
           </div>
           <div className="total-students">
-            Total Students: {students.length}
+            Total Students: {filteredStudents.length}
           </div>
           <button 
             className="refresh-btn"
@@ -198,7 +213,7 @@ export default function Students({ user }) {
             </tr>
           </thead>
           <tbody>
-            {students.map((student,index) => {
+            {filteredStudents.map((student,index) => {
               const uploadCount = getUploadCount(student.uploads);
               return (
                 <tr key={student.username}>

@@ -36,35 +36,29 @@ export async function GET(req) {
         const username = decoded.username;
         db = await pool.getConnection();
 
-        // Get faculty mentor's current slot (highest slot among their leads)
-        const [facultySlot] = await db.query(
-            `SELECT MAX(sl.slot) as currentSlot 
-             FROM studentLeads sl 
-             WHERE sl.facultyMentorId = ?`,
+        // Get faculty mentor's branch
+        const [facultyData] = await db.query(
+            `SELECT branch FROM facultyMentors WHERE username = ?`,
             [username]
         );
+        const mentorBranch = facultyData[0]?.branch;
 
-        const currentSlot = facultySlot[0]?.currentSlot || 1;
-
-        // Get students directly from registrations table where facultyMentorId matches
+        // Get students directly from registrations table where facultyMentorId matches and branch matches
         const sql = `
             SELECT r.*, u.updatedAt
             FROM registrations r
-            JOIN studentLeads sl ON r.studentLeadId = sl.username
             LEFT JOIN uploads u ON r.username = u.username
-            WHERE sl.facultyMentorId = ?
-            AND r.slot <= ?
+            WHERE r.facultyMentorId = ? AND r.branch = ?
             ORDER BY r.slot DESC, u.updatedAt DESC
         `;
 
-        const [students] = await db.query(sql, [username, currentSlot]);
+        const [students] = await db.query(sql, [username, mentorBranch]);
 
         if (!students || students.length === 0) {
             return NextResponse.json({
                 success: true,
                 students: [],
                 total: 0,
-                currentSlot: currentSlot,
                 message: 'No students assigned yet'
             });
         }
@@ -108,8 +102,7 @@ export async function GET(req) {
         return NextResponse.json({
             success: true,
             students: studentsWithData,
-            total: students.length,
-            currentSlot: currentSlot
+            total: students.length
         });
     } catch (error) {
         console.error('Error in get students API:', error);
@@ -154,14 +147,11 @@ export async function POST(req) {
 
         db = await pool.getConnection();
 
-        // Verify the student is under this faculty mentor's leads
+        // Verify the student is under this faculty mentor
         const [student] = await db.query(
             `SELECT r.username
              FROM registrations r
-             JOIN studentLeads sl ON r.studentLeadId = sl.username
-             LEFT JOIN uploads u ON r.username = u.username
-             WHERE r.username = ? AND sl.facultyMentorId = ?
-             ORDER BY u.updatedAt DESC`,
+             WHERE r.username = ? AND r.facultyMentorId = ?`,
             [username, decoded.username]
         );
 
