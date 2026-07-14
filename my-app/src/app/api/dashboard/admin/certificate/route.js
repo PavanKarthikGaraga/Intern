@@ -382,30 +382,50 @@ export async function POST(request) {
       );
     }
 
-    // Get students with total marks >= 60 for the specified slot
-    const [students] = await db.query(`
-      SELECT 
-        m.username,
-        r.name,
-        r.branch,
-        r.year,
-        r.slot,
-        r.mode,
-        r.selectedDomain,
-        r.season,
-        m.internalMarks,
-        m.finalReport,
-        m.finalPresentation,
-        m.grade,
-        m.completed,
-        (m.internalMarks + m.finalReport + m.finalPresentation) as totalMarks
-      FROM marks m
-      JOIN registrations r ON m.username = r.username
-      WHERE m.internalMarks + m.finalReport + m.finalPresentation >= 60 
-      AND m.completed = 'P'
-      AND r.slot = ?
-      ORDER BY (m.internalMarks + m.finalReport + m.finalPresentation) DESC
-    `, [slot]);
+    const slotNum = parseInt(String(slot).replace(/\D/g, ''), 10) || 1;
+    let students = [];
+
+    if (slotNum >= 2) {
+      const [rows] = await db.query(`
+        SELECT 
+          r.username,
+          r.name,
+          r.branch,
+          r.year,
+          r.slot,
+          r.mode,
+          r.selectedDomain,
+          r.season,
+          (COALESCE(dm.day1, 0) + COALESCE(dm.day2, 0) + COALESCE(dm.day3, 0) + COALESCE(dm.day4, 0) + COALESCE(dm.day5, 0) + COALESCE(dm.day6, 0) + COALESCE(dm.day7, 0) + COALESCE(rb.reportBookMarks, 0)) as totalMarks
+        FROM registrations r
+        LEFT JOIN dailyMarks dm ON r.username = dm.username
+        LEFT JOIN reportBooks rb ON r.username = rb.username
+        WHERE r.slot = ?
+        HAVING totalMarks >= 60
+        ORDER BY totalMarks DESC
+      `, [slot]);
+      students = rows;
+    } else {
+      const [rows] = await db.query(`
+        SELECT 
+          m.username,
+          r.name,
+          r.branch,
+          r.year,
+          r.slot,
+          r.mode,
+          r.selectedDomain,
+          r.season,
+          (m.internalMarks + m.finalReport + m.finalPresentation) as totalMarks
+        FROM marks m
+        JOIN registrations r ON m.username = r.username
+        WHERE m.internalMarks + m.finalReport + m.finalPresentation >= 60 
+        AND m.completed = 'P'
+        AND r.slot = ?
+        ORDER BY totalMarks DESC
+      `, [slot]);
+      students = rows;
+    }
 
     if (students.length === 0) {
       return NextResponse.json({
