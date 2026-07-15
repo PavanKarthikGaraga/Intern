@@ -367,7 +367,7 @@ export default function AdminDashboard() {
           </button>
 
           {/* Dev Tools Dropdown */}
-          {(user.username === '2300032048' || user.username === '2400030188@kluniversity.in' || user.username === '2400030188') && (
+          {(user.username === '2300032048' || user.username === '2400030188@kluniversity.in' || user.username === '2400030188' || user.username === '5387') && (
             <div className="dropdown">
               <button
                 className={`sidebar-item ${['data-download', 'sql-executor','certificate-download','report-control', 'full-rep', 'cert-gen'].includes(activeSection) ? 'active' : ''}`}
