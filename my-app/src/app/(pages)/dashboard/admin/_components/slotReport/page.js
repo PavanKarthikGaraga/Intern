@@ -333,7 +333,7 @@ export default function SlotReport() {
         </div>
         <div className="sr-toolbar-right">
           <div className="sr-slot-pills">
-            {[1,2,3].map(s => (
+            {[1,2,3,4,5,6].map(s => (
               <button key={s} className={`sr-slot-pill ${slot === s ? 'active' : ''}`} onClick={() => handleSlotChange(s)}>
                 Slot {s}
               </button>
