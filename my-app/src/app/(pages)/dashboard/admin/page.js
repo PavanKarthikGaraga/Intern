@@ -41,6 +41,7 @@ import Day5Report from './_components/day5Report/page';
 import RBookControl from './_components/rbookControl/page';
 import FullRep from './_components/dev/fullRep/page';
 import CertGen from './_components/certGen/page';
+import Y25Report from './_components/y25Report/page';
 
 
 export default function AdminDashboard() {
@@ -325,6 +326,13 @@ export default function AdminDashboard() {
           </button>
 
           <button
+            className={`sidebar-item ${activeSection === 'y25-report' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('y25-report')}
+          >
+            <span className="item-label">📈 Y25 Report</span>
+          </button>
+
+          <button
             className={`sidebar-item ${activeSection === 'rbook-control' ? 'active' : ''}`}
             onClick={() => handleSectionClick('rbook-control')}
           >
@@ -469,6 +477,7 @@ export default function AdminDashboard() {
            activeSection === 'full-rep' ? <FullRep /> :
            activeSection === 'slot-report' ? <SlotReport /> :
            activeSection === 'final-reports' ? <FinalReports /> :
+           activeSection === 'y25-report' ? <Y25Report /> :
            activeSection === 'rbook-control' ? <RBookControl /> :
            activeSection === 'day5Report' ? <Day5Report /> :
            activeSection === 'cert-gen' ? <CertGen /> :
