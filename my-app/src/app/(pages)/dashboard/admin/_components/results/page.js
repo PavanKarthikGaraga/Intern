@@ -73,6 +73,7 @@ export default function Results() {
         'Name': r.name,
         'Slot': r.slot,
         'Mode': r.mode || 'N/A',
+        'Department': r.branch || 'N/A',
         'Total Marks': r.totalMarks,
         'Grade': info.grade,
         'Category': info.text,
@@ -197,6 +198,9 @@ export default function Results() {
                     <td style={{ padding: '16px' }}>
                       <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '1.05rem' }}>{r.username}</div>
                       <div style={{ fontSize: '0.9rem', color: '#64748b', marginTop: '4px' }}>{r.name}</div>
+                      <div style={{ fontSize: '0.85rem', color: '#475569', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <span style={{ background: '#e2e8f0', padding: '2px 6px', borderRadius: '4px' }}>{r.branch || 'No Dept'}</span>
+                      </div>
                     </td>
                     
                     <td style={{ padding: '16px', textAlign: 'center' }}>

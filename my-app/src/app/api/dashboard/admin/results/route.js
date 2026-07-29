@@ -24,6 +24,7 @@ export async function GET(request) {
           r.name, 
           r.slot,
           r.mode,
+          r.branch,
           dm.day1, dm.day2, dm.day3, dm.day4, dm.day5, dm.day6, dm.day7,
           rb.reportBookMarks,
           CASE 
