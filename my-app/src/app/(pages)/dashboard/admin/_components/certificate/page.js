@@ -1,11 +1,28 @@
 'use client'
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { FaDownload, FaFilePdf, FaSync, FaEye, FaCog } from 'react-icons/fa';
+import { FaDownload, FaFilePdf, FaFileSignature, FaSync, FaEye, FaCog } from 'react-icons/fa';
 import './certificateDownload.css';
+
+// Certificate template options offered by the generator
+const CERT_TYPES = [
+  {
+    value: 'unsigned',
+    label: 'Unsigned Certificate',
+    description: 'Uses the existing template (certificate.pdf). No signature on the document.',
+    icon: FaFilePdf
+  },
+  {
+    value: 'signed',
+    label: 'Digitally Signed Certificate',
+    description: 'Uses the signed template (certificate-2.pdf) carrying the Director’s signature.',
+    icon: FaFileSignature
+  }
+];
 
 const CertificateDownload = () => {
   const [usernames, setUsernames] = useState('');
+  const [certType, setCertType] = useState('unsigned');
   const [selectedSlot, setSelectedSlot] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -174,7 +191,7 @@ const CertificateDownload = () => {
           },
           credentials: 'include',
           signal: controller.signal,
-          body: JSON.stringify({ username })
+          body: JSON.stringify({ username, certType })
         });
 
         const data = await res.json();
@@ -183,10 +200,11 @@ const CertificateDownload = () => {
           results.push({
             username,
             status: 'Generated',
-            message: 'Certificate generated successfully',
+            message: data.message || 'Certificate generated successfully',
             uid: data.uid,
             totalMarks: data.totalMarks,
-            grade: data.grade
+            grade: data.grade,
+            certType: data.certType || certType
           });
           successCount++;
           if (data.totalMarks >= 60) {
@@ -460,9 +478,44 @@ const CertificateDownload = () => {
             You can enter multiple usernames separated by newlines, commas, or spaces.
           </p>
         </div>
+
+        {/* Certificate Type Options */}
+        <div className="cert-type-section">
+          <span className="input-label">Certificate Type:</span>
+          <div className="cert-type-options">
+            {CERT_TYPES.map(option => {
+              const Icon = option.icon;
+              return (
+                <label
+                  key={option.value}
+                  className={`cert-type-option ${certType === option.value ? 'selected' : ''}`}
+                >
+                  <input
+                    type="radio"
+                    name="certType"
+                    value={option.value}
+                    checked={certType === option.value}
+                    onChange={() => setCertType(option.value)}
+                    disabled={loading}
+                  />
+                  <span className="cert-type-content">
+                    <span className="cert-type-label"><Icon /> {option.label}</span>
+                    <span className="cert-type-description">{option.description}</span>
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+          <p className="input-help">
+            2025 season students always use the old template and can only be generated as unsigned.
+          </p>
+        </div>
+
         <div className="generate-controls">
           <button onClick={handleGenerateIndividual} disabled={loading} className="certificate-generate-btn">
-            {loading ? <><FaCog className="spinning" /> Generating...</> : <><FaCog /> Generate Certificates</>}
+            {loading
+              ? <><FaCog className="spinning" /> Generating...</>
+              : <><FaCog /> Generate {certType === 'signed' ? 'Digitally Signed' : 'Unsigned'} Certificates</>}
           </button>
           {loading && (
             <button onClick={cancelGeneration} className="cancel-btn">
@@ -655,6 +708,9 @@ const CertificateDownload = () => {
                 </div>
                 <div className="result-details">
                   <p className="result-message">{result.message}</p>
+                  {result.certType && (
+                    <p><strong>Type:</strong> {result.certType === 'signed' ? 'Digitally Signed' : 'Unsigned'}</p>
+                  )}
                   {result.uid && <p><strong>UID:</strong> {result.uid}</p>}
                   {result.totalMarks && <p><strong>Total Marks:</strong> {result.totalMarks}</p>}
                   {result.grade && <p><strong>Grade:</strong> {result.grade}</p>}

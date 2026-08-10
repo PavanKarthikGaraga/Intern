@@ -40,6 +40,14 @@ function getgrd(totalMarks){
   return 'Fail';
 }
 
+// Certificate template variants (2026 season)
+// - unsigned: plain template, no signature on the document
+// - signed: template carrying the Director's digital signature
+const CERT_TEMPLATES = {
+  unsigned: 'certificate.pdf',
+  signed: 'certificate-2.pdf',
+};
+
 // Helper to draw certificate fields at the correct positions
 // function drawCertificateFields(page, { grade, name, branch, idNumber, start, end, slot, mode, domain, totalMarks, time, uid }, font) {
 //   page.drawText(grade, { x: 376.29, y: 709.36, size: 16, font, color: rgb(0, 0, 0) });
@@ -77,11 +85,18 @@ export async function POST(request) {
   }
 
   try {
-    const { username } = await request.json();
+    const { username, certType = 'unsigned' } = await request.json();
 
     if (!username) {
       return NextResponse.json(
         { success: false, error: 'Username is required' },
+        { status: 400 }
+      );
+    }
+
+    if (!Object.prototype.hasOwnProperty.call(CERT_TEMPLATES, certType)) {
+      return NextResponse.json(
+        { success: false, error: `Invalid certificate type "${certType}". Use "unsigned" or "signed".` },
         { status: 400 }
       );
     }
@@ -168,9 +183,24 @@ export async function POST(request) {
     // Generate unique ID for the certificate
     const uid = season === '2025' ? `SI25${username}` : `SI26${username}`;
 
-    // Load certificate template PDF based on season
-    const pdfFilename = season === '2025' ? 'Old_Certificate.pdf' : 'certificate.pdf';
+    // Load certificate template PDF based on season and the requested type
+    if (season === '2025' && certType === 'signed') {
+      return NextResponse.json({
+        success: false,
+        error: `A digitally signed template is not available for 2025 season certificates (${username}). Use the unsigned option.`,
+      }, { status: 400 });
+    }
+
+    const pdfFilename = season === '2025' ? 'Old_Certificate.pdf' : CERT_TEMPLATES[certType];
     const certPath = path.join(process.cwd(), 'public', pdfFilename);
+
+    if (!fs.existsSync(certPath)) {
+      return NextResponse.json({
+        success: false,
+        error: `Certificate template "${pdfFilename}" not found on the server.`,
+      }, { status: 500 });
+    }
+
     const certBytes = fs.readFileSync(certPath);
     const pdfDoc = await PDFDocument.load(certBytes);
 
@@ -249,11 +279,13 @@ export async function POST(request) {
 
     return NextResponse.json({
       success: true,
-      message: `Certificate generated successfully for ${username}`,
+      message: `${certType === 'signed' ? 'Digitally signed' : 'Unsigned'} certificate generated successfully for ${username}`,
       uid: uid,
       totalMarks: totalMarks,
       grade: grade,
-      name: name
+      name: name,
+      certType: certType,
+      template: pdfFilename
     });
 
   } catch (error) {
