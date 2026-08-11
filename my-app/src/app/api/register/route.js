@@ -2,7 +2,6 @@ import pool from "../../../lib/db.js";
 import bcrypt from 'bcryptjs';
 import { sendEmail } from '../../../lib/email.js';
 import { logActivity } from '../../../lib/activityLog.js';
-import { BLOCKED_PBL_IDS } from '../../../lib/blockedPblIds.js';
 
 const yearMap = {
   '1': '1st',
@@ -46,18 +45,6 @@ export async function POST(request) {
     await db.beginTransaction();
     
     try {
-      // 1. Check if ID belongs to blocked PBL student list
-      const studentId = formData.studentInfo?.idNumber?.trim();
-      if (studentId && BLOCKED_PBL_IDS.has(studentId)) {
-        return new Response(JSON.stringify({ 
-          success: false, 
-          message: 'PBL students are not eligible for social internship.' 
-        }), {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        });
-      }
-
       // Use a single query to check both username and phone number
       if (formData.mode === 'InVillage' && formData.studentInfo.gender === 'Female') {
         return new Response(JSON.stringify({ success: false, message: 'In-Village mode is not available for female students' }), {
