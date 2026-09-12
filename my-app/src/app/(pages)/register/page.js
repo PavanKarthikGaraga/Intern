@@ -528,7 +528,7 @@ export default function Register() {
                       ))}
 
                       {/* Y-25 PBL Slots */}
-                      <tr><td colSpan={6} style={{background:'linear-gradient(135deg, #0056b3 0%, #007bff 50%, #00a2ff 100%)',color:'#fff',fontWeight:700,textAlign:'center',padding:'10px 16px',fontSize:'0.92rem',letterSpacing:'0.06em',textShadow:'0 1px 4px rgba(0,0,0,0.3)'}}>Y-25 Batch (PBL)</td></tr>
+                      <tr><td colSpan={6} style={{background:'linear-gradient(135deg, #014a01 0%, #006400 50%, #008a00 100%)',color:'#fff',fontWeight:700,textAlign:'center',padding:'10px 16px',fontSize:'0.92rem',letterSpacing:'0.06em',textShadow:'0 1px 4px rgba(0,0,0,0.3)'}}>Y-25 Batch (PBL)</td></tr>
                       {[10].map((slot) => (
                         <tr 
                           key={slot}
@@ -537,7 +537,7 @@ export default function Register() {
                           style={{cursor:'pointer'}}
                         >
                           <td>Slot {slot}</td>
-                          <td><span className="batch-tag y25" style={{background:'#0056b3'}}>Y-25 (PBL)</span></td>
+                          <td><span className="batch-tag y25">Y-25 (PBL)</span></td>
                           <td>{SLOT_DATES[slot]}</td>
                           <td style={{color:'#bbb',fontStyle:'italic',textAlign:'center'}}>—</td>
                           <td data-status={checkSlotAvailability(slot, 'Incampus').toLowerCase().replace(' ', '-')}>
