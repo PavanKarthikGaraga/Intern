@@ -12,6 +12,7 @@ import { districtNames } from '../../Data/districts';
 import { countryCodes,countryNames } from '../../Data/coutries';
 import { branchNames } from '../../Data/branches';
 import { PROBLEM_STATEMENTS } from '../../Data/problemStatements';
+import { PBL_IDS } from '../../Data/pblIds';
 
 // Remove duplicate country codes and sort alphabetically
 const uniqueCountryCodes = countryCodes
@@ -250,6 +251,13 @@ export default function Register() {
         if (!/^(22|23|24|25)\d{8}$/.test(formData.studentInfo.idNumber)) {
           toast.error('Please enter a valid 10-digit ID number starting with 22, 23, 24, or 25');
           return;
+        }
+
+        if (formData.batch === 'Y-25-PBL') {
+          if (!PBL_IDS.includes(formData.studentInfo.idNumber)) {
+            toast.error('Only PBL students can register to this slot. ID number not matched with PBL list.');
+            return;
+          }
         }
 
         toast.success('Student information saved successfully!');

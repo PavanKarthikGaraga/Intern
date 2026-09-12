@@ -268,13 +268,22 @@ export async function DELETE(request) {
       } else if (mode === 'InVillage') {
         slotModeField = `slot${slot}Invillage`;
       }
+
+      const [statsCols] = await connection.query('SHOW COLUMNS FROM stats');
+      const columnNames = statsCols.map(c => c.Field);
+
+      const hasSlotCol = columnNames.includes(`slot${slot}`);
+      const hasModeCol = columnNames.includes(mode?.toLowerCase());
+      const hasSlotModeCol = columnNames.includes(slotModeField);
+
+      let setParts = ['totalStudents = totalStudents - 1'];
+      if (hasSlotCol) setParts.push(`slot${slot} = slot${slot} - 1`);
+      if (hasModeCol) setParts.push(`${mode.toLowerCase()} = ${mode.toLowerCase()} - 1`);
+      if (hasSlotModeCol) setParts.push(`${slotModeField} = ${slotModeField} - 1`);
+
       const updateStatsQuery = `
         UPDATE stats 
-        SET 
-          totalStudents = totalStudents - 1,
-          slot${slot} = slot${slot} - 1,
-          ${mode.toLowerCase()} = ${mode.toLowerCase()} - 1,
-          ${slotModeField} = ${slotModeField} - 1
+        SET ${setParts.join(', ')}
         WHERE id = (SELECT id FROM (SELECT id FROM stats ORDER BY id DESC LIMIT 1) as temp)
       `;
 

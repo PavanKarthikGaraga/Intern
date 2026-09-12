@@ -2,6 +2,7 @@ import pool from "../../../lib/db.js";
 import bcrypt from 'bcryptjs';
 import { sendEmail } from '../../../lib/email.js';
 import { logActivity } from '../../../lib/activityLog.js';
+import { PBL_IDS } from '../../Data/pblIds.js';
 
 const yearMap = {
   '1': '1st',
@@ -97,23 +98,41 @@ export async function POST(request) {
       }
 
       // ── Slot + mode capacity check (live from registrations) ──────────────
-      const LIMITS = { incampus: 200, invillage: 30 }; // Remote has no limit
-      const modeKey = formData.mode?.toLowerCase();
-
-      if (modeKey === 'incampus' || modeKey === 'invillage') {
-        const limit = LIMITS[modeKey];
-        const [[{ count }]] = await db.query(
-          `SELECT COUNT(*) AS count FROM registrations
-           WHERE slot = ? AND LOWER(TRIM(mode)) = ?`,
-          [formData.slot, modeKey]
-        );
-        if (Number(count) >= limit) {
+      if (slotNum === 10) {
+        if (!PBL_IDS.includes(formData.studentInfo.idNumber)) {
           await db.rollback();
-          const modeLabel = modeKey === 'incampus' ? 'In Campus' : 'In Village';
+          return new Response(JSON.stringify({ success: false, message: 'Only PBL students can register to this slot. ID number not matched with PBL list.' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+        }
+        
+        const [[{ count }]] = await db.query(
+          `SELECT COUNT(*) AS count FROM registrations WHERE slot = 10`
+        );
+        if (Number(count) >= 300) {
+          await db.rollback();
           return new Response(JSON.stringify({
             success: false,
-            message: `The ${modeLabel} mode for Slot ${formData.slot} is full (limit: ${limit} students). Please choose a different mode or a different slot.`
+            message: 'Slot 10 has reached its maximum capacity of 300 students. Please choose a different slot.'
           }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+        }
+      } else {
+        const LIMITS = { incampus: 200, invillage: 30 }; // Remote has no limit
+        const modeKey = formData.mode?.toLowerCase();
+
+        if (modeKey === 'incampus' || modeKey === 'invillage') {
+          const limit = LIMITS[modeKey];
+          const [[{ count }]] = await db.query(
+            `SELECT COUNT(*) AS count FROM registrations
+             WHERE slot = ? AND LOWER(TRIM(mode)) = ?`,
+            [formData.slot, modeKey]
+          );
+          if (Number(count) >= limit) {
+            await db.rollback();
+            const modeLabel = modeKey === 'incampus' ? 'In Campus' : 'In Village';
+            return new Response(JSON.stringify({
+              success: false,
+              message: `The ${modeLabel} mode for Slot ${formData.slot} is full (limit: ${limit} students). Please choose a different mode or a different slot.`
+            }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+          }
         }
       }
       // Remote (hometown) mode: no limit — no check needed
