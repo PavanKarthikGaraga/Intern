@@ -88,12 +88,17 @@ export default function StudentDashboard() {
   const allDaysEvaluated = [1, 2, 3, 4, 5, 6, 7].every(d => dm[`d${d}`] !== null && dm[`d${d}`] !== undefined);
   const totalMarks = dm.total || 0;
   const isSlot1 = Number(studentData?.slot) === 1;
+  const isSlot10 = Number(studentData?.slot) === 10;
   const day7Submitted = Boolean(studentData?.uploads?.details?.day7) || Boolean(studentData?.hasFinalDay7Task);
-  // For slot 2+: show Report Book tab for everyone so they can submit
+  // For slot 1: requires all evaluated and 60 marks
+  // For slot 10 (PBL): requires all 7 days tasks to be submitted
+  // For others: show by default
   const hasReportBookEntry = Boolean(studentData?.reportBook);
   const showReportBook = isSlot1
     ? (allDaysEvaluated && totalMarks >= 60)
-    : true;
+    : isSlot10
+      ? day7Submitted
+      : true;
 
   // Whether this student's mentor is assigned
   const hasMentor = Boolean(studentData?.facultyMentorId || studentData?.mentor);
