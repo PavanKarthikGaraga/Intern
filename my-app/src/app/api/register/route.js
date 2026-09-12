@@ -90,9 +90,9 @@ export async function POST(request) {
         }
       }
 
-      // Validate slot range 1-9
+      // Validate slot range 1-10
       const slotNum = parseInt(formData.slot);
-      if (slotNum < 1 || slotNum > 9) {
+      if (slotNum < 1 || slotNum > 10) {
         throw new Error('Invalid slot selected');
       }
 

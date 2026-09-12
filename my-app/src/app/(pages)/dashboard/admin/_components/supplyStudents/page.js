@@ -220,6 +220,7 @@ export default function SupplyStudents() {
               <option value="7">Slot 7</option>
               <option value="8">Slot 8</option>
               <option value="9">Slot 9</option>
+              <option value="10">Slot 10</option>
             </select>
           </div>
 

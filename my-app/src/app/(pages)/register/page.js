@@ -62,17 +62,22 @@ export default function Register() {
     6: "Jun 15 – Jun 21",
     7: "Jun 22 – Jun 28",
     8: "Jun 29 – Jul 5",
-    9: "Jul 6 – Jul 12"
+    9: "Jul 6 – Jul 12",
+    10: "Sep 17 – Oct 4"
   };
 
   const SLOT_BATCH = {
     1: 'Y-25-VJA', 2: 'Y-25-VJA', 3: 'Y-25-VJA', 4: 'Y-25-VJA', 5: 'Y-25-VJA', 6: 'Y-25-VJA',
-    7: 'Y-24', 8: 'Y-24', 9: 'Y-24'
+    7: 'Y-24', 8: 'Y-24', 9: 'Y-24', 10: 'Y-25-PBL'
   };
 
   // Batches that only support Remote mode
   const REMOTE_ONLY_BATCHES = ['Y-25-HYD', 'Y-24', 'Y-22', 'Y-23'];
   const isRemoteOnly = (batch) => REMOTE_ONLY_BATCHES.includes(batch);
+
+  // Batches that only support In-Campus mode
+  const INCAMPUS_ONLY_BATCHES = ['Y-25-PBL'];
+  const isIncampusOnly = (batch) => INCAMPUS_ONLY_BATCHES.includes(batch);
 
   const [selectedDomainInfo, setSelectedDomainInfo] = useState('');
   const [stats, setStats] = useState(null);
@@ -521,6 +526,26 @@ export default function Register() {
                           <td style={{color:'#bbb',fontStyle:'italic',textAlign:'center'}}>—</td>
                         </tr>
                       ))}
+
+                      {/* Y-25 PBL Slots */}
+                      <tr><td colSpan={6} style={{background:'linear-gradient(135deg, #0056b3 0%, #007bff 50%, #00a2ff 100%)',color:'#fff',fontWeight:700,textAlign:'center',padding:'10px 16px',fontSize:'0.92rem',letterSpacing:'0.06em',textShadow:'0 1px 4px rgba(0,0,0,0.3)'}}>Y-25 Batch (PBL)</td></tr>
+                      {[10].map((slot) => (
+                        <tr 
+                          key={slot}
+                          className={formData.slot === slot.toString() ? 'selected-row' : ''}
+                          onClick={() => handleSlotChange(slot)}
+                          style={{cursor:'pointer'}}
+                        >
+                          <td>Slot {slot}</td>
+                          <td><span className="batch-tag y25" style={{background:'#0056b3'}}>Y-25 (PBL)</span></td>
+                          <td>{SLOT_DATES[slot]}</td>
+                          <td style={{color:'#bbb',fontStyle:'italic',textAlign:'center'}}>—</td>
+                          <td data-status={checkSlotAvailability(slot, 'Incampus').toLowerCase().replace(' ', '-')}>
+                            {stats ? stats[`slot${slot}Incamp`] || 0 : 0} Registered
+                          </td>
+                          <td style={{color:'#bbb',fontStyle:'italic',textAlign:'center'}}>—</td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>
@@ -608,18 +633,21 @@ export default function Register() {
                   onChange={(e) => {
                     const newBatch = e.target.value;
                     const remoteOnly = REMOTE_ONLY_BATCHES.includes(newBatch);
+                    const incampusOnly = INCAMPUS_ONLY_BATCHES.includes(newBatch);
                     setFormData(prev => ({
                       ...prev,
                       batch: newBatch,
                       slot: '',
-                      // If switching to a remote-only batch, force mode to Remote
-                      mode: remoteOnly ? 'Remote' : prev.mode === 'Remote' ? prev.mode : '',
+                      // If switching to a remote-only batch, force mode to Remote. 
+                      // If incampus only, force to Incampus.
+                      mode: remoteOnly ? 'Remote' : incampusOnly ? 'Incampus' : prev.mode === 'Remote' || prev.mode === 'Incampus' ? prev.mode : '',
                       accommodationRequired: '',
                       transportationRequired: ''
                     }));
                   }}
                 >
                   <option value="">Select Batch</option>
+                  <option value="Y-25-PBL">Y-25 (PBL Batch)</option>
                   <option value="Y-25-VJA">Y-25 (Vijayawada Campus)</option>
                   <option value="Y-25-HYD">Y-25 (Hyderabad Campus)</option>
                   <option value="Y-24">Y-24 (Detained) / Supply (Both Campuses)</option>
@@ -636,6 +664,13 @@ export default function Register() {
                       <option value="Remote">Remote (HomeTown)</option>
                     </select>
                     <span style={{ fontSize: '0.82rem', color: '#555', marginTop: '4px', display: 'block' }}>Only Remote mode is available for this batch.</span>
+                  </>
+                ) : isIncampusOnly(formData.batch) ? (
+                  <>
+                    <select value="Incampus" disabled style={{ background: '#f0f0f0', color: '#555' }}>
+                      <option value="Incampus">In-Campus (Campus → Villages)</option>
+                    </select>
+                    <span style={{ fontSize: '0.82rem', color: '#555', marginTop: '4px', display: 'block' }}>Only In-Campus mode is available for this batch.</span>
                   </>
                 ) : (
                   <select
@@ -731,6 +766,18 @@ export default function Register() {
                   {formData.batch === 'Y-24' && (
                     <>
                       {[7,8,9].map(s => {
+                        const open = slotAvailability[s] !== false;
+                        return (
+                          <option key={s} value={String(s)} disabled={!open}>
+                            {open ? `Slot ${s} — ${SLOT_DATES[s]}` : `Slot ${s} — Registration Closed`}
+                          </option>
+                        );
+                      })}
+                    </>
+                  )}
+                  {formData.batch === 'Y-25-PBL' && (
+                    <>
+                      {[10].map(s => {
                         const open = slotAvailability[s] !== false;
                         return (
                           <option key={s} value={String(s)} disabled={!open}>

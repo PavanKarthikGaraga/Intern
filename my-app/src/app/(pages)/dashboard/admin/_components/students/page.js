@@ -18,6 +18,7 @@ const SLOT_LABELS = {
   '7': 'Slot 7 — Jun 22–28',
   '8': 'Slot 8 — Jun 29–Jul 5',
   '9': 'Slot 9 — Jul 6–12',
+  '10': 'Slot 10 — Sep 17–Oct 4',
 };
 
 const MODE_LABELS = {

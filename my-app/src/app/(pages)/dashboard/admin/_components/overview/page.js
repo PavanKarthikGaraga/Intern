@@ -26,6 +26,7 @@ const SLOT_OPTS = [
   { v:'5', l:'Slot 5 — Jun 8–14' }, { v:'6', l:'Slot 6 — Jun 15–21' },
   { v:'7', l:'Slot 7 — Jun 22–28' }, { v:'8', l:'Slot 8 — Jun 29–Jul 5' },
   { v:'9', l:'Slot 9 — Jul 6–12' },
+  { v:'10', l:'Slot 10 — Sep 17–Oct 4' },
 ];
 
 /* ── Custom Pie label (outer) ── */

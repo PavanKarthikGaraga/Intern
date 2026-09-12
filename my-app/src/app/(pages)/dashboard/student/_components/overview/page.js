@@ -197,7 +197,8 @@ export default function Overview({ user, studentData }) {
   const SLOT_DATES = {
     1: 'May 11 – May 17', 2: 'May 18 – May 24', 3: 'May 25 – May 31',
     4: 'Jun 1 – Jun 7', 5: 'Jun 8 – Jun 14', 6: 'Jun 15 – Jun 21',
-    7: 'Jun 22 – Jun 28', 8: 'Jun 29 – Jul 5', 9: 'Jul 6 – Jul 12'
+    7: 'Jun 22 – Jun 28', 8: 'Jun 29 – Jul 5', 9: 'Jul 6 – Jul 12',
+    10: 'Sep 17 – Oct 4'
   };
 
   const handlePsSubmit = async (e) => {

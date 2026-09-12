@@ -291,6 +291,7 @@ export default function StudentLeads() {
                   <option value="7">Slot 7 — Jun 22–28</option>
                   <option value="8">Slot 8 — Jun 29–Jul 5</option>
                   <option value="9">Slot 9 — Jul 6–12</option>
+                  <option value="10">Slot 10 — Sep 17–Oct 4</option>
                 </select>
               </div>
               <div className="form-actions">

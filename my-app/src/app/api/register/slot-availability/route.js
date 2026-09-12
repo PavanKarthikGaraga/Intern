@@ -16,8 +16,8 @@ export async function GET() {
     );
 
     if (!tables || tables.length === 0) {
-      // Table doesn't exist yet — all 9 slots open
-      const slots = Array.from({ length: 9 }, (_, i) => ({
+      // Table doesn't exist yet — all 10 slots open
+      const slots = Array.from({ length: 10 }, (_, i) => ({
         slot: i + 1,
         registrationOpen: 1,
       }));
@@ -31,7 +31,7 @@ export async function GET() {
     // Fill any missing slots as open
     const map = {};
     rows.forEach(r => { map[r.slot] = r.registrationOpen; });
-    const slots = Array.from({ length: 9 }, (_, i) => ({
+    const slots = Array.from({ length: 10 }, (_, i) => ({
       slot: i + 1,
       registrationOpen: map[i + 1] !== undefined ? map[i + 1] : 1,
     }));
@@ -39,7 +39,7 @@ export async function GET() {
     return NextResponse.json({ success: true, slots });
   } catch (e) {
     // On any error, fail open so registration is never accidentally broken
-    const slots = Array.from({ length: 9 }, (_, i) => ({ slot: i + 1, registrationOpen: 1 }));
+    const slots = Array.from({ length: 10 }, (_, i) => ({ slot: i + 1, registrationOpen: 1 }));
     return NextResponse.json({ success: true, slots });
   } finally { db.release(); }
 }

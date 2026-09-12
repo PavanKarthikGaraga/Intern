@@ -14,6 +14,8 @@ export async function GET() {
       slot1: 0, slot2: 0, slot3: 0, slot4: 0, slot5: 0, slot6: 0,
       // Y-24 slots 7-9
       slot7: 0, slot8: 0, slot9: 0,
+      // Y-25 PBL slot 10
+      slot10: 0,
       remote: 0, incampus: 0, invillage: 0,
       // Slot mode breakdowns
       slot1Remote: 0, slot1Incamp: 0, slot1Invillage: 0,
@@ -25,6 +27,7 @@ export async function GET() {
       slot7Remote: 0, slot7Incamp: 0, slot7Invillage: 0,
       slot8Remote: 0, slot8Incamp: 0, slot8Invillage: 0,
       slot9Remote: 0, slot9Incamp: 0, slot9Invillage: 0,
+      slot10Remote: 0, slot10Incamp: 0, slot10Invillage: 0,
     };
 
     const [rows] = await pool.query(`
@@ -41,7 +44,7 @@ export async function GET() {
 
     rows.forEach(row => {
       const n = parseInt(row.slot, 10);
-      if (!isNaN(n) && n >= 1 && n <= 9) {
+      if (!isNaN(n) && n >= 1 && n <= 10) {
         liveStats[`slot${n}`] = Number(row.total) || 0;
         liveStats[`slot${n}Remote`] = Number(row.remote) || 0;
         liveStats[`slot${n}Incamp`] = Number(row.incampus) || 0;

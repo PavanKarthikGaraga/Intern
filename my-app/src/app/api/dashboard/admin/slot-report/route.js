@@ -21,6 +21,10 @@ const SLOT_DATES = {
   4: { start: '2026-06-01', end: '2026-06-07', label: 'Slot 4 (Jun 01 – 07, 2026)' },
   5: { start: '2026-06-08', end: '2026-06-14', label: 'Slot 5 (Jun 08 – 14, 2026)' },
   6: { start: '2026-06-15', end: '2026-06-21', label: 'Slot 6 (Jun 15 – 21, 2026)' },
+  7: { start: '2026-06-22', end: '2026-06-28', label: 'Slot 7 (Jun 22 – 28, 2026)' },
+  8: { start: '2026-06-29', end: '2026-07-05', label: 'Slot 8 (Jun 29 – Jul 05, 2026)' },
+  9: { start: '2026-07-06', end: '2026-07-12', label: 'Slot 9 (Jul 06 – 12, 2026)' },
+  10: { start: '2026-09-17', end: '2026-10-04', label: 'Slot 10 (Sep 17 – Oct 04, 2026)' },
 };
 
 

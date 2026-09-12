@@ -12,7 +12,8 @@ export default function Timeline() {
     { slot: "Slot 6", batch: "Y-25", date: "Jun 15-21, 2026" },
     { slot: "Slot 7", batch: "Y-24", date: "Jun 22-28, 2026" },
     { slot: "Slot 8", batch: "Y-24", date: "Jun 29-Jul 5, 2026" },
-    { slot: "Slot 9", batch: "Y-24", date: "Jul 6-12, 2026" }
+    { slot: "Slot 9", batch: "Y-24", date: "Jul 6-12, 2026" },
+    { slot: "Slot 10", batch: "Y-25 (PBL)", date: "Sep 17-Oct 4, 2026" }
   ];
 
   return (
