@@ -694,7 +694,7 @@ export default function Register() {
                 )}
               </div>
 
-              {formData.mode === 'Incampus' && (
+              {formData.mode === 'Incampus' && formData.batch !== 'Y-25-PBL' && (
                 <>
                   <div className="input-row">
                     <label>Accommodation required? *</label>
