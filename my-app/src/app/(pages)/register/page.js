@@ -197,7 +197,7 @@ export default function Register() {
           toast.error('Please select a domain to continue');
           return;
         }
-        if (formData.mode === 'Incampus') {
+        if (formData.mode === 'Incampus' && formData.batch !== 'Y-25-PBL') {
           if (!formData.accommodationRequired) {
             toast.error('Please select whether accommodation is required');
             return;
