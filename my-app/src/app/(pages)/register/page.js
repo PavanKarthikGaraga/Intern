@@ -918,7 +918,7 @@ export default function Register() {
                 disabled={(() => {
                   const effectiveMode = isRemoteOnly(formData.batch) ? 'Remote' : formData.mode;
                   return !formData.batch || !formData.selectedDomain || !formData.fieldOfInterest || !formData.careerChoice || !effectiveMode || !formData.slot ||
-                    (effectiveMode === 'Incampus' && (!formData.accommodationRequired || (formData.accommodationRequired === 'No' && !formData.transportationRequired)));
+                    (effectiveMode === 'Incampus' && formData.batch !== 'Y-25-PBL' && (!formData.accommodationRequired || (formData.accommodationRequired === 'No' && !formData.transportationRequired)));
                 })()}
               >
                 Next
