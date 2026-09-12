@@ -1207,7 +1207,8 @@ export default function Register() {
                   <div className="confirm-item">
                     <span>Batch</span>
                     <span><span className={`batch-tag ${formData.batch.startsWith('Y-24') || formData.batch.startsWith('Y-22') || formData.batch.startsWith('Y-23') ? 'y24' : 'y25'}`}>
-                      {formData.batch === 'Y-25-VJA' ? 'Y-25 (Vijayawada Campus)' :
+                      {formData.batch === 'Y-25-PBL' ? 'Y-25 (PBL Batch)' :
+                       formData.batch === 'Y-25-VJA' ? 'Y-25 (Vijayawada Campus)' :
                        formData.batch === 'Y-25-HYD' ? 'Y-25 (Hyderabad Campus)' :
                        formData.batch === 'Y-23' ? 'Y-23 (Remote)' :
                        formData.batch === 'Y-22' ? 'Y-22 (Remote)' :
@@ -1230,7 +1231,7 @@ export default function Register() {
                     <span>Internship Mode</span>
                     <span>{formData.mode}</span>
                   </div>
-                  {formData.mode === 'Incampus' && (
+                  {formData.mode === 'Incampus' && formData.batch !== 'Y-25-PBL' && (
                     <>
                       <div className="confirm-item">
                         <span>Accommodation</span>
