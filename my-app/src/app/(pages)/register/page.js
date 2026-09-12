@@ -437,6 +437,10 @@ export default function Register() {
   };
 
   const handleSlotChange = (slot) => {
+    if (slot === 10 && stats && stats[`slot10`] >= 300) {
+      toast.error('Slot 10 is full (300/300 capacity reached)');
+      return;
+    }
     setFormData(prev => ({...prev, slot: slot.toString()}));
   };
 
@@ -787,9 +791,12 @@ export default function Register() {
                     <>
                       {[10].map(s => {
                         const open = slotAvailability[s] !== false;
+                        const isFull = stats && (stats[`slot${s}`] >= 300);
                         return (
-                          <option key={s} value={String(s)} disabled={!open}>
-                            {open ? `Slot ${s} — ${SLOT_DATES[s]}` : `Slot ${s} — Registration Closed`}
+                          <option key={s} value={String(s)} disabled={!open || isFull}>
+                            {open 
+                              ? (isFull ? `Slot ${s} — Full (300/300 capacity reached)` : `Slot ${s} — ${SLOT_DATES[s]}`)
+                              : `Slot ${s} — Registration Closed`}
                           </option>
                         );
                       })}
