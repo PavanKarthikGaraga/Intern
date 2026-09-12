@@ -11,8 +11,8 @@ const ensureTable = async (db) => {
       updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   `);
-  // Seed all 9 slots if not present
-  for (let s = 1; s <= 9; s++) {
+  // Seed all 10 slots if not present
+  for (let s = 1; s <= 10; s++) {
     await db.query(
       'INSERT IGNORE INTO slotControl (slot, enabled) VALUES (?, 0)', [s]
     );
@@ -53,7 +53,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
     const { slot, enabled } = await request.json();
-    if (!slot || slot < 1 || slot > 9)
+    if (!slot || slot < 1 || slot > 10)
       return NextResponse.json({ error: 'Invalid slot' }, { status: 400 });
 
     const db = await pool.getConnection();

@@ -121,7 +121,7 @@ export default function SlotControl() {
         <h2 style={S.h2}>🎛️ Slot Control</h2>
         <p style={S.sub}>
           Toggle each slot on or off. Students see the full dashboard only when their slot is enabled.
-          &nbsp;<strong>{enabledCount} / 9</strong> slots currently active.
+          &nbsp;<strong>{enabledCount} / 10</strong> slots currently active.
         </p>
       </div>
 
