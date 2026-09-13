@@ -472,7 +472,7 @@ export default function Register() {
                   </div>
                   <div className="highlight-item">
                     <span className="highlight-label">End Date</span>
-                    <span className="highlight-value">Jul 11, 2026</span>
+                    <span className="highlight-value">Oct 4, 2026</span>
                   </div>
                 </div>
               </div>
