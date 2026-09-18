@@ -231,6 +231,32 @@ export async function DELETE(request) {
 
       const { slot, mode } = studentData[0];
 
+      // Remove student from any studentLeads assigned
+      const updateLeadQueries = [];
+      for (let i = 1; i <= 30; i++) {
+        updateLeadQueries.push(
+          connection.query(`UPDATE studentLeads SET student${i}Username = NULL WHERE student${i}Username = ?`, [username])
+        );
+      }
+      await Promise.all(updateLeadQueries);
+
+      // Ensure dynamic tables exist before attempting to delete
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS dailyTasks (
+          id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(255) NOT NULL,
+          day TINYINT NOT NULL, data JSON NOT NULL, submittedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          UNIQUE KEY uq_user_day (username, day)
+        )
+      `);
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS unlockedDays (
+          username VARCHAR(255) NOT NULL, day TINYINT NOT NULL,
+          unlockedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          PRIMARY KEY (username, day)
+        )
+      `);
+
       // Delete from child tables of sstudents first
       await connection.query('DELETE FROM suploads WHERE username = ?', [username]);
       await connection.query('DELETE FROM sstatus WHERE username = ?', [username]);
@@ -255,9 +281,11 @@ export async function DELETE(request) {
       // Clear daily task submissions and unlocked days (prevents stale data on re-registration)
       await connection.query('DELETE FROM dailyTasks WHERE username = ?', [username]);
       await connection.query('DELETE FROM unlockedDays WHERE username = ?', [username]);
+      // Clear activity logs
+      await connection.query('DELETE FROM activityLogs WHERE actorUsername = ? OR targetUsername = ?', [username, username]);
+      
       await connection.query('DELETE FROM registrations WHERE username = ?', [username]);
       await connection.query('DELETE FROM users WHERE username = ?', [username]);
-
 
       // Update stats table
       let slotModeField;
