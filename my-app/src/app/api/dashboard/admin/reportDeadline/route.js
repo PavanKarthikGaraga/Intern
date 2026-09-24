@@ -46,7 +46,8 @@ export async function GET() {
             (6, '2026-05-30 12:30:00'),
             (7, '2026-06-30 12:30:00'),
             (8, '2026-06-30 12:30:00'),
-            (9, '2026-06-30 12:30:00')
+            (9, '2026-06-30 12:30:00'),
+            (10, '2026-06-30 12:30:00')
         `);
 
         const [rows] = await pool.query("SELECT slot, DATE_FORMAT(deadline, '%Y-%m-%dT%H:%i:%s.000Z') as deadline FROM reportDeadlines ORDER BY slot ASC");

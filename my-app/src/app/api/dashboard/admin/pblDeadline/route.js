@@ -6,10 +6,12 @@ import { cookies } from 'next/headers';
 const ensureTable = async (db) => {
     await db.query(`
         CREATE TABLE IF NOT EXISTS pblDeadlines (
-            slot INT NOT NULL PRIMARY KEY,
+            slot INT NOT NULL,
+            dayNum INT NOT NULL,
             start_date DATETIME NOT NULL,
             end_date DATETIME NOT NULL,
-            updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (slot, dayNum)
         ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
     `);
 };
@@ -28,7 +30,7 @@ export async function GET(req) {
         db = await pool.getConnection();
         await ensureTable(db);
         
-        const [rows] = await db.query("SELECT slot, DATE_FORMAT(start_date, '%Y-%m-%dT%H:%i:%s.000Z') as start_date, DATE_FORMAT(end_date, '%Y-%m-%dT%H:%i:%s.000Z') as end_date FROM pblDeadlines ORDER BY slot ASC");
+        const [rows] = await db.query("SELECT slot, dayNum, DATE_FORMAT(start_date, '%Y-%m-%dT%H:%i:%s.000Z') as start_date, DATE_FORMAT(end_date, '%Y-%m-%dT%H:%i:%s.000Z') as end_date FROM pblDeadlines ORDER BY slot ASC, dayNum ASC");
         
         return NextResponse.json({ success: true, data: rows });
     } catch (error) {
@@ -50,10 +52,10 @@ export async function PUT(req) {
         if (decoded.role !== 'admin')
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-        const { slot, start_date, end_date } = await req.json();
+        const { slot, dayNum, start_date, end_date } = await req.json();
 
-        if (!slot || !start_date || !end_date) {
-            return NextResponse.json({ error: 'Missing slot, start_date or end_date' }, { status: 400 });
+        if (!slot || !dayNum || !start_date || !end_date) {
+            return NextResponse.json({ error: 'Missing slot, dayNum, start_date or end_date' }, { status: 400 });
         }
 
         if (slot < 10) {
@@ -74,8 +76,8 @@ export async function PUT(req) {
         await ensureTable(db);
         
         await db.query(
-            'INSERT INTO pblDeadlines (slot, start_date, end_date) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE start_date = ?, end_date = ?',
-            [slot, parsedStartDate, parsedEndDate, parsedStartDate, parsedEndDate]
+            'INSERT INTO pblDeadlines (slot, dayNum, start_date, end_date) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE start_date = ?, end_date = ?',
+            [slot, dayNum, parsedStartDate, parsedEndDate, parsedStartDate, parsedEndDate]
         );
         
         return NextResponse.json({ success: true, message: 'Deadline updated successfully' });

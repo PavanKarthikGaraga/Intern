@@ -26,10 +26,10 @@ const wc = (txt) => (txt || '').trim().split(/\s+/).filter(Boolean).length;
 
 /** Window for the Nth day of the slot */
 function dayWindow(slot, dayNum, pblData = null) {
-  if (pblData && Number(slot) >= 10) {
+  if (pblData && pblData[dayNum] && Number(slot) >= 10) {
     return {
-      open: new Date(pblData.start_date),
-      close: new Date(pblData.end_date)
+      open: new Date(pblData[dayNum].start_date),
+      close: new Date(pblData[dayNum].end_date)
     };
   }
   const start = SLOT_START[slot];
@@ -85,7 +85,7 @@ function getDayStatus(dayNum, slot, saved, username, unlockedDays = [], slotEnab
     const s = saved[dayNum] || saved[String(dayNum)];
     return s ? 'submitted' : 'open';
   }
-  if (!slot || (!SLOT_START[slot] && !(pblData && Number(slot) >= 10))) return 'upcoming';
+  if (!slot || (!SLOT_START[slot] && !(pblData && pblData[dayNum] && Number(slot) >= 10))) return 'upcoming';
   
   const { open, close } = dayWindow(slot, dayNum, pblData);
   const now = serverNow();   // ← server-authoritative IST time
@@ -703,7 +703,7 @@ export default function DailyTasks({ studentData, onSectionChange }) {
     } finally { 
       setSaving(false); 
     }
-  }, [activeDay, latestDataRef, setSaved, setDraft, setMsg, setMsgType, survey, saved, studentData?.slot]);
+  }, [activeDay, latestDataRef, setSaved, setDraft, setMsg, setMsgType, survey, saved, studentData?.slot, editingDays, studentData?.problemStatementData?.problem_statement]);
 
 
 
@@ -843,7 +843,7 @@ export default function DailyTasks({ studentData, onSectionChange }) {
                 🎉 Congratulations on Completing Day 7!
               </h3>
               <p style={{ margin: '0 0 24px 0', color: '#15803d', fontSize: '1.05rem', lineHeight: '1.6' }}>
-                You have successfully submitted your Day 7 tasks. It's now time to start drafting your <strong>Final Report Book</strong> (which consists of 20 marks).
+                You have successfully submitted your Day 7 tasks. It&apos;s now time to start drafting your <strong>Final Report Book</strong> (which consists of 20 marks).
               </p>
               <button
                 onClick={() => onSectionChange && onSectionChange('report-book')}

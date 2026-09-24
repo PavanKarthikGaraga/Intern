@@ -5,6 +5,7 @@ import './page.css';
 export default function PblDeadline() {
     const [deadlines, setDeadlines] = useState([]);
     const [selectedSlot, setSelectedSlot] = useState('10');
+    const [selectedDay, setSelectedDay] = useState('1');
     const [newStartDate, setNewStartDate] = useState('');
     const [newStartTime, setNewStartTime] = useState('');
     const [newEndDate, setNewEndDate] = useState('');
@@ -61,6 +62,7 @@ export default function PblDeadline() {
                 },
                 body: JSON.stringify({
                     slot: parseInt(selectedSlot),
+                    dayNum: parseInt(selectedDay),
                     start_date: startDateTimeStr,
                     end_date: endDateTimeStr
                 })
@@ -85,7 +87,7 @@ export default function PblDeadline() {
         return <div className="loading">Loading PBL deadlines...</div>;
     }
 
-    const currentSlotData = deadlines?.find(d => d.slot === parseInt(selectedSlot));
+    const currentSlotData = deadlines?.find(d => d.slot === parseInt(selectedSlot) && d.dayNum === parseInt(selectedDay));
 
     return (
         <div className="pbl-deadline-container">
@@ -108,15 +110,28 @@ export default function PblDeadline() {
                     </select>
                 </div>
 
+                <div className="form-group">
+                    <label>Select Day</label>
+                    <select 
+                        className="form-control"
+                        value={selectedDay}
+                        onChange={(e) => setSelectedDay(e.target.value)}
+                    >
+                        {[1, 2, 3, 4, 5, 6, 7].map(day => (
+                            <option key={day} value={day}>Day {day}</option>
+                        ))}
+                    </select>
+                </div>
+
                 <div className="deadline-display">
-                    <p>Current Start Window for Slot {selectedSlot}:</p>
+                    <p>Current Start Window for Slot {selectedSlot} - Day {selectedDay}:</p>
                     <strong>
                         {currentSlotData?.start_date 
                             ? new Date(currentSlotData.start_date).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) 
                             : 'Not set'}
                     </strong>
                     <br/><br/>
-                    <p>Current End Deadline for Slot {selectedSlot}:</p>
+                    <p>Current End Deadline for Slot {selectedSlot} - Day {selectedDay}:</p>
                     <strong>
                         {currentSlotData?.end_date 
                             ? new Date(currentSlotData.end_date).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) 

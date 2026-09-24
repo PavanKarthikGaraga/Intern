@@ -26,15 +26,17 @@ export async function GET(req) {
         // Ensure table exists just in case
         await db.query(`
             CREATE TABLE IF NOT EXISTS pblDeadlines (
-                slot INT NOT NULL PRIMARY KEY,
+                slot INT NOT NULL,
+                dayNum INT NOT NULL,
                 start_date DATETIME NOT NULL,
                 end_date DATETIME NOT NULL,
-                updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                PRIMARY KEY (slot, dayNum)
             ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
         `);
         
         const [rows] = await db.query(
-            "SELECT DATE_FORMAT(start_date, '%Y-%m-%dT%H:%i:%s.000Z') as start_date, DATE_FORMAT(end_date, '%Y-%m-%dT%H:%i:%s.000Z') as end_date FROM pblDeadlines WHERE slot = ?", 
+            "SELECT dayNum, DATE_FORMAT(start_date, '%Y-%m-%dT%H:%i:%s.000Z') as start_date, DATE_FORMAT(end_date, '%Y-%m-%dT%H:%i:%s.000Z') as end_date FROM pblDeadlines WHERE slot = ?", 
             [slot]
         );
         
@@ -42,7 +44,16 @@ export async function GET(req) {
             return NextResponse.json({ success: true, data: null });
         }
         
-        return NextResponse.json({ success: true, data: rows[0] });
+        // Map rows into an object keyed by dayNum
+        const dataByDay = {};
+        rows.forEach(row => {
+            dataByDay[row.dayNum] = {
+                start_date: row.start_date,
+                end_date: row.end_date
+            };
+        });
+        
+        return NextResponse.json({ success: true, data: dataByDay });
     } catch (error) {
         console.error('Error fetching PBL deadline for student:', error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
