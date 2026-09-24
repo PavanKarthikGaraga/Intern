@@ -42,6 +42,7 @@ export async function PUT(request) {
             transportation,
             busRoute,
             selectedDomain,
+            problemStatement,
             fieldOfInterest,
             mode,
             slot,
@@ -105,6 +106,19 @@ export async function PUT(request) {
             // Update the users table as well if name changed
             await db.execute('UPDATE users SET name = ? WHERE username = ?', [name, username]);
 
+            // Update Problem Statement
+            if (problemStatement) {
+                await db.execute(`
+                    INSERT INTO problemStatements (username, domain, problem_statement, location, district, state) 
+                    VALUES (?, ?, ?, 'N/A', ?, ?)
+                    ON DUPLICATE KEY UPDATE 
+                        domain = VALUES(domain), 
+                        problem_statement = VALUES(problem_statement),
+                        district = VALUES(district),
+                        state = VALUES(state)
+                `, [username, selectedDomain, problemStatement, district, state]);
+            }
+
             await db.commit();
 
             logActivity({
@@ -115,6 +129,7 @@ export async function PUT(request) {
                 details: { 
                     editedFields: true,
                     domain: selectedDomain,
+                    problemStatement: problemStatement
                 }
             }).catch(() => {});
 

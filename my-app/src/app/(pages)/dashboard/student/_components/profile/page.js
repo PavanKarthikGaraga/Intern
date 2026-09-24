@@ -12,6 +12,8 @@ import { districtNames } from '@/app/Data/districts';
 import { countryCodes } from '@/app/Data/coutries';
 import { branchNames } from '@/app/Data/branches';
 import { girlHostels, boyHostels, busRoutes } from '@/app/Data/locations';
+import { DOMAINS } from '@/app/Data/domains';
+import { PROBLEM_STATEMENTS } from '@/app/Data/problemStatements';
 
 /* ── Deduplicated & sorted country list ── */
 const uniqueCountryCodes = countryCodes
@@ -73,15 +75,6 @@ export default function Profile({ user, studentData: initialStudentData }) {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({});
   const [isSaving, setIsSaving] = useState(false);
-  const [domains, setDomains] = useState([]);
-
-  /* Fetch domain list */
-  useEffect(() => {
-    fetch('/api/dashboard/student/domains')
-      .then(r => r.json())
-      .then(d => { if (d.success) setDomains(d.domains); })
-      .catch(() => {});
-  }, []);
 
   /* Seed form whenever student data arrives */
   useEffect(() => {
@@ -103,6 +96,7 @@ export default function Profile({ user, studentData: initialStudentData }) {
       transportation: initialStudentData.transportation || 'No',
       busRoute:       initialStudentData.busRoute       || '',
       selectedDomain: initialStudentData.selectedDomain || '',
+      problemStatement: initialStudentData.problemStatementData?.problem_statement || '',
       mode:           initialStudentData.mode           || 'Remote',
       slot:           String(initialStudentData.slot    || '1'),
       year:           String(initialStudentData.year    || '1'),
@@ -116,7 +110,11 @@ export default function Profile({ user, studentData: initialStudentData }) {
 
   const handleChange = e => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    if (name === 'selectedDomain') {
+      setFormData(prev => ({ ...prev, [name]: value, problemStatement: '' }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleCancel = () => {
@@ -137,6 +135,7 @@ export default function Profile({ user, studentData: initialStudentData }) {
       transportation: studentData.transportation || 'No',
       busRoute:       studentData.busRoute       || '',
       selectedDomain: studentData.selectedDomain || '',
+      problemStatement: studentData.problemStatementData?.problem_statement || '',
       mode:           studentData.mode           || 'Remote',
       slot:           String(studentData.slot    || '1'),
       year:           String(studentData.year    || '1'),
@@ -160,6 +159,11 @@ export default function Profile({ user, studentData: initialStudentData }) {
           ...prev,
           ...formData,
           profileEdited: (Number(prev.profileEdited) || 0) + 1,
+          problemStatementData: {
+            ...prev.problemStatementData,
+            domain: formData.selectedDomain,
+            problem_statement: formData.problemStatement
+          }
         }));
         setIsEditing(false);
       } else {
@@ -447,14 +451,23 @@ export default function Profile({ user, studentData: initialStudentData }) {
               {isEditing ? (
                 <EditSelect label="Domain" name="selectedDomain" value={formData.selectedDomain} onChange={handleChange}>
                   {!formData.selectedDomain && <option value="">Select Domain</option>}
-                  {domains.map(d => <option key={d} value={d}>{d}</option>)}
+                  {DOMAINS.map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
                 </EditSelect>
               ) : (
                 <ViewField label="Domain" value={studentData.selectedDomain} />
               )}
 
-              {/* Problem Statement — read-only here */}
-              <ViewField label="Problem Statement" value={studentData.problemStatementData?.problem_statement || 'N/A'} />
+              {/* Problem Statement */}
+              {isEditing ? (
+                <EditSelect label="Problem Statement" name="problemStatement" value={formData.problemStatement} onChange={handleChange}>
+                  {!formData.problemStatement && <option value="">Select Problem Statement</option>}
+                  {(PROBLEM_STATEMENTS[formData.selectedDomain] || []).map(p => (
+                    <option key={p} value={p}>{p}</option>
+                  ))}
+                </EditSelect>
+              ) : (
+                <ViewField label="Problem Statement" value={studentData.problemStatementData?.problem_statement || 'N/A'} />
+              )}
 
               {/* Mode — always read-only */}
               <ViewField label="Internship Mode" value={studentData.mode} />
