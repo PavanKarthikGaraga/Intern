@@ -98,8 +98,8 @@ export async function PUT(request) {
                 busRoute || null,
                 accommodation || null,
                 transportation || null,
-                selectedDomain, fieldOfInterest,
-                year, careerChoice,
+                selectedDomain || null, fieldOfInterest || null,
+                year || null, careerChoice || null,
                 username
             ]);
 
@@ -116,7 +116,7 @@ export async function PUT(request) {
                         problem_statement = VALUES(problem_statement),
                         district = VALUES(district),
                         state = VALUES(state)
-                `, [username, selectedDomain, problemStatement, district, state]);
+                `, [username, selectedDomain || null, problemStatement || null, district || null, state || null]);
             }
 
             await db.commit();
@@ -152,7 +152,7 @@ export async function PUT(request) {
         }
 
         return NextResponse.json(
-            { success: false, error: 'Internal server error' },
+            { success: false, error: 'Internal server error: ' + error.message },
             { status: 500 }
         );
     } finally {
