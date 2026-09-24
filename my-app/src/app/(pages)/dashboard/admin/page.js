@@ -16,6 +16,7 @@ import Admins from './_components/admins/page';
 import DataDownload from './_components/dataDownload/page';
 import ReportControl from './_components/reportControl/page';
 import ReportDeadline from './_components/reportDeadline/page';
+import PblDeadline from './_components/pblDeadline/page';
 // import PM2Logs from './_components/pm2-logs/page';
 import TokenGenerator from './_components/tokenGenerator/page';
 import SQLExecutor from './_components/sqlExecutor/page';
@@ -291,6 +292,13 @@ export default function AdminDashboard() {
           </button>
 
           <button
+            className={`sidebar-item ${activeSection === 'pbl-deadline' ? 'active' : ''}`}
+            onClick={() => handleSectionClick('pbl-deadline')}
+          >
+            <span className="item-label">PBL Deadline</span>
+          </button>
+
+          <button
             className={`sidebar-item ${activeSection === 'evaluate' ? 'active' : ''}`}
             onClick={() => handleSectionClick('evaluate')}
           >
@@ -457,6 +465,7 @@ export default function AdminDashboard() {
            activeSection === 'data-download' ? <DataDownload /> :
            activeSection === 'report-control' ? <ReportControl /> :
            activeSection === 'report-deadline' ? <ReportDeadline /> :
+           activeSection === 'pbl-deadline' ? <PblDeadline /> :
            activeSection === 'token-generator' ? <TokenGenerator /> :
            activeSection === 'sql-executor' ? <SQLExecutor /> :
            activeSection === 'reset-password' ? <ResetPassword /> :

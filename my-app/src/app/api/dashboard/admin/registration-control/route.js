@@ -11,8 +11,8 @@ const ensureTable = async (db) => {
       updatedAt        TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   `);
-  // Seed all 9 slots as OPEN by default
-  for (let s = 1; s <= 9; s++) {
+  // Seed all 10 slots as OPEN by default
+  for (let s = 1; s <= 10; s++) {
     await db.query(
       'INSERT IGNORE INTO registrationControl (slot, registrationOpen) VALUES (?, 1)', [s]
     );
@@ -52,8 +52,8 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
     const { slot, open } = await request.json();
-    if (!slot || slot < 1 || slot > 9)
-      return NextResponse.json({ error: 'Invalid slot (must be 1–9)' }, { status: 400 });
+    if (!slot || slot < 1 || slot > 10)
+      return NextResponse.json({ error: 'Invalid slot (must be 1–10)' }, { status: 400 });
 
     await ensureTable(db);
     await db.query(

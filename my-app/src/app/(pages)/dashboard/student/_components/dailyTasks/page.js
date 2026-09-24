@@ -25,7 +25,13 @@ const SLOT_START = {
 const wc = (txt) => (txt || '').trim().split(/\s+/).filter(Boolean).length;
 
 /** Window for the Nth day of the slot */
-function dayWindow(slot, dayNum) {
+function dayWindow(slot, dayNum, pblData = null) {
+  if (pblData && Number(slot) >= 10) {
+    return {
+      open: new Date(pblData.start_date),
+      close: new Date(pblData.end_date)
+    };
+  }
   const start = SLOT_START[slot];
   if (!start) return { open: null, close: null };
   const d = new Date(start);
@@ -49,8 +55,8 @@ function dayWindow(slot, dayNum) {
 let _serverOffset = 0;   // ms
 function serverNow() { return Date.now() + _serverOffset; }
 
-function dayLabel(slot, dayNum) {
-  const { close } = dayWindow(slot, dayNum);
+function dayLabel(slot, dayNum, pblData = null) {
+  const { close } = dayWindow(slot, dayNum, pblData);
   if (!close) return '';
   return close.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
 }
@@ -73,15 +79,15 @@ function addProportionalImage(doc, base64, x, y, maxW, maxH) {
 
 const DEMO_ID = '2500099999';
 
-function getDayStatus(dayNum, slot, saved, username, unlockedDays = [], slotEnabled = false, dailyMarks = {}) {
+function getDayStatus(dayNum, slot, saved, username, unlockedDays = [], slotEnabled = false, dailyMarks = {}, pblData = null) {
   // ── Demo bypass: all days open regardless of date ──
   if (username === DEMO_ID) {
     const s = saved[dayNum] || saved[String(dayNum)];
     return s ? 'submitted' : 'open';
   }
-  if (!slot || !SLOT_START[slot]) return 'upcoming';
+  if (!slot || (!SLOT_START[slot] && !(pblData && Number(slot) >= 10))) return 'upcoming';
   
-  const { open, close } = dayWindow(slot, dayNum);
+  const { open, close } = dayWindow(slot, dayNum, pblData);
   const now = serverNow();   // ← server-authoritative IST time
   const s = saved[dayNum] || saved[String(dayNum)];
   const mark = dailyMarks[`d${dayNum}`];
@@ -122,7 +128,7 @@ function getDayStatus(dayNum, slot, saved, username, unlockedDays = [], slotEnab
 
   // Check previous days first to see if we should cascade lock
   if (dayNum > 1) {
-    const prevStatus = getDayStatus(dayNum - 1, slot, saved, username, unlockedDays, slotEnabled, dailyMarks);
+    const prevStatus = getDayStatus(dayNum - 1, slot, saved, username, unlockedDays, slotEnabled, dailyMarks, pblData);
     if (prevStatus === 'missed' || prevStatus === 'locked') return 'locked';
   }
 
@@ -258,8 +264,8 @@ function CompletedBar({ deadline, submittedAt }) {
 }
 
 /* ── Lock overlay ── */
-function LockedView({ status, dayNum, slot }) {
-  const { close } = slot ? dayWindow(slot, dayNum) : { close: null };
+function LockedView({ status, dayNum, slot, pblData }) {
+  const { close } = slot ? dayWindow(slot, dayNum, pblData) : { close: null };
   const dateStr = close ? close.toLocaleDateString('en-IN', { day:'numeric', month:'long' }) : '';
   if (status === 'missed') return (
     <div className="dt-locked-overlay missed-lock">
@@ -294,6 +300,7 @@ export default function DailyTasks({ studentData, onSectionChange }) {
   const [saving, setSaving]   = useState(false);
   const [msg, setMsg]         = useState('');
   const [msgType, setMsgType] = useState('ok');
+  const [pblDeadlineData, setPblDeadlineData] = useState(null);
   
   // Use a Ref to always have the latest state for the async handleSave function
   // and for synchronous updates during input changes
@@ -353,12 +360,27 @@ export default function DailyTasks({ studentData, onSectionChange }) {
         latestDataRef.current.saved = tasks; // sync ref immediately
         setUnlockedDays(unlocked);
 
+        // Fetch PBL Deadline if slot >= 10
+        let fetchedPblData = null;
+        if (Number(slotRef.current) >= 10) {
+            try {
+                const pblRes = await fetch(`/api/dashboard/student/pbl-deadline?slot=${slotRef.current}`);
+                const pblJson = await pblRes.json();
+                if (pblJson.success && pblJson.data) {
+                    fetchedPblData = pblJson.data;
+                    setPblDeadlineData(fetchedPblData);
+                }
+            } catch (err) {
+                console.error('Failed to fetch PBL deadline', err);
+            }
+        }
+
         const sl  = slotRef.current;
         const un  = usernameRef.current;
         const se  = slotEnabledRef.current;
         const dm  = dailyMarksRef.current;
         const firstOpen = [1,2,3,4,5,6,7].find(d => {
-          const st = getDayStatus(d, sl, tasks, un, unlocked, se, dm);
+          const st = getDayStatus(d, sl, tasks, un, unlocked, se, dm, fetchedPblData);
           return st === 'open' || st === 'submitted' || st === 'unlocked' || st === 'preview';
         });
         setActiveDay(prev => prev === null ? (firstOpen || 1) : prev);
@@ -700,7 +722,7 @@ export default function DailyTasks({ studentData, onSectionChange }) {
 
   if (activeDay === null) return <div className="dt-wrap"><p style={{color:'#888'}}>Loading…</p></div>;
 
-  const statuses     = Object.fromEntries([1,2,3,4,5,6,7].map(d => [d, getDayStatus(d, slot, saved, username, unlockedDays, slotEnabled, dailyMarks)]));
+  const statuses     = Object.fromEntries([1,2,3,4,5,6,7].map(d => [d, getDayStatus(d, slot, saved, username, unlockedDays, slotEnabled, dailyMarks, pblDeadlineData)]));
   const meta         = activeDay === 'report-book' ? { title: 'Report Book', subtitle: 'Final Submission', icon: '📖' } : DAY_META[activeDay - 1];
   const activeStatus = activeDay === 'report-book' ? 'unlocked' : statuses[activeDay];
   const isSaved      = activeDay === 'report-book' ? false : (activeStatus === 'submitted' && !editingDays[activeDay]);
@@ -723,7 +745,7 @@ export default function DailyTasks({ studentData, onSectionChange }) {
       {isSaved && activeDay !== 'report-book' ? (
         <>
           <CompletedBar 
-            deadline={slot ? dayWindow(slot, activeDay).close : new Date()} 
+            deadline={slot ? dayWindow(slot, activeDay, pblDeadlineData).close : new Date()} 
             submittedAt={saved[activeDay]?.data?.finalSubmittedAt || saved[activeDay]?.submittedAt} 
           />
           {/* Evaluated marks banner */}
@@ -757,7 +779,7 @@ export default function DailyTasks({ studentData, onSectionChange }) {
           })()}
         </>
       ) : activeStatus === 'open' || activeStatus === 'upcoming' || activeStatus === 'preview' ? (
-        <TimerBar openTime={dayWindow(slot, activeDay).open} closeTime={dayWindow(slot, activeDay).close} status={activeStatus} />
+        <TimerBar openTime={dayWindow(slot, activeDay, pblDeadlineData).open} closeTime={dayWindow(slot, activeDay, pblDeadlineData).close} status={activeStatus} />
       ) : activeStatus === 'unlocked' && activeDay !== 'report-book' ? (
         <TimerBar openTime={null} closeTime={null} status="unlocked" />
       ) : null}
@@ -777,7 +799,7 @@ export default function DailyTasks({ studentData, onSectionChange }) {
             >
               <span className="dt-pill-icon">{pillIcon(st)}</span>
               Day {m.day}
-              {slot && <span style={{fontSize:'0.72rem',opacity:0.8}}> · {dayLabel(slot, m.day)}</span>}
+              {slot && <span style={{fontSize:'0.72rem',opacity:0.8}}> · {dayLabel(slot, m.day, pblDeadlineData)}</span>}
             </button>
           );
         })}
@@ -912,7 +934,7 @@ export default function DailyTasks({ studentData, onSectionChange }) {
                         {isSaved && (() => {
                           const mark = dailyMarks[`d${activeDay}`];
                           const max  = DAY_MAX[activeDay];
-                          const { open, close } = dayWindow(slot, activeDay);
+                          const { open, close } = dayWindow(slot, activeDay, pblDeadlineData);
                           const isWindowOpen = serverNow() >= open.getTime() && serverNow() <= close.getTime();
                           const canEdit = Number(slot) >= 3 && (dayData(activeDay).editCount || 0) < 1 && isWindowOpen;
 
@@ -938,7 +960,7 @@ export default function DailyTasks({ studentData, onSectionChange }) {
                           );
                         })()}
 
-                        {isPreview && <span style={{fontSize:'0.82rem',color:'#1d4ed8'}}>Submission opens {new Date(dayWindow(slot, activeDay).open).toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit', hour12:true })}</span>}
+                        {isPreview && <span style={{fontSize:'0.82rem',color:'#1d4ed8'}}>Submission opens {new Date(dayWindow(slot, activeDay, pblDeadlineData).open).toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit', hour12:true })}</span>}
 
                         {/* Inline blocking message */}
                         {blockMsg && !msg && !isSaved && isEditable && (
@@ -963,7 +985,7 @@ export default function DailyTasks({ studentData, onSectionChange }) {
                       {isSaved && (() => {
                         const mark = dailyMarks[`d${activeDay}`];
                         const max  = DAY_MAX[activeDay];
-                        const { open, close } = dayWindow(slot, activeDay);
+                        const { open, close } = dayWindow(slot, activeDay, pblDeadlineData);
                         const isWindowOpen = serverNow() >= open.getTime() && serverNow() <= close.getTime();
                         const canEdit = Number(slot) >= 3 && (dayData(activeDay).editCount || 0) < 1 && isWindowOpen;
 
@@ -988,7 +1010,7 @@ export default function DailyTasks({ studentData, onSectionChange }) {
                           </div>
                         );
                       })()}
-                      {isPreview && <span style={{fontSize:'0.82rem',color:'#1d4ed8'}}>Submission opens {new Date(dayWindow(slot, activeDay).open).toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit', hour12:true })}</span>}
+                      {isPreview && <span style={{fontSize:'0.82rem',color:'#1d4ed8'}}>Submission opens {new Date(dayWindow(slot, activeDay, pblDeadlineData).open).toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit', hour12:true })}</span>}
                       {msg && <span className={`dt-save-msg ${msgType}`}>{msg}</span>}
                     </div>
                   );

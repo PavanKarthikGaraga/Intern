@@ -106,7 +106,8 @@ export default function RegistrationControl() {
   }
 
   const y25Slots = slots.filter(s => s.slot <= 6);
-  const y24Slots = slots.filter(s => s.slot >= 7);
+  const y24Slots = slots.filter(s => s.slot >= 7 && s.slot <= 9);
+  const pblSlots = slots.filter(s => s.slot >= 10);
 
   return (
     <div style={{ padding: '28px 24px', maxWidth: 1000, margin: '0 auto', fontFamily: 'Inter, sans-serif' }}>
@@ -254,6 +255,63 @@ export default function RegistrationControl() {
           })}
         </div>
       </div>
+
+      {/* PBL Batch Section */}
+      {pblSlots.length > 0 && (
+        <div style={{ marginTop: 32 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+            <span style={{ background: 'linear-gradient(135deg,#d97706,#b45309)', color: '#fff', fontWeight: 700, fontSize: '0.8rem', padding: '3px 12px', borderRadius: 20 }}>
+              PBL Batch
+            </span>
+            <span style={{ color: '#888', fontSize: '0.82rem' }}>Project Based Learning — Slots 10 onwards</span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
+            {pblSlots.map(({ slot, registrationOpen }) => {
+              const on   = Boolean(registrationOpen);
+              const busy = toggling[slot];
+              return (
+                <div key={slot} style={{
+                  background: '#fff', borderRadius: 14, padding: '18px 20px',
+                  boxShadow: '0 2px 10px rgba(0,0,0,0.07)',
+                  border: `2px solid ${on ? '#d97706' : '#fca5a5'}`,
+                  display: 'flex', flexDirection: 'column', gap: 12,
+                  transition: 'border 0.2s, box-shadow 0.2s',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                      <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#92400e' }}>Slot {slot}</div>
+                      <div style={{ fontSize: '0.78rem', color: '#888', marginTop: 2 }}>📅 {SLOT_DATES[slot] || 'TBD'}</div>
+                      <div style={{ fontSize: '0.75rem', marginTop: 4 }}>
+                        <span style={{ background: '#fef3c7', color: '#92400e', fontWeight: 700, padding: '2px 8px', borderRadius: 12 }}>
+                          {SLOT_BATCH[slot] || 'PBL'}
+                        </span>
+                      </div>
+                    </div>
+                    <Toggle on={on} busy={busy} onClick={() => !busy && toggle(slot, on)} />
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{
+                      padding: '4px 12px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 700,
+                      background: on ? '#fef3c7' : '#fef2f2', color: on ? '#b45309' : '#dc2626',
+                      border: on ? '1px solid #fde68a' : '1px solid #fca5a5',
+                    }}>
+                      {on ? '✅ Registration Open' : '🔒 Registration Closed'}
+                    </span>
+                    {busy && <span style={{ fontSize: '0.72rem', color: '#888' }}>Updating…</span>}
+                  </div>
+
+                  <div style={{ fontSize: '0.79rem', color: on ? '#92400e' : '#b91c1c', lineHeight: 1.5 }}>
+                    {on
+                      ? 'Students can select this slot during registration.'
+                      : 'This slot is hidden from the registration dropdown. Students will see "Registration Closed".'}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Info box */}
       <div style={{
