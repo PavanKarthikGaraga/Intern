@@ -4,6 +4,15 @@ import { verifyAccessToken } from '@/lib/jwt';
 import { cookies } from 'next/headers';
 
 const ensureTable = async (db) => {
+    try {
+        const [cols] = await db.query("SHOW COLUMNS FROM pblDeadlines LIKE 'dayNum'");
+        if (cols.length === 0) {
+            await db.query("DROP TABLE pblDeadlines");
+        }
+    } catch (e) {
+        // Table doesn't exist, ignore
+    }
+
     await db.query(`
         CREATE TABLE IF NOT EXISTS pblDeadlines (
             slot INT NOT NULL,

@@ -24,6 +24,13 @@ export async function GET(req) {
         db = await pool.getConnection();
         
         // Ensure table exists just in case
+        try {
+            const [cols] = await db.query("SHOW COLUMNS FROM pblDeadlines LIKE 'dayNum'");
+            if (cols.length === 0) {
+                await db.query("DROP TABLE pblDeadlines");
+            }
+        } catch (e) {}
+
         await db.query(`
             CREATE TABLE IF NOT EXISTS pblDeadlines (
                 slot INT NOT NULL,
