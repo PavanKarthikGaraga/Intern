@@ -120,6 +120,7 @@ export default function Overview({ user, studentData }) {
   // };
 
   const isSlot1 = Number(studentData?.slot) === 1;
+  const isSlot10OrMore = (parseInt(String(studentData?.slot || '1').replace(/\D/g, ''), 10) || 1) >= 10;
   const dm = studentData.dailyMarks || {};
   const evalComponents = isSlot1 ? [
     { label: 'Day 1 — Problem Understanding', score: dm.d1 ?? null, max: 10  },
@@ -549,7 +550,11 @@ export default function Overview({ user, studentData }) {
                   <div>
                     <p style={{ fontSize: '1rem' }}>
                       Your certificate is ready! attach the certificate in your final report book.
-                      <br/>then when book is printed then get it signed by <span style={{color:'#d4380d', fontWeight:'bold'}}>DIRECTOR-SAC</span>.
+                      {!isSlot10OrMore && (
+                        <>
+                          <br/>then when book is printed then get it signed by <span style={{color:'#d4380d', fontWeight:'bold'}}>DIRECTOR-SAC</span>.
+                        </>
+                      )}
                     </p>
                     <button
                       type="button"

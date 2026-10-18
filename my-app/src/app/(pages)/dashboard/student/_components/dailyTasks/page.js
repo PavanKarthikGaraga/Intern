@@ -803,7 +803,7 @@ export default function DailyTasks({ studentData, onSectionChange }) {
             </button>
           );
         })}
-        {Number(slot) >= 2 && saved[7]?.data?.isFinal && (
+        {(parseInt(String(slot || '1').replace(/\D/g, ''), 10) || 1) >= 2 && (saved[7]?.data?.isFinal || Boolean(studentData?.uploads?.details?.day7) || Boolean(studentData?.hasFinalDay7Task)) && (
           <button
             className={`dt-day-pill ${activeDay === 'report-book' ? 'active' : ''} unlocked`}
             style={{ borderColor: '#16a34a', color: activeDay === 'report-book' ? '#fff' : '#166534', fontWeight: 700 }}

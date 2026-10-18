@@ -30,6 +30,7 @@ export async function POST(request) {
     if (regRows.length === 0) {
       return NextResponse.json({ success: false, error: 'Student not found' }, { status: 403 });
     }
+    const studentSlot = parseInt(String(regRows[0].slot || '1').replace(/\D/g, ''), 10) || 1;
 
     // Create reportBooks table if it doesn't exist
     await db.execute(`
@@ -57,6 +58,9 @@ export async function POST(request) {
 
     // Handle Own Printing Submission
     if (ownPrinting) {
+      if (studentSlot >= 10) {
+        return NextResponse.json({ success: false, error: 'Printing options are currently on hold for your slot. Instructions will be announced soon.' }, { status: 400 });
+      }
       if (!current || current.status !== 'APPROVED') {
         return NextResponse.json({ success: false, error: 'You are not eligible to choose a printing option yet.' }, { status: 400 });
       }
@@ -69,6 +73,9 @@ export async function POST(request) {
 
     // Handle UTR Submission
     if (utrId) {
+      if (studentSlot >= 10) {
+        return NextResponse.json({ success: false, error: 'Printing and payment are currently on hold for your slot. Instructions will be announced soon.' }, { status: 400 });
+      }
       if (!current || current.status !== 'APPROVED') {
         return NextResponse.json({ success: false, error: 'You are not eligible to submit a UTR yet.' }, { status: 400 });
       }

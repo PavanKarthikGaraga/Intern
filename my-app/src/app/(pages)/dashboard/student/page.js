@@ -87,16 +87,17 @@ export default function StudentDashboard() {
   const dm = studentData?.dailyMarks || {};
   const allDaysEvaluated = [1, 2, 3, 4, 5, 6, 7].every(d => dm[`d${d}`] !== null && dm[`d${d}`] !== undefined);
   const totalMarks = dm.total || 0;
-  const isSlot1 = Number(studentData?.slot) === 1;
-  const isSlot10 = Number(studentData?.slot) === 10;
+  const slotNum = parseInt(String(studentData?.slot || '1').replace(/\D/g, ''), 10) || 1;
+  const isSlot1 = slotNum === 1;
+  const isSlot10OrMore = slotNum >= 10;
   const day7Submitted = Boolean(studentData?.uploads?.details?.day7) || Boolean(studentData?.hasFinalDay7Task);
   // For slot 1: requires all evaluated and 60 marks
-  // For slot 10 (PBL): requires all 7 days tasks to be submitted
+  // For slot 10 onwards: requires all 7 days tasks to be submitted
   // For others: show by default
   const hasReportBookEntry = Boolean(studentData?.reportBook);
   const showReportBook = isSlot1
     ? (allDaysEvaluated && totalMarks >= 60)
-    : isSlot10
+    : isSlot10OrMore
       ? day7Submitted
       : true;
 
