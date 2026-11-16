@@ -13,14 +13,14 @@
   z-index: 1;
 }
 
-.stats-grid {
+.program-structure .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1.5rem;
   margin-bottom: 1rem;
 }
 
-.stat-card {
+.program-structure .stat-card {
   background: linear-gradient(145deg, rgba(255,255,255,0.95), rgba(255,255,255,0.9));
   border-radius: 12px;
   padding: 1.5rem;
@@ -31,13 +31,13 @@
   backdrop-filter: blur(10px);
 }
 
-.stat-card:hover {
+.program-structure .stat-card:hover {
   transform: translateY(-3px);
   box-shadow: 0 8px 25px rgba(151, 0, 3, 0.12);
   border-color: rgba(151,0,3,0.2);
 }
 
-.stat-icon {
+.program-structure .stat-icon {
   width: 40px;
   height: 40px;
   background: linear-gradient(135deg, rgb(151, 0, 3), #ff6b6b);
@@ -50,19 +50,19 @@
   box-shadow: 0 3px 10px rgba(151, 0, 3, 0.2);
 }
 
-.stat-content {
+.program-structure .stat-content {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
 }
 
-.stat-number {
+.program-structure .stat-number {
   font-size: 2rem;
   font-weight: 700;
   margin-bottom: 0.25rem;
 }
 
-.stat-label {
+.program-structure .stat-label {
   font-size: 0.9rem;
   color: #666;
   font-weight: 500;
@@ -152,7 +152,7 @@
     font-size: 1rem;
   }
 
-  .stats-grid {
+  .program-structure .stats-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
   }
@@ -180,16 +180,16 @@
     font-size: 1.75rem;
   }
 
-  .stats-grid {
+  .program-structure .stats-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
 
-  .stat-card {
+  .program-structure .stat-card {
     padding: 1.25rem;
   }
 
-  .stat-number {
+  .program-structure .stat-number {
     font-size: 1.75rem;
   }
 

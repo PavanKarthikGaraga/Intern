@@ -9,6 +9,92 @@
 :root {
   --section-padding: 6rem;
   --container-max-width: 1200px;
+
+  /* ── Brand ─────────────────────────────────────────── */
+  --brand-700: #6e0002;
+  --brand-600: #970003;   /* KL maroon — rgb(151, 0, 3) */
+  --brand-500: #b3141a;
+  --brand-100: #fbe9e9;
+  --brand-50:  #fdf4f4;
+
+  /* ── Neutrals ──────────────────────────────────────── */
+  --gray-900: #111827;
+  --gray-800: #1f2937;
+  --gray-700: #374151;
+  --gray-600: #4b5563;
+  --gray-500: #6b7280;
+  --gray-400: #9ca3af;
+  --gray-300: #d1d5db;
+  --gray-200: #e5e7eb;
+  --gray-100: #f3f4f6;
+  --gray-50:  #f9fafb;
+
+  /* ── Semantic ──────────────────────────────────────── */
+  --surface:        #ffffff;
+  --surface-subtle: #f5f6f8;
+  --border:         var(--gray-200);
+  --text:           var(--gray-900);
+  --text-muted:     var(--gray-500);
+  --success-600: #15803d;
+  --success-50:  #f0fdf4;
+  --warning-600: #b45309;
+  --warning-50:  #fffbeb;
+  --danger-600:  #b91c1c;
+  --danger-50:   #fef2f2;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06);
+  --shadow-md: 0 4px 12px rgba(16, 24, 40, 0.08);
+  --shadow-lg: 0 12px 32px rgba(16, 24, 40, 0.14);
+  --focus-ring: 0 0 0 3px rgba(151, 0, 3, 0.25);
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  color: var(--text);
+  background: var(--surface);
+}
+
+::selection {
+  background: var(--brand-100);
+  color: var(--brand-700);
+}
+
+/* Visible keyboard focus everywhere, without changing mouse-click styling */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--brand-600);
+  outline-offset: 2px;
+}
+
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  cursor: not-allowed;
+}
+
+img,
+video,
+iframe {
+  max-width: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 @media (max-width: 768px) {

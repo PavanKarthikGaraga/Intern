@@ -13,22 +13,37 @@ const lexend = Lexend({
 });
 
 export const metadata = {
-  title: "Social Internship KLU",
-  description: "A platform for managing social internships and community engagement",
+  title: {
+    default: "Social Internship | KL University",
+    template: "%s | Social Internship KLU",
+  },
+  description:
+    "KL University's Social Internship programme — register for a slot, submit daily reports and track evaluation for community-engagement internships.",
+  applicationName: "Social Internship KLU",
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#970003",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning className={lexend.variable}>
-      <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      </head>
       <body suppressHydrationWarning>
         <ChunkErrorGuard />
         <AuthProvider>
           {children}
         </AuthProvider>
-        <Toaster position="top-right" />
+        {/* Offset keeps toasts below the 60px dashboard header so they never cover Logout */}
+        <Toaster
+          position="top-right"
+          containerStyle={{ top: 72 }}
+          toastOptions={{
+            style: { fontSize: '0.875rem', borderRadius: '10px', boxShadow: '0 8px 24px rgba(16,24,40,0.12)' },
+          }}
+        />
       </body>
     </html>
   );

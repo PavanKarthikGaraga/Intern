@@ -84,13 +84,13 @@
   margin-bottom: 0;
 }
 
-.stats-grid {
+.impact-stats .stats-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 2rem;
 }
 
-.stat-card {
+.impact-stats .stat-card {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -107,7 +107,7 @@
   overflow: hidden;
 }
 
-.stat-card::before {
+.impact-stats .stat-card::before {
   content: '';
   position: absolute;
   top: 0;
@@ -118,34 +118,45 @@
   transition: left 0.6s ease;
 }
 
-.stat-card:hover {
+.impact-stats .stat-card:hover {
   transform: translateY(-10px) scale(1.02);
   box-shadow: 0 20px 40px rgba(151,0,3,0.2);
   border-color: rgba(151,0,3,0.3);
 }
 
-.stat-card:hover::before {
+.impact-stats .stat-card:hover::before {
   left: 100%;
 }
 
-.stat-icon {
+/* Scoped to this section: program-structure also defines .stat-icon globally */
+.impact-stats .stat-icon {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 1rem;
   display: flex;
+  align-items: center;
   justify-content: center;
-  margin-bottom: 1rem;
+  border-radius: 16px;
+  background: var(--brand-50, #fdf4f4);
+  border: 1px solid var(--brand-100, #fbe9e9);
+  box-shadow: none;
+  color: var(--brand-600, #970003);
 }
 
-.stat-icon svg {
-  color: #666;
+.impact-stats .stat-icon svg {
+  width: 26px;
+  height: 26px;
+  color: var(--brand-600, #970003);
 }
 
-.stat-number {
+.impact-stats .stat-number {
   font-size: 3rem;
   font-weight: 700;
   color: rgb(151, 0, 3);
   margin-bottom: 0.5rem;
 }
 
-.stat-label {
+.impact-stats .stat-label {
   font-size: 1.2rem;
   font-weight: 600;
   color: #333;
@@ -167,7 +178,7 @@
     gap: 3rem;
   }
 
-  .stats-grid {
+  .impact-stats .stats-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 1.5rem;
   }
@@ -212,7 +223,7 @@
     width: 100%;
   }
 
-  .stats-grid {
+  .impact-stats .stats-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
     width: 100%;
@@ -233,21 +244,21 @@
     font-size: 1.5rem;
   }
 
-  .stats-grid {
+  .impact-stats .stats-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
     width: 100%;
   }
 
-  .stat-card {
+  .impact-stats .stat-card {
     padding: 1.5rem 1rem;
   }
 
-  .stat-number {
+  .impact-stats .stat-number {
     font-size: 2.2rem;
   }
 
-  .stat-label {
+  .impact-stats .stat-label {
     font-size: 1.1rem;
   }
 }

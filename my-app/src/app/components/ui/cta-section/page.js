@@ -38,25 +38,19 @@ const youtubeVideos = [
     src: "https://www.youtube.com/embed/c6xbIDqd_N4?si=pOMy-wjYky3NKxbi",
     width: 450,
     height: 253,
-    title: "YouTube video player 1"
+    title: "Social Internship student story 1"
   },
   {
     src: "https://www.youtube.com/embed/kxaM1sEry9s",
     width: 450,
     height: 253,
-    title: "YouTube video player 2"
-  },
-  {
-    src: "https://www.youtube.com/embed/dBRNF5JyXag",
-    width: 450,
-    height: 253,
-    title: "YouTube video player 3"
+    title: "Social Internship student story 2"
   },
   {
     src: "https://www.youtube.com/embed/J-qy1RcS8eA",
     width: 450,
     height: 253,
-    title: "YouTube video player 4"
+    title: "Social Internship student story 3"
   }
 ];
 
@@ -93,6 +87,7 @@ export default function CTASection() {
                     frameBorder="0"
                     allowFullScreen=""
                     scrolling="no"
+                    loading="lazy"
                     title={post.title}
                     style={{ position: 'relative', zIndex: 1, borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                   ></iframe>
@@ -113,6 +108,7 @@ export default function CTASection() {
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   referrerPolicy="strict-origin-when-cross-origin"
+                  loading="lazy"
                   allowFullScreen
                 ></iframe>
               ))}
