@@ -26,11 +26,13 @@ export default function ChunkErrorGuard() {
     window.addEventListener('error', handleError);
     window.addEventListener('unhandledrejection', handleError);
 
-    // Clear the reload flag on successful page load
-    // (if we reloaded and it worked, allow future reloads if needed)
-    sessionStorage.removeItem('chunk_reload');
+    // Clear the reload flag only once the page has stayed healthy for a while.
+    // Clearing it immediately on mount meant a permanently-missing chunk would
+    // trigger reload → mount → clear → error → reload… forever.
+    const clearTimer = setTimeout(() => sessionStorage.removeItem('chunk_reload'), 10000);
 
     return () => {
+      clearTimeout(clearTimer);
       window.removeEventListener('error', handleError);
       window.removeEventListener('unhandledrejection', handleError);
     };

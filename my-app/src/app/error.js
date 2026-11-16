@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import './status-page.css';
 
 export default function GlobalError({ error, reset }) {
   const isChunkError =
@@ -11,65 +12,72 @@ export default function GlobalError({ error, reset }) {
 
   useEffect(() => {
     if (isChunkError) {
-      // Auto-reload once to get fresh chunks from new deployment
+      // Auto-reload once to get fresh chunks from a new deployment
       const reloaded = sessionStorage.getItem('chunk_reload');
       if (!reloaded) {
         sessionStorage.setItem('chunk_reload', '1');
         window.location.reload();
       }
+    } else {
+      console.error(error);
     }
-  }, [isChunkError]);
+  }, [isChunkError, error]);
 
   if (isChunkError) {
     return (
-      <div style={{
-        minHeight: '100vh', display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center',
-        background: '#f0fdf4', fontFamily: 'system-ui, sans-serif', padding: 24
-      }}>
-        <div style={{ fontSize: '3rem', marginBottom: 16 }}>🔄</div>
-        <h2 style={{ color: '#014a01', fontWeight: 700, marginBottom: 8 }}>App Updated!</h2>
-        <p style={{ color: '#555', marginBottom: 20, textAlign: 'center', maxWidth: 360 }}>
-          A new version of the platform has been deployed. The page is reloading to get the latest version…
-        </p>
-        <button
-          onClick={() => {
-            sessionStorage.removeItem('chunk_reload');
-            window.location.reload();
-          }}
-          style={{
-            padding: '10px 24px', borderRadius: 8, border: 'none',
-            background: '#014a01', color: '#fff', fontWeight: 600,
-            fontSize: '0.95rem', cursor: 'pointer'
-          }}
-        >
-          Reload Now
-        </button>
-      </div>
+      <main className="status-page">
+        <div className="status-card">
+          <img src="/klu.png" alt="KL University" className="status-logo" />
+          <p className="status-code">Update available</p>
+          <h1>A new version is ready</h1>
+          <p>The platform was just updated. Reload the page to continue with the latest version.</p>
+          <div className="status-actions">
+            <button
+              type="button"
+              className="status-btn"
+              onClick={() => {
+                sessionStorage.removeItem('chunk_reload');
+                window.location.reload();
+              }}
+            >
+              Reload now
+            </button>
+          </div>
+        </div>
+      </main>
     );
   }
 
+  const isDev = process.env.NODE_ENV !== 'production';
+
   return (
-    <div style={{
-      minHeight: '100vh', display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center',
-      background: '#fff5f5', fontFamily: 'system-ui, sans-serif', padding: 24
-    }}>
-      <div style={{ fontSize: '3rem', marginBottom: 16 }}>⚠️</div>
-      <h2 style={{ color: '#dc2626', fontWeight: 700, marginBottom: 8 }}>Something went wrong</h2>
-      <p style={{ color: '#555', marginBottom: 20, textAlign: 'center', maxWidth: 360 }}>
-        {error?.message || 'An unexpected error occurred.'}
+    <main className="status-page">
+      <div className="status-card" role="alert">
+        <img src="/klu.png" alt="KL University" className="status-logo" />
+        <p className="status-code">Something went wrong</p>
+        <h1>We hit an unexpected error</h1>
+        <p>
+          This section couldn&apos;t be displayed. Try again, or reload the page.
+          If the problem continues, please contact the SAC office.
+        </p>
+        <div className="status-actions">
+          <button type="button" className="status-btn" onClick={() => reset()}>
+            Try again
+          </button>
+          <button type="button" className="status-btn is-secondary" onClick={() => window.location.reload()}>
+            Reload page
+          </button>
+        </div>
+        {/* Technical details are for developers only; users get a reference code instead */}
+        {isDev && error?.message ? (
+          <div className="status-detail">{error.message}</div>
+        ) : error?.digest ? (
+          <div className="status-detail">Reference: {error.digest}</div>
+        ) : null}
+      </div>
+      <p className="status-footer">
+        Need help? Email <a href="mailto:sac@kluniversity.in">sac@kluniversity.in</a>
       </p>
-      <button
-        onClick={reset}
-        style={{
-          padding: '10px 24px', borderRadius: 8, border: 'none',
-          background: '#014a01', color: '#fff', fontWeight: 600,
-          fontSize: '0.95rem', cursor: 'pointer'
-        }}
-      >
-        Try Again
-      </button>
-    </div>
+    </main>
   );
 }
