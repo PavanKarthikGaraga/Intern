@@ -3,10 +3,11 @@ import "./Navbar.css";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { useState, useEffect } from "react";
-import { BellOutlined, CheckCircleOutlined, CloseOutlined, NotificationOutlined } from "@ant-design/icons";
+import { CheckCircleOutlined, NotificationOutlined } from "@ant-design/icons";
 import { Modal, Badge, Empty, Button } from "antd";
+import { Bell, LogOut, Menu, X } from "lucide-react";
 
-export default function Navbar({ title, user, onToggleSidebar }) {
+export default function Navbar({ title, user, onToggleSidebar, sidebarOpen = false }) {
   const router = useRouter();
   const [announcements, setAnnouncements] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -88,34 +89,55 @@ export default function Navbar({ title, user, onToggleSidebar }) {
     }
   };
 
+  const initials = (user?.name || user?.username || '?')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0].toUpperCase())
+    .join('');
+
   return (
     <header className="dashboard-header">
       <div className="header-left">
-        <button 
-          className="sidebar-toggle-btn" 
-          onClick={onToggleSidebar}
-          aria-label="Toggle Sidebar"
-        >
-          <span></span>
-          <span></span>
-          <span></span>
-        </button>
+        {onToggleSidebar && (
+          <button
+            type="button"
+            className="sidebar-toggle-btn"
+            onClick={onToggleSidebar}
+            aria-label={sidebarOpen ? 'Close navigation' : 'Open navigation'}
+            aria-expanded={Boolean(sidebarOpen)}
+            aria-controls="ds-sidebar"
+          >
+            {sidebarOpen ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
+          </button>
+        )}
+        <img src="/klu.png" alt="KL University" className="header-logo" width={88} height={32} />
+        <span className="header-divider" aria-hidden="true" />
         <h1>{title}</h1>
       </div>
       <div className="header-right">
         {user?.role === 'student' && (
-          <div className="notification-bell" onClick={() => setIsModalOpen(true)}>
+          <button
+            type="button"
+            className="notification-bell"
+            onClick={() => setIsModalOpen(true)}
+            aria-label={unreadCount > 0 ? `Announcements, ${unreadCount} unread` : 'Announcements'}
+          >
             <Badge count={unreadCount} overflowCount={9} size="small">
-              <BellOutlined style={{ fontSize: '20px', color: 'white', cursor: 'pointer' }} />
+              <Bell size={20} aria-hidden="true" />
             </Badge>
-          </div>
+          </button>
         )}
-        <div className="user-info">
-          <span>{user?.name}</span>
-          <span className="user-id">ID: {user?.username}</span>
+        <div className="user-chip">
+          <span className="user-avatar" aria-hidden="true">{initials}</span>
+          <div className="user-info">
+            <span className="user-name">{user?.name}</span>
+            <span className="user-id">{user?.username}</span>
+          </div>
         </div>
-        <button onClick={handleLogout} className="logout-btn">
-          Logout
+        <button type="button" onClick={handleLogout} className="logout-btn" aria-label="Logout">
+          <LogOut size={16} aria-hidden="true" />
+          <span>Logout</span>
         </button>
       </div>
 
@@ -202,15 +224,6 @@ export default function Navbar({ title, user, onToggleSidebar }) {
       </Modal>
 
       <style jsx>{`
-        .notification-bell {
-          margin-right: 20px;
-          display: flex;
-          align-items: center;
-          transition: transform 0.2s;
-        }
-        .notification-bell:hover {
-          transform: scale(1.1);
-        }
         .ann-card.unread::before {
           content: 'NEW';
           position: absolute;
