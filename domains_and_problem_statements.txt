@@ -1,0 +1,241 @@
+20 Domains (from src/app/Data/domains.js) with 10 Problem Statements Each
+
+1. Health and Hygiene
+- Lack of awareness about proper handwashing techniques in rural schools.
+- Inadequate menstrual hygiene management and access to sanitary products.
+- High prevalence of communicable diseases due to poor personal hygiene.
+- Absence of structured waste disposal systems leading to disease outbreaks.
+- Limited knowledge about the prevention of waterborne diseases.
+- Poor dental hygiene practices among children and adults.
+- Lack of community-led sanitation monitoring programs.
+- Insufficient training for local health workers on hygiene promotion.
+- Resistance to behavioral changes regarding open defecation.
+- Inadequate maintenance of public toilets and sanitation facilities.
+
+2. Village Infrastructure
+- Poorly maintained rural roads causing transportation bottlenecks.
+- Lack of proper drainage systems leading to waterlogging and disease.
+- Inadequate housing structures vulnerable to extreme weather conditions.
+- Insufficient street lighting compromising safety at night.
+- Absence of community centers for public gatherings and events.
+- Deteriorating public school buildings needing urgent repairs.
+- Lack of reliable telecommunication and internet infrastructure.
+- Poorly planned village layouts hindering future development.
+- Insufficient infrastructure for local markets and agricultural storage.
+- Limited access to safe and structured public spaces for children.
+
+3. Water Conservation
+- Depleting groundwater levels due to over-extraction for agriculture.
+- Lack of rainwater harvesting systems in residential and public buildings.
+- Inefficient agricultural irrigation practices leading to water wastage.
+- Poor maintenance of traditional water bodies (ponds, lakes, stepwells).
+- Limited awareness about household water conservation techniques.
+- Runoff water from paved surfaces not being captured or recharged.
+- Absence of check dams or trenches to slow down rainwater flow.
+- Contamination of surface water sources reducing usable water supply.
+- Lack of community-driven water budgeting and management.
+- High evaporation rates in open water storage requiring shading solutions.
+
+4. Energy Utilization & Efficiency
+- High dependence on firewood leading to deforestation and indoor air pollution.
+- Inefficient household appliances consuming excessive electricity.
+- Lack of awareness about energy-saving practices in daily life.
+- Wastage of electricity in public spaces and government buildings.
+- Limited access to energy-efficient cooking stoves (chulhas).
+- High energy consumption in agricultural water pumps.
+- Poor insulation in housing leading to high heating/cooling energy needs.
+- Absence of community-level energy audits and monitoring.
+- Over-reliance on fossil fuels for local transportation and generators.
+- Lack of technical knowledge for maintaining energy-efficient equipment.
+
+5. Community Actions
+- Low citizen participation in local governance and Gram Sabha meetings.
+- Lack of organized volunteer groups for community problem-solving.
+- Weak communication channels between local authorities and villagers.
+- Absence of conflict resolution mechanisms for community disputes.
+- Limited engagement of youth in civic duties and village development.
+- Poor coordination during community events and public welfare drives.
+- Lack of platforms for marginalized groups to voice their concerns.
+- Inadequate community response plans for local emergencies.
+- Weak sense of collective ownership over public assets and infrastructure.
+- Difficulty in mobilizing resources and funds for community projects.
+
+6. Agriculture
+- Heavy reliance on chemical fertilizers degrading soil health.
+- Lack of access to timely weather forecasts for crop planning.
+- High post-harvest losses due to inadequate storage facilities.
+- Limited knowledge about crop diversification and multi-cropping.
+- Pest and disease outbreaks reducing crop yields significantly.
+- Lack of direct market access, leading to exploitation by middlemen.
+- Insufficient adoption of modern, sustainable farming tools.
+- Declining interest of youth in taking up agriculture as a livelihood.
+- Poor management of agricultural waste leading to environmental hazards.
+- Limited awareness of government agricultural schemes and subsidies.
+
+7. Water and Sanitation
+- Contamination of drinking water sources with agricultural runoff.
+- Lack of regular water quality testing and purification methods.
+- Insufficient awareness about the safe handling and storage of water.
+- Poor functioning and maintenance of village water supply pipelines.
+- Open defecation practices continuing despite toilet construction.
+- Lack of handwashing facilities near toilets in schools and homes.
+- Improper disposal of child feces leading to health risks.
+- Absence of safe wastewater disposal and gray water management.
+- Limited community ownership in maintaining public sanitation facilities.
+- High incidence of diarrheal diseases due to unsafe sanitation practices.
+
+8. Waste Management
+- Rampant burning of plastic and agricultural waste causing air pollution.
+- Lack of segregation of organic and inorganic waste at the source.
+- Absence of designated waste dumping and processing sites.
+- Limited awareness about composting kitchen and yard waste.
+- Accumulation of single-use plastics in village surroundings.
+- Inadequate systems for collecting and managing electronic waste.
+- Poor disposal of hazardous waste (e.g., medical supplies, batteries).
+- Lack of community-led cleanliness drives and monitoring.
+- Insufficient infrastructure for recycling non-biodegradable materials.
+- Overflowing garbage in public drains leading to blockages and flooding.
+
+9. Digital Literacy & ICT
+- High digital illiteracy among the elderly and marginalized groups.
+- Lack of access to reliable smartphones or computers for learning.
+- Limited knowledge of using digital platforms for banking and payments.
+- Vulnerability to cyber fraud and phishing due to lack of awareness.
+- Inability to access online government portals for essential services.
+- Poor internet connectivity hindering remote education and work.
+- Lack of trained local instructors to teach basic digital skills.
+- Gender disparity in access to and usage of digital devices.
+- Limited understanding of using the internet for agricultural/business information.
+- Absence of community digital hubs or common service centers.
+
+10. Women Empowerment & Gender Equality
+- Low participation of women in household and community decision-making.
+- High dropout rates of girls from higher education.
+- Limited access to financial independence and credit for women.
+- Prevalence of gender-based violence and lack of safe reporting mechanisms.
+- Unequal distribution of unpaid domestic and caregiving work.
+- Lack of women's representation in local leadership and panchayats.
+- Restricted mobility for women to access markets and healthcare.
+- Insufficient awareness of legal rights and welfare schemes for women.
+- Lack of skill development programs tailored to women's needs.
+- Societal stigmas hindering women from pursuing non-traditional careers.
+
+11. Renewable Energy & Sustainability
+- High initial cost and lack of financing for installing solar panels.
+- Limited awareness about biogas plants for clean cooking fuel.
+- Poor maintenance and repair services for solar streetlights.
+- Underutilization of wind or micro-hydro energy potential.
+- Lack of community-owned renewable energy micro-grids.
+- Insufficient knowledge about the long-term benefits of renewable energy.
+- Dependence on erratic grid electricity instead of decentralized solutions.
+- Lack of trained local technicians for servicing renewable systems.
+- Poor integration of renewable energy into agricultural operations (e.g., solar pumps).
+- Inadequate policy awareness and support for green energy adoption.
+
+12. Nutrition & Food Security
+- High prevalence of anemia and malnutrition among women and children.
+- Lack of dietary diversity, with over-reliance on a single staple crop.
+- Disappearing knowledge and cultivation of traditional, nutrient-dense foods.
+- Poor maternal nutrition during pregnancy and lactation.
+- Inadequate functioning of Anganwadis and mid-day meal schemes.
+- Lack of kitchen gardens to provide fresh vegetables to households.
+- Seasonal food insecurity during periods of drought or heavy rains.
+- Limited awareness about the importance of balanced diets.
+- High consumption of processed, low-nutrition packaged foods.
+- Poor preservation techniques leading to food spoilage and waste.
+
+13. Disaster Preparedness & Resilience
+- Lack of early warning systems for floods, cyclones, or droughts.
+- Absence of identified safe shelters and evacuation routes during emergencies.
+- Poorly constructed homes unable to withstand extreme weather events.
+- Lack of community emergency response teams and first-aid training.
+- Insufficient stockpiling of essential supplies (food, water, medicine).
+- Unplanned development blocking natural water drainage, causing urban/rural flooding.
+- Limited awareness about disaster risk reduction strategies.
+- Loss of livelihoods and assets during disasters with no insurance coverage.
+- Poor coordination with government disaster management agencies.
+- Lack of post-disaster psychological support for affected populations.
+
+14. Cultural Heritage & Narratives
+- Gradual loss of traditional folklore, folk songs, and storytelling.
+- Disinterest among the younger generation in learning traditional arts and crafts.
+- Lack of documentation and archiving of local history and oral traditions.
+- Deterioration of historical monuments and culturally significant sites.
+- Commercialization and dilution of authentic cultural practices.
+- Inadequate platforms for local artisans to showcase and sell their work.
+- Loss of traditional knowledge regarding native plants and medicine.
+- Lack of integration of local culture into the school curriculum.
+- Disappearance of traditional festivals and community celebrations.
+- Limited digital presence to promote local cultural heritage globally.
+
+15. Green Innovations & Tree Plantation
+- Low survival rate of planted saplings due to lack of aftercare.
+- Selection of non-native or invasive tree species for plantation drives.
+- Lack of community spaces dedicated to green cover and parks.
+- Insufficient adoption of eco-friendly products (e.g., leaf plates, natural dyes).
+- Poor management of village common lands, leading to barrenness.
+- Lack of innovative solutions for upcycling agricultural and household waste.
+- Limited awareness about the benefits of agroforestry.
+- Absence of community nurseries to supply locally suited saplings.
+- Reluctance to adopt new, green technologies due to lack of trust.
+- Deforestation and illegal logging for firewood and timber.
+
+16. Livelihood & Entrepreneurship
+- High youth unemployment and lack of local job opportunities.
+- Migration of skilled labor to urban areas leading to brain drain.
+- Lack of access to microfinance and seed capital for local startups.
+- Insufficient training in business management and financial literacy.
+- Poor market linkages for locally produced goods and handicrafts.
+- Absence of mentorship programs for aspiring rural entrepreneurs.
+- Limited value addition to raw agricultural products before selling.
+- Failure of self-help groups (SHGs) due to lack of sustained support.
+- Lack of awareness about emerging gig economy or remote work opportunities.
+- Dependence on a single source of income, making households economically vulnerable.
+
+17. Rural/Urban Education
+- High dropout rates in secondary schools, particularly among marginalized groups.
+- Lack of basic infrastructure (desks, electricity, toilets) in rural schools.
+- Shortage of trained and motivated teachers in remote areas.
+- Outdated teaching methods that fail to engage students interactively.
+- Poor foundational literacy and numeracy skills among primary students.
+- Lack of access to educational materials, libraries, and laboratories.
+- Weak parental involvement in children's education and school affairs.
+- Digital divide preventing rural students from accessing online learning.
+- Lack of vocational training integrated into the school curriculum.
+- Insufficient support for students with learning disabilities.
+
+18. Sports & Wellness Engagement
+- Lack of accessible playgrounds and sports equipment in villages.
+- Disproportionate focus on academics, neglecting physical education.
+- Absence of organized local sports tournaments to foster community spirit.
+- Limited participation of girls and women in sports and physical activities.
+- Poor identification and nurturing of athletic talent at the grassroots level.
+- Lack of trained sports coaches and physical education teachers.
+- Insufficient awareness about the link between physical activity and mental health.
+- Sedentary lifestyles increasing the risk of non-communicable diseases.
+- Deterioration of traditional, low-cost rural sports and games.
+- Lack of wellness programs (e.g., yoga, meditation) for adults and the elderly.
+
+19. Skill Identification & Development
+- Mismatch between local youth skills and the demands of the job market.
+- Lack of formal certification for traditional and inherited skills.
+- Insufficient awareness about government skill development schemes (e.g., PMKVY).
+- Absence of local skill mapping to identify the community's strengths.
+- Poor access to quality vocational training centers in rural areas.
+- Lack of soft skills (communication, teamwork) among rural job seekers.
+- Limited opportunities for upskilling in rapidly changing industries.
+- Gender bias in skill training, pushing women only towards traditional roles.
+- Failure to connect trained individuals with potential employers.
+- Lack of localized training for specific regional industries (e.g., handloom, specific agriculture).
+
+20. Mental Health & Well-Being
+- Deep-rooted stigma preventing individuals from seeking mental health support.
+- Complete absence of mental health professionals (counselors, psychiatrists) in rural areas.
+- High stress and anxiety related to agricultural failures and debt.
+- Lack of awareness about the symptoms of depression and anxiety.
+- Poor maternal mental health impacting child development.
+- Rise in substance abuse and alcoholism as coping mechanisms.
+- Lack of safe spaces for youth to discuss emotional and psychological challenges.
+- Insufficient training for local health workers (ASHAs) to identify mental health issues.
+- Isolation and loneliness among the elderly population.
+- Absence of peer support groups or community listening circles.
