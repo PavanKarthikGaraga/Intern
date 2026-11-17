@@ -47,16 +47,16 @@ export async function POST(req) {
         }
 
         // Format usernames for SQL query
-        const formattedUsernames = usernames.map(username => `'${username}'`).join(',');
+        const placeholders = usernames.map(() => '?').join(',');
 
         // First check if all usernames exist and are students
         const checkQuery = `
             SELECT username, role 
             FROM users 
-            WHERE username IN (${formattedUsernames})
+            WHERE username IN (${placeholders})
         `;
 
-        const [users] = await pool.query(checkQuery);
+        const [users] = await pool.query(checkQuery, usernames);
 
         // Check if all usernames exist
         if (users.length !== usernames.length) {
@@ -81,11 +81,11 @@ export async function POST(req) {
         const updateQuery = `
             UPDATE users 
             SET password = '$2a$10$.mlfuK/yGtw5X3zFk7tfcuSrZ5O/SqA2xeRr8KAoL0lvsDVffrx0e'
-            WHERE username IN (${formattedUsernames})
+            WHERE username IN (${placeholders})
             AND role = 'student'
         `;
 
-        const [result] = await pool.query(updateQuery);
+        const [result] = await pool.query(updateQuery, usernames);
 
         logActivity({
             action: 'ADMIN_RESET_PASSWORD',

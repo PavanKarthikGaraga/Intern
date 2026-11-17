@@ -4,10 +4,14 @@ import IndiaMap from "@/lib/indiaMap";
 import pool from '@/lib/db';
 import fs from 'fs';
 import path from 'path';
+import { requireAdmin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
+  const auth = await requireAdmin();
+  if (auth.error) return auth.error;
+
   try {
     const COMPLETED_CONDITION = `
       (

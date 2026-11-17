@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
+import { requireAdmin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
+  const auth = await requireAdmin();
+  if (auth.error) return auth.error;
+
   try {
     const [users] = await pool.query("SELECT username FROM registrations WHERE selectedDomain = 'Security_Test'");
     const usernames = users.map(u => u.username);

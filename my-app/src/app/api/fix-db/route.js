@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
 import { defaultPool, legacyPool } from '@/lib/db';
+import { requireAdmin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
+  const auth = await requireAdmin();
+  if (auth.error) return auth.error;
+
   const results = [];
   
   const columnsToAdd = [
