@@ -3,6 +3,7 @@ import { verifyAccessToken } from '@/lib/jwt';
 import pool from '@/lib/db';
 import { cookies } from 'next/headers';
 import { logActivity } from '@/lib/activityLog';
+import { parseDay } from '@/lib/validate';
 
 export async function POST(request) {
   const connection = await pool.getConnection();
@@ -25,7 +26,11 @@ export async function POST(request) {
       }, { status: 403 });
     }
 
-    const { username, day, verified } = await request.json();
+    const { username, day: rawDay, verified } = await request.json();
+    const day = parseDay(rawDay);
+    if (day === null) {
+      return NextResponse.json({ success: false, error: 'Invalid day. Day must be between 1 and 7.' }, { status: 400 });
+    }
 
     // Validate inputs
     if (!username || !day || typeof verified !== 'boolean') {

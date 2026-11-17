@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { cookies } from 'next/headers';
 import { verifyAccessToken } from '@/lib/jwt';
+import { parseDay } from '@/lib/validate';
 
 export async function POST(req) {
   try {
@@ -23,7 +24,11 @@ export async function POST(req) {
       }, { status: 403 });
     }
 
-    const { username, day, status } = await req.json();
+    const { username, day: rawDay, status } = await req.json();
+    const day = parseDay(rawDay);
+    if (day === null) {
+      return NextResponse.json({ success: false, error: 'Invalid day. Day must be between 1 and 7.' }, { status: 400 });
+    }
 
     if (!username || !day || !status) {
       return NextResponse.json(
