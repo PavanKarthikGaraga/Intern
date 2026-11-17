@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { verifyAccessToken } from '@/lib/jwt';
 import { cookies } from 'next/headers';
+import { parseDay } from '@/lib/validate';
 
 export async function GET(request) {
   try {
@@ -112,7 +113,11 @@ export async function POST(request) {
     }
 
 
-    const { username, day, status, marks } = await request.json();
+    const { username, day: rawDay, status, marks } = await request.json();
+    const day = parseDay(rawDay);
+    if (day === null) {
+      return NextResponse.json({ success: false, error: 'Invalid day. Day must be between 1 and 7.' }, { status: 400 });
+    }
 
     if (!username || !day || !status) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });

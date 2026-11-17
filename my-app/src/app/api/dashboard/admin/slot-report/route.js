@@ -220,7 +220,6 @@ export async function GET(request) {
           totalIncampus,
           totalInvillage,
           totalRemote,
-          totalRemote,
           totalSurveyed,
           domainStats,
           domains: domainsOut,

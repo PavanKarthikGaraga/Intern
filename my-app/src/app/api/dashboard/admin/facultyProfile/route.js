@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
+import { requireAdmin } from '@/lib/auth';
 
 export async function GET(request) {
+  const auth = await requireAdmin();
+  if (auth.error) return auth.error;
+
     try {
         const { searchParams } = new URL(request.url);
         const username = searchParams.get('username');
