@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/auth';
 
 export async function GET(request) {
+  const auth = await requireAdmin();
+  if (auth.error) return auth.error;
+
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   if (!id) {
