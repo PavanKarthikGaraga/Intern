@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { verifyAccessToken } from "./lib/jwt";
 
+function clearSession(response) {
+  response.cookies.delete("accessToken");
+  return response;
+}
+
 export async function middleware(req) {
   const pathname = req.nextUrl.pathname;
 
@@ -23,8 +28,9 @@ export async function middleware(req) {
       const userRole = decoded.role;
       return NextResponse.redirect(new URL(`/dashboard/${userRole}`, req.url));
     } catch (err) {
-      // If token is invalid, redirect to login
-      return NextResponse.redirect(new URL("/auth/login", req.url));
+      // Expired/invalid token: clear it and show the page. Redirecting back to
+      // /auth/login here would loop forever because the bad cookie is still set.
+      return clearSession(NextResponse.next());
     }
   }
 
@@ -40,11 +46,13 @@ export async function middleware(req) {
       const userRole = decoded.role;
       const expectedPath = `/dashboard/${userRole}`;
 
-      if (!pathname.startsWith(expectedPath)) {
+      // Match the whole path segment: a plain startsWith would let a "student"
+      // into /dashboard/studentLead.
+      if (pathname !== expectedPath && !pathname.startsWith(`${expectedPath}/`)) {
         return NextResponse.redirect(new URL(expectedPath, req.url));
       }
     } catch (err) {
-      return NextResponse.redirect(new URL("/auth/login", req.url));
+      return clearSession(NextResponse.redirect(new URL("/auth/login", req.url)));
     }
   }
 

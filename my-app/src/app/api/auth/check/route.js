@@ -51,7 +51,10 @@ export async function GET() {
                 );
             }
 
-            // For other errors during verification
+            // For other errors during verification. Note: verifyAccessToken uses
+            // `jose`, which never raises the jsonwebtoken-style error names
+            // checked above, so expired/invalid tokens normally land here.
+            cookieStore.set("accessToken", "", { maxAge: 0, path: "/" });
             return Response.json(
                 {
                     error: "Invalid token",
