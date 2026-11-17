@@ -64,12 +64,14 @@ export async function POST(request) {
       // Large base64 payloads can exceed MySQL max_allowed_packet and cause errors.
       const sanitizedData = { ...data };
 
-      // Strip images from reportSlots (PDF generator photo slots)
+      // reportSlots (PDF generator photo slots): keep stored-file URLs ("/api/files/…"),
+      // drop anything else (legacy base64 images).
       if (sanitizedData.reportSlots && Array.isArray(sanitizedData.reportSlots)) {
         sanitizedData.reportSlots = sanitizedData.reportSlots.map(slot => ({
           id: slot.id,
           name: slot.name,
           description: slot.description,
+          ...(typeof slot.image === 'string' && slot.image.startsWith('/api/files/') ? { image: slot.image } : {}),
         }));
       }
 

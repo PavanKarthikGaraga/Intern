@@ -364,9 +364,11 @@ export async function POST(request) {
                         grade: 'Not Qualified',
                         completed: null
                     },
+                    // Per-day marks (previously a second `marks` key that silently
+                    // overwrote the summary above)
+                    dailyMarks: sstudentMarks,
                     attendance: sstudentAttendance,
                     uploads: sstudentUploads,
-                    marks: sstudentMarks,
                     messages: sstudentMessages
                 } : null,
                 certificate: certificate ? { exists: true, uid: certificate.uid } : { exists: false },

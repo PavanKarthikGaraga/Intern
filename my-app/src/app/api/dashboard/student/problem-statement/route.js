@@ -14,7 +14,10 @@ export async function POST(request) {
         }, { status: 401 });
     }
 
-    const decoded = await verifyAccessToken(accessToken.value);
+    const decoded = await verifyAccessToken(accessToken.value).catch(() => null);
+    if (!decoded) {
+      return NextResponse.json({ success: false, error: 'Session expired. Please login again.' }, { status: 401 });
+    }
     if (!decoded || decoded.role !== 'student') {
         return NextResponse.json({ 
             success: false, 
