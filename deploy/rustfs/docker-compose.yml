@@ -1,0 +1,34 @@
+# RustFS object storage for Social Internship uploads (photos, generated PDFs, certificates).
+#
+# Runs on the same Ubuntu server as the Next.js app. Both ports are bound to
+# 127.0.0.1 only: the app talks to RustFS locally, and files reach browsers only
+# through the authenticated /api/files route — RustFS is never exposed publicly.
+#
+#   cd /var/www/Intern/deploy/rustfs
+#   cp rustfs.env.example rustfs.env   # then set strong credentials
+#   sudo mkdir -p /srv/rustfs/data && sudo chown -R 10001:10001 /srv/rustfs/data
+#   docker compose up -d
+#
+# See README.md in this folder for the full setup.
+
+services:
+  rustfs:
+    image: rustfs/rustfs:latest   # pin to a specific version once verified in production
+    container_name: rustfs
+    restart: unless-stopped
+    env_file: rustfs.env
+    environment:
+      RUSTFS_VOLUMES: /data
+      RUSTFS_ADDRESS: 0.0.0.0:9000
+      RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_CONSOLE_ADDRESS: 0.0.0.0:9001
+    ports:
+      - "127.0.0.1:9000:9000"   # S3 API (used by the app)
+      - "127.0.0.1:9001:9001"   # web console (reach it through an SSH tunnel)
+    volumes:
+      - /srv/rustfs/data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:9000/health >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
