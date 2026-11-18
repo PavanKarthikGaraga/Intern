@@ -75,7 +75,7 @@ header.dashboard-header {
   display: flex;
   align-items: center;
   gap: 12px;
-  flex-shrink: 1;
+  flex-shrink: 0;
   min-width: 0;
 }
 
@@ -91,6 +91,7 @@ header.dashboard-header {
   color: var(--gray-600, #4b5563);
   cursor: pointer;
   transition: background-color 0.15s ease, color 0.15s ease;
+  flex-shrink: 0;
 }
 
 .dashboard-header .notification-bell:hover {
@@ -110,7 +111,7 @@ header.dashboard-header {
   padding-left: 12px;
   border-left: 1px solid var(--border, #e5e7eb);
   min-width: 0;
-  overflow: hidden;
+  max-width: 240px;
 }
 
 .dashboard-header .user-avatar {
@@ -131,26 +132,34 @@ header.dashboard-header {
 .dashboard-header .user-info {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
   line-height: 1.25;
   min-width: 0;
-  max-width: 160px;
+  overflow: hidden;
 }
 
 .dashboard-header .user-name {
+  display: block;
+  max-width: 100%;
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--gray-900, #111827);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-align: left;
 }
 
 .dashboard-header .user-id {
+  display: block;
+  max-width: 100%;
   font-size: 0.72rem;
   color: var(--gray-500, #6b7280);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-align: left;
 }
 
 .dashboard-header .logout-btn {

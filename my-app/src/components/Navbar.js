@@ -128,10 +128,10 @@ export default function Navbar({ title, user, onToggleSidebar, sidebarOpen = fal
             </Badge>
           </button>
         )}
-        <div className="user-chip">
+        <div className="user-chip" title={user?.name ? `${user.name} (${user?.username || ''})` : undefined}>
           <span className="user-avatar" aria-hidden="true">{initials}</span>
           <div className="user-info">
-            <span className="user-name">{user?.name}</span>
+            <span className="user-name" title={user?.name}>{user?.name}</span>
             <span className="user-id">{user?.username}</span>
           </div>
         </div>
