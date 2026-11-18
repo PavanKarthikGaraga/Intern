@@ -7,6 +7,10 @@ import {
 } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import { surveyData as SURVEY } from '../../../student/_components/dailyTasks/surveyDataShared';
+import {
+  isStoredFileUrl, StoredPdfCard, StoredPhotoGallery, StoredCertificates,
+  surveyDayPhotos, interventionPhotos, caseStudyPhotos,
+} from '@/components/SubmissionFiles';
 import './page.css';
 
 const SLOT_LABELS = {
@@ -75,13 +79,24 @@ function SurveyDayPreview({ data, day }) {
   }
   return (
     <div className="ev-task-preview">
-      {data.driveLink && (
+      {isStoredFileUrl(data.driveLink) ? (
+        <div className="ev-field">
+          <span className="ev-field-label">Day {day} Report</span>
+          <StoredPdfCard url={data.driveLink} label={`Day ${day} Report`} meta={data.reportGeneratedAt ? `Generated ${new Date(data.reportGeneratedAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}` : undefined} />
+          <StoredPhotoGallery title="Stakeholder photos" photos={surveyDayPhotos(data)} />
+        </div>
+      ) : data.driveLink && (
         <div className="ev-field">
           <span className="ev-field-label">Google Drive Report</span>
           <a href={data.driveLink} target="_blank" rel="noopener noreferrer" className="ev-link">{data.driveLink}</a>
         </div>
       )}
-      {data.mygovDriveLink && (
+      {isStoredFileUrl(data.mygovDriveLink) ? (
+        <div className="ev-field">
+          <span className="ev-field-label">MyGov Certificates</span>
+          <StoredCertificates bundleUrl={data.mygovDriveLink} files={data.mygovFiles} />
+        </div>
+      ) : data.mygovDriveLink && (
         <div className="ev-field">
           <span className="ev-field-label">MyGov Certificates (Drive)</span>
           <a href={data.mygovDriveLink} target="_blank" rel="noopener noreferrer" className="ev-link">{data.mygovDriveLink}</a>
@@ -176,7 +191,12 @@ function Day5Preview({ data, surveyDays, ps, slot }) {
 
   return (
     <div className="ev-task-preview">
-      {data.mygovDriveLink && (
+      {isStoredFileUrl(data.mygovDriveLink) ? (
+        <div className="ev-field" style={{ marginBottom: 16 }}>
+          <span className="ev-field-label">MyGov Certificates</span>
+          <StoredCertificates bundleUrl={data.mygovDriveLink} files={data.mygovFiles} />
+        </div>
+      ) : data.mygovDriveLink && (
         <div className="ev-field" style={{ marginBottom: 16 }}>
           <span className="ev-field-label">MyGov Certificates (Drive)</span>
           <a href={data.mygovDriveLink} target="_blank" rel="noopener noreferrer" className="ev-link">{data.mygovDriveLink}</a>
@@ -290,13 +310,24 @@ function Day6Preview({ data }) {
         <span className="ev-field-label">Activity</span>
         <div className="ev-field-value">{data.activityTitle || <em>Not set</em>}</div>
       </div>
-      {data.driveLink && (
+      {isStoredFileUrl(data.driveLink) ? (
+        <div className="ev-field">
+          <span className="ev-field-label">Intervention Report</span>
+          <StoredPdfCard url={data.driveLink} label="Intervention Activity Report" />
+          <StoredPhotoGallery title="Activity photos" photos={interventionPhotos(data)} />
+        </div>
+      ) : data.driveLink && (
         <div className="ev-field">
           <span className="ev-field-label">Intervention Report (Drive)</span>
           <a href={data.driveLink} target="_blank" rel="noopener noreferrer" className="ev-link">{data.driveLink}</a>
         </div>
       )}
-      {data.mygovDriveLink && (
+      {isStoredFileUrl(data.mygovDriveLink) ? (
+        <div className="ev-field">
+          <span className="ev-field-label">MyGov Certificates</span>
+          <StoredCertificates bundleUrl={data.mygovDriveLink} files={data.mygovFiles} />
+        </div>
+      ) : data.mygovDriveLink && (
         <div className="ev-field">
           <span className="ev-field-label">MyGov Certificates (Drive)</span>
           <a href={data.mygovDriveLink} target="_blank" rel="noopener noreferrer" className="ev-link">{data.mygovDriveLink}</a>
@@ -324,7 +355,13 @@ function Day7Preview({ data }) {
           <a href={data.linkedinLink} target="_blank" rel="noopener noreferrer" className="ev-link">{data.linkedinLink}</a>
         </div>
       )}
-      {data.caseStudyLink && (
+      {isStoredFileUrl(data.caseStudyLink) ? (
+        <div className="ev-field">
+          <span className="ev-field-label">Case Study Report</span>
+          <StoredPdfCard url={data.caseStudyLink} label="Case Study Report" />
+          <StoredPhotoGallery title="Case study photos" photos={caseStudyPhotos(data)} />
+        </div>
+      ) : data.caseStudyLink && (
         <div className="ev-field">
           <span className="ev-field-label">Case Study Report</span>
           <a href={data.caseStudyLink} target="_blank" rel="noopener noreferrer" className="ev-link">{data.caseStudyLink}</a>

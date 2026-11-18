@@ -1,6 +1,10 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { FaFileUpload, FaHistory, FaSearch, FaUser, FaClipboardList, FaUsers, FaChartLine } from 'react-icons/fa';
+import {
+  isStoredFileUrl, StoredPdfCard, StoredPhotoGallery, StoredCertificates,
+  surveyDayPhotos, interventionPhotos, caseStudyPhotos,
+} from '@/components/SubmissionFiles';
 
 const DAY_LABELS = {
   1: 'Day 1 – Problem Statement Understanding',
@@ -240,6 +244,18 @@ function SurveyView({ dayNum, data }) {
           </div>
         ) : <p style={{color:'#bbb',fontSize:'0.85rem',marginTop:8}}>No answers recorded.</p>}
       </div>
+      {isStoredFileUrl(data?.driveLink) && (
+        <div style={{ marginTop: 16 }}>
+          <label style={S.fieldLabel}>Day {dayNum} Report</label>
+          <StoredPdfCard url={data.driveLink} label={`Day ${dayNum} Report`} />
+          <StoredPhotoGallery title="Stakeholder photos" photos={surveyDayPhotos(data)} />
+        </div>
+      )}
+      {isStoredFileUrl(data?.mygovDriveLink) && (
+        <div style={{ marginTop: 12 }}>
+          <StoredCertificates bundleUrl={data.mygovDriveLink} files={data.mygovFiles} />
+        </div>
+      )}
     </div>
   );
 }
@@ -259,6 +275,9 @@ function Day5View({ data }) {
         <label style={S.fieldLabel}>3. Proposed Intervention Strategy</label>
         <div style={S.textBox}>{data?.strategy || <em style={{color:'#bbb'}}>No content</em>}</div>
       </div>
+      {isStoredFileUrl(data?.mygovDriveLink) && (
+        <StoredCertificates bundleUrl={data.mygovDriveLink} files={data.mygovFiles} />
+      )}
     </div>
   );
 }
@@ -266,12 +285,23 @@ function Day5View({ data }) {
 function Day6View({ data }) {
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
-      <div>
-        <label style={S.fieldLabel}>Google Drive Link</label>
-        {data?.driveLink
-          ? <a href={data.driveLink} target="_blank" rel="noreferrer" style={S.link}>{data.driveLink}</a>
-          : <p style={S.empty2}>Not submitted</p>}
-      </div>
+      {isStoredFileUrl(data?.driveLink) ? (
+        <div>
+          <label style={S.fieldLabel}>Intervention Report</label>
+          <StoredPdfCard url={data.driveLink} label="Intervention Activity Report" />
+          <StoredPhotoGallery title="Activity photos" photos={interventionPhotos(data)} />
+          {isStoredFileUrl(data?.mygovDriveLink) && (
+            <StoredCertificates bundleUrl={data.mygovDriveLink} files={data.mygovFiles} />
+          )}
+        </div>
+      ) : (
+        <div>
+          <label style={S.fieldLabel}>Google Drive Link</label>
+          {data?.driveLink
+            ? <a href={data.driveLink} target="_blank" rel="noreferrer" style={S.link}>{data.driveLink}</a>
+            : <p style={S.empty2}>Not submitted</p>}
+        </div>
+      )}
       <div>
         <label style={S.fieldLabel}>Activity Description</label>
         <div style={S.textBox}>{data?.notes || <em style={{color:'#bbb'}}>No description</em>}</div>
@@ -291,7 +321,12 @@ function Day7View({ data }) {
       {fields.map(({ label, key }) => (
         <div key={key}>
           <label style={S.fieldLabel}>{label}</label>
-          {data?.[key]
+          {key === 'caseStudyLink' && isStoredFileUrl(data?.[key]) ? (
+            <>
+              <StoredPdfCard url={data[key]} label="Case Study Report" />
+              <StoredPhotoGallery title="Case study photos" photos={caseStudyPhotos(data)} />
+            </>
+          ) : data?.[key]
             ? <a href={data[key]} target="_blank" rel="noreferrer" style={S.link}>{data[key]}</a>
             : <p style={S.empty2}>Not submitted</p>}
         </div>

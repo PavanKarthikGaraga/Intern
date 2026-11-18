@@ -3,6 +3,7 @@ import pool from '@/lib/db';
 import { verifyAccessToken } from '@/lib/jwt';
 import { cookies } from 'next/headers';
 import { logActivity } from '@/lib/activityLog';
+import { parseDay } from '@/lib/validate';
 
 /* ─── Marking scheme (mirrors evaluationPlan) ─────────────────────────────── */
 // Day → { maxMarks, criterion }
@@ -37,7 +38,7 @@ export async function GET(request) {
 
     const { searchParams } = new URL(request.url);
     const slot = searchParams.get('slot');
-    const day  = searchParams.get('day');
+    const day  = parseDay(searchParams.get('day'));
 
     if (!slot || !day) {
       return NextResponse.json({ success: false, error: 'slot and day are required' }, { status: 400 });
@@ -238,7 +239,11 @@ export async function POST(request) {
     const decoded = await assertAdmin(request);
     if (!decoded) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
-    const { username, day, marks, remark } = await request.json();
+    const { username, day: rawDay, marks, remark } = await request.json();
+    const day = parseDay(rawDay);
+    if (day === null) {
+      return NextResponse.json({ success: false, error: 'Invalid day. Day must be between 1 and 7.' }, { status: 400 });
+    }
 
     if (!username || !day || marks === undefined) {
       return NextResponse.json({ success: false, error: 'username, day and marks are required' }, { status: 400 });

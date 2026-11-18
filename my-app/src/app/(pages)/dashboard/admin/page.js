@@ -2,103 +2,145 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import './page.css';
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import Overview from './_components/overview/page';
-import Profile from './_components/profile/page';
-import ChangePassword from './_components/changePassword/page';
-import Students from './_components/students/page';
-import CompletedStudents from './_components/completedStudents/page';
-import Stats from './_components/stats/page';
-import StudentLeads from './_components/studentLeads/page';
-import FacultyMentors from './_components/facultyMentors/page';
-import Admins from './_components/admins/page';
-import DataDownload from './_components/dataDownload/page';
-import ReportControl from './_components/reportControl/page';
-import ReportDeadline from './_components/reportDeadline/page';
-import PblDeadline from './_components/pblDeadline/page';
-// import PM2Logs from './_components/pm2-logs/page';
-import TokenGenerator from './_components/tokenGenerator/page';
-import SQLExecutor from './_components/sqlExecutor/page';
-import ResetPassword from './_components/resetPassword/page';
-import SupplyStudents from './_components/supplyStudents/page';
-import CertificateDownload from './_components/certificate/page';
-import VerifyCertificates from './_components/verifyCertificates/page';
-import SFinalProfile from './_components/sfinal/page';
-import ProblemStatements from './_components/problemStatements/page';
-import ActivityLogs from './_components/activityLogs/page';
-import DailyTasksViewer from '../studentLead/_components/dailyTasksViewer/page';
-import TaskUnlocker from './_components/taskUnlocker/page';
-import SlotControl from './_components/slotControl/page';
-import RegistrationControl from './_components/registrationControl/page';
-import VideoDump from './_components/videoDump/page';
-import Announcements from './_components/announcements/page';
-import Evaluate from './_components/evaluate/page';
-import SurveyAnalysis from './_components/surveyAnalysis/page';
-import SlotReport from './_components/slotReport/page';
-import FinalReports from './_components/finalReports/page';
-import Results from './_components/results/page';
-import Day5Report from './_components/day5Report/page';
-import RBookControl from './_components/rbookControl/page';
-import FullRep from './_components/dev/fullRep/page';
-import CertGen from './_components/certGen/page';
-import Y25Report from './_components/y25Report/page';
+import DashboardShell, { useHashSection } from '@/components/DashboardShell';
+import Loader from '@/app/components/loader/loader';
+import dynamic from 'next/dynamic';
+import {
+  LayoutDashboard, UserRound, BarChart3, GraduationCap, Users, UserCog, ShieldCheck, UserCheck,
+  Repeat, FileText, FileBarChart, Megaphone, ListChecks, Video, BadgeCheck, ClipboardCheck, Trophy,
+  BookOpen, BookMarked, PieChart, Map as MapIcon, ScrollText, CalendarClock, SlidersHorizontal, CalendarDays,
+  Unlock, Globe, KeyRound, LogIn, Lock, FolderDown, Terminal, Award, Wrench, FileSpreadsheet, History, Database,
+} from 'lucide-react';
 
+// Sections are code-split: only the one being viewed is downloaded.
+const SectionLoading = () => <Loader />;
+
+const Overview = dynamic(() => import('./_components/overview/page'), { loading: SectionLoading });
+const Profile = dynamic(() => import('./_components/profile/page'), { loading: SectionLoading });
+const ChangePassword = dynamic(() => import('./_components/changePassword/page'), { loading: SectionLoading });
+const Students = dynamic(() => import('./_components/students/page'), { loading: SectionLoading });
+const CompletedStudents = dynamic(() => import('./_components/completedStudents/page'), { loading: SectionLoading });
+const Stats = dynamic(() => import('./_components/stats/page'), { loading: SectionLoading });
+const StudentLeads = dynamic(() => import('./_components/studentLeads/page'), { loading: SectionLoading });
+const FacultyMentors = dynamic(() => import('./_components/facultyMentors/page'), { loading: SectionLoading });
+const Admins = dynamic(() => import('./_components/admins/page'), { loading: SectionLoading });
+const DataDownload = dynamic(() => import('./_components/dataDownload/page'), { loading: SectionLoading });
+const ReportControl = dynamic(() => import('./_components/reportControl/page'), { loading: SectionLoading });
+const ReportDeadline = dynamic(() => import('./_components/reportDeadline/page'), { loading: SectionLoading });
+const PblDeadline = dynamic(() => import('./_components/pblDeadline/page'), { loading: SectionLoading });
+const TokenGenerator = dynamic(() => import('./_components/tokenGenerator/page'), { loading: SectionLoading });
+const SQLExecutor = dynamic(() => import('./_components/sqlExecutor/page'), { loading: SectionLoading });
+const ResetPassword = dynamic(() => import('./_components/resetPassword/page'), { loading: SectionLoading });
+const SupplyStudents = dynamic(() => import('./_components/supplyStudents/page'), { loading: SectionLoading });
+const CertificateDownload = dynamic(() => import('./_components/certificate/page'), { loading: SectionLoading });
+const VerifyCertificates = dynamic(() => import('./_components/verifyCertificates/page'), { loading: SectionLoading });
+const SFinalProfile = dynamic(() => import('./_components/sfinal/page'), { loading: SectionLoading });
+const ProblemStatements = dynamic(() => import('./_components/problemStatements/page'), { loading: SectionLoading });
+const ActivityLogs = dynamic(() => import('./_components/activityLogs/page'), { loading: SectionLoading });
+const DailyTasksViewer = dynamic(() => import('../studentLead/_components/dailyTasksViewer/page'), { loading: SectionLoading });
+const TaskUnlocker = dynamic(() => import('./_components/taskUnlocker/page'), { loading: SectionLoading });
+const SlotControl = dynamic(() => import('./_components/slotControl/page'), { loading: SectionLoading });
+const RegistrationControl = dynamic(() => import('./_components/registrationControl/page'), { loading: SectionLoading });
+const VideoDump = dynamic(() => import('./_components/videoDump/page'), { loading: SectionLoading });
+const Announcements = dynamic(() => import('./_components/announcements/page'), { loading: SectionLoading });
+const Evaluate = dynamic(() => import('./_components/evaluate/page'), { loading: SectionLoading });
+const SurveyAnalysis = dynamic(() => import('./_components/surveyAnalysis/page'), { loading: SectionLoading });
+const SlotReport = dynamic(() => import('./_components/slotReport/page'), { loading: SectionLoading });
+const FinalReports = dynamic(() => import('./_components/finalReports/page'), { loading: SectionLoading });
+const Results = dynamic(() => import('./_components/results/page'), { loading: SectionLoading });
+const Day5Report = dynamic(() => import('./_components/day5Report/page'), { loading: SectionLoading });
+const RBookControl = dynamic(() => import('./_components/rbookControl/page'), { loading: SectionLoading });
+const FullRep = dynamic(() => import('./_components/dev/fullRep/page'), { loading: SectionLoading });
+const CertGen = dynamic(() => import('./_components/certGen/page'), { loading: SectionLoading });
+const Y25Report = dynamic(() => import('./_components/y25Report/page'), { loading: SectionLoading });
+const MyGovTasks = dynamic(() => import('./_components/mygovTasks/page'), { loading: SectionLoading });
+
+// Accounts allowed to see the Developer tools group (server routes enforce their own checks)
+const DEV_USERNAMES = ['2300032048', '2400030188@kluniversity.in', '2400030188', '5387'];
+
+const SECTIONS = {
+  'overview': Overview,
+  'profile': Profile,
+  'stats': Stats,
+  'students': Students,
+  'student-leads': StudentLeads,
+  'faculty-mentors': FacultyMentors,
+  'admins': Admins,
+  'completed-students': CompletedStudents,
+  'supply-students': SupplyStudents,
+  'supply-final': SFinalProfile,
+  'problem-statements': ProblemStatements,
+  'announcements': Announcements,
+  'daily-tasks': DailyTasksViewer,
+  'videoDump': VideoDump,
+  'verify-certificates': VerifyCertificates,
+  'evaluate': Evaluate,
+  'results': Results,
+  'final-reports': FinalReports,
+  'rbook-control': RBookControl,
+  'survey-analysis': SurveyAnalysis,
+  'slot-report': SlotReport,
+  'y25-report': Y25Report,
+  'day5Report': Day5Report,
+  'activity-logs': ActivityLogs,
+  'slot-control': SlotControl,
+  'registration-control': RegistrationControl,
+  'report-deadline': ReportDeadline,
+  'pbl-deadline': PblDeadline,
+  'task-unlocker': TaskUnlocker,
+  'mygov-tasks': MyGovTasks,
+  'reset-password': ResetPassword,
+  'token-generator': TokenGenerator,
+  'change-password': ChangePassword,
+  // Developer tools
+  'data-download': DataDownload,
+  'sql-executor': SQLExecutor,
+  'certificate-download': CertificateDownload,
+  'report-control': ReportControl,
+  'full-rep': FullRep,
+  'cert-gen': CertGen,
+};
+
+const DEV_SECTIONS = new Set(['data-download', 'sql-executor', 'certificate-download', 'report-control', 'full-rep', 'cert-gen']);
 
 export default function AdminDashboard() {
   const { user, isLoading, isAuthenticated } = useAuth();
-  const [activeSection, setActiveSection] = useState('overview');
-  const [showUsersDropdown, setShowUsersDropdown] = useState(false);
-  const [showDevDropdown, setShowDevDropdown] = useState(false);
-  const [showSupplyDropdown, setShowSupplyDropdown] = useState(false);
+  const isDev = DEV_USERNAMES.includes(user?.username);
+  const [activeSection, setActiveSection] = useHashSection(
+    'overview',
+    (id) => id in SECTIONS && (!DEV_SECTIONS.has(id) || DEV_USERNAMES.includes(user?.username)),
+    user?.username || ''
+  );
   const [isLegacy, setIsLegacy] = useState(false);
   const [isTogglingDB, setIsTogglingDB] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       window.location.replace('/auth/login');
     }
-    
-    // Check current DB state
+
     const checkDBState = async () => {
       try {
         const res = await fetch('/api/dashboard/admin/toggle-db');
         const data = await res.json();
-        if (data.success) {
-          setIsLegacy(data.isLegacy);
-        }
+        if (data.success) setIsLegacy(data.isLegacy);
       } catch (err) {
         console.error('Failed to fetch DB state');
       }
     };
-    
+
     if (isAuthenticated) checkDBState();
   }, [isLoading, isAuthenticated]);
 
-  if (isLoading) {
-    return <div className="loading">Loading...</div>;
-  }
-
-  if (!isAuthenticated || !user) {
-    return null;
-  }
-
-  const handleSectionClick = (section) => {
-    setActiveSection(section);
-    setShowUsersDropdown(false);
-    setShowDevDropdown(false);
-    setShowSupplyDropdown(false);
-    setIsSidebarOpen(false); // Close sidebar on mobile after clicking a link
-  };
+  if (isLoading) return <Loader fullscreen />;
+  if (!isAuthenticated || !user) return null;
 
   const handleToggleDB = async () => {
     if (isTogglingDB) return;
-    
-    const confirmMsg = isLegacy 
-      ? "Switch back to Current (2026) Database?"
-      : "WARNING: Switch to Legacy (2025) Database? \n\nAll data shown will be from last year. Use with caution.";
-      
+
+    const confirmMsg = isLegacy
+      ? 'Switch back to the current (2026) database?'
+      : 'Switch to the legacy (2025) database?\n\nAll data shown will be from last year. Use with caution.';
     if (!window.confirm(confirmMsg)) return;
 
     setIsTogglingDB(true);
@@ -106,13 +148,12 @@ export default function AdminDashboard() {
       const res = await fetch('/api/dashboard/admin/toggle-db', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ useLegacy: !isLegacy })
+        body: JSON.stringify({ useLegacy: !isLegacy }),
       });
-      
       const data = await res.json();
       if (data.success) {
         setIsLegacy(data.isLegacy);
-        // Reload the page to ensure all components fetch from the new DB
+        // Reload so every component re-fetches from the newly selected database
         window.location.reload();
       } else {
         alert(data.error || 'Failed to switch database');
@@ -124,377 +165,122 @@ export default function AdminDashboard() {
     }
   };
 
-  return (
-    <div className={`student-dashboard ${isSidebarOpen ? 'sidebar-mobile-open' : ''}`}>
-      <Navbar 
-        title={isLegacy ? "Legacy Dashboard (2025)" : "Admin Dashboard"} 
-        user={user} 
-        onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-      />
+  const navGroups = [
+    {
+      items: [
+        { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+        { id: 'stats', label: 'Statistics', icon: BarChart3 },
+        { id: 'profile', label: 'Profile', icon: UserRound },
+      ],
+    },
+    {
+      label: 'People',
+      items: [
+        { id: 'students', label: 'Students', icon: GraduationCap },
+        { id: 'student-leads', label: 'Student Leads', icon: Users },
+        { id: 'faculty-mentors', label: 'Faculty Mentors', icon: UserCog },
+        { id: 'admins', label: 'Administrators', icon: ShieldCheck },
+        { id: 'completed-students', label: 'Completed Students', icon: UserCheck },
+      ],
+    },
+    {
+      label: 'Supply',
+      items: [
+        { id: 'supply-students', label: 'Supply Students', icon: Repeat },
+        { id: 'supply-final', label: 'Supply Final', icon: FileText },
+      ],
+    },
+    {
+      label: 'Programme',
+      items: [
+        { id: 'problem-statements', label: 'Problem Statements', icon: FileBarChart },
+        { id: 'announcements', label: 'Announcements', icon: Megaphone },
+        { id: 'daily-tasks', label: 'Daily Tasks', icon: ListChecks },
+        { id: 'videoDump', label: 'Video Dump', icon: Video },
+        { id: 'verify-certificates', label: 'Verify Certificates', icon: BadgeCheck },
+      ],
+    },
+    {
+      label: 'Evaluation',
+      items: [
+        { id: 'evaluate', label: 'Evaluate', icon: ClipboardCheck },
+        { id: 'results', label: 'Results', icon: Trophy },
+        { id: 'final-reports', label: 'Final Reports', icon: BookOpen },
+        { id: 'rbook-control', label: 'Report Book', icon: BookMarked },
+      ],
+    },
+    {
+      label: 'Reports',
+      items: [
+        { id: 'survey-analysis', label: 'Survey Analysis', icon: PieChart },
+        { id: 'slot-report', label: 'Slot-wise Report', icon: MapIcon },
+        { id: 'y25-report', label: 'Y25 Report', icon: FileSpreadsheet },
+        { id: 'day5Report', label: 'Day 5 Report (PDF)', icon: ScrollText },
+        { id: 'activity-logs', label: 'Activity Log', icon: History },
+      ],
+    },
+    {
+      label: 'Controls',
+      items: [
+        { id: 'slot-control', label: 'Slot Control', icon: SlidersHorizontal },
+        { id: 'registration-control', label: 'Registration Control', icon: CalendarDays },
+        { id: 'report-deadline', label: 'Report Deadline', icon: CalendarClock },
+        { id: 'pbl-deadline', label: 'PBL Deadline', icon: CalendarClock },
+        { id: 'task-unlocker', label: 'Task Unlocker', icon: Unlock },
+        { id: 'mygov-tasks', label: 'MyGov Tasks', icon: Globe },
+      ],
+    },
+    {
+      label: 'Accounts',
+      items: [
+        { id: 'reset-password', label: 'Reset Student Password', icon: KeyRound },
+        { id: 'token-generator', label: 'Proxy Login', icon: LogIn },
+        { id: 'change-password', label: 'Change My Password', icon: Lock },
+      ],
+    },
+    {
+      label: 'Developer',
+      items: [
+        { id: 'data-download', label: 'Data Download', icon: FolderDown, hidden: !isDev },
+        { id: 'sql-executor', label: 'SQL Executor', icon: Terminal, hidden: !isDev },
+        { id: 'certificate-download', label: 'Certificate Download', icon: Award, hidden: !isDev },
+        { id: 'report-control', label: 'Report Control', icon: Wrench, hidden: !isDev },
+        { id: 'full-rep', label: 'Full Report', icon: FileBarChart, hidden: !isDev },
+        { id: 'cert-gen', label: 'Certificate Generator', icon: Award, hidden: !isDev },
+      ],
+    },
+    {
+      label: 'Database',
+      items: [
+        {
+          id: 'toggle-db',
+          label: isTogglingDB ? 'Switching…' : isLegacy ? 'Switch to 2026 database' : 'Switch to 2025 database',
+          icon: Database,
+          onClick: handleToggleDB,
+          disabled: isTogglingDB,
+          tone: isLegacy ? 'warning' : undefined,
+        },
+      ],
+    },
+  ];
 
-      {/* Mobile Sidebar Overlay */}
-      {isSidebarOpen && (
-        <div className="sidebar-overlay" onClick={() => setIsSidebarOpen(false)}></div>
-      )}
-      {isLegacy && (
-        <div className="legacy-warning-banner">
-          ⚠️ YOU ARE VIEWING THE LEGACY (2025) DATABASE. CHANGES MADE HERE WILL NOT AFFECT THE 2026 PROGRAM.
-          <button onClick={handleToggleDB} className="banner-switch-btn">Switch Back to 2026</button>
+  const ActiveSection = SECTIONS[activeSection] || Overview;
+
+  return (
+    <DashboardShell
+      title={isLegacy ? 'Admin · Legacy 2025 database' : 'Admin Dashboard'}
+      user={user}
+      navGroups={navGroups}
+      activeId={activeSection}
+      onNavigate={setActiveSection}
+      banner={isLegacy && (
+        <div className="ds-banner" role="status">
+          <span>You are viewing the legacy 2025 database. Changes here do not affect the 2026 programme.</span>
+          <button type="button" onClick={handleToggleDB}>Switch back to 2026</button>
         </div>
       )}
-
-      <div className="dashboard-content">
-        <nav className={`dashboard-sidebar ${isSidebarOpen ? 'open' : ''}`}>
-          <button
-            className={`sidebar-item ${activeSection === 'overview' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('overview')}
-          >
-            <span className="item-label">Overview</span>
-          </button>
-          <button
-            className={`sidebar-item ${activeSection === 'profile' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('profile')}
-          >
-            <span className="item-label">Profile</span>
-          </button>
-          <button
-            className={`sidebar-item ${activeSection === 'stats' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('stats')}
-          >
-            <span className="item-label">Statistics</span>
-          </button>
-          <button
-            className={`sidebar-item ${activeSection === 'students' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('students')}
-          >
-            <span className="item-label">Students</span>
-          </button>
-
-          {/* Users Dropdown */}
-          <div className="dropdown">
-            <button
-              className={`sidebar-item ${['student-leads', 'faculty-mentors', 'admins'].includes(activeSection) ? 'active' : ''}`}
-              onClick={() => setShowUsersDropdown(!showUsersDropdown)}
-            >
-              <span className="item-label">Users</span>
-            </button>
-            {showUsersDropdown && (
-              <div className="dropdown-content">
-                <button
-                  className={`dropdown-item ${activeSection === 'student-leads' ? 'active' : ''}`}
-                  onClick={() => handleSectionClick('student-leads')}
-                >
-                  Student Leads
-                </button>
-                <button
-                  className={`dropdown-item ${activeSection === 'faculty-mentors' ? 'active' : ''}`}
-                  onClick={() => handleSectionClick('faculty-mentors')}
-                >
-                  Faculty Mentors
-                </button>
-                <button
-                  className={`dropdown-item ${activeSection === 'admins' ? 'active' : ''}`}
-                  onClick={() => handleSectionClick('admins')}
-                >
-                  Administrators
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Supply Students Section */}
-            <div className="dropdown">
-              <button
-                className={`sidebar-item ${['supply-students', 'supply-final'].includes(activeSection) ? 'active' : ''}`}
-                onClick={() => setShowSupplyDropdown(!showSupplyDropdown)}
-              >
-                <span className="item-label">Supply</span>
-              </button>
-              {showSupplyDropdown && (
-                <div className="dropdown-content">
-                  <button
-                    className={`dropdown-item ${activeSection === 'supply-students' ? 'active' : ''}`}
-                    onClick={() => handleSectionClick('supply-students')}
-                  >
-                    Supply Students
-                  </button>
-                  <button
-                    className={`dropdown-item ${activeSection === 'supply-final' ? 'active' : ''}`}
-                    onClick={() => handleSectionClick('supply-final')}
-                  >
-                    Supply Final
-                  </button>
-                </div>
-              )}
-            </div>
-        
-          <button
-            className={`sidebar-item ${activeSection === 'completed-students' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('completed-students')}
-          >
-            <span className="item-label">Completed Students</span>
-          </button>
-
-          <button
-            className={`sidebar-item ${activeSection === 'verify-certificates' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('verify-certificates')}
-          >
-            <span className="item-label">Verify Certificates</span>
-          </button>
-
-          <button
-            className={`sidebar-item ${activeSection === 'problem-statements' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('problem-statements')}
-          >
-            <span className="item-label">Problem Statements</span>
-          </button>
-
-          <button
-            className={`sidebar-item ${activeSection === 'announcements' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('announcements')}
-          >
-            <span className="item-label">Announcements</span>
-          </button>
-
-          <button
-            className={`sidebar-item ${activeSection === 'videoDump' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('videoDump')}
-          >
-            <span className="item-label">Video Dump</span>
-          </button>
-
-          <button
-            className={`sidebar-item ${activeSection === 'activity-logs' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('activity-logs')}
-          >
-            <span className="item-label">Activity Log</span>
-          </button>
-
-          <button
-            className={`sidebar-item ${activeSection === 'slot-control' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('slot-control')}
-          >
-            <span className="item-label">Slot Control</span>
-          </button>
-
-          <button
-            className={`sidebar-item ${activeSection === 'registration-control' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('registration-control')}
-          >
-            <span className="item-label">Registration Control</span>
-          </button>
-
-          <button
-            className={`sidebar-item ${activeSection === 'report-deadline' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('report-deadline')}
-          >
-            <span className="item-label">Report Deadline</span>
-          </button>
-
-          <button
-            className={`sidebar-item ${activeSection === 'pbl-deadline' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('pbl-deadline')}
-          >
-            <span className="item-label">PBL Deadline</span>
-          </button>
-
-          <button
-            className={`sidebar-item ${activeSection === 'evaluate' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('evaluate')}
-          >
-            <span className="item-label">⭐ Evaluate</span>
-          </button>
-
-          <button
-            className={`sidebar-item ${activeSection === 'results' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('results')}
-          >
-            <span className="item-label">🏆 Results</span>
-          </button>
-
-          <button
-            className={`sidebar-item ${activeSection === 'survey-analysis' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('survey-analysis')}
-          >
-            <span className="item-label">📊 Survey Analysis</span>
-          </button>
-
-          <button
-            className={`sidebar-item ${activeSection === 'slot-report' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('slot-report')}
-          >
-            <span className="item-label">🇮🇳 Slot-wise Report</span>
-          </button>
-
-          <button
-            className={`sidebar-item ${activeSection === 'final-reports' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('final-reports')}
-          >
-            <span className="item-label">📘 Final Reports</span>
-          </button>
-
-          <button
-            className={`sidebar-item ${activeSection === 'y25-report' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('y25-report')}
-          >
-            <span className="item-label">📈 Y25 Report</span>
-          </button>
-
-          <button
-            className={`sidebar-item ${activeSection === 'rbook-control' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('rbook-control')}
-          >
-            <span className="item-label">📒 R-Book</span>
-          </button>
-
-          <button
-            className={`sidebar-item ${activeSection === 'day5Report' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('day5Report')}
-          >
-            <span className="item-label">Day 5 Report (PDF)</span>
-          </button>
-
-          <button
-            className={`sidebar-item ${activeSection === 'daily-tasks' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('daily-tasks')}
-          >
-            <span className="item-label">Daily Tasks</span>
-          </button>
-
-          <button
-            className={`sidebar-item ${activeSection === 'task-unlocker' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('task-unlocker')}
-          >
-            <span className="item-label">Task Unlocker</span>
-          </button>
-
-          <button
-            className={`sidebar-item ${activeSection === 'reset-password' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('reset-password')}
-          >
-            <span className="item-label">Reset Password</span>
-          </button>
-
-          <button
-            className={`sidebar-item ${activeSection === 'token-generator' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('token-generator')}
-          >
-            <span className="item-label">Proxy Login</span>
-          </button>
-
-          {/* Dev Tools Dropdown */}
-          {(user.username === '2300032048' || user.username === '2400030188@kluniversity.in' || user.username === '2400030188' || user.username === '5387') && (
-            <div className="dropdown">
-              <button
-                className={`sidebar-item ${['data-download', 'sql-executor','certificate-download','report-control', 'full-rep', 'cert-gen'].includes(activeSection) ? 'active' : ''}`}
-                onClick={() => setShowDevDropdown(!showDevDropdown)}
-              >
-                <span className="item-label">Dev</span>
-              </button>
-              {showDevDropdown && (
-                <div className="dropdown-content">
-                  <button
-                    className={`dropdown-item ${activeSection === 'data-download' ? 'active' : ''}`}
-                    onClick={() => handleSectionClick('data-download')}
-                  >
-                    Data Download
-                  </button>
-                  <button
-                    className={`dropdown-item ${activeSection === 'sql-executor' ? 'active' : ''}`}
-                    onClick={() => handleSectionClick('sql-executor')}
-                  >
-                    SQL Executor
-                  </button>
-                  <button
-                    className={`dropdown-item ${activeSection === 'certificate-download' ? 'active' : ''}`}
-                    onClick={() => handleSectionClick('certificate-download')}
-                  >
-                    Certificate Download
-                  </button>
-                  <button
-                    className={`dropdown-item ${activeSection === 'report-control' ? 'active' : ''}`}
-                    onClick={() => handleSectionClick('report-control')}
-                  >
-                    Report Control
-                  </button>
-                  <button
-                    className={`dropdown-item ${activeSection === 'full-rep' ? 'active' : ''}`}
-                    onClick={() => handleSectionClick('full-rep')}
-                  >
-                    Full Report
-                  </button>
-                  <button
-                    className={`dropdown-item ${activeSection === 'cert-gen' ? 'active' : ''}`}
-                    onClick={() => handleSectionClick('cert-gen')}
-                  >
-                    Cert Gen
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          <button
-            className={`sidebar-item db-toggle-btn ${isLegacy ? 'legacy-active' : ''}`}
-            onClick={handleToggleDB}
-            disabled={isTogglingDB}
-          >
-            <span className="item-label">
-              {isTogglingDB ? 'Switching...' : isLegacy ? 'Switch to 2026 DB' : 'Switch to 2025 DB'}
-            </span>
-          </button>
-
-          <button
-            className={`sidebar-item ${activeSection === 'change-password' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('change-password')}
-          >
-            <span className="item-label">Change Password</span>
-          </button>
-        </nav>
-
-        <main className="dashboard-main">
-          {activeSection === 'overview' ? <Overview /> : 
-           activeSection === 'profile' ? <Profile /> :
-           activeSection === 'stats' ? <Stats /> :
-           activeSection === 'students' ? <Students /> :
-           activeSection === 'supply-students' ? <SupplyStudents /> :
-           activeSection === 'completed-students' ? <CompletedStudents /> :
-           activeSection === 'student-leads' ? <StudentLeads /> :
-           activeSection === 'faculty-mentors' ? <FacultyMentors /> :
-           activeSection === 'admins' ? <Admins /> :
-           activeSection === 'data-download' ? <DataDownload /> :
-           activeSection === 'report-control' ? <ReportControl /> :
-           activeSection === 'report-deadline' ? <ReportDeadline /> :
-           activeSection === 'pbl-deadline' ? <PblDeadline /> :
-           activeSection === 'token-generator' ? <TokenGenerator /> :
-           activeSection === 'sql-executor' ? <SQLExecutor /> :
-           activeSection === 'reset-password' ? <ResetPassword /> :
-           activeSection === 'verify-certificates' ? <VerifyCertificates/> :
-           activeSection === 'certificate-download' ? <CertificateDownload /> :
-           activeSection === 'supply-final' ? <SFinalProfile /> :
-           activeSection === 'problem-statements' ? <ProblemStatements /> :
-           activeSection === 'videoDump' ? <VideoDump /> :
-           activeSection === 'announcements' ? <Announcements /> :
-           activeSection === 'activity-logs' ? <ActivityLogs /> :
-           activeSection === 'slot-control' ? <SlotControl /> :
-           activeSection === 'registration-control' ? <RegistrationControl /> :
-           activeSection === 'daily-tasks' ? <DailyTasksViewer /> :
-           activeSection === 'task-unlocker' ? <TaskUnlocker /> :
-           activeSection === 'evaluate' ? <Evaluate /> :
-           activeSection === 'results' ? <Results /> :
-           activeSection === 'survey-analysis' ? <SurveyAnalysis /> :
-           activeSection === 'full-rep' ? <FullRep /> :
-           activeSection === 'slot-report' ? <SlotReport /> :
-           activeSection === 'final-reports' ? <FinalReports /> :
-           activeSection === 'y25-report' ? <Y25Report /> :
-           activeSection === 'rbook-control' ? <RBookControl /> :
-           activeSection === 'day5Report' ? <Day5Report /> :
-           activeSection === 'cert-gen' ? <CertGen /> :
-           <ChangePassword />}
-        </main>
-      </div>
-
-      <Footer />
-    </div>
+    >
+      <ActiveSection />
+    </DashboardShell>
   );
 }
