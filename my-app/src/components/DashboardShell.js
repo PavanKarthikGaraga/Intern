@@ -140,7 +140,7 @@ export default function DashboardShell({
 
           <div className="ds-sidebar-footer">
             <p>© {new Date().getFullYear()} Smart Village Revolution</p>
-            <p>Designed &amp; developed by Nischal Singana · ZeroOne CodeClub</p>
+            <p>Designed &amp; developed by <a href="https://www.linkedin.com/in/singananischal/" target="_blank" rel="noopener noreferrer">Nischal Singana</a> · ZeroOne CodeClub</p>
           </div>
         </aside>
 

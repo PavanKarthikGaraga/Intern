@@ -157,14 +157,24 @@
 .ds-root .ds-sidebar-footer {
   margin-top: auto;
   padding: 14px 20px 18px;
-  border-top: 1px solid var(--gray-100);
+  border-top: 1px solid var(--gray-200, #e5e7eb);
 }
 
 .ds-root .ds-sidebar-footer p {
   margin: 0;
-  font-size: 0.7rem;
-  line-height: 1.5;
-  color: var(--gray-400);
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: var(--gray-600, #4b5563);
+}
+
+.ds-root .ds-sidebar-footer a {
+  color: var(--brand-600, #970003);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.ds-root .ds-sidebar-footer a:hover {
+  text-decoration: underline;
 }
 
 /* ── Main content ─────────────────────────────────────────── */
