@@ -1,0 +1,84 @@
+.sf-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+  overflow: hidden;
+  margin: 4px 0 10px;
+}
+.sf-card-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  flex-wrap: wrap;
+}
+.sf-card-icon { color: #b91c1c; font-size: 1.4rem; flex-shrink: 0; }
+.sf-card-text { flex: 1; min-width: 160px; display: flex; flex-direction: column; line-height: 1.35; }
+.sf-card-text strong { font-size: 0.88rem; color: #1e293b; }
+.sf-card-text span { font-size: 0.76rem; color: #64748b; }
+.sf-card-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.sf-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #334155;
+  font-size: 0.76rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+.sf-btn:hover { border-color: #970003; color: #970003; background: #fdf4f4; }
+.sf-pdf-frame {
+  display: block;
+  width: 100%;
+  height: 560px;
+  border: 0;
+  border-top: 1px solid #e2e8f0;
+  background: #f1f5f9;
+}
+
+.sf-gallery { margin: 6px 0 12px; }
+.sf-gallery-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+}
+.sf-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+.sf-photo {
+  margin: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+}
+.sf-photo a { display: block; aspect-ratio: 4 / 3; background: #f1f5f9; }
+.sf-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sf-photo figcaption {
+  padding: 6px 8px;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: #475569;
+  max-height: 90px;
+  overflow: auto;
+}
+.sf-photo figcaption strong { display: block; color: #1e293b; font-size: 0.74rem; }
+.sf-file-list { margin: 0 0 10px; padding-left: 20px; font-size: 0.8rem; }
+.sf-file-list a { color: #1d4ed8; }
+
+@media (max-width: 600px) {
+  .sf-pdf-frame { height: 420px; }
+}
