@@ -2,8 +2,9 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import './page.css';
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import DashboardShell, { useHashSection } from '@/components/DashboardShell';
+import Loader from '@/app/components/loader/loader';
+import { LayoutDashboard, UserRound, Users, GraduationCap, UserCheck, ClipboardList, ClipboardCheck, Lock } from 'lucide-react';
 import Overview from './_components/overview/page';
 import Profile from './_components/profile/page';
 import ChangePassword from './_components/changePassword/page';
@@ -13,9 +14,11 @@ import CompletedStudents from './_components/completedStudents/page';
 import FinalReports from './_components/finalReports/page';
 import EvaluationPlan from '../student/_components/evaluationPlan/page';
 
+const SECTION_IDS = ['overview', 'profile', 'leads', 'students', 'completed-students', 'evaluation-plan', 'evaluate', 'change-password'];
+
 export default function FacultyMentorDashboard() {
   const { user, isLoading, isAuthenticated } = useAuth();
-  const [activeSection, setActiveSection] = useState('overview');
+  const [activeSection, setActiveSection] = useHashSection('overview', (id) => SECTION_IDS.includes(id));
   const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
@@ -32,96 +35,53 @@ export default function FacultyMentorDashboard() {
       .catch(() => {});
   }, [user]);
 
-  if (isLoading) {
-    return <div className="loading">Loading...</div>;
-  }
+  if (isLoading) return <Loader fullscreen />;
+  if (!isAuthenticated || !user) return null;
 
-  if (!isAuthenticated || !user) {
-    return null;
-  }
-
-  const handleSectionClick = (section) => {
-    setActiveSection(section);
-  };
+  const navGroups = [
+    {
+      items: [
+        { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+        { id: 'profile', label: 'Profile', icon: UserRound },
+      ],
+    },
+    {
+      label: 'Mentoring',
+      items: [
+        { id: 'leads', label: 'Student Leads', icon: Users },
+        { id: 'students', label: 'Students', icon: GraduationCap },
+        { id: 'completed-students', label: 'Completed Students', icon: UserCheck },
+      ],
+    },
+    {
+      label: 'Evaluation',
+      items: [
+        { id: 'evaluation-plan', label: 'Evaluation Plan', icon: ClipboardList },
+        { id: 'evaluate', label: 'Evaluate', icon: ClipboardCheck, badge: pendingCount },
+      ],
+    },
+    {
+      label: 'Account',
+      items: [{ id: 'change-password', label: 'Change Password', icon: Lock }],
+    },
+  ];
 
   return (
-    <div className="student-dashboard">
-      <Navbar title="Faculty Mentor Dashboard" user={user} />
-
-      <div className="dashboard-content">
-        <nav className="dashboard-sidebar">
-          <button
-            className={`sidebar-item ${activeSection === 'overview' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('overview')}
-          >
-            <span className="item-label">Overview</span>
-          </button>
-          <button
-            className={`sidebar-item ${activeSection === 'profile' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('profile')}
-          >
-            <span className="item-label">Profile</span>
-          </button>
-          <button  className={`sidebar-item ${activeSection === 'leads' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('leads')}
-          >
-            <span className="item-label">Leads</span>
-          </button>
-          <button
-            className={`sidebar-item ${activeSection === 'students' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('students')}
-          >
-            <span className="item-label">Students</span>
-          </button>
-          <button
-            className={`sidebar-item ${activeSection === 'completed-students' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('completed-students')}
-          >
-            <span className="item-label">Completed Students</span>
-          </button>
-          <button
-            className={`sidebar-item ${activeSection === 'evaluation-plan' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('evaluation-plan')}
-          >
-            <span className="item-label">Evaluation Plan</span>
-          </button>
-          <button
-            className={`sidebar-item ${activeSection === 'evaluate' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('evaluate')}
-            style={{ position: 'relative' }}
-          >
-            <span className="item-label">Evaluate</span>
-            {pendingCount > 0 && (
-              <span style={{
-                position: 'absolute', top: '6px', right: '10px',
-                background: '#e53e3e', color: '#fff', borderRadius: '50%',
-                minWidth: '20px', height: '20px', fontSize: '0.72rem', fontWeight: 700,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px'
-              }}>{pendingCount}</span>
-            )}
-          </button>
-
-          <button
-            className={`sidebar-item ${activeSection === 'change-password' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('change-password')}
-          >
-            <span className="item-label">Change Password</span>
-          </button>
-        </nav>
-
-        <main className="dashboard-main">
-          {activeSection === 'overview' ? <Overview user={user} /> : 
-           activeSection === 'profile' ? <Profile user={user} /> :
-           activeSection === 'students' ? <Students user={user} /> :
-           activeSection === 'leads' ? <Leads user={user} /> :
-           activeSection === 'completed-students' ? <CompletedStudents user={user} /> :
-           activeSection === 'evaluation-plan' ? <EvaluationPlan /> :
-           activeSection === 'evaluate' ? <FinalReports /> :
-           <ChangePassword user={user} />}
-        </main>
-      </div>
-
-      <Footer />
-    </div>
+    <DashboardShell
+      title="Faculty Mentor Dashboard"
+      user={user}
+      navGroups={navGroups}
+      activeId={activeSection}
+      onNavigate={setActiveSection}
+    >
+      {activeSection === 'overview' ? <Overview user={user} /> :
+       activeSection === 'profile' ? <Profile user={user} /> :
+       activeSection === 'students' ? <Students user={user} /> :
+       activeSection === 'leads' ? <Leads user={user} /> :
+       activeSection === 'completed-students' ? <CompletedStudents user={user} /> :
+       activeSection === 'evaluation-plan' ? <EvaluationPlan /> :
+       activeSection === 'evaluate' ? <FinalReports /> :
+       <ChangePassword user={user} />}
+    </DashboardShell>
   );
 }

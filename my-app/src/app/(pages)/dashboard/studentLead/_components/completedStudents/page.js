@@ -27,11 +27,6 @@ const CompletedStudents = () => {
   });
   const [selectedSlot, setSelectedSlot] = useState("all");
 
-  useEffect(() => {
-    if (!user) return;
-    fetchStudents();
-  }, [user, fetchStudents]);
-
   const fetchStudents = useCallback(async () => {
     try {
       setLoading(true);
@@ -65,6 +60,13 @@ const CompletedStudents = () => {
       setLoading(false);
     }
   }, [user, selectedSlot, pagination.currentPage.completed, pagination.currentPage.pending]);
+
+  // Must come after fetchStudents is declared: the dependency array is evaluated
+  // during render, so referencing it earlier threw a ReferenceError.
+  useEffect(() => {
+    if (!user) return;
+    fetchStudents();
+  }, [user, fetchStudents]);
 
   const handleSlotChange = (e) => {
     setSelectedSlot(e.target.value);
