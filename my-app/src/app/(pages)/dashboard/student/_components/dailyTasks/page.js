@@ -7,7 +7,18 @@ import { getInterventionTemplate } from './interventionTemplates';
 import { DOMAINS } from '@/app/Data/domains';
 import { PROBLEM_STATEMENTS } from '@/app/Data/problemStatements';
 import { FaCheck, FaLock, FaTimes, FaHourglassHalf, FaPlay, FaClipboardList, FaHandshake, FaChartBar, FaCamera, FaVideo, FaClock, FaCheckCircle, FaTimesCircle, FaExclamationTriangle, FaCalendarAlt, FaFilePdf } from 'react-icons/fa';
+import { isBase64Image, isStoredFileUrl, preloadImagesForPdf } from '@/lib/uploads';
+import { PhotoUploadField, StoredReportStatus, CertificateUploader, attachGeneratedPdf } from './StorageWidgets';
+import MyGovTaskPanel from './MyGovTaskPanel';
 import './dailyTasks.css';
+
+/** True if a value (or anything nested in it) is a newly-stored file URL. */
+function containsStoredFile(value) {
+  if (isStoredFileUrl(value)) return true;
+  if (Array.isArray(value)) return value.some(containsStoredFile);
+  if (value && typeof value === 'object') return Object.values(value).some(containsStoredFile);
+  return false;
+}
 
 /* ── Slot start dates (IST midnight) ── */
 const SLOT_START = {
@@ -393,15 +404,31 @@ export default function DailyTasks({ studentData, onSectionChange }) {
     ...(draft[day]  || {}),
   }), [saved, draft]);
 
+  // Ref to the latest handleSave so the upload auto-save timer never calls a stale closure
+  const handleSaveRef = useRef(null);
+  const autoSaveTimerRef = useRef(null);
+
   const setDayField = (day, field, value) => {
-    const newDraft = { ...(latestDataRef.current.draft[day] || {}), [field]: value };
-    setDraft(prev => {
-      const updated = { ...prev, [day]: newDraft };
-      latestDataRef.current.draft = updated; // Synchronous update
-      return updated;
-    });
+    // Update the ref synchronously so back-to-back calls (e.g. report URL + timestamp)
+    // build on each other. Previously the ref was only updated inside the deferred
+    // state updater, so a second call in the same tick could drop the first field.
+    const current = latestDataRef.current.draft;
+    const updated = { ...current, [day]: { ...(current[day] || {}), [field]: value } };
+    latestDataRef.current.draft = updated;
+    setDraft(updated);
     setMsg('');
+
+    // Persist uploaded-file URLs right away so a reload/app switch can't lose them.
+    // Skipped for days that are already final-submitted (a draft save would un-submit them).
+    if (containsStoredFile(value) && !latestDataRef.current.saved?.[day]?.data?.isFinal) {
+      clearTimeout(autoSaveTimerRef.current);
+      autoSaveTimerRef.current = setTimeout(() => {
+        handleSaveRef.current?.(true, day);
+      }, 1200);
+    }
   };
+
+  useEffect(() => () => clearTimeout(autoSaveTimerRef.current), []);
 
   const handleSave = useCallback(async (isDraft = false) => {
     const { saved: latestSaved, draft: latestDraft } = latestDataRef.current;
@@ -439,14 +466,14 @@ export default function DailyTasks({ studentData, onSectionChange }) {
         }
       }
       if (!data.driveLink?.trim()) {
-        setMsg("Please provide the Google Drive Public Link for your report.");
+        setMsg(`Please generate your Day ${activeDay} report using the report generator — it is attached to your submission automatically.`);
         setMsgType('err'); return;
       }
       // Slot 2: MyGov Drive Link is mandatory for days 3 and 4
       const isSlot2 = (parseInt(String(studentData?.slot || '1').replace(/\D/g, ''), 10) || 1) === 2;
       if (isSlot2 && (activeDay === 3 || activeDay === 4)) {
         if (!data.mygovDriveLink?.trim()) {
-          setMsg(`Please complete the MyGov quizzes & pledges for Day ${activeDay}, upload certificates to Google Drive, and paste the link before submitting.`);
+          setMsg(`Please complete the MyGov quizzes & pledges for Day ${activeDay} and upload your certificates before submitting.`);
           setMsgType('err'); return;
         }
       }
@@ -455,7 +482,7 @@ export default function DailyTasks({ studentData, onSectionChange }) {
     const isSlot4OrMore = (parseInt(String(studentData?.slot || '1').replace(/\D/g, ''), 10) || 1) >= 4;
     if (!isDraft && activeDay === 5) {
       if (((parseInt(String(studentData?.slot || '1').replace(/\D/g, ''), 10) || 1) === 2 || isSlot4OrMore) && !data.mygovDriveLink?.trim()) {
-        setMsg('Please complete the Day 5 MyGov quizzes & pledges, upload certificates to Google Drive, and paste the link before submitting.');
+        setMsg('Please complete the Day 5 MyGov quizzes & pledges and upload your certificates before submitting.');
         setMsgType('err'); return;
       }
       
@@ -499,7 +526,7 @@ export default function DailyTasks({ studentData, onSectionChange }) {
         data.driveLink?.trim() ||
         (data.coverPhoto && data.photo2 && data.photo3 && data.photo4 && data.photo5);
       if (!photosOk) {
-        setMsg("Please open the Intervention Activity Report generator, upload all 5 photos, generate & download the PDF, then upload it to Google Drive and paste the link.");
+        setMsg("Please upload all 5 photos in the Intervention Activity Report generator and generate the report.");
         setMsgType('err'); return;
       }
       if (wc(data.coverDesc || '') < 120) {
@@ -514,20 +541,20 @@ export default function DailyTasks({ studentData, onSectionChange }) {
         }
       }
       if (!data.driveLink?.trim()) {
-        setMsg("Please upload your intervention report to Google Drive and paste the public link.");
+        setMsg("Please generate your intervention report — it is attached to your submission automatically.");
         setMsgType('err'); return;
       }
       // Slot 1, Slot 3, and Slot >= 4: both MyGov + intervention drive link are required
       const isSlot3 = (parseInt(String(studentData?.slot || '1').replace(/\D/g, ''), 10) || 1) === 3;
       const isSlot4OrMore = (parseInt(String(studentData?.slot || '1').replace(/\D/g, ''), 10) || 1) >= 4;
       if ((isSlot1 || isSlot3 || isSlot4OrMore) && !data.mygovDriveLink?.trim()) {
-        setMsg("Please complete the MyGov quizzes/pledges, upload your certificates to Google Drive, and paste the link before submitting.");
+        setMsg("Please complete the MyGov quizzes/pledges and upload your certificates before submitting.");
         setMsgType('err'); return;
       }
     }
     if (!isDraft && activeDay === 7) {
       if (!data.caseStudyLink?.trim()) {
-        setMsg("Please provide your Case Study Document Public Link.");
+        setMsg("Please generate your Case Study report using the generator — it is attached to your submission automatically.");
         setMsgType('err'); return;
       }
       if (!data.youtubeLink?.trim()) {
@@ -569,21 +596,21 @@ export default function DailyTasks({ studentData, onSectionChange }) {
       if (!isDraft && !dataToSave.finalSubmittedAt) {
         dataToSave.finalSubmittedAt = new Date().toISOString();
       }
-      // Strip base64 images before saving to prevent payload-too-large / network errors.
-      // coverPhoto and photo2-5 can be 3-10 MB each; strip them the same way as reportSlots.
-      // Persist a flag so future sessions know photos were previously provided.
+      // Photos are now uploaded to server storage and kept as short "/api/files/…" URLs,
+      // which are saved normally. Only legacy base64 images (from older sessions) are
+      // stripped, since those can be several MB each.
       const PHOTO_FIELDS = ['coverPhoto','photo2','photo3','photo4','photo5'];
       if (PHOTO_FIELDS.every(f => !!dataToSave[f])) {
         dataToSave.photosProvided = true; // ← survives page refresh; used by validation
       }
-      PHOTO_FIELDS.forEach(f => { if (dataToSave[f]) delete dataToSave[f]; });
+      PHOTO_FIELDS.forEach(f => { if (isBase64Image(dataToSave[f])) delete dataToSave[f]; });
 
       if (dataToSave.reportSlots && Array.isArray(dataToSave.reportSlots)) {
         dataToSave.reportSlots = dataToSave.reportSlots.map(slot => ({
           id: slot.id,
           name: slot.name,
           description: slot.description,
-          // image intentionally excluded — user re-uploads for PDF generation
+          ...(isStoredFileUrl(slot.image) ? { image: slot.image } : {}),
         }));
       }
 
@@ -707,6 +734,12 @@ export default function DailyTasks({ studentData, onSectionChange }) {
 
 
 
+
+  // Upload auto-save: only for the day the upload belongs to (and only if still viewing it)
+  handleSaveRef.current = (isDraft, day) => {
+    if (day !== activeDay || saving) return;
+    return handleSave(isDraft);
+  };
 
   const handleSaveDraft = () => handleSave(true);
   const handleFinalSubmit = () => handleSave(false);
@@ -896,11 +929,11 @@ export default function DailyTasks({ studentData, onSectionChange }) {
                     let blockMsg = '';
                     if (!canFinalSubmit && !isSaved && isEditable) {
                       if (isS1 && !hasDriveLink && !hasMygovLink)
-                        blockMsg = '⚠️ Please save your Intervention Report Drive link and your MyGov Certificates Drive link before final submission.';
+                        blockMsg = '⚠️ Please generate your Intervention Report and upload your MyGov certificates before final submission.';
                       else if (!hasDriveLink)
-                        blockMsg = '⚠️ Please upload your intervention report to Google Drive and save the link before final submission.';
+                        blockMsg = '⚠️ Please generate your Intervention Report (it is attached automatically) before final submission.';
                       else if (isS1 && !hasMygovLink)
-                        blockMsg = '⚠️ Please complete MyGov quizzes & pledges, upload certificates to Google Drive, and save the link before final submission.';
+                        blockMsg = '⚠️ Please complete the MyGov quizzes & pledges and upload your certificates before final submission.';
                     }
 
                     return (
@@ -908,7 +941,7 @@ export default function DailyTasks({ studentData, onSectionChange }) {
                         {/* Save drive links as draft */}
                         {!isSaved && isEditable && (
                           <button type="button" className="dt-draft-btn" onClick={handleSaveDraft} disabled={saving}>
-                            {saving ? 'Saving…' : '💾 Save Links & Progress'}
+                            {saving ? 'Saving…' : '💾 Save Progress'}
                           </button>
                         )}
 
@@ -1370,6 +1403,9 @@ function SurveyReportGenerator({ day, stakeholder, persons, personData, onChange
   
   const [slots, setSlots] = useState(initSlots);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [uploadingCount, setUploadingCount] = useState(0);
+  const slotsRef = useRef(slots);
+  slotsRef.current = slots;
 
   const pushSlots = (newSlots) => {
     if (onChange && !readOnly) {
@@ -1377,18 +1413,14 @@ function SurveyReportGenerator({ day, stakeholder, persons, personData, onChange
     }
   };
 
-  const handleImageUpload = (index, e) => {
+  // Photo is already compressed + stored on the server; keep only its URL
+  const handleImageUploaded = (slotId, url) => {
     if (readOnly) return;
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const newSlots = slots.map((s, i) => i === index ? { ...s, image: reader.result } : s);
-      setSlots(newSlots);
-      pushSlots(newSlots);
-    };
-    reader.readAsDataURL(file);
+    const newSlots = slotsRef.current.map(s => s.id === slotId ? { ...s, image: url } : s);
+    setSlots(newSlots);
+    pushSlots(newSlots);
   };
+  const trackUpload = (busy) => setUploadingCount(c => Math.max(0, c + (busy ? 1 : -1)));
 
   const handleFieldChange = (index, field, val) => {
     if (readOnly) return;
@@ -1416,6 +1448,10 @@ function SurveyReportGenerator({ day, stakeholder, persons, personData, onChange
   };
 
   const generatePDF = async () => {
+    if (uploadingCount > 0) {
+      alert('Please wait until all photos finish uploading.');
+      return;
+    }
     for (let i = 0; i < slots.length; i++) {
       if (!slots[i].image) {
         alert(`Please upload a photo for slot ${i + 1} before generating the PDF.`);
@@ -1434,6 +1470,7 @@ function SurveyReportGenerator({ day, stakeholder, persons, personData, onChange
     setIsGenerating(true);
     try {
       const { jsPDF } = await import('jspdf');
+      const img = await preloadImagesForPdf(slots.map(sl => sl.image));
       const doc = new jsPDF({ unit: 'mm', format: 'a4' });
       const PW = doc.internal.pageSize.getWidth();
       const PH = doc.internal.pageSize.getHeight();
@@ -1482,7 +1519,7 @@ function SurveyReportGenerator({ day, stakeholder, persons, personData, onChange
 
         pair.forEach((slot, si) => {
           if (slot.image) {
-            addProportionalImage(doc, slot.image, margin, y, contentW, 65);
+            addProportionalImage(doc, img(slot.image), margin, y, contentW, 65);
             y += 70;
           }
           doc.setFontSize(11); doc.setFont('times', 'bold'); doc.setTextColor(0,0,0);
@@ -1506,13 +1543,20 @@ function SurveyReportGenerator({ day, stakeholder, persons, personData, onChange
         );
       }
 
-      doc.save(`Day${day}_${stakeholder.replace(/\s+/g, '_')}_Report.pdf`);
+      const reportUrl = await attachGeneratedPdf(doc, {
+        day,
+        purpose: `day${day}-report`,
+        filename: `Day${day}_${stakeholder.replace(/\s+/g, '_')}_Report.pdf`,
+      });
+      onChange('driveLink', reportUrl);
+      onChange('reportGeneratedAt', new Date().toISOString());
+      alert(`Your Day-${day} report has been generated and attached to your submission.`);
     } catch (err) {
       console.error(err);
       if (err.name === 'ChunkLoadError' || err.message?.includes('Loading chunk')) {
         alert('A new update was just released! Please hard refresh the page to generate your PDF.');
       } else {
-        alert('Failed to generate PDF.');
+        alert(err.message || 'Failed to generate PDF.');
       }
     } finally {
       setIsGenerating(false);
@@ -1525,7 +1569,7 @@ function SurveyReportGenerator({ day, stakeholder, persons, personData, onChange
         <FaFilePdf /> Day-{day} Report Generator
       </h4>
       <p style={{ fontSize: '0.85rem', color: '#15803d', marginBottom: 20 }}>
-        Upload photos for each person interviewed. Descriptions must be 30-50 words.
+        Upload a photo for each person interviewed (large photos are compressed automatically). Descriptions must be 30-50 words. The generated PDF is attached to your submission — no Google Drive link needed.
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -1541,15 +1585,14 @@ function SurveyReportGenerator({ day, stakeholder, persons, personData, onChange
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 16 }}>
                 <div>
-                  {slot.image ? (
-                    <Image src={slot.image} alt="preview" width={200} height={110} unoptimized style={{ width: '100%', height: 110, objectFit: 'cover', borderRadius: 8, border: '1px solid #cbd5e1' }} />
-                  ) : (
-                    <div style={{ width: '100%', height: 110, background: '#f1f5f9', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', border: '2px dashed #cbd5e1', fontSize: '0.8rem' }}>No Photo</div>
-                  )}
-                  <label style={{ display: 'block', marginTop: 8, padding: '5px 10px', background: '#e0f2fe', borderRadius: 6, cursor: 'pointer', textAlign: 'center', fontSize: '0.78rem', color: '#0369a1', fontWeight: 500 }}>
-                    Upload Photo
-                    <input type="file" accept="image/*" onChange={e => handleImageUpload(index, e)} style={{ display: 'none' }} />
-                  </label>
+                  <PhotoUploadField
+                    value={slot.image}
+                    day={day}
+                    purpose={`day${day}-photo`}
+                    disabled={readOnly}
+                    onBusyChange={trackUpload}
+                    onUploaded={url => handleImageUploaded(slot.id, url)}
+                  />
                 </div>
                 <div>
                   <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>Stakeholder Name</label>
@@ -1587,9 +1630,11 @@ function SurveyReportGenerator({ day, stakeholder, persons, personData, onChange
             + Add Photo Slot
           </button>
         )}
-        <button onClick={generatePDF} disabled={isGenerating} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: '#16a34a', color: '#fff', fontWeight: 600, cursor: isGenerating ? 'not-allowed' : 'pointer', opacity: isGenerating ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <FaFilePdf /> {isGenerating ? 'Generating...' : `Download Day-${day} PDF`}
-        </button>
+        {!readOnly && (
+          <button onClick={generatePDF} disabled={isGenerating || uploadingCount > 0} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: '#16a34a', color: '#fff', fontWeight: 600, cursor: isGenerating || uploadingCount > 0 ? 'not-allowed' : 'pointer', opacity: isGenerating || uploadingCount > 0 ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <FaFilePdf /> {isGenerating ? 'Generating & attaching…' : uploadingCount > 0 ? 'Waiting for uploads…' : `Generate & Attach Day-${day} Report`}
+          </button>
+        )}
       </div>
     </div>
   );
@@ -1687,45 +1732,15 @@ function DaySurvey({ day, stakeholderIdx, survey, data, onChange, readOnly, onFi
               <p style={{ margin: '0 0 12px', color: '#1e3a8a', fontWeight: 600 }}>Dear Students,</p>
               <p style={{ margin: '0 0 12px', color: '#334155' }}>Please create your account on <a href="https://www.mygov.in/" target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8', fontWeight: 600 }}>MyGov India</a> (if not already done) and complete today&apos;s tasks:</p>
 
-              {/* Quizzes */}
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ fontWeight: 700, color: '#1e40af', marginBottom: 8, fontSize: '0.95rem' }}>🧠 QUIZZES (Complete both):</div>
-                {mg.quizzes.map((q, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
-                    <span style={{ color: '#1e40af', fontWeight: 700, minWidth: 20 }}>•</span>
-                    <a href={q.url} target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8', fontSize: '0.88rem', wordBreak: 'break-all' }}>{q.title}</a>
-                  </div>
-                ))}
-              </div>
-
-              {/* Pledges */}
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ fontWeight: 700, color: '#15803d', marginBottom: 8, fontSize: '0.95rem' }}>🤝 PLEDGES (Complete both):</div>
-                {mg.pledges.map((p, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
-                    <span style={{ color: '#15803d', fontWeight: 700, minWidth: 20 }}>•</span>
-                    <a href={p.url} target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8', fontSize: '0.88rem', wordBreak: 'break-all' }}>{p.title}</a>
-                  </div>
-                ))}
-              </div>
-
-              <div style={{ background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: 8, padding: '10px 14px', fontSize: '0.87rem', color: '#78350f', marginBottom: 14 }}>
-                ⚠️ After completing <strong>2 quizzes</strong> and <strong>2 pledges</strong> today, save all 4 certificates in a folder, upload to Google Drive, make the link <strong>public (anyone can view)</strong>, and submit the URL below.
-              </div>
-
-              <label style={{ fontWeight: 700, color: '#1e3a8a', display: 'block', marginBottom: 6 }}>
-                📁 MyGov Certificates Google Drive URL – Day {day} <span style={{ color: '#dc2626' }}>*</span>
-              </label>
-              <input
-                type="url"
-                className="dt-link-input"
-                placeholder="https://drive.google.com/…"
-                value={data.mygovDriveLink || ''}
+              <MyGovTaskPanel
+                day={day}
+                quizCount={mg.quizzes.length}
+                pledgeCount={mg.pledges.length}
+                fallback={mg}
+                data={data}
+                onChange={onChange}
                 readOnly={readOnly}
-                style={{ marginBottom: 4, background: readOnly ? '#f9f9f9' : undefined }}
-                onChange={e => !readOnly && onChange('mygovDriveLink', e.target.value)}
               />
-              <p style={{ fontSize: '0.78rem', color: '#6b7280', margin: '4px 0 0' }}>Make sure the link is set to &quot;Anyone with the link can view&quot;.</p>
             </div>
           </div>
         );
@@ -1733,7 +1748,7 @@ function DaySurvey({ day, stakeholderIdx, survey, data, onChange, readOnly, onFi
 
       <div className="dt-sh-banner">
         <span className="sh-tag">{sh.stakeholder}</span>
-        <p>Take photos along with stakeholders while performing the surveys and generate the document at last and upload in the drive and submit the public link.</p>
+        <p>Take photos with stakeholders while performing the surveys, then use the report generator at the end — the PDF is attached to your submission automatically.</p>
         <p style={{ fontSize: '0.8rem', color: '#555', marginTop: 4 }}>Minimum {minPersons} persons required.</p>
       </div>
 
@@ -1811,14 +1826,7 @@ function DaySurvey({ day, stakeholderIdx, survey, data, onChange, readOnly, onFi
             onChange={onChange}
             readOnly={readOnly}
           />
-          <div className="dt-warning-box" style={{marginTop: 30}}>⚠️ Set sharing to <strong>&quot;Anyone with the link can view&quot;</strong>. Private links will NOT be evaluated.</div>
-          <div className="dt-link-section">
-            <label htmlFor={`d${day}-link`}>Google Drive Public Link</label>
-            <p>Paste the shareable link to your generated report here.</p>
-            <input id={`d${day}-link`} type="url" className="dt-link-input" placeholder="https://drive.google.com/…"
-              value={data.driveLink||''} readOnly={readOnly} style={readOnly ? {background:'#f9f9f9'} : {}}
-              onChange={e => !readOnly && onChange('driveLink', e.target.value)} />
-          </div>
+          <StoredReportStatus url={data.driveLink} title={`Day-${day} report`} />
         </>
       )}
 
@@ -1873,11 +1881,11 @@ function DaySurvey({ day, stakeholderIdx, survey, data, onChange, readOnly, onFi
               </button>
               <button className="dt-save-btn" onClick={async () => {
                 if (!data.driveLink || !data.driveLink.trim()) {
-                  alert("Please provide the Google Drive Public Link of the generated report before submitting.");
+                  alert(`Please generate your Day ${day} report above before submitting — it is attached automatically.`);
                   return;
                 }
                 if (isSlot2 && (day === 3 || day === 4) && !data.mygovDriveLink?.trim()) {
-                  alert(`Please submit the MyGov certificates Google Drive link for Day ${day} before submitting.`);
+                  alert(`Please upload your MyGov certificates for Day ${day} before submitting.`);
                   return;
                 }
                 if (window.confirm("Are you sure you want to submit all responses for evaluation? This cannot be undone.")) {
@@ -1968,43 +1976,15 @@ function Day5({ saved, survey, data, onChange, readOnly, studentData }) {
             <p style={{ margin: '0 0 12px', color: '#1e3a8a', fontWeight: 600 }}>Dear Students,</p>
             <p style={{ margin: '0 0 12px', color: '#334155' }}>Complete today&apos;s final MyGov tasks (if not already done, create your account on <a href="https://www.mygov.in/" target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8', fontWeight: 600 }}>MyGov India</a>):</p>
 
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontWeight: 700, color: '#1e40af', marginBottom: 8, fontSize: '0.95rem' }}>🧠 QUIZZES (Complete all {activeMyGovTasks.quizzes.length}):</div>
-              {activeMyGovTasks.quizzes.map((q, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
-                  <span style={{ color: '#1e40af', fontWeight: 700, minWidth: 20 }}>•</span>
-                  <a href={q.url} target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8', fontSize: '0.88rem', wordBreak: 'break-all' }}>{q.title}</a>
-                </div>
-              ))}
-            </div>
-
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontWeight: 700, color: '#15803d', marginBottom: 8, fontSize: '0.95rem' }}>🤝 PLEDGES (Complete all {activeMyGovTasks.pledges.length}):</div>
-              {activeMyGovTasks.pledges.map((p, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
-                  <span style={{ color: '#15803d', fontWeight: 700, minWidth: 20 }}>•</span>
-                  <a href={p.url} target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8', fontSize: '0.88rem', wordBreak: 'break-all' }}>{p.title}</a>
-                </div>
-              ))}
-            </div>
-
-            <div style={{ background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: 8, padding: '10px 14px', fontSize: '0.87rem', color: '#78350f', marginBottom: 14 }}>
-              ⚠️ After completing <strong>{activeMyGovTasks.quizzes.length} quizzes</strong> and <strong>{activeMyGovTasks.pledges.length} pledges</strong> today, save all {activeMyGovTasks.quizzes.length + activeMyGovTasks.pledges.length} certificates in a folder, upload to Google Drive, make the link <strong>public (anyone can view)</strong>, and submit the URL below.
-            </div>
-
-            <label style={{ fontWeight: 700, color: '#1e3a8a', display: 'block', marginBottom: 6 }}>
-              📁 MyGov Certificates Google Drive URL – Day 5 <span style={{ color: '#dc2626' }}>*</span>
-            </label>
-            <input
-              type="url"
-              className="dt-link-input"
-              placeholder="https://drive.google.com/…"
-              value={data.mygovDriveLink || ''}
+            <MyGovTaskPanel
+              day={5}
+              quizCount={activeMyGovTasks.quizzes.length}
+              pledgeCount={activeMyGovTasks.pledges.length}
+              fallback={activeMyGovTasks}
+              data={data}
+              onChange={onChange}
               readOnly={readOnly}
-              style={{ marginBottom: 4, background: readOnly ? '#f9f9f9' : undefined }}
-              onChange={e => !readOnly && onChange('mygovDriveLink', e.target.value)}
             />
-            <p style={{ fontSize: '0.78rem', color: '#6b7280', margin: '4px 0 0' }}>Make sure the link is set to &quot;Anyone with the link can view&quot;.</p>
           </div>
         </div>
       )}
@@ -2259,75 +2239,12 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
   })();
 
   const [uploadingImages, setUploadingImages] = useState({});
+  const anyUploading = Object.values(uploadingImages).some(Boolean);
 
-  const handlePhotoUpload = (e, key) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    setUploadingImages(prev => ({ ...prev, [key]: true }));
-
-    // Safety timeout: always clear the spinner after 20s even if something silently fails
-    const safetyTimer = setTimeout(() => {
-      setUploadingImages(prev => ({ ...prev, [key]: false }));
-    }, 20000);
-
-    const clearUploading = () => {
-      clearTimeout(safetyTimer);
-      setUploadingImages(prev => ({ ...prev, [key]: false }));
-    };
-
-    const compressAndStore = (bitmap, width, height) => {
-      try {
-        const MAX_SIZE = 800;
-        let w = width, h = height;
-        if (w > h && w > MAX_SIZE) { h = Math.round(h * (MAX_SIZE / w)); w = MAX_SIZE; }
-        else if (h > MAX_SIZE) { w = Math.round(w * (MAX_SIZE / h)); h = MAX_SIZE; }
-
-        const canvas = document.createElement('canvas');
-        canvas.width = w;
-        canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(bitmap, 0, 0, w, h);
-        const compressed = canvas.toDataURL('image/jpeg', 0.6);
-        onChangeWithPersist(key, compressed);
-      } catch (err) {
-        console.error('Image compression error:', err);
-        alert('Failed to process image. Please try a different or smaller photo.');
-      } finally {
-        clearUploading();
-      }
-    };
-
-    // Prefer createImageBitmap (faster, better mobile/format support incl. WhatsApp JPEGs)
-    if (typeof createImageBitmap === 'function') {
-      createImageBitmap(file)
-        .then(bitmap => compressAndStore(bitmap, bitmap.width, bitmap.height))
-        .catch(() => {
-          // Fallback to FileReader + Image if createImageBitmap fails
-          fallbackToFileReader();
-        });
-    } else {
-      fallbackToFileReader();
-    }
-
-    function fallbackToFileReader() {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const img = new Image();
-        img.onload = () => compressAndStore(img, img.width, img.height);
-        img.onerror = () => {
-          alert('Failed to load image. Try converting to JPG or use a different photo.');
-          clearUploading();
-        };
-        img.src = reader.result;
-      };
-      reader.onerror = () => {
-        alert('Failed to read file from your device.');
-        clearUploading();
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+  // One source of truth for photos: current draft first, then the locally-cached copy.
+  // (Validation and drawing previously read different sources, so a reload could pass
+  // validation yet produce a PDF with missing photos.)
+  const photo = (key) => data?.[key] || localData[key] || null;
 
   const generatePDF = async () => {
     // ── Pre-generation validation ──
@@ -2337,7 +2254,10 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
     if (localData.activityTitle === 'Other' && !localData.customTitle?.trim()) {
       alert("Please specify the custom activity title."); return;
     }
-    if (!localData.coverPhoto || !localData.photo2 || !localData.photo3 || !localData.photo4 || !localData.photo5) {
+    if (anyUploading) {
+      alert('Please wait until all photos finish uploading.'); return;
+    }
+    if (!['coverPhoto', 'photo2', 'photo3', 'photo4', 'photo5'].every(photo)) {
       alert("Please upload all 5 photos before generating the report."); return;
     }
     if (wc(localData.coverDesc || '') < 120) {
@@ -2354,6 +2274,7 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
     setIsGenerating(true);
     try {
       const { jsPDF } = await import('jspdf');
+      const img = await preloadImagesForPdf(['coverPhoto', 'photo2', 'photo3', 'photo4', 'photo5'].map(photo));
       const doc = new jsPDF({ unit: 'mm', format: 'a4' });
       const PW = doc.internal.pageSize.getWidth();
       const PH = doc.internal.pageSize.getHeight();
@@ -2425,8 +2346,8 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
       doc.line(PW/2 - 40, y + 2, PW/2 + 40, y + 2);
       y += titleLines.length * 8 + 10;
 
-      if (data.coverPhoto) {
-        addProportionalImage(doc, data.coverPhoto, margin, y, contentW, 95);
+      if (photo('coverPhoto')) {
+        addProportionalImage(doc, img(photo('coverPhoto')), margin, y, contentW, 95);
         y += 100;
       }
 
@@ -2436,14 +2357,14 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
       doc.addPage();
       drawBorder();
       y = margin + 10;
-      if (data.photo2) {
-        addProportionalImage(doc, data.photo2, margin, y, contentW, 75);
+      if (photo('photo2')) {
+        addProportionalImage(doc, img(photo('photo2')), margin, y, contentW, 75);
         y += 80;
       }
       y += writeDynamicText(data.photo2Desc || '', y, 40, 12) + 5;
 
-      if (data.photo3) {
-        addProportionalImage(doc, data.photo3, margin, y, contentW, 75);
+      if (photo('photo3')) {
+        addProportionalImage(doc, img(photo('photo3')), margin, y, contentW, 75);
         y += 80;
       }
       writeDynamicText(data.photo3Desc || '', y, PH - margin - 15 - y, 12);
@@ -2452,14 +2373,14 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
       doc.addPage();
       drawBorder();
       y = margin + 10;
-      if (data.photo4) {
-        addProportionalImage(doc, data.photo4, margin, y, contentW, 75);
+      if (photo('photo4')) {
+        addProportionalImage(doc, img(photo('photo4')), margin, y, contentW, 75);
         y += 80;
       }
       y += writeDynamicText(data.photo4Desc || '', y, 40, 12) + 5;
 
-      if (data.photo5) {
-        addProportionalImage(doc, data.photo5, margin, y, contentW, 75);
+      if (photo('photo5')) {
+        addProportionalImage(doc, img(photo('photo5')), margin, y, contentW, 75);
         y += 80;
       }
       writeDynamicText(data.photo5Desc || '', y, PH - margin - 15 - y, 12);
@@ -2477,15 +2398,22 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
         );
       }
 
-      doc.save(`Day6_Intervention_${studentData?.rollNumber || 'Report'}.pdf`);
-      // Clear localStorage after successful download
+      const reportUrl = await attachGeneratedPdf(doc, {
+        day: 6,
+        purpose: 'intervention-report',
+        filename: `Day6_Intervention_${studentData?.username || studentData?.rollNumber || 'Report'}.pdf`,
+      });
+      onChange('driveLink', reportUrl);
+      onChange('photosProvided', true);
+      // Everything now lives in the saved draft; drop the local cache so stale text can't resurface
       try { localStorage.removeItem(LS_KEY); } catch (e) {}
+      alert('Your intervention report has been generated and attached to your submission.');
     } catch (e) {
       console.error(e);
       if (e.name === 'ChunkLoadError' || e.message?.includes('Loading chunk')) {
         alert('A new update was just released! Please hard refresh the page to generate your PDF.');
       } else {
-        alert('Failed to generate PDF. Ensure all uploaded photos are valid images.');
+        alert(e.message || 'Failed to generate PDF. Ensure all uploaded photos are valid images.');
       }
     } finally {
       setIsGenerating(false);
@@ -2528,9 +2456,15 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
           <h4 style={{ margin: 0, fontSize: '0.95rem', display: 'inline-block' }}>📄 Page 1: Cover Photo &amp; Description</h4>
           <WordCountLabel count={wc(data.coverDesc || '')} min={120} />
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-          <input type="file" accept="image/*" onChange={e => handlePhotoUpload(e, 'coverPhoto')} disabled={readOnly || uploadingImages['coverPhoto']} style={{ fontSize: '0.8rem' }} />
-          {uploadingImages['coverPhoto'] ? <span style={{ fontSize: '0.75rem', color: '#d97706', marginLeft: 10 }}>⏳ Processing...</span> : data.coverPhoto ? <span style={{ fontSize: '0.75rem', color: '#16a34a', marginLeft: 10 }}>✅ Uploaded</span> : null}
+        <div style={{ marginBottom: '10px' }}>
+          <PhotoUploadField
+            value={photo('coverPhoto')}
+            day={6}
+            purpose="intervention-photo"
+            disabled={readOnly}
+            onBusyChange={busy => setUploadingImages(prev => ({ ...prev, coverPhoto: busy }))}
+            onUploaded={url => onChangeWithPersist('coverPhoto', url)}
+          />
         </div>
         <textarea placeholder="Description of the activity (Min 120 words)..." value={data.coverDesc || ''} onChange={e => !readOnly && onChange('coverDesc', e.target.value)} style={{...inputStyle(readOnly), minHeight: '100px'}} readOnly={readOnly} />
       </div>
@@ -2541,9 +2475,15 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
           <h4 style={{ margin: 0, fontSize: '0.95rem', display: 'inline-block' }}>📄 Page 2: Photo 2 &amp; Description</h4>
           <WordCountLabel count={wc(data.photo2Desc || '')} min={40} />
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-          <input type="file" accept="image/*" onChange={e => handlePhotoUpload(e, 'photo2')} disabled={readOnly || uploadingImages['photo2']} style={{ fontSize: '0.8rem' }} />
-          {uploadingImages['photo2'] ? <span style={{ fontSize: '0.75rem', color: '#d97706', marginLeft: 10 }}>⏳ Processing...</span> : data.photo2 ? <span style={{ fontSize: '0.75rem', color: '#16a34a', marginLeft: 10 }}>✅ Uploaded</span> : null}
+        <div style={{ marginBottom: '10px' }}>
+          <PhotoUploadField
+            value={photo('photo2')}
+            day={6}
+            purpose="intervention-photo"
+            disabled={readOnly}
+            onBusyChange={busy => setUploadingImages(prev => ({ ...prev, photo2: busy }))}
+            onUploaded={url => onChangeWithPersist('photo2', url)}
+          />
         </div>
         <textarea placeholder="Description of this photo (Min 40 words)..." value={data.photo2Desc || ''} onChange={e => !readOnly && onChange('photo2Desc', e.target.value)} style={{...inputStyle(readOnly), minHeight: '80px'}} readOnly={readOnly} />
       </div>
@@ -2553,9 +2493,15 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
           <h4 style={{ margin: 0, fontSize: '0.95rem', display: 'inline-block' }}>📄 Page 2: Photo 3 &amp; Description</h4>
           <WordCountLabel count={wc(data.photo3Desc || '')} min={40} />
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-          <input type="file" accept="image/*" onChange={e => handlePhotoUpload(e, 'photo3')} disabled={readOnly || uploadingImages['photo3']} style={{ fontSize: '0.8rem' }} />
-          {uploadingImages['photo3'] ? <span style={{ fontSize: '0.75rem', color: '#d97706', marginLeft: 10 }}>⏳ Processing...</span> : data.photo3 ? <span style={{ fontSize: '0.75rem', color: '#16a34a', marginLeft: 10 }}>✅ Uploaded</span> : null}
+        <div style={{ marginBottom: '10px' }}>
+          <PhotoUploadField
+            value={photo('photo3')}
+            day={6}
+            purpose="intervention-photo"
+            disabled={readOnly}
+            onBusyChange={busy => setUploadingImages(prev => ({ ...prev, photo3: busy }))}
+            onUploaded={url => onChangeWithPersist('photo3', url)}
+          />
         </div>
         <textarea placeholder="Description of this photo (Min 40 words)..." value={data.photo3Desc || ''} onChange={e => !readOnly && onChange('photo3Desc', e.target.value)} style={{...inputStyle(readOnly), minHeight: '80px'}} readOnly={readOnly} />
       </div>
@@ -2566,9 +2512,15 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
           <h4 style={{ margin: 0, fontSize: '0.95rem', display: 'inline-block' }}>📄 Page 3: Photo 4 &amp; Description</h4>
           <WordCountLabel count={wc(data.photo4Desc || '')} min={40} />
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-          <input type="file" accept="image/*" onChange={e => handlePhotoUpload(e, 'photo4')} disabled={readOnly || uploadingImages['photo4']} style={{ fontSize: '0.8rem' }} />
-          {uploadingImages['photo4'] ? <span style={{ fontSize: '0.75rem', color: '#d97706', marginLeft: 10 }}>⏳ Processing...</span> : data.photo4 ? <span style={{ fontSize: '0.75rem', color: '#16a34a', marginLeft: 10 }}>✅ Uploaded</span> : null}
+        <div style={{ marginBottom: '10px' }}>
+          <PhotoUploadField
+            value={photo('photo4')}
+            day={6}
+            purpose="intervention-photo"
+            disabled={readOnly}
+            onBusyChange={busy => setUploadingImages(prev => ({ ...prev, photo4: busy }))}
+            onUploaded={url => onChangeWithPersist('photo4', url)}
+          />
         </div>
         <textarea placeholder="Description of this photo (Min 40 words)..." value={data.photo4Desc || ''} onChange={e => !readOnly && onChange('photo4Desc', e.target.value)} style={{...inputStyle(readOnly), minHeight: '80px'}} readOnly={readOnly} />
       </div>
@@ -2578,25 +2530,32 @@ function InterventionGenerator({ studentData, readOnly, data, onChange }) {
           <h4 style={{ margin: 0, fontSize: '0.95rem', display: 'inline-block' }}>📄 Page 3: Photo 5 &amp; Description</h4>
           <WordCountLabel count={wc(data.photo5Desc || '')} min={40} />
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-          <input type="file" accept="image/*" onChange={e => handlePhotoUpload(e, 'photo5')} disabled={readOnly || uploadingImages['photo5']} style={{ fontSize: '0.8rem' }} />
-          {uploadingImages['photo5'] ? <span style={{ fontSize: '0.75rem', color: '#d97706', marginLeft: 10 }}>⏳ Processing...</span> : data.photo5 ? <span style={{ fontSize: '0.75rem', color: '#16a34a', marginLeft: 10 }}>✅ Uploaded</span> : null}
+        <div style={{ marginBottom: '10px' }}>
+          <PhotoUploadField
+            value={photo('photo5')}
+            day={6}
+            purpose="intervention-photo"
+            disabled={readOnly}
+            onBusyChange={busy => setUploadingImages(prev => ({ ...prev, photo5: busy }))}
+            onUploaded={url => onChangeWithPersist('photo5', url)}
+          />
         </div>
         <textarea placeholder="Description of this photo (Min 40 words)..." value={data.photo5Desc || ''} onChange={e => !readOnly && onChange('photo5Desc', e.target.value)} style={{...inputStyle(readOnly), minHeight: '80px'}} readOnly={readOnly} />
       </div>
 
-      <button onClick={generatePDF} disabled={isGenerating} style={{
-        padding: '10px 20px', backgroundColor: '#16a34a', color: 'white', border: 'none', borderRadius: '6px', cursor: isGenerating ? 'not-allowed' : 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px'
-      }}>
-        {isGenerating ? '⏳ Generating PDF...' : '⬇ Download Intervention PDF'}
-      </button>
+      {!readOnly && (
+        <button onClick={generatePDF} disabled={isGenerating || anyUploading} style={{
+          padding: '10px 20px', backgroundColor: '#16a34a', color: 'white', border: 'none', borderRadius: '6px', cursor: isGenerating || anyUploading ? 'not-allowed' : 'pointer', opacity: isGenerating || anyUploading ? 0.7 : 1, fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px'
+        }}>
+          <FaFilePdf /> {isGenerating ? 'Generating & attaching…' : anyUploading ? 'Waiting for uploads…' : 'Generate & Attach Intervention Report'}
+        </button>
+      )}
     </div>
   );
 }
 
 /* ── Day 6 ── */
 function Day6({ data, onChange, readOnly, studentData }) {
-  const ro = { background: readOnly ? '#f9f9f9' : undefined };
   const domain = studentData?.selectedDomain || '';
   const template = getInterventionTemplate(domain);
   const isSlot1 = (parseInt(String(studentData?.slot || '1').replace(/\D/g, ''), 10) || 1) === 1;
@@ -2667,46 +2626,15 @@ function Day6({ data, onChange, readOnly, studentData }) {
             </ol>
             <p style={{ margin: '0 0 10px', color: '#1e3a8a', fontWeight: 700 }}>After creating the account, complete the below tasks:</p>
 
-            {/* Quizzes */}
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontWeight: 700, color: '#1e40af', marginBottom: 8, fontSize: '0.95rem' }}>🧠 QUIZZES (Complete all {activeQuizzes.length}):</div>
-              {activeQuizzes.map((q, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
-                  <span style={{ color: '#1e40af', fontWeight: 700, minWidth: 20 }}>•</span>
-                  <a href={q.url} target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8', fontSize: '0.88rem', wordBreak: 'break-all' }}>{q.title}</a>
-                </div>
-              ))}
-            </div>
-
-            {/* Pledges */}
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontWeight: 700, color: '#15803d', marginBottom: 8, fontSize: '0.95rem' }}>🤝 PLEDGES (Complete all {activePledges.length}):</div>
-              {activePledges.map((p, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
-                  <span style={{ color: '#15803d', fontWeight: 700, minWidth: 20 }}>•</span>
-                  <a href={p.url} target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8', fontSize: '0.88rem', wordBreak: 'break-all' }}>{p.title}</a>
-                </div>
-              ))}
-            </div>
-
-            <div style={{ background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: 8, padding: '10px 14px', fontSize: '0.87rem', color: '#78350f', marginBottom: 14 }}>
-              ⚠️ After completing all <strong>{activeQuizzes.length} quizzes</strong> and <strong>{activePledges.length} pledges</strong>, save all {activeQuizzes.length + activePledges.length} certificates in a folder, upload to Google Drive, make the link <strong>public (anyone can view)</strong>, and submit the URL below.
-            </div>
-
-            {/* MyGov Drive Link */}
-            <label style={{ fontWeight: 700, color: '#1e3a8a', display: 'block', marginBottom: 6 }}>
-              📁 MyGov Certificates Google Drive URL <span style={{ color: '#dc2626' }}>*</span>
-            </label>
-            <input
-              type="url"
-              className="dt-link-input"
-              placeholder="https://drive.google.com/…"
-              value={data.mygovDriveLink || ''}
+            <MyGovTaskPanel
+              day={6}
+              quizCount={activeQuizzes.length}
+              pledgeCount={activePledges.length}
+              fallback={{ quizzes: activeQuizzes, pledges: activePledges }}
+              data={data}
+              onChange={onChange}
               readOnly={readOnly}
-              style={{ ...ro, marginBottom: 4 }}
-              onChange={e => !readOnly && onChange('mygovDriveLink', e.target.value)}
             />
-            <p style={{ fontSize: '0.78rem', color: '#6b7280', margin: '4px 0 0' }}>Make sure the link is set to &quot;Anyone with the link can view&quot;.</p>
           </div>
         </div>
       )}
@@ -2716,8 +2644,8 @@ function Day6({ data, onChange, readOnly, studentData }) {
         <ul>
           <li><strong>Select any 1 activity</strong> from the list below and perform it.</li>
           <li>Capture images during the activity.</li>
-          <li>Use the <strong>Intervention Activity Report Generator</strong> below to compile your photos and descriptions and generate the report.</li>
-          <li>Upload the generated PDF to your Google Drive and submit the public link.</li>
+          <li>Use the <strong>Intervention Activity Report Generator</strong> below to upload your photos, add descriptions and generate the report.</li>
+          <li>The generated PDF is attached to your submission automatically — no Google Drive link needed.</li>
         </ul>
       </div>
 
@@ -2731,14 +2659,7 @@ function Day6({ data, onChange, readOnly, studentData }) {
 
       <InterventionGenerator data={data} onChange={onChange} readOnly={readOnly} studentData={studentData} />
 
-      <div className="dt-warning-box" style={{marginTop: 20}}>⚠️ Set sharing to <strong>&quot;Anyone with the link can view&quot;</strong>. Private links will NOT be evaluated.</div>
-      <div className="dt-link-section">
-        <label htmlFor="d6-link">Google Drive Public Link</label>
-        <p>Paste the shareable link to your intervention report here.</p>
-        <input id="d6-link" type="url" className="dt-link-input" placeholder="https://drive.google.com/…"
-          value={data.driveLink||''} readOnly={readOnly} style={ro}
-          onChange={e => !readOnly && onChange('driveLink', e.target.value)} />
-      </div>
+      <StoredReportStatus url={data.driveLink} title="Intervention report" />
     </div>
   );
 }
@@ -3000,86 +2921,7 @@ function CaseStudyGenerator({ studentData, readOnly, survey, saved, data, onChan
   };
 
   const [uploadingImages, setUploadingImages] = useState({});
-
-  const handlePhotoUpload = (e, key) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    setUploadingImages(prev => ({ ...prev, [key]: true }));
-
-    // Use createImageBitmap which handles HEIC/HEIF from iPhones natively
-    const processWithBitmap = async () => {
-      try {
-        const bitmap = await createImageBitmap(file);
-        const canvas = document.createElement('canvas');
-        let width = bitmap.width;
-        let height = bitmap.height;
-        const MAX_SIZE = 800;
-
-        if (width > height && width > MAX_SIZE) {
-          height = Math.round(height * (MAX_SIZE / width));
-          width = MAX_SIZE;
-        } else if (height > MAX_SIZE) {
-          width = Math.round(width * (MAX_SIZE / height));
-          height = MAX_SIZE;
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(bitmap, 0, 0, width, height);
-        bitmap.close();
-
-        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.65);
-        setAns(key, compressedBase64);
-      } catch (err) {
-        console.warn('createImageBitmap failed, falling back to FileReader:', err);
-        // Fallback: FileReader + Image element
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const img = new Image();
-          const timeout = setTimeout(() => {
-            // If onload never fires after 15s, clear stuck state
-            setUploadingImages(prev => ({ ...prev, [key]: false }));
-            alert('Image took too long to process. If using an iPhone, go to Settings → Camera → Formats → Most Compatible, then try again.');
-          }, 15000);
-          img.onload = () => {
-            clearTimeout(timeout);
-            try {
-              const canvas = document.createElement('canvas');
-              let width = img.width;
-              let height = img.height;
-              const MAX_SIZE = 800;
-              if (width > height && width > MAX_SIZE) { height = Math.round(height * MAX_SIZE / width); width = MAX_SIZE; }
-              else if (height > MAX_SIZE) { width = Math.round(width * MAX_SIZE / height); height = MAX_SIZE; }
-              canvas.width = width; canvas.height = height;
-              canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-              setAns(key, canvas.toDataURL('image/jpeg', 0.65));
-            } catch (e2) {
-              alert('Failed to compress image. Please try a smaller or different photo.');
-            } finally {
-              setUploadingImages(prev => ({ ...prev, [key]: false }));
-            }
-          };
-          img.onerror = () => {
-            clearTimeout(timeout);
-            setUploadingImages(prev => ({ ...prev, [key]: false }));
-            alert('Could not read this image. If using an iPhone, go to Settings → Camera → Formats → Most Compatible and try again.');
-          };
-          img.src = reader.result;
-        };
-        reader.onerror = () => {
-          setUploadingImages(prev => ({ ...prev, [key]: false }));
-          alert('Failed to read file.');
-        };
-        reader.readAsDataURL(file);
-        return; // Don't clear uploading state here — the reader callbacks will
-      }
-      setUploadingImages(prev => ({ ...prev, [key]: false }));
-    };
-
-    processWithBitmap();
-  };
+  const setUploading = (key, busy) => setUploadingImages(prev => ({ ...prev, [key]: busy }));
 
   const inputStyle = (ro) => ({
     width: '100%', padding: '7px 10px', borderRadius: 6,
@@ -3097,13 +2939,15 @@ function CaseStudyGenerator({ studentData, readOnly, survey, saved, data, onChan
             {count < minWords ? `Min ${minWords} words (Current: ${count})` : `✓ ${count} words`}
           </span>
         </div>
-        <div style={{ marginBottom: 10, display: 'flex', alignItems: 'center' }}>
-          <input type="file" accept="image/*" onChange={e => handlePhotoUpload(e, photoKey)} disabled={readOnly || uploadingImages[photoKey]} style={{ fontSize: '0.8rem' }} />
-          {uploadingImages[photoKey] ? (
-            <span style={{ fontSize: '0.8rem', color: '#d97706', marginLeft: 10, fontWeight: 600 }}>⏳ Processing...</span>
-          ) : answers[photoKey] ? (
-            <span style={{ fontSize: '0.8rem', color: '#388e3c', marginLeft: 10, fontWeight: 600 }}>✓ Image Selected</span>
-          ) : null}
+        <div style={{ marginBottom: 10 }}>
+          <PhotoUploadField
+            value={answers[photoKey]}
+            day={7}
+            purpose="case-study-photo"
+            disabled={readOnly}
+            onBusyChange={busy => setUploading(photoKey, busy)}
+            onUploaded={url => setAns(photoKey, url)}
+          />
         </div>
         <textarea
           rows={3}
@@ -3120,7 +2964,7 @@ function CaseStudyGenerator({ studentData, readOnly, survey, saved, data, onChan
   const generatePDF = async () => {
     // Block if any images are still being processed
     if (Object.values(uploadingImages).some(v => v)) {
-      alert('Please wait for all images to finish processing before generating the PDF.');
+      alert('Please wait until all photos finish uploading before generating the PDF.');
       return;
     }
     // Validation
@@ -3129,7 +2973,7 @@ function CaseStudyGenerator({ studentData, readOnly, survey, saved, data, onChan
         for (const field of section.fields) {
           const key = `${section.heading}__${field}`;
           if (!answers[`${key}__photo1`] || !answers[`${key}__photo2`]) {
-            alert(`Please upload 2 photos for ${field}. If you already selected a photo and it shows "Processing...", please wait or try a different image.`); return;
+            alert(`Please upload 2 photos for ${field}.`); return;
           }
           if (wc(answers[`${key}__desc1`]) < 20 || wc(answers[`${key}__desc2`]) < 20) {
             alert(`Description for ${field} photos must be at least 20 words.`); return;
@@ -3171,6 +3015,9 @@ function CaseStudyGenerator({ studentData, readOnly, survey, saved, data, onChan
     setIsGenerating(true);
     try {
       const { jsPDF } = await import('jspdf');
+      const img = await preloadImagesForPdf(
+        Object.entries(answers).filter(([k]) => /__photo\d$/.test(k)).map(([, v]) => v)
+      );
       const doc = new jsPDF({ unit: 'mm', format: 'a4' });
       const PW = doc.internal.pageSize.getWidth();
       const PH = doc.internal.pageSize.getHeight();
@@ -3415,7 +3262,7 @@ function CaseStudyGenerator({ studentData, readOnly, survey, saved, data, onChan
               checkNewPage(120);
               doc.setFontSize(11); doc.setFont('times', 'bold'); doc.setTextColor(20, 60, 20);
               doc.text(`${field} - Photo ${i}:`, margin, y); y += 6;
-              try { addProportionalImage(doc, answers[`${key}__photo${i}`], margin, y, contentW, 90); } catch(e) { console.error(e); }
+              try { addProportionalImage(doc, img(answers[`${key}__photo${i}`]), margin, y, contentW, 90); } catch(e) { console.error(e); }
               y += 95;
               doc.setFont('times', 'normal'); doc.setTextColor(20, 20, 20);
               const lines = doc.splitTextToSize(answers[`${key}__desc${i}`] || '', contentW);
@@ -3430,7 +3277,7 @@ function CaseStudyGenerator({ studentData, readOnly, survey, saved, data, onChan
             checkNewPage(120);
             doc.setFontSize(11); doc.setFont('times', 'bold'); doc.setTextColor(20, 60, 20);
             doc.text(`Student Intervention - Photo ${i}:`, margin, y); y += 6;
-            try { doc.addImage(answers[`${key}__photo${i}`], 'JPEG', margin, y, contentW, 90); } catch(e) { console.error(e); }
+            try { addProportionalImage(doc, img(answers[`${key}__photo${i}`]), margin, y, contentW, 90); } catch(e) { console.error(e); }
             y += 95;
             doc.setFont('times', 'normal'); doc.setTextColor(20, 20, 20);
             const lines = doc.splitTextToSize(answers[`${key}__desc${i}`] || '', contentW);
@@ -3454,15 +3301,21 @@ function CaseStudyGenerator({ studentData, readOnly, survey, saved, data, onChan
         );
       }
 
-      doc.save(`Case_Study_${domain.replace(/\s+/g, '_') || 'Report'}.pdf`);
-      // Clear localStorage after successful download — data is no longer needed
+      const reportUrl = await attachGeneratedPdf(doc, {
+        day: 7,
+        purpose: 'case-study',
+        filename: `Case_Study_${domain.replace(/\s+/g, '_') || 'Report'}.pdf`,
+      });
+      if (onChange) onChange('caseStudyLink', reportUrl);
+      // Clear localStorage after successful generation — everything is saved server-side now
       try { localStorage.removeItem(LS_KEY); } catch (e) {}
+      alert('Your case study report has been generated and attached to your submission.');
     } catch (err) {
       console.error('PDF error', err);
       if (err.name === 'ChunkLoadError' || err.message?.includes('Loading chunk')) {
         alert('A new update was just released! Please hard refresh the page to generate your PDF.');
       } else {
-        alert('Failed to generate PDF. Please try again.');
+        alert(err.message || 'Failed to generate PDF. Please try again.');
       }
     } finally {
       setIsGenerating(false);
@@ -3483,7 +3336,8 @@ function CaseStudyGenerator({ studentData, readOnly, survey, saved, data, onChan
       </div>
       <p style={{ fontSize: '0.88rem', color: '#4a6b4a', marginBottom: 22 }}>
         Domain: <strong>{domain || 'Not assigned'}</strong> — Fill in the fields below and click
-        <strong> Download PDF</strong> to generate your professionally formatted case study report.
+        <strong> Generate &amp; Attach</strong>. Photos are compressed and saved as you upload them, and the
+        finished PDF is attached to your submission automatically.
       </p>
       
       <canvas ref={pieChartRef} width="600" height="400" style={{ display: 'none' }} />
@@ -3635,7 +3489,7 @@ function CaseStudyGenerator({ studentData, readOnly, survey, saved, data, onChan
         <button
           type="button"
           onClick={generatePDF}
-          disabled={isGenerating}
+          disabled={isGenerating || Object.values(uploadingImages).some(Boolean)}
           style={{
             marginTop: 8, padding: '13px 28px', borderRadius: 10, border: 'none',
             background: isGenerating ? '#9e9e9e' : 'linear-gradient(135deg, #014a01, #1b7a1b)',
@@ -3645,7 +3499,7 @@ function CaseStudyGenerator({ studentData, readOnly, survey, saved, data, onChan
           }}
         >
           <FaFilePdf />
-          {isGenerating ? 'Generating PDF…' : '⬇ Download Case Study PDF'}
+          {isGenerating ? 'Generating & attaching…' : Object.values(uploadingImages).some(Boolean) ? 'Waiting for uploads…' : 'Generate & Attach Case Study Report'}
         </button>
       )}
     </div>
@@ -3660,23 +3514,19 @@ function Day7({ saved, data, onChange, readOnly, studentData, survey }) {
       <div className="dt-info-box" style={{marginBottom:18}}>
         <h4>Task: Documentation &amp; Presentation</h4>
         <ul>
-          <li><strong>Case Study Report:</strong> Use the generator below to auto-fill and download your domain-specific report as a PDF. Then upload it to Google Docs/Drive.</li>
+          <li><strong>Case Study Report:</strong> Use the generator below to fill in and generate your domain-specific report. The PDF is attached to your submission automatically.</li>
           <li><strong>Presentation Video:</strong> PowerPoint + face recording + voiceover.</li>
           <li>Upload video to <strong>YouTube</strong> and write a <strong>LinkedIn Article</strong>.</li>
           <li>Your LinkedIn article MUST include your key findings and embed both your presentation video and article links.</li>
-          <li>Submit all three links below.</li>
+          <li>Submit your YouTube and LinkedIn links below.</li>
         </ul>
       </div>
 
       {/* Case Study Generator */}
       <CaseStudyGenerator saved={saved} studentData={studentData} readOnly={readOnly} survey={survey} data={data} onChange={onChange} />
 
-      <div className="dt-link-section" style={{marginTop: 28}}>
-        <label htmlFor="d7-cs">Case Study Document Public Link</label>
-        <p>After downloading the PDF above, upload it to Google Drive and paste the shareable link here.</p>
-        <input id="d7-cs" type="url" className="dt-link-input" placeholder="https://docs.google.com/…"
-          value={data.caseStudyLink||''} readOnly={readOnly} style={ro}
-          onChange={e => !readOnly && onChange('caseStudyLink', e.target.value)} />
+      <div style={{ marginTop: 28 }}>
+        <StoredReportStatus url={data.caseStudyLink} title="Case study report" />
       </div>
       <div className="dt-link-section">
         <label htmlFor="d7-yt">Presentation Video – YouTube Link</label>

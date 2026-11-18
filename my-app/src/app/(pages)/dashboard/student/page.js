@@ -1,34 +1,56 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { FaHome, FaUser, FaTasks, FaClipboardList, FaUserTie, FaLock, FaBook } from 'react-icons/fa';
 import toast from 'react-hot-toast';
+import { LayoutDashboard, UserRound, ListChecks, ClipboardList, FileText, Lock, BookMarked, AlertTriangle, Construction, RefreshCw } from 'lucide-react';
 import './page.css';
 import Loader from '@/app/components/loader/loader';
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import Overview from './_components/overview/page';
-import Profile from './_components/profile/page';
-import ChangePassword from './_components/changePassword/page';
-import Lead from './_components/Lead/page';
-import Reports from './_components/submissions/reports';
-import FinalReport from './_components/finalReport/page';
-import ProblemStatement from './_components/problemStatment/page';
-import ReportBook from './_components/reportBook/page';
+import dynamic from 'next/dynamic';
+import DashboardShell, { DashboardState, useHashSection } from '@/components/DashboardShell';
 
-import DailyTasks from './_components/dailyTasks/page';
-import EvaluationPlan from './_components/evaluationPlan/page';
-import SurveyQuestions from './_components/surveyQuestions/page';
+// Sections are code-split: only the one being viewed is downloaded.
+const SectionLoading = () => <Loader />;
+
+const Overview = dynamic(() => import('./_components/overview/page'), { loading: SectionLoading });
+const Profile = dynamic(() => import('./_components/profile/page'), { loading: SectionLoading });
+const ChangePassword = dynamic(() => import('./_components/changePassword/page'), { loading: SectionLoading });
+const ReportBook = dynamic(() => import('./_components/reportBook/page'), { loading: SectionLoading });
+const DailyTasks = dynamic(() => import('./_components/dailyTasks/page'), { loading: SectionLoading });
+const EvaluationPlan = dynamic(() => import('./_components/evaluationPlan/page'), { loading: SectionLoading });
+const SurveyQuestions = dynamic(() => import('./_components/surveyQuestions/page'), { loading: SectionLoading });
+
+const BASE_SECTIONS = ['overview', 'profile', 'daily-tasks', 'survey-questions', 'evaluation-plan', 'change-password'];
+
+/** Report Book eligibility, unchanged from the previous inline logic. */
+function getReportBookEligibility(studentData) {
+  const dm = studentData?.dailyMarks || {};
+  const allDaysEvaluated = [1, 2, 3, 4, 5, 6, 7].every(d => dm[`d${d}`] !== null && dm[`d${d}`] !== undefined);
+  const totalMarks = dm.total || 0;
+  const slotNum = parseInt(String(studentData?.slot || '1').replace(/\D/g, ''), 10) || 1;
+  const day7Submitted = Boolean(studentData?.uploads?.details?.day7) || Boolean(studentData?.hasFinalDay7Task);
+  // Slot 1: all days evaluated and at least 60 marks
+  // Slot 10 onwards: all 7 daily tasks submitted
+  // Other slots: always visible
+  if (slotNum === 1) return allDaysEvaluated && totalMarks >= 60;
+  if (slotNum >= 10) return day7Submitted;
+  return true;
+}
 
 export default function StudentDashboard() {
   const { user, isLoading: authLoading } = useAuth();
-  const [loading, setLoading]       = useState(true);
-  const [error, setError]           = useState(null);
-  const [activeSection, setActiveSection] = useState('overview');
-  const [studentData, setStudentData]     = useState(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [slotEnabled, setSlotEnabled]     = useState(false); // default locked
-  const [rbookVisible, setRbookVisible]   = useState(true);  // admin report book visibility
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [studentData, setStudentData] = useState(null);
+  const [slotEnabled, setSlotEnabled] = useState(false); // default locked
+  const [rbookVisible, setRbookVisible] = useState(true); // admin report book visibility
+  const [reloadKey, setReloadKey] = useState(0);
+
+  const showReportBook = Boolean(studentData) && getReportBookEligibility(studentData) && rbookVisible;
+  const [activeSection, setActiveSection] = useHashSection(
+    'overview',
+    (id) => BASE_SECTIONS.includes(id) || (id === 'report-book' && showReportBook),
+    `${studentData ? 'loaded' : 'pending'}-${showReportBook}`
+  );
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -52,10 +74,14 @@ export default function StudentDashboard() {
 
         if (!studentRes.ok) {
           const errData = await studentRes.json().catch(() => ({}));
-          throw new Error(errData.message || `HTTP error! status: ${studentRes.status}`);
+          throw new Error(errData.message || errData.error || `Request failed (${studentRes.status})`);
         }
 
-        const [data, slotData, rbookData] = await Promise.all([studentRes.json(), slotRes.json(), rbookRes.json()]);
+        const [data, slotData, rbookData] = await Promise.all([
+          studentRes.json(),
+          slotRes.json().catch(() => ({})),
+          rbookRes.json().catch(() => ({})),
+        ]);
 
         if (data.success && data.student) setStudentData(data.student);
         else throw new Error(data.error || 'Failed to fetch student data');
@@ -65,146 +91,102 @@ export default function StudentDashboard() {
       } catch (err) {
         console.error('Error fetching data:', err);
         setError(err.message || 'Failed to load student data');
-        toast.error(err.message || 'Failed to load student data');
+        toast.error('Could not load your dashboard. Please try again.');
       } finally {
         setLoading(false);
       }
     };
 
     fetchAll();
-  }, [user, authLoading]);
+  }, [user, authLoading, reloadKey]);
 
-  if (!user || authLoading) return <Loader />;
-  if (loading) return <Loader />;
-  if (error)   return <div className="error">{error}</div>;
+  const retry = useCallback(() => setReloadKey((k) => k + 1), []);
 
-  const handleSectionClick = (section) => {
-    setActiveSection(section);
-    setIsSidebarOpen(false);
+  if (!user || authLoading) return <Loader fullscreen />;
+
+  const navGroups = [
+    {
+      items: [
+        { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+        { id: 'profile', label: 'Profile', icon: UserRound },
+      ],
+    },
+    {
+      label: 'Internship',
+      items: [
+        { id: 'daily-tasks', label: 'Daily Tasks', icon: ListChecks },
+        { id: 'survey-questions', label: 'Survey Questions', icon: FileText },
+        { id: 'evaluation-plan', label: 'Evaluation Plan', icon: ClipboardList },
+        { id: 'report-book', label: 'Report Book', icon: BookMarked, hidden: !showReportBook },
+      ],
+    },
+    {
+      label: 'Account',
+      items: [{ id: 'change-password', label: 'Change Password', icon: Lock }],
+    },
+  ];
+
+  const renderSection = () => {
+    if (loading) return <Loader />;
+
+    // Keep navigation available on failure and offer a retry instead of a blank screen
+    if (error) {
+      return (
+        <DashboardState
+          tone="error"
+          icon={AlertTriangle}
+          title="We couldn't load your dashboard"
+          message="Something went wrong while fetching your internship details. Please check your connection and try again."
+          action={
+            <button type="button" className="ds-btn" onClick={retry}>
+              <RefreshCw size={16} aria-hidden="true" /> Try again
+            </button>
+          }
+        />
+      );
+    }
+
+    switch (activeSection) {
+      case 'overview':         return <Overview user={user} studentData={studentData} />;
+      case 'profile':          return <Profile user={user} studentData={studentData} />;
+      case 'change-password':  return <ChangePassword user={user} />;
+      case 'evaluation-plan':  return <EvaluationPlan studentData={studentData} />;
+      case 'survey-questions': return <SurveyQuestions studentData={studentData} />;
+      case 'report-book':      return showReportBook ? <ReportBook studentData={studentData} /> : null;
+      case 'daily-tasks':
+        return slotEnabled
+          ? <DailyTasks studentData={studentData} onSectionChange={setActiveSection} />
+          : (
+            <DashboardState
+              tone="warning"
+              icon={Lock}
+              title="Your slot isn't active yet"
+              message="Daily tasks will be available once your internship slot is activated by the admin. Please check back soon."
+            />
+          );
+      default:
+        return (
+          <DashboardState
+            icon={Construction}
+            title="Coming soon"
+            message="This section is being prepared and will be available soon."
+          />
+        );
+    }
   };
 
-  // Check Report Book eligibility
-  const dm = studentData?.dailyMarks || {};
-  const allDaysEvaluated = [1, 2, 3, 4, 5, 6, 7].every(d => dm[`d${d}`] !== null && dm[`d${d}`] !== undefined);
-  const totalMarks = dm.total || 0;
-  const slotNum = parseInt(String(studentData?.slot || '1').replace(/\D/g, ''), 10) || 1;
-  const isSlot1 = slotNum === 1;
-  const isSlot10OrMore = slotNum >= 10;
-  const day7Submitted = Boolean(studentData?.uploads?.details?.day7) || Boolean(studentData?.hasFinalDay7Task);
-  // For slot 1: requires all evaluated and 60 marks
-  // For slot 10 onwards: requires all 7 days tasks to be submitted
-  // For others: show by default
-  const hasReportBookEntry = Boolean(studentData?.reportBook);
-  const showReportBook = isSlot1
-    ? (allDaysEvaluated && totalMarks >= 60)
-    : isSlot10OrMore
-      ? day7Submitted
-      : true;
-
-  // Whether this student's mentor is assigned
-  const hasMentor = Boolean(studentData?.facultyMentorId || studentData?.mentor);
-
   return (
-    <div className="student-dashboard">
-      <Navbar title="Student Dashboard" user={user} onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
-
-      <div className="dashboard-content">
-        {/* Overlay for mobile */}
-        <div 
-          className={`sidebar-overlay ${isSidebarOpen ? 'open' : ''}`} 
-          onClick={() => setIsSidebarOpen(false)}
-        ></div>
-
-        <nav className={`dashboard-sidebar ${isSidebarOpen ? 'open' : ''}`}>
-          {/* ── Always visible ── */}
-          <button className={`sidebar-item ${activeSection === 'overview' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('overview')}>
-            <FaHome className="sidebar-icon" />
-            <span className="item-label">Overview</span>
-          </button>
-          <button className={`sidebar-item ${activeSection === 'profile' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('profile')}>
-            <FaUser className="sidebar-icon" />
-            <span className="item-label">Profile</span>
-          </button>
-          <button className={`sidebar-item ${activeSection === 'daily-tasks' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('daily-tasks')}>
-            <FaTasks className="sidebar-icon" />
-            <span className="item-label">Daily Tasks</span>
-          </button>
-          <button className={`sidebar-item ${activeSection === 'survey-questions' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('survey-questions')}>
-            <FaClipboardList className="sidebar-icon" />
-            <span className="item-label">Survey Questions</span>
-          </button>
-          <button className={`sidebar-item ${activeSection === 'evaluation-plan' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('evaluation-plan')}>
-            <FaClipboardList className="sidebar-icon" />
-            <span className="item-label">Evaluation Plan</span>
-          </button>
-          <button className={`sidebar-item ${activeSection === 'change-password' ? 'active' : ''}`}
-            onClick={() => handleSectionClick('change-password')}>
-            <FaLock className="sidebar-icon" />
-            <span className="item-label">Change Password</span>
-          </button>
-
-          {showReportBook && rbookVisible && (
-            <button className={`sidebar-item ${activeSection === 'report-book' ? 'active' : ''}`}
-              onClick={() => handleSectionClick('report-book')}>
-              <FaBook className="sidebar-icon" />
-              <span className="item-label">Report Book</span>
-            </button>
-          )}
-
-          {/* Locked notice */}
-          {!slotEnabled && (
-            <div style={{
-              margin: '16px 12px 0',
-              background: '#fff8e1',
-              border: '1.5px solid #ffe082',
-              borderRadius: 10,
-              padding: '10px 12px',
-              fontSize: '0.78rem',
-              color: '#e65100',
-              lineHeight: 1.5,
-            }}>
-              🔒 Your slot is not yet active. Other sections will unlock when your slot opens.
-            </div>
-          )}
-        </nav>
-
-        <main className="dashboard-main">
-          {activeSection === 'overview'         ? <Overview user={user} studentData={studentData} /> :
-           activeSection === 'profile'          ? <Profile user={user} studentData={studentData} /> :
-           activeSection === 'change-password'  ? <ChangePassword user={user} /> :
-           activeSection === 'evaluation-plan'   ? <EvaluationPlan studentData={studentData} /> :
-           activeSection === 'lead'             ? <Lead studentData={studentData} /> :
-           activeSection === 'survey-questions' ? <SurveyQuestions studentData={studentData} /> :
-           activeSection === 'report-book' && showReportBook && rbookVisible ? <ReportBook studentData={studentData} /> :
-           // Slot-gated
-           activeSection === 'daily-tasks' && slotEnabled  ? <DailyTasks studentData={studentData} onSectionChange={setActiveSection} /> :
-           !slotEnabled && (activeSection === 'daily-tasks') ? (
-             <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'60px 24px', textAlign:'center', gap:16 }}>
-               <div style={{ fontSize:'3rem' }}>🔒</div>
-               <h2 style={{ fontSize:'1.4rem', fontWeight:700, color:'#014a01', margin:0 }}>Slot Not Active Yet</h2>
-               <p style={{ color:'#555', fontSize:'0.95rem', maxWidth:380, lineHeight:1.6 }}>
-                 This section will be available once your internship slot is activated by the admin. Please check back soon.
-               </p>
-             </div>
-           ) : (
-             <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'60px 24px', textAlign:'center', gap:16 }}>
-               <div style={{ fontSize:'3rem' }}>🚧</div>
-               <h2 style={{ fontSize:'1.5rem', fontWeight:'700', color:'#014a01', margin:0 }}>Coming Soon</h2>
-               <p style={{ color:'#555', fontSize:'1rem', maxWidth:'400px', lineHeight:'1.6' }}>
-                 This section is under preparation and will be available soon.
-               </p>
-             </div>
-           )
-          }
-        </main>
-      </div>
-
-      <Footer />
-    </div>
+    <DashboardShell
+      title="Student Dashboard"
+      user={user}
+      navGroups={navGroups}
+      activeId={activeSection}
+      onNavigate={setActiveSection}
+      sidebarNotice={!loading && !error && !slotEnabled
+        ? 'Your slot is not active yet. Daily tasks will unlock when your slot opens.'
+        : null}
+    >
+      {renderSection()}
+    </DashboardShell>
   );
 }

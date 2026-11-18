@@ -227,3 +227,69 @@
 }
 .dt-no-ps h3 { color: #856404; margin-bottom: 8px; }
 .dt-no-ps p { color: #6c5700; font-size: 0.9rem; }
+
+/* ── Uploads to server storage (RustFS) ─────────────────────────────── */
+.dt-upload { display: flex; flex-direction: column; gap: 8px; }
+.dt-upload-thumb {
+  position: relative; width: 100%; max-width: 280px; aspect-ratio: 16 / 10;
+  border-radius: 8px; overflow: hidden; background: #f1f5f9;
+  border: 2px dashed #cbd5e1; display: flex; align-items: center; justify-content: center;
+}
+.dt-upload-thumb.has-image { border: 1px solid #cbd5e1; background: #fff; }
+.dt-upload-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.dt-upload-placeholder { display: inline-flex; align-items: center; gap: 6px; color: #94a3b8; font-size: 0.8rem; }
+.dt-upload-overlay {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: rgba(255, 255, 255, 0.82); color: #b45309; font-size: 0.82rem; font-weight: 600;
+}
+.dt-upload-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.dt-upload-btn {
+  display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 6px;
+  border: 1px solid #16a34a; background: #fff; color: #166534; font-size: 0.82rem; font-weight: 600; cursor: pointer;
+}
+.dt-upload-btn:hover:not(:disabled) { background: #f0fdf4; }
+.dt-upload-btn:disabled { opacity: 0.6; cursor: wait; }
+.dt-upload-ok { display: inline-flex; align-items: center; gap: 5px; color: #16a34a; font-size: 0.8rem; font-weight: 600; }
+.dt-upload-error {
+  margin: 0; padding: 8px 10px; border-radius: 6px; background: #fef2f2; border: 1px solid #fecaca;
+  color: #b91c1c; font-size: 0.8rem; line-height: 1.45;
+}
+.dt-spin { animation: dt-spin 0.9s linear infinite; }
+@keyframes dt-spin { to { transform: rotate(360deg); } }
+
+.dt-report-status {
+  display: flex; align-items: flex-start; gap: 12px; margin-top: 18px; padding: 14px 16px;
+  border-radius: 10px; font-size: 0.86rem;
+}
+.dt-report-status > svg { flex-shrink: 0; margin-top: 2px; font-size: 1.1rem; }
+.dt-report-status strong { display: block; margin-bottom: 2px; }
+.dt-report-status p { margin: 0; color: #475569; line-height: 1.5; }
+.dt-report-status.is-pending { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+.dt-report-status.is-done { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+.dt-report-status > div { flex: 1; min-width: 0; }
+.dt-report-open {
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px;
+  background: #16a34a; color: #fff !important; font-size: 0.8rem; font-weight: 600; text-decoration: none; white-space: nowrap;
+}
+.dt-report-open:hover { background: #15803d; }
+
+.dt-cert-uploader {
+  display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 10px;
+  background: #fff; border: 1px solid #bfdbfe;
+}
+.dt-cert-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; color: #1e3a8a; }
+.dt-cert-head span { font-size: 0.8rem; color: #64748b; font-weight: 600; }
+.dt-cert-hint, .dt-cert-legacy, .dt-cert-busy { margin: 0; font-size: 0.8rem; color: #475569; line-height: 1.5; }
+.dt-cert-legacy a { word-break: break-all; }
+.dt-cert-busy { display: inline-flex; align-items: center; gap: 8px; color: #b45309; font-weight: 600; }
+.dt-cert-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.dt-cert-list li {
+  display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 6px;
+  background: #f8fafc; border: 1px solid #e2e8f0; font-size: 0.82rem;
+}
+.dt-cert-name { flex: 1; min-width: 0; display: inline-flex; align-items: center; gap: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #334155; }
+.dt-cert-list a { color: #1d4ed8; font-weight: 600; }
+.dt-cert-list button { border: 0; background: none; color: #dc2626; cursor: pointer; padding: 2px 4px; }
+.dt-cert-uploader > .dt-upload-btn { align-self: flex-start; border-color: #1d4ed8; color: #1e40af; }
+.dt-cert-uploader > .dt-report-open { align-self: flex-start; background: #1d4ed8; }
+.dt-upload-hint { font-size: 0.74rem; color: #64748b; }
