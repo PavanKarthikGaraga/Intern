@@ -220,3 +220,15 @@ header.dashboard-header {
     display: none;
   }
 }
+
+/* During an admin proxy session the logout button returns to the admin dashboard */
+.dashboard-header .logout-btn.is-proxy {
+  border-color: var(--brand-600, #970003);
+  background: var(--brand-600, #970003);
+  color: #fff;
+}
+.dashboard-header .logout-btn.is-proxy:hover {
+  border-color: var(--brand-700, #6e0002);
+  background: var(--brand-700, #6e0002);
+  color: #fff;
+}

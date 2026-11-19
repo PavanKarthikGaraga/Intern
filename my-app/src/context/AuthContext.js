@@ -88,10 +88,28 @@ export const AuthProvider = ({ children }) => {
         throw new Error('No user returned');
       }
     } catch (error) {
+      // A proxied ("login as user") session is short-lived; when it runs out, send the
+      // admin back to their own dashboard instead of the login page.
+      if (user?.impersonatedBy) {
+        toast('The proxy session ended. Returning to the admin dashboard…');
+        await exitProxy();
+        return;
+      }
       toast.error('Session expired. Please login again.');
       setIsAuthenticated(false);
       setUser(null);
       router.replace('/auth/login');
+    }
+  };
+
+  /** End an admin proxy session and return to the admin dashboard (full page load). */
+  const exitProxy = async () => {
+    try {
+      const res = await fetch('/api/auth/proxy-exit', { method: 'POST', credentials: 'include' });
+      const data = await res.json().catch(() => ({}));
+      window.location.assign(data.redirectTo || (res.ok ? '/dashboard/admin' : '/auth/login'));
+    } catch {
+      toast.error('Could not exit the proxy session. Please check your connection and try again.');
     }
   };
 
@@ -134,7 +152,8 @@ export const AuthProvider = ({ children }) => {
       isAuthenticated,
       isLoading,
       setUser,
-      setIsAuthenticated
+      setIsAuthenticated,
+      exitProxy,
     }}>
       {children}
     </AuthContext.Provider>

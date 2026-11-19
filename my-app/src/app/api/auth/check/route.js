@@ -1,5 +1,6 @@
 import { verifyAccessToken } from "../../../../lib/jwt";
 import { cookies } from "next/headers";
+import { getProxyAdmin } from "@/lib/auth";
 
 export async function GET() {
     try {
@@ -18,12 +19,16 @@ export async function GET() {
                 return Response.json({ error: "Invalid token" }, { status: 401 });
             }
 
+            // Set when an admin is viewing this account through "Proxy Login"
+            const impersonatedBy = decoded.role !== "admin" ? await getProxyAdmin() : null;
+
             return Response.json(
                 {
                     user: {
                         username: decoded.username,
                         name: decoded.name,
-                        role: decoded.role
+                        role: decoded.role,
+                        impersonatedBy,
                     },
                 },
                 { status: 200 }

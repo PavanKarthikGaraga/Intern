@@ -1,6 +1,7 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
 import Navbar from '@/components/Navbar';
+import { useAuth } from '@/context/AuthContext';
 import './DashboardShell.css';
 
 /**
@@ -57,6 +58,9 @@ export default function DashboardShell({
   children,
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [exiting, setExiting] = useState(false);
+  const { exitProxy } = useAuth();
+  const proxyAdmin = user?.impersonatedBy;
 
   // Close the mobile drawer with Escape and lock background scroll while open.
   useEffect(() => {
@@ -91,6 +95,22 @@ export default function DashboardShell({
         onToggleSidebar={() => setDrawerOpen((open) => !open)}
         sidebarOpen={drawerOpen}
       />
+
+      {proxyAdmin && (
+        <div className="ds-proxy-banner" role="status">
+          <span>
+            <strong>Proxy login:</strong> you are viewing <strong>{user?.name || user?.username}</strong>&apos;s
+            dashboard ({user?.username}) as {proxyAdmin.name || proxyAdmin.username}.
+          </span>
+          <button
+            type="button"
+            onClick={async () => { setExiting(true); await exitProxy(); setExiting(false); }}
+            disabled={exiting}
+          >
+            {exiting ? 'Returning…' : 'Exit & return to admin dashboard'}
+          </button>
+        </div>
+      )}
 
       {banner}
 

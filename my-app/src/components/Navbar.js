@@ -5,13 +5,16 @@ import toast from "react-hot-toast";
 import { useState, useEffect } from "react";
 import { CheckCircleOutlined, NotificationOutlined } from "@ant-design/icons";
 import { Modal, Badge, Empty, Button } from "antd";
-import { Bell, LogOut, Menu, X } from "lucide-react";
+import { Bell, LogOut, Menu, X, Undo2 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Navbar({ title, user, onToggleSidebar, sidebarOpen = false }) {
   const router = useRouter();
   const [announcements, setAnnouncements] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const { exitProxy } = useAuth();
+  const isProxy = Boolean(user?.impersonatedBy);
 
   useEffect(() => {
     if (user?.role === 'student') {
@@ -33,6 +36,11 @@ export default function Navbar({ title, user, onToggleSidebar, sidebarOpen = fal
   };
 
   const handleLogout = async () => {
+    // During an admin proxy session, "logout" returns to the admin dashboard
+    if (isProxy) {
+      await exitProxy();
+      return;
+    }
     try {
       const response = await fetch("/api/auth/logout", {
         method: "POST",
@@ -135,9 +143,14 @@ export default function Navbar({ title, user, onToggleSidebar, sidebarOpen = fal
             <span className="user-id">{user?.username}</span>
           </div>
         </div>
-        <button type="button" onClick={handleLogout} className="logout-btn" aria-label="Logout">
-          <LogOut size={16} aria-hidden="true" />
-          <span>Logout</span>
+        <button
+          type="button"
+          onClick={handleLogout}
+          className={`logout-btn ${isProxy ? 'is-proxy' : ''}`}
+          aria-label={isProxy ? 'Exit proxy login and return to admin dashboard' : 'Logout'}
+        >
+          {isProxy ? <Undo2 size={16} aria-hidden="true" /> : <LogOut size={16} aria-hidden="true" />}
+          <span>{isProxy ? 'Exit proxy' : 'Logout'}</span>
         </button>
       </div>
 

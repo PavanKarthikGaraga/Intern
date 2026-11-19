@@ -53,9 +53,14 @@ export default function StudentDashboard() {
   );
 
   useEffect(() => {
+    let cancelled = false; // ignore responses from an outdated user/session
+
     const fetchAll = async () => {
       if (authLoading) return;
       if (!user?.username) { setLoading(false); return; }
+      // Auth state can briefly still hold a different account (e.g. right after an
+      // admin "proxy login"); only fetch once the session really is a student.
+      if (user.role && user.role !== 'student') return;
 
       try {
         setLoading(true);
@@ -83,22 +88,25 @@ export default function StudentDashboard() {
           rbookRes.json().catch(() => ({})),
         ]);
 
+        if (cancelled) return;
         if (data.success && data.student) setStudentData(data.student);
         else throw new Error(data.error || 'Failed to fetch student data');
 
         setSlotEnabled(slotData.enabled === true);
         setRbookVisible(rbookData.visible !== false); // default to true if missing
       } catch (err) {
+        if (cancelled) return;
         console.error('Error fetching data:', err);
         setError(err.message || 'Failed to load student data');
         toast.error('Could not load your dashboard. Please try again.');
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchAll();
-  }, [user, authLoading, reloadKey]);
+    return () => { cancelled = true; };
+  }, [user?.username, user?.role, authLoading, reloadKey]);
 
   const retry = useCallback(() => setReloadKey((k) => k + 1), []);
 

@@ -1,14 +1,12 @@
 'use client';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { useRouter } from 'next/navigation';
 import './page.css';
 
 export default function TokenGenerator() {
   const [username, setUsername] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
-  const router = useRouter();
 
   const handleGenerateToken = async (e) => {
     e.preventDefault();
@@ -27,37 +25,21 @@ export default function TokenGenerator() {
         body: JSON.stringify({ username }),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to generate token');
+        throw new Error(data.error || data.message || 'Failed to generate token');
       }
 
       toast.success('Successfully logged in as ' + username);
-      
-      // Set redirecting state
       setIsRedirecting(true);
-      
-      // Wait for 2 seconds to ensure cookies are set
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      // Redirect based on role
-      const role = data.user.role;
-      switch(role) {
-        case 'student':
-          router.push('/dashboard/student');
-          break;
-        case 'studentLead':
-          router.push('/dashboard/studentLead');
-          break;
-        case 'facultyMentor':
-          router.push('/dashboard/facultyMentor');
-          break;
-        case 'admin':
-          router.push('/dashboard/admin');
-          break;
-        default:
-          router.push('/auth/login');
-      }
+
+      // Full page load (not router.push): the app's auth state must start fresh with the
+      // proxied user's session. A soft navigation kept the admin as the "current user"
+      // for a moment, so the dashboard requested data with the wrong ID and showed
+      // "Could not load your dashboard" until the page was refreshed.
+      window.location.assign(data.redirectTo || `/dashboard/${data.user?.role || ''}`);
+      return;
     } catch (error) {
       toast.error(error.message);
       setIsRedirecting(false);

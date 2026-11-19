@@ -1,5 +1,6 @@
 import { verifyRefreshToken, generateAccessToken } from "../../../../lib/jwt";
 import { cookies } from "next/headers";
+import { getProxyAdmin } from "@/lib/auth";
 
 export async function POST() {
     try {
@@ -35,6 +36,7 @@ export async function POST() {
                 username: decoded.username,
                 name: decoded.name,
                 role: decoded.role,
+                impersonatedBy: decoded.role !== "admin" ? await getProxyAdmin() : null,
             },
         });
     } catch (error) {

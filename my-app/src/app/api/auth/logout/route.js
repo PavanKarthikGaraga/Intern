@@ -7,6 +7,7 @@ export async function POST(request) {
         // Clear both tokens
         cookieStore.delete({ name: 'accessToken', path: '/' });
         cookieStore.delete({ name: 'refreshToken', path: '/' });
+        cookieStore.delete({ name: 'proxyAdminSession', path: '/' });
 
         return Response.json({ 
             message: 'Logged out successfully' 

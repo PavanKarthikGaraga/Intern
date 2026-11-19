@@ -71,6 +71,9 @@ export async function POST(request) {
             path: '/'
         });
 
+        // A fresh login ends any leftover admin "proxy login" session
+        await cookieStore.delete({ name: 'proxyAdminSession', path: '/' });
+
         // Log successful login
         logActivity({
             action: 'AUTH_LOGIN',

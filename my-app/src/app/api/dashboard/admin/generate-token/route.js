@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { generateAuthTokens, verifyAccessToken } from '@/lib/jwt';
+import { generateAuthTokens, generateRefreshToken, verifyAccessToken } from '@/lib/jwt';
+import { PROXY_COOKIE, proxyCookieOptions } from '@/lib/auth';
 import pool from '@/lib/db';
 import { cookies } from 'next/headers';
 import { logActivity } from '@/lib/activityLog';
@@ -17,7 +18,7 @@ export async function POST(request) {
       }, { status: 401 });
     }
 
-    const decoded = await verifyAccessToken(accessToken.value);
+    const decoded = await verifyAccessToken(accessToken.value).catch(() => null);
     if (!decoded || decoded.role !== 'admin') {
       return NextResponse.json({ 
         success: false, 
@@ -85,6 +86,15 @@ export async function POST(request) {
         path: '/'
     });
 
+    // "Return ticket" so the admin can exit the proxy session straight back to
+    // their own dashboard (see /api/auth/proxy-exit) instead of logging in again.
+    const adminReturnToken = await generateRefreshToken({
+        username: decoded.username,
+        name: decoded.name,
+        role: 'admin',
+    });
+    await cookieStore.set(PROXY_COOKIE, adminReturnToken, proxyCookieOptions());
+
     logActivity({
         action: 'ADMIN_PROXY_LOGIN',
         actorUsername: decoded.username,
@@ -98,9 +108,10 @@ export async function POST(request) {
         message: "Token Generated Successfully",
         user: {
             username: user.username,
-            id: user.id,
-            role: user.role 
-        }
+            name: user.name,
+            role: user.role
+        },
+        redirectTo: `/dashboard/${user.role}`
     }, { status: 200 });
 
 } catch (err) {
