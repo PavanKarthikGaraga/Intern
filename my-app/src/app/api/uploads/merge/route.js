@@ -19,7 +19,7 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 const MAX_FILES = 20;
-const MAX_BUNDLE_BYTES = 10 * 1024 * 1024; // combined PDF follows the same 10 MB PDF limit
+const MAX_BUNDLE_BYTES = 100 * 1024 * 1024; // same 100 MB anti-misuse cap as single uploads
 const A4 = { w: 595.28, h: 841.89 }; // points
 const PAGE_MARGIN = 24;
 
@@ -81,7 +81,7 @@ export async function POST(request) {
 
     const bytes = Buffer.from(await out.save());
     if (bytes.length > MAX_BUNDLE_BYTES) {
-      return NextResponse.json({ success: false, error: `Your certificates add up to ${(bytes.length / 1048576).toFixed(1)} MB; the combined PDF must be under 10 MB. Please remove or replace the largest files.` }, { status: 413 });
+      return NextResponse.json({ success: false, error: `Your certificates add up to ${(bytes.length / 1048576).toFixed(1)} MB; the combined PDF must be under 100 MB. Please remove or replace the largest files.` }, { status: 413 });
     }
     const key = studentKey(user.username, {
       day: parseDay(body.day),

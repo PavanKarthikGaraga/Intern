@@ -5,7 +5,7 @@ Student photos, generated reports (Days 2–4, 6, 7) and MyGov certificates are 
 Students no longer paste Google Drive links: generated PDFs are attached automatically.
 The final Report Book is unchanged (students still submit a link).
 
-**Limits:** photos 2 MB each (compressed automatically when possible), PDFs 10 MB each.
+**Limit:** 100 MB per file (photos and PDFs), only to prevent misuse. Photos are still compressed automatically.
 
 ```
 Browser ──▶ Next.js /api/uploads (auth, compress)  ──▶ RustFS 127.0.0.1:9000
@@ -75,12 +75,15 @@ pm2 restart intern --update-env
 
 ## 6. Allow larger uploads in nginx
 
-The app accepts photos up to **2 MB** (larger ones are compressed in the browser first) and
-PDFs up to **10 MB**. nginx's default request limit is **1 MB**, which would reject most
-PDFs with "413 Request Entity Too Large". In the site's `server { … }` block:
+The app accepts files up to **100 MB**. nginx's default request limit is **1 MB**, which rejects
+most generated PDFs with "413 Request Entity Too Large" — students then see *"The server rejected
+this upload as too large"*. In the site's `server { … }` block (or the `location` that proxies to the app):
 
 ```nginx
-client_max_body_size 12m;
+client_max_body_size 110m;   # 100 MB app limit + multipart overhead
+client_body_timeout 300s;    # large uploads on slow mobile data
+proxy_read_timeout 300s;
+proxy_send_timeout 300s;
 ```
 
 ```bash

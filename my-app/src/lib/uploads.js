@@ -12,8 +12,9 @@ const MAX_DIMENSION = 1600;
 const JPEG_QUALITY = 0.82;
 const SKIP_COMPRESSION_BELOW = 400 * 1024; // small JPEGs are uploaded as-is
 
-export const MAX_IMAGE_BYTES = 2 * 1024 * 1024; // 2 MB per photo (after compression)
-export const MAX_PDF_BYTES = 10 * 1024 * 1024;  // 10 MB per PDF
+// Single anti-misuse cap for any file. Photos are still compressed automatically
+// (faster uploads, smaller PDFs) but are never rejected for size below this.
+export const MAX_FILE_BYTES = 100 * 1024 * 1024; // 100 MB
 
 const mb = (bytes) => (bytes / 1048576).toFixed(1);
 
@@ -82,7 +83,7 @@ export async function compressImage(file) {
 
   try {
     // Try progressively smaller/lower-quality encodings until the photo is
-    // comfortably under the 2 MB limit.
+    // reasonably small (~1 MB) for fast uploads and compact PDFs.
     const attempts = [
       [MAX_DIMENSION, JPEG_QUALITY],
       [MAX_DIMENSION, 0.7],
@@ -118,7 +119,7 @@ export async function compressImage(file) {
 function friendlyError(status, serverMessage) {
   if (serverMessage) return serverMessage;
   if (status === 401) return 'Your session has expired. Please log in again.';
-  if (status === 413) return 'This file is too large. Photos must be under 2 MB and PDFs under 10 MB.';
+  if (status === 413) return 'The server rejected this upload as too large. Files up to 100 MB are allowed — if this file is smaller, please contact the SAC office.';
   if (status === 415) return 'Unsupported file type. Please upload a JPG/PNG photo or a PDF.';
   return 'Upload failed. Please check your connection and try again.';
 }
@@ -138,7 +139,8 @@ export async function uploadFile(file, { day, purpose = 'file', filename } = {})
     form.append('purpose', purpose);
 
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 90000);
+    // Allow big files on slow mobile data: 90 s plus ~1 s per 50 KB, capped at 15 minutes
+    const timer = setTimeout(() => controller.abort(), Math.min(90000 + (file.size / 51200) * 1000, 15 * 60 * 1000));
     try {
       const res = await fetch('/api/uploads', {
         method: 'POST',
@@ -172,11 +174,8 @@ export async function uploadImage(file, { day, purpose = 'photo' } = {}) {
     throw new Error('Please choose a photo (JPG, PNG or WebP).');
   }
   const compressed = await compressImage(file);
-  if (compressed.size > MAX_IMAGE_BYTES) {
-    throw new Error(
-      `This photo is ${mb(file.size)} MB and couldn't be compressed below the 2 MB limit. ` +
-      'Please choose a smaller photo, or take a screenshot of it and upload that.'
-    );
+  if (compressed.size > MAX_FILE_BYTES) {
+    throw new Error(`This photo is ${mb(compressed.size)} MB. The maximum is 100 MB.`);
   }
   const baseName = (file.name || 'photo').replace(/\.[^.]+$/, '');
   return uploadFile(compressed, { day, purpose, filename: `${baseName}.jpg` });
@@ -188,10 +187,10 @@ export async function uploadPdfDocument(doc, { day, purpose = 'report', filename
   return uploadPdf(blob, { day, purpose, filename });
 }
 
-/** Upload a PDF file/blob after checking the 10 MB limit. */
+/** Upload a PDF file/blob after checking the 100 MB cap. */
 export async function uploadPdf(file, { day, purpose = 'document', filename } = {}) {
-  if (file.size > MAX_PDF_BYTES) {
-    throw new Error(`This PDF is ${mb(file.size)} MB. The maximum is 10 MB — please reduce its size and try again.`);
+  if (file.size > MAX_FILE_BYTES) {
+    throw new Error(`This PDF is ${mb(file.size)} MB. The maximum is 100 MB.`);
   }
   return uploadFile(file, { day, purpose, filename: filename || file.name || 'document.pdf' });
 }

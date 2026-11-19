@@ -69,7 +69,7 @@ export function PhotoUploadField({ value, onUploaded, day, purpose = 'photo', di
           <span className="dt-upload-ok"><FaCheckCircle aria-hidden="true" /> Saved</span>
         )}
         {!disabled && !value && !busy && (
-          <span className="dt-upload-hint">Max 2 MB · larger photos are compressed automatically</span>
+          <span className="dt-upload-hint">Any photo up to 100 MB · large photos are compressed automatically</span>
         )}
       </div>
       {error && <p className="dt-upload-error" role="alert">{error}</p>}
@@ -200,7 +200,7 @@ export function CertificateUploader({ day, files = [], bundleUrl = '', onChange,
         </span>
       </div>
       <p className="dt-cert-hint">
-        Upload each certificate as a PDF (max 10 MB) or a clear photo/screenshot (max 2 MB, large photos are compressed automatically). They are combined into one PDF and attached to your submission automatically — no Google Drive link needed.
+        Upload each certificate as a PDF or a clear photo/screenshot (up to 100 MB each). They are combined into one PDF and attached to your submission automatically — no Google Drive link needed.
       </p>
 
       {legacyLink && list.length === 0 && (

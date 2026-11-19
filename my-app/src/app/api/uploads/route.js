@@ -6,7 +6,7 @@
  *   day      (optional)  1–7, used to organise the storage key
  *   purpose  (optional)  short label, e.g. "photo", "day2-report", "mygov-certificate"
  *
- * Limits: photos 2 MB (after browser compression), PDFs 10 MB.
+ * Limit: 100 MB per file (photos and PDFs) — only to prevent misuse.
  * Images are always re-encoded server-side: auto-rotated from EXIF, resized to fit
  * 1600×1600, saved as JPEG ~80% quality, and stripped of metadata (incl. GPS EXIF).
  * PDFs are stored as-is after a header check.
@@ -22,11 +22,12 @@ import { putObject, studentKey, isStorageConfigured } from '@/lib/storage';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-// Limits agreed for student uploads. Photos are compressed in the browser first, so
-// a photo only hits this limit if it still can't be brought under 2 MB.
-const MAX_IMAGE_BYTES = 2 * 1024 * 1024;   // 2 MB per photo
-const MAX_PDF_BYTES = 10 * 1024 * 1024;    // 10 MB per PDF
-const MAX_REQUEST_BYTES = MAX_PDF_BYTES + 512 * 1024; // + multipart overhead
+// Single anti-misuse cap. Photos are still compressed (browser + server) so they
+// stay small in practice, but no ordinary file is rejected for its size.
+const MAX_FILE_BYTES = 100 * 1024 * 1024;  // 100 MB per file
+const MAX_IMAGE_BYTES = MAX_FILE_BYTES;
+const MAX_PDF_BYTES = MAX_FILE_BYTES;
+const MAX_REQUEST_BYTES = MAX_FILE_BYTES + 1024 * 1024; // + multipart overhead
 const MAX_DIMENSION = 1600;
 
 /** Identify a file by its leading bytes rather than trusting the client's MIME type. */
@@ -60,7 +61,7 @@ export async function POST(request) {
 
   const declaredLength = Number(request.headers.get('content-length') || 0);
   if (declaredLength > MAX_REQUEST_BYTES) {
-    return json(413, { success: false, error: 'This file is too large. Photos must be under 2 MB and PDFs under 10 MB.' });
+    return json(413, { success: false, error: 'This file is larger than 100 MB. Please upload a smaller file.' });
   }
 
   let form;
@@ -88,7 +89,7 @@ export async function POST(request) {
   try {
     if (type === 'application/pdf') {
       if (input.length > MAX_PDF_BYTES) {
-        return json(413, { success: false, error: `This PDF is ${(input.length / 1048576).toFixed(1)} MB. The maximum is 10 MB — please reduce its size and try again.` });
+        return json(413, { success: false, error: `This PDF is ${(input.length / 1048576).toFixed(1)} MB. The maximum is 100 MB.` });
       }
       const key = studentKey(user.username, { day, purpose, ext: 'pdf' });
       const stored = await putObject(key, input, 'application/pdf', { originalname: safeName(file.name) });
@@ -97,7 +98,7 @@ export async function POST(request) {
 
     // ── Image: normalise + compress ──
     if (input.length > MAX_IMAGE_BYTES) {
-      return json(413, { success: false, error: `This photo is ${(input.length / 1048576).toFixed(1)} MB and could not be compressed below the 2 MB limit. Please choose a smaller photo or take a screenshot of it.` });
+      return json(413, { success: false, error: `This photo is ${(input.length / 1048576).toFixed(1)} MB. The maximum is 100 MB.` });
     }
 
     let output;
